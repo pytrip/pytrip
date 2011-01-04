@@ -1,0 +1,91 @@
+--- WHAT IS THIS ? ---
+
+PyTRiP is a python package for working with TRiP and VIRTUOS/VOXELPLAN files.
+It is mainly supposed for batch processing, but an experimental GUI is also included.
+
+--- REQUIREMENTS --- 
+
+PyTrip is developed on Debain Squeeze (6.0). 
+
+* python2.5 or better
+* python-dev
+* python-matplotlib (and all its dependencies, such as numpy)
+* python-gtk2
+* python-glade2
+
+all these packages are available in the standard Debian repository. There may be more packages, please let me know.
+
+Optional package:
+
+* pydicom
+
+whithout it, you wont be able to load any DICOM files, so I highly recommend you install it. Pydicom is not a part of the Debian repository. Get it from: 
+http://code.google.com/p/pydicom/
+
+
+--- INSTALLATION ---
+
+Unzip the tar-ball and run as root user:
+
+     python ./setup.py install
+
+--- HOW TO DO STUFF ---
+
+* start the GUI:
+
+  gtrip
+
+there are plenty of testfiles in the "testfiles" directory.
+
+
+* From the python console, or run it as a script:
+
+from pytrip import *
+
+# read a dose cube, divide by 2.0, and write to a new cube:
+d0 = DoseCube("box050001.dos")
+d0 = d0/2.0
+d0.write("out0.dos")
+
+# sum two dose cubes, write result:
+print "Two half boxes: out.dos"
+d1 = DoseCube("box052000.dos")
+d2 = DoseCube("box053000.dos")
+d = (d1 + d2)
+d.write("out.dos")
+
+
+# print minium and maximum value found in cubes
+print d1.cube.min(),d1.cube.max()
+print d0.cube.min(),d0.cube.max()
+
+# calculate new dose average LET cube
+l1 = DoseCube("box052000.dosemlet.dos")
+l2 = DoseCube("box053000.dosemlet.dos")
+
+l = ((d1 * l1) + (d2 * l2)) / (d1 + d2)
+l.write("out.dosemlet.dos")
+
+# plot the LET distribution of slice X = 115:
+l.plot("x",115,"myplot.png")
+
+#print l.cube.min(),l.cube.max()
+
+
+--- WHAT ELSE CAN I DO ? ---
+
+Any object has a lot of methods, documentation is still poor.
+But use dir(<object>) and help(<object>) commands.
+
+If you are a developer and wish to contribute, contact me at <bassler@phys.au.dk>
+
+--------------------------------------------
+Last change: 28.June 2010 /NB
+
+
+
+
+
+
+
+
