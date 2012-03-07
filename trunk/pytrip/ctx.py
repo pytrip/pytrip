@@ -10,6 +10,7 @@ import struct
 from pytrip.hed import Header
 from numpy import arange,dtype
 from pylab import *
+import numpy
 
 # DICOM handeling is only optional.
 try:
@@ -123,11 +124,16 @@ class CtxCube(object):
                 raise IOError, \
 		      "Header size and dose cube size are not consistent."
             print "Read and convert data..."
-            _sformat = header.format_str[0] + \
-                            header.format_str[1] * cube_size
-            _so = struct.Struct(_sformat)
-            scube = array(_so.unpack(a))
+            #_sformat = header.format_str[0] + \ header.format_str[1] * cube_size
+            #_so = struct.Struct(_sformat)
+	    scube = zeros(cube_size)
+	    print header.format_str
+	    so = struct.Struct(header.format_str)
+	    print so.unpack(a[0:2])[0]
+	    for i in range(cube_size):
+            	scube[i] = so.unpack(a[i*header.num_bytes:i*header.num_bytes+header.num_bytes])[0]
             scube.astype(float)
+	    print "loaded"
             self.cube = scube.reshape((header.dimx,
                                        header.dimy,
                                        header.dimz),
