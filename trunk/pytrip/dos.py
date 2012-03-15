@@ -140,11 +140,21 @@ class DoseCube(object):
         if (header.dimx * header.dimy * header.dimz) != cube_size:
             raise IOError, "Header size and dose cube size are not consistent."
 
-        _sformat = header.format_str[0] + \
-                   header.format_str[1] * cube_size
-        _so = struct.Struct(_sformat)
-        scube = array(_so.unpack(a))
+        # old slow method
+        #_sformat = header.format_str[0] + \
+        #           header.format_str[1] * cube_size
+        #_so = struct.Struct(_sformat)
+        #scube = array(_so.unpack(a))
+        #scube.astype(float)
+
+        scube = zeros(cube_size)
+        print header.format_str
+        so = struct.Struct(header.format_str)
+        print so.unpack(a[0:2])[0]
+        for i in range(cube_size):
+            scube[i] = so.unpack(a[i*header.num_bytes:i*header.num_bytes+header.num_bytes])[0]
         scube.astype(float)
+        print "loaded"
 
         # TODO: verify x-y order at tranpose
         self.cube = scube.reshape((header.dimx,
