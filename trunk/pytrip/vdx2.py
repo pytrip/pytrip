@@ -1,0 +1,315 @@
+#! /usr/bin/env python
+"""Reads .VDX file from TRiP and Virtuos
+"""
+
+import os, re, sys
+import res.point
+import struct
+from numpy import *
+from pytrip.hed import Header
+
+__author__ = "Niels Bassler and Jakob Toftegaard"
+__version__ = "1.0"
+__email__ = "bassler@phys.au.dk"
+
+class VdxCube:
+	def __init__(self,content,header = None):
+		self.vois = []
+		self.header = header
+		self.version = "2.0"
+	def read_dicom(self,dcm):
+		for i in range(len(dcm.ROIContours)):
+			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel)
+			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
+			self.add_voi(v)
+	def import_vdx(self,path):
+		fp = open(path,"r")
+		vdx_data = fp.read().split('\n')
+		fp.close()
+		self.read_vdx(vdx_data)
+	def add_voi(self,voi):
+		self.vois.append(voi)
+	def read_vdx(self,content):
+		i = 0
+		n = len(content)
+		header_full = False
+		number_of_vois = 0
+		while(i < n):
+			line = content[i]
+			if not header_full:
+				if re.match("vdx_file_version",line) is not None:
+					self.version = line.split()[1]
+				elif re.match("all_indices_zero_based",line) is not None:
+					self.zero_based = True
+				elif re.match("number_of_vois",line) is not None:
+					number_of_vois = int(line.split()[1])
+			if re.match("voi",line) is not None:
+					v = Voi("")
+					i = v.read_vdx(content,i)
+					self.add_voi(v)
+					header_full = True
+			i+=1
+
+	def concat_contour(self):
+		for i in range(len(self.vois)):
+			self.vois[i].concat_contour()
+	def number_of_vois(self):
+		return len(self.vois)
+	def print_to_voxel(self,path):
+		fp = open(path,"w+")
+		fp.write("vdx_file_version %s\n"%self.version)
+		fp.write("all_indices_zero_based\n")
+		fp.write("number_of_vois %d\n"%self.number_of_vois())
+		for i in range(len(self.vois)):
+			fp.write(self.vois[i].to_voxel_string())
+		fp.close()
+	def print_to_trip(self,path):
+		self.concat_contour()
+		self.print_to_voxel(path)
+class Voi:
+	def __init__(self,name):
+		self.name = name
+		self.type = 90
+		self.slice_z = []
+		self.slices = {}
+	def read_vdx(self,content,i):
+		line = content[i]
+		self.name = line.split()[1]
+		number_of_slices = 0
+		i+=1
+		while i < len(content):
+			line = content[i]
+			if re.match("key",line) is not None:
+				self.key = line.split()[1]
+			elif re.match("type",line) is not None:
+				self.type = int(line.split()[1])
+			elif re.match("number_of_slices",line) is not None:
+				number_of_slices = int(line.split()[1])
+			elif re.match("slice",line) is not None:
+				s = Slice()
+				i = s.read_vdx(content,i)
+				key = s.get_position()
+				self.slice_z.append(key)
+				self.slices[key] = s
+			elif re.match("voi",line) is not None:
+				print "found voi"
+				break
+			elif len(self.slices) >= number_of_slices:
+				break
+			i += 1
+		return i-1
+
+	def read_dicom(self,info,data):
+		if not data.has_key("Contours"):
+			return
+		self.name = info.ROIObservationLabel
+		type_name = info.RTROIInterpretedType
+		if type_name == 'EXTERNAL':
+			self.type = 10
+		elif type_name == 'AVOIDANCE':
+			self.type  = 2
+		elif type_name == 'ORGAN':
+			self.type = 2
+		elif type_name == 'GTV':
+			self.type = 1
+		elif type_name == 'CTV':
+			self.type = 1
+		else:
+			self.type = 90
+			
+		for i in range(len(data.Contours)):
+			key = int(data.Contours[i].ContourData[2])
+			if not self.slices.has_key(key):
+				self.slices[key] = Slice()
+				self.slice_z.append(key)
+			self.slices[key].add_dicom_contour(data.Contours[i])
+	def get_thickness(self):
+		return abs(float(self.slice_z[1])-float(self.slice_z[0]))
+	def to_voxel_string(self):
+		if len(self.slices) is 0:
+			return ""	
+
+		out = "\n"
+		out += "voi %s\n"%self.name
+		out += "key empty\n"
+		out += "type %s\n"%self.type
+		out += "\n"
+		out += "contours\n"
+		out += "reference_frame\n"
+		out += " origin 0.000 0.000 0.000\n"
+		out += " point_on_x_axis 1.000 0.000 0.000\n"
+		out += " point_on_y_axis 0.000 1.000 0.000\n"
+		out += " point_on_z_axis 0.000 0.000 1.000\n"
+		out += "number_of_slices %d\n"%self.number_of_slices()
+		out += "\n"
+		i = 0
+		thickness = self.get_thickness()
+		for k in self.slice_z:
+			out += "slice %d\n"%i
+			out += "slice_in_frame %.3f\n"%k
+			out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n"%(thickness,k-0.5*thickness,k+0.5*thickness)
+			out += "number_of_contours %d\n"%self.slices[k].number_of_contours()
+			out += self.slices[k].to_voxel_string()
+			i += 1
+		return out
+
+	def number_of_slices(self):
+		return len(self.slices)
+	def concat_contour(self):
+		for k in self.slices.keys():
+			self.slices[k].concat_contour()
+class Slice:
+	def __init__(self):
+		self.contour = []
+		return
+	def add_contour(self,contour):
+		self.contour.append(contour)
+	def add_dicom_contour(self,dcm):
+		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData)))
+	def get_position(self):
+		if len(self.contour) == 0:
+			return None
+		return self.contour[0].contour[0][2]
+	def read_vdx(self,content,i):
+		line = content[i]
+		number_of_contours = 0
+		i += 1
+		while i < len(content):
+			line = content[i]
+			if re.match("slice_in_frame",line) is not None:
+				self.slice_in_frame = float(line.split()[1])
+			elif re.match("thickness",line) is not None:
+				items = line.split()
+				self.thickness = float(items[1])
+				if(len(items) == 7):
+					self.start_pos = float(items[4])
+					self.stop_pos = float(items[6])
+				else:
+					self.start_pos = float(items[3])
+					self.stop_pos = float(items[5])
+
+			elif re.match("number_of_contours",line) is not None:
+				number_of_contours = int(line.split()[1])
+			elif re.match("contour",line) is not None:
+				c = Contour([])
+				i = c.read_vdx(content,i)
+				self.add_contour(c)
+			elif re.match("slice",line) is not None:
+				break
+			elif len(self.contour >= number_of_contours):
+				break
+			i += 1
+		return i-1
+
+
+	def to_voxel_string(self):
+		out = ""
+		for i in range(len(self.contour)):
+			out += "contour %d\n"%i
+			out += "internal false\n"
+			out += "number_of_points %d\n"%self.contour[i].number_of_points()
+			out += self.contour[i].to_voxel_string()
+			out += "\n"
+		return out
+	def number_of_contours(self):
+		return len(self.contour)
+	def concat_contour(self):
+		for i in range(len(self.contour)-1,0,-1):
+			self.contour[0].push(self.contour[i])
+			self.contour.pop(i)
+		self.contour[0].concat()
+class Contour:
+	def __init__(self,contour):
+		self.children = []
+		self.contour = contour
+	def push(self,contour):
+		for i in range(len(self.children)):
+			if(self.children[i].contains_contour(contour)):
+				self.children[i].push(contour)
+				return
+		self.add_child(contour)
+	def to_voxel_string(self):
+		out = ""
+		for i in range(len(self.contour)):
+			out += " %.3f %.3f %.3f %.3f %.3f %.3f\n"%(self.contour[i][0],self.contour[i][1],self.contour[i][2],0,0,0)
+		out += " %.3f %.3f %.3f %.3f %.3f %.3f\n"%(self.contour[0][0],self.contour[0][1],self.contour[0][2],0,0,0)
+		return out
+	def read_vdx(self,content,i):
+		set_point = False
+		points = 0
+		j = 0
+		while i < len(content):
+			line = content[i]
+			if set_point:
+				if j >= points:
+					break
+				con_dat = line.split()
+				self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
+				j += 1
+			else:
+				if re.match("internal_false",line) is not None:
+					self.internal_false = True
+				if re.match("number_of_points",line) is not None:
+					points = int(line.split()[1])
+					set_point = True
+					
+			i += 1
+		return i-1
+	def add_child(self,contour):
+		remove_idx = []
+		for i in range(len(self.children)):
+			if(contour.contains_contour(self.children[i])):
+				contour.push(self.children[i])
+				remove_idx.append(i)
+		remove_idx.sort(reverse=True)
+		for i in remove_idx:
+			self.children.pop(i)
+		self.children.append(contour)
+	def number_of_points(self):
+		return len(self.contour)
+	def has_childs(self):
+		if(len(self.children) > 0):
+			return True
+		return False
+	def print_child(self,level):
+		for i in range(len(self.children)):
+			print level*'\t',
+			print self.children[i].contour
+			self.children[i].print_child(level+1)
+
+	def contains_contour(self,contour):
+		return res.point.point_in_polygon(contour.contour[0][0],contour.contour[0][1],self.contour)
+	def concat(self):
+		for i in range(len(self.children)):
+				self.children[i].concat()
+		while(len(self.children) > 1):
+			d = -1
+			i1 = 0
+			i2 = 0
+			child = 0
+			for i in range(1,len(self.children)):
+				i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour,self.children[i].contour)
+				if(d == -1 or d_temp < d):
+					d = d_temp
+					child = i
+			self.children[0].merge(self.children[child])
+			self.children.pop(child)
+		if(len(self.children) == 1):
+			self.merge(self.children[0])
+			self.children.pop(0)
+	def merge(self,contour):
+		if(len(self.contour) == 0):
+			self.contour = contour.contour
+			return
+		i1, i2, d = res.point.short_distance_polygon_idx(self.contour,contour.contour)
+		con = []
+		for i in range(i1+1):
+			con.append(self.contour[i])
+		for i in range(i2,len(contour.contour)):
+			con.append(contour.contour[i])
+		for i in range(i2+1):
+			con.append(contour.contour[i])
+		for i in range(i1,len(self.contour)):
+			con.append(self.contour[i])
+		self.contour = con
+		return
