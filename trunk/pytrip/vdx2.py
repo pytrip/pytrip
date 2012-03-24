@@ -16,7 +16,7 @@ class VdxCube:
 	def __init__(self,content,header = None):
 		self.vois = []
 		self.header = header
-		self.version = "2.0"
+		self.version = "1.2"
 	def read_dicom(self,dcm):
 		for i in range(len(dcm.ROIContours)):
 			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel)
@@ -45,7 +45,10 @@ class VdxCube:
 					number_of_vois = int(line.split()[1])
 			if re.match("voi",line) is not None:
 					v = Voi("")
-					i = v.read_vdx(content,i)
+					if self.version == "1.2":
+						i = v.read_vdx_old(content,i)
+					else
+						i = v.read_vdx(content,i)
 					self.add_voi(v)
 					header_full = True
 			i+=1
@@ -72,6 +75,10 @@ class Voi:
 		self.type = 90
 		self.slice_z = []
 		self.slices = {}
+	def read_vdx_old(self,content,i):
+		line = content[i]
+		items = line.split()
+		
 	def read_vdx(self,content,i):
 		line = content[i]
 		self.name = line.split()[1]
@@ -180,7 +187,7 @@ class Slice:
 				self.slice_in_frame = float(line.split()[1])
 			elif re.match("thickness",line) is not None:
 				items = line.split()
-				self.thickness = float(items[1])
+	self.thickness = float(items[1])
 				if(len(items) == 7):
 					self.start_pos = float(items[4])
 					self.stop_pos = float(items[6])

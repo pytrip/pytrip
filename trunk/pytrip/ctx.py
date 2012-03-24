@@ -131,8 +131,8 @@ class CtxCube(object):
 	    so = struct.Struct(header.format_str)
 	    print so.unpack(a[0:2])[0]
 	    for i in range(cube_size):
-            	scube[i] = so.unpack(a[i*header.num_bytes:i*header.num_bytes+header.num_bytes])[0]
-            scube.astype(float)
+        	scube[i] = so.unpack(a[i*header.num_bytes:i*header.num_bytes+header.num_bytes])[0]
+		scube.astype(float)
 	    print "loaded"
             self.cube = scube.reshape((header.dimx,
                                        header.dimy,
@@ -224,7 +224,7 @@ class CtxCube(object):
                     dcm = dicom.read_file(filename)
                     _cube.append(dcm.pixel_array)
                     # TODO: build it properly at numpy level.
-                    self.cube = array(_cube)
+            self.cube = array(_cube)
 
             self.cube = swapaxes(self.cube,0,2)
             self.cube = rot90(self.cube,3)          
