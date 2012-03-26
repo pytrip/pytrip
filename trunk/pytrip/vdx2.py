@@ -3,21 +3,24 @@
 """
 
 import os, re, sys
+from error import *
 import res.point
 import struct
 from numpy import *
-from pytrip.hed import Header
 
 __author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
 
 class VdxCube:
-	def __init__(self,content,header = None):
+	def __init__(self,content,cube = None):
 		self.vois = []
-		self.header = header
+		self.cube = cube
 		self.version = "1.2"
-	def read_dicom(self,dcm):
+	def read_dicom(self,data):
+		if not data.has_key("rtss"):
+			raise InputError, "Input is not a valid rtss structure"
+		dcm = data["rtss"]
 		for i in range(len(dcm.ROIContours)):
 			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel)
 			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
@@ -47,7 +50,7 @@ class VdxCube:
 					v = Voi("")
 					if self.version == "1.2":
 						i = v.read_vdx_old(content,i)
-					else
+					else:
 						i = v.read_vdx(content,i)
 					self.add_voi(v)
 					header_full = True
@@ -58,7 +61,7 @@ class VdxCube:
 			self.vois[i].concat_contour()
 	def number_of_vois(self):
 		return len(self.vois)
-	def print_to_voxel(self,path):
+	def write_to_voxel(self,path):
 		fp = open(path,"w+")
 		fp.write("vdx_file_version %s\n"%self.version)
 		fp.write("all_indices_zero_based\n")
@@ -66,9 +69,9 @@ class VdxCube:
 		for i in range(len(self.vois)):
 			fp.write(self.vois[i].to_voxel_string())
 		fp.close()
-	def print_to_trip(self,path):
+	def write_to_trip(self,path):
 		self.concat_contour()
-		self.print_to_voxel(path)
+		self.write_to_voxel(path)
 class Voi:
 	def __init__(self,name):
 		self.name = name
@@ -187,7 +190,7 @@ class Slice:
 				self.slice_in_frame = float(line.split()[1])
 			elif re.match("thickness",line) is not None:
 				items = line.split()
-	self.thickness = float(items[1])
+				self.thickness = float(items[1])
 				if(len(items) == 7):
 					self.start_pos = float(items[4])
 					self.stop_pos = float(items[6])

@@ -39,5 +39,5 @@ def short_distance_polygon_idx(poly1,poly2):
 		if d2 < d:
 			i1 = i
 			d = d2
-	return (i1,i2,d**0.5)
+	return (i1,i2,float(d)**0.5)
 	

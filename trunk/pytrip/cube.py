@@ -264,9 +264,13 @@ class Cube(object):
 		f = open(path,"wb+")
 		out =""
 		_format = self.format_str[0]+self.format_str[1]*self.dimx
+		i = 0
 		for image in self.cube:
+			out = ""
 			for line in image:
 				out += pack(_format,*line)
-		f.write(out)
+			f.write(out)
+
+		
 		f.close()
 
