@@ -2,6 +2,7 @@ import os,re,string,sys
 from error import *
 from struct import *
 from numpy import *
+from dicom.dataset import Dataset,FileDataset
 try:
 	import dicom
 	_dicom_loaded = True
@@ -123,7 +124,43 @@ class Cube(object):
 		else:
 			print "Format:", self.byte_order, self.data_type, self.num_bytes
 			raise IOError, "Unsupported format."
-
+	def create_dicom_base(self):
+		if _dicom_loaded is False:
+			raise ModuleNotLoadedError, "Dicom"
+		if self.header_set is False:
+			raise InputError, "Header not loaded"
+		meta = Dataset()
+		meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+		meta.MediaStorageSOPInstanceUID = "1.2.3"
+		meta.ImplementationClassUID = "1.2.3.4"
+		ds = FileDataset("file", {}, file_meta=meta, preamble="\0"*128)
+		ds.Modality = 'CT'
+		ds.PatientsName = self.patient_name
+		ds.PatientID = "123456"
+		ds.PatientsSex = '0'
+		ds.PatientsBirthDate = '19010101'
+		ds.is_little_endian = True
+		ds.is_implicit_VR = True
+		ds.SOPClassUID = '1.2.3' #!!!!!!!!
+		ds.SOPInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.StudyInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.SeriesInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.FrameofReferenceUID = '1.2.3' #!!!!!!!!!
+		ds.SeriesDate = '19010101' #!!!!!!!!
+		ds.ContentDate = '19010101' #!!!!!!
+		ds.StudyDate = '19010101' #!!!!!!!
+		ds.SeriesTime = '000000' #!!!!!!!!!
+		ds.StudyTime = '000000' #!!!!!!!!!!
+		ds.ContentTime = '000000' #!!!!!!!!!
+		ds.PhotometricInterpretation = 'MONOCHROME2'
+	 	ds.SamplesPerPixel = 1
+		ds.ImageOrientationPatient = ['1' '0' '0' '0' '1' '0']	
+		ds.Rows = self.dimx
+		ds.Columns = self.dimy
+		ds.SliceThickness = self.slice_distance
+		ds.PatientPosition = 'HFS'
+		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
+		return ds
 	def read_trip_header(self,content):
 		i = 0
 		self.header_set = True
@@ -256,6 +293,7 @@ class Cube(object):
 		self.dicom_set_z_table(dcm)
 		self.set_byteorder()
 		self.set_format_str()
+		self.header_set = True
 	def dicom_set_z_table(self,dcm):
 		self.slice_pos = []
 		for i in range(len(dcm["images"])):

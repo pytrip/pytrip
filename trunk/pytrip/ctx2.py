@@ -26,35 +26,31 @@ class CtxCube(Cube):
 		for i in range(len(dcm["images"])):
 			self.cube.append(dcm["images"][i].pixel_array)
 	def create_dicom(self):
+		data = []
 		if _dicom_loaded is False:
 			raise ModuleNotLoadedError, "Dicom"
 		if self.header_set is False:
 			raise InputError, "Header not loaded"
-		meta = Dataset()
-		meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
-		meta.MediaStorageSOPInstanceUID = "1.2.3"
-		meta.ImplementationClassUID = "1.2.3.4"
-		ds = FileDataset("", {}, file_meta=meta, preamble="\0"*128)
-		ds.Modality = 'CT'
-		ds.file_meta.TransferSyntaxUID = dicom.UID.ExplicitVRBigEndian
-		ds.PatientsName = self.patient_name
-		ds.PatientID = "123456"
-		ds.is_little_endian = True
-		ds.is_implicit_VR = True
-		ds.Rows = self.dimx
-		ds.Columns = self.dimy
-		ds.SliceThickness = self.slice_distance
-		ds.BitsAllocated = self.num_bytes*8
-		ds.BitsStored = self.num_bytes*8
-		ds.InstanceNumber = '1'
-		ds.ImagePositionPatient = [self.xoffset*self.pixel_size, self.yoffset*self.pixel_size, self.zoffset*self.slice_distance]
-		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
-		pixel_array = numpy.zeros((ds.Rows,ds.Columns),dtype=self.pydata_type)
-		for i in range(self.dimx):
-			for j in range(self.dimy):
-				pixel_array[i][j] = self.cube[0][i][j]
-		ds.PixelData = pixel_array.tostring()
-		return ds
-					
-			
-
+		
+		for i in range(len(self.cube)):
+			ds = self.create_dicom_base()
+			ds.Modality = 'CT'
+	 		ds.SamplesPerPixel = 1
+			ds.BitsAllocated = self.num_bytes*8
+			ds.BitsStored = self.num_bytes*8
+			ds.PatientPosition = 'HFS'
+			ds.RescaleIntercept = 0
+			ds.RescaleSlope = 1
+			ds.PixelRepresentation = 1
+			ds.ImagePositionPatient = ["%.3f"%(self.xoffset*self.pixel_size), "%.3f"%(self.yoffset*self.pixel_size), "%.3f"%(self.slice_pos[i])]
+			ds.SliceLocation = str(self.slice_pos[i])
+			ds.InstanceNumber = str(i+1)
+			pixel_array = numpy.zeros((ds.Rows,ds.Columns),dtype=self.pydata_type)
+			pixel_array[:][:] = self.cube[0][:][:]
+			ds.PixelData = pixel_array.tostring()
+			data.append(ds)
+		return data
+	def write_dicom(self,path):
+		dcm_list = self.create_dicom()
+		for i in range(len(dcm_list)):
+			dcm_list[i].save_as(os.path.join(path,"ct.%d.dcm"%(dcm_list[i].InstanceNumber-1)))
