@@ -7,10 +7,18 @@ from error import *
 import res.point
 import struct
 from numpy import *
+from dicom.dataset import Dataset,FileDataset
+from dicom.sequence import Sequence
+
 
 __author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
+try:
+	import dicom
+	_dicom_loaded = True
+except:
+	_dicom_loaded = False
 
 class VdxCube:
 	def __init__(self,content,cube = None):
@@ -21,6 +29,7 @@ class VdxCube:
 		if not data.has_key("rtss"):
 			raise InputError, "Input is not a valid rtss structure"
 		dcm = data["rtss"]
+		self.version = "2.0"
 		for i in range(len(dcm.ROIContours)):
 			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel)
 			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
@@ -72,12 +81,92 @@ class VdxCube:
 	def write_to_trip(self,path):
 		self.concat_contour()
 		self.write_to_voxel(path)
+	def create_dicom(self):
+		if _dicom_loaded is False:
+			raise ModuleNotLoadedError, "Dicom"
+		meta = Dataset()
+		meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+		meta.MediaStorageSOPInstanceUID = "1.2.3"
+		meta.ImplementationClassUID = "1.2.3.4"
+		ds = FileDataset("file", {}, file_meta=meta, preamble="\0"*128)
+		if self.cube is not None:
+			ds.PatientsName = self.patient_name
+		else:
+			ds.PatientsName = ""
+		ds.PatientID = "123456"
+		ds.PatientsSex = '0'
+		ds.PatientsBirthDate = '19010101'
+		ds.SpecificCharacterSet = 'ISO_IR 100'
+		ds.AccessionNumber = ''  
+		ds.is_little_endian = True
+		ds.is_implicit_VR = True
+		ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' 
+		ds.SOPInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.StudyInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.SeriesInstanceUID = '1.2.3' #!!!!!!!!!!
+		ds.FrameofReferenceUID = '1.2.3' #!!!!!!!!!
+		ds.SeriesDate = '19010101' #!!!!!!!!
+		ds.ContentDate = '19010101' #!!!!!!
+		ds.StudyDate = '19010101' #!!!!!!!
+		ds.SeriesTime = '000000' #!!!!!!!!!
+		ds.StudyTime = '000000' #!!!!!!!!!!
+		ds.ContentTime = '000000' #!!!!!!!!!
+		ds.StructureSetLabel = ''
+		ds.StructureSetDate = ''
+		ds.StructureSetTime = ''
+		ds.Modality = 'RTSTRUCT'
+		roi_label_list = []
+		roi_data_list = []
+		roi_structure_roi_list = []
+
+		for i in range(self.number_of_vois()):
+			roi_label = self.vois[i].create_dicom_label()
+			roi_label.ObservationNumber = str(i+1)
+			roi_label.ReferencedROINumber = str(i+1)
+			roi_label.RefdROINumber = str(i+1)
+			roi_contours = self.vois[i].create_dicom_contour_data()
+			roi_contours.RefdROINumber = str(i+1)
+			roi_contours.ReferencedROINumber = str(i+1)
+
+			roi_structure_roi = self.vois[i].create_dicom_structure_roi()
+			roi_structure_roi.ROINumber = str(i+1)
+
+			roi_structure_roi_list.append(roi_structure_roi)
+			roi_label_list.append(roi_label)
+			roi_data_list.append(roi_contours)
+		ds.RTROIObservations = Sequence(roi_label_list)
+		ds.ROIContours = Sequence(roi_data_list)
+		ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+		return ds
+
+	def write_dicom(self,path):
+		dcm = self.create_dicom()
+		dcm.save_as(os.path.join(path,"rtss.dcm"))
 class Voi:
 	def __init__(self,name):
 		self.name = name
 		self.type = 90
 		self.slice_z = []
 		self.slices = {}
+	def create_dicom_label(self):
+		roi_label = Dataset()
+		roi_label.ROIObservationLabel = self.name
+		roi_label.RTROIInterpretedType = self.get_roi_type_name(self.type)
+		return roi_label
+	def create_dicom_structure_roi(self):
+		roi = Dataset()
+		roi.ROIName = self.name
+		return roi	
+	def create_dicom_contour_data(self):
+		roi_contours = Dataset()
+		contours = []
+		for k in self.slices:
+			contours.extend(self.slices[k].create_dicom_contours())
+		roi_contours.Contours = Sequence(contours)
+		roi_contours.ROIDisplayColor = [255,204,255]
+
+		return roi_contours
+
 	def read_vdx_old(self,content,i):
 		line = content[i]
 		items = line.split()
@@ -85,7 +174,7 @@ class Voi:
 	def read_vdx(self,content,i):
 		line = content[i]
 		self.name = line.split()[1]
-		number_of_slices = 0
+		number_of_slices = 10000
 		i+=1
 		while i < len(content):
 			line = content[i]
@@ -108,25 +197,33 @@ class Voi:
 				break
 			i += 1
 		return i-1
-
+	def get_roi_type_number(self,type_name):
+		if type_name == 'EXTERNAL':
+			return 10
+		elif type_name == 'AVOIDANCE':
+			return 2
+		elif type_name == 'ORGAN':
+			return 2
+		elif type_name == 'GTV':
+			return 1
+		elif type_name == 'CTV':
+			return 1
+		else:
+			return 90
+	def get_roi_type_name(self,type_id):
+		if type_id == 10:
+			return "EXTERNAL"
+		elif type_id == 2:
+			return 'AVOIDANCE'
+		elif type_id == 1:
+			return 'CTV'
+		return '' 
 	def read_dicom(self,info,data):
 		if not data.has_key("Contours"):
 			return
 		self.name = info.ROIObservationLabel
 		type_name = info.RTROIInterpretedType
-		if type_name == 'EXTERNAL':
-			self.type = 10
-		elif type_name == 'AVOIDANCE':
-			self.type  = 2
-		elif type_name == 'ORGAN':
-			self.type = 2
-		elif type_name == 'GTV':
-			self.type = 1
-		elif type_name == 'CTV':
-			self.type = 1
-		else:
-			self.type = 90
-			
+		self.type = self.get_roi_type_number(typename)
 		for i in range(len(data.Contours)):
 			key = int(data.Contours[i].ContourData[2])
 			if not self.slices.has_key(key):
@@ -206,12 +303,23 @@ class Slice:
 				self.add_contour(c)
 			elif re.match("slice",line) is not None:
 				break
-			elif len(self.contour >= number_of_contours):
+			elif self.contour >= number_of_contours:
 				break
 			i += 1
 		return i-1
-
-
+	def create_dicom_contours(self):
+		contour_list = []
+		for i in range(len(self.contour)):
+			con = Dataset()
+			contour = []
+			for p in self.contour[i].contour:
+				contour.extend([p[0],p[1],p[2]])
+			con.ContourData = contour
+			con.ContourGeometricType = 'CLOSED_PLANAR'
+			con.NumberofContourPoints = self.contour[i].number_of_points() 
+			contour_list.append(con)
+		return contour_list
+		
 	def to_voxel_string(self):
 		out = ""
 		for i in range(len(self.contour)):
@@ -302,8 +410,13 @@ class Contour:
 				if(d == -1 or d_temp < d):
 					d = d_temp
 					child = i
-			self.children[0].merge(self.children[child])
-			self.children.pop(child)
+			i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour,self.contour)
+			if d_temp < d:
+				self.merge(self.children[0])
+				self.children.pop(0)
+			else:
+				self.children[0].merge(self.children[child])
+				self.children.pop(child)
 		if(len(self.children) == 1):
 			self.merge(self.children[0])
 			self.children.pop(0)

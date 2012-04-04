@@ -14,7 +14,7 @@ __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
 
 from hed import Header
-from ctx import CtxCube
-from dos import DoseCube
-from vdx import Vdx
+from ctx2 import CtxCube
+from dos2 import DosCube
+from vdx2 import VdxCube
 from get_dvh  import GetDvh

@@ -20,6 +20,8 @@ class CtxCube(Cube):
 		super(CtxCube,self).__init__(cube)
 		self.type = "CTX"
 	def read_dicom(self,dcm):
+		if not dcm.has_key("images"):
+			raise InputError, "Data doesn't contain ct data"
 		if self.header_set is False:
 			self.read_dicom_header(dcm)
 		self.cube = []
@@ -35,18 +37,31 @@ class CtxCube(Cube):
 		for i in range(len(self.cube)):
 			ds = self.create_dicom_base()
 			ds.Modality = 'CT'
-	 		ds.SamplesPerPixel = 1
+	 		ds.SamplesperPixel = 1
 			ds.BitsAllocated = self.num_bytes*8
 			ds.BitsStored = self.num_bytes*8
+			ds.HighBit = self.num_bytes*8-1
 			ds.PatientPosition = 'HFS'
-			ds.RescaleIntercept = 0
-			ds.RescaleSlope = 1
+			ds.RescaleIntercept = 0.0
+			ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
+
+			ds.PatientPosition = 'HFS'
+			ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43' #!!!!!!!!!!
+			ds.RescaleSlope = 1.0
 			ds.PixelRepresentation = 1
 			ds.ImagePositionPatient = ["%.3f"%(self.xoffset*self.pixel_size), "%.3f"%(self.yoffset*self.pixel_size), "%.3f"%(self.slice_pos[i])]
+			ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+			ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i+1) 
+			
+			ds.SeriesDate = '19010101' #!!!!!!!!
+			ds.ContentDate = '19010101' #!!!!!!
+			ds.SeriesTime = '000000' #!!!!!!!!!
+			ds.ContentTime = '000000' #!!!!!!!!!
+
 			ds.SliceLocation = str(self.slice_pos[i])
 			ds.InstanceNumber = str(i+1)
 			pixel_array = numpy.zeros((ds.Rows,ds.Columns),dtype=self.pydata_type)
-			pixel_array[:][:] = self.cube[0][:][:]
+			pixel_array[:][:] = self.cube[i][:][:]
 			ds.PixelData = pixel_array.tostring()
 			data.append(ds)
 		return data

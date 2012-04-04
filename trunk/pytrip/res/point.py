@@ -39,5 +39,16 @@ def short_distance_polygon_idx(poly1,poly2):
 		if d2 < d:
 			i1 = i
 			d = d2
+	for i in range(n2):
+		d1 = (poly2[i][0]-poly1[i1][0])**2+(poly2[i][1]-poly1[i1][1])**2
+		if d1 < d:
+			i2 = i
+			d = d1
+	for i in range(n1):
+		d2 = (poly2[i2][0]-poly1[i][0])**2+(poly2[i2][1]-poly1[i][1])**2
+		if d2 < d:
+			i1 = i
+			d = d2
+
 	return (i1,i2,float(d)**0.5)
 	

@@ -6,7 +6,7 @@ def compare_dicom_ct(dcm1,dcm2):
 	if diff > 0:
 		return 1
 	return -1
-def import_dicom_folder(path):
+def read_dicom_folder(path):
 	if os.path.isdir(path) is False:
 		raise IOError, "Folder does not exist"
 	data = {}

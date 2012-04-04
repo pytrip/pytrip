@@ -1,7 +1,8 @@
 import os,re,string,sys
 from error import *
 from struct import *
-from numpy import *
+import numpy as np
+import array
 from dicom.dataset import Dataset,FileDataset
 try:
 	import dicom
@@ -34,7 +35,10 @@ class Cube(object):
 			self.dimy = cube.dimy
 			self.zoffset = cube.zoffset
 			self.dimz = cube.dimz
-			self.z_table = cube.z_table 
+			self.z_table = cube.z_table
+			self.slice_pos = cube.slice_pos
+			self.set_format_str()
+			self.set_number_of_bytes()
 		else:
 			self.header_set = False
 			self.version = ""
@@ -106,21 +110,21 @@ class Cube(object):
 		if self.data_type == "integer":
 			if self.num_bytes==1:
 				self.format_str += "b"
-				self.pydata_type = int8
+				self.pydata_type = np.int8
 			if self.num_bytes==2:
 				self.format_str +="h"
-				self.pydata_type = int16
+				self.pydata_type = np.int16
 			if self.num_bytes==4:
 				self.format_str +="i"
-				self.pydata_type = int32
+				self.pydata_type = np.int32
 		elif self.data_type == "float":
 			if self.num_bytes==4:
 				self.format_str +="f"
-				self.pydata_type = float
+				self.pydata_type = np.float
 		elif self.data_type == "double":
 			if self.num_bytes==8:
 				self.format_str +="d"
-				self.pydata_type = double
+				self.pydata_type = np.double
 		else:
 			print "Format:", self.byte_order, self.data_type, self.num_bytes
 			raise IOError, "Unsupported format."
@@ -134,31 +138,27 @@ class Cube(object):
 		meta.MediaStorageSOPInstanceUID = "1.2.3"
 		meta.ImplementationClassUID = "1.2.3.4"
 		ds = FileDataset("file", {}, file_meta=meta, preamble="\0"*128)
-		ds.Modality = 'CT'
 		ds.PatientsName = self.patient_name
 		ds.PatientID = "123456"
 		ds.PatientsSex = '0'
 		ds.PatientsBirthDate = '19010101'
+		ds.SpecificCharacterSet = 'ISO_IR 100'
+		ds.AccessionNumber = ''  
 		ds.is_little_endian = True
 		ds.is_implicit_VR = True
 		ds.SOPClassUID = '1.2.3' #!!!!!!!!
 		ds.SOPInstanceUID = '1.2.3' #!!!!!!!!!!
 		ds.StudyInstanceUID = '1.2.3' #!!!!!!!!!!
-		ds.SeriesInstanceUID = '1.2.3' #!!!!!!!!!!
 		ds.FrameofReferenceUID = '1.2.3' #!!!!!!!!!
-		ds.SeriesDate = '19010101' #!!!!!!!!
-		ds.ContentDate = '19010101' #!!!!!!
 		ds.StudyDate = '19010101' #!!!!!!!
-		ds.SeriesTime = '000000' #!!!!!!!!!
 		ds.StudyTime = '000000' #!!!!!!!!!!
-		ds.ContentTime = '000000' #!!!!!!!!!
 		ds.PhotometricInterpretation = 'MONOCHROME2'
 	 	ds.SamplesPerPixel = 1
-		ds.ImageOrientationPatient = ['1' '0' '0' '0' '1' '0']	
+		ds.ImageOrientationPatient = ['1','0','0','0','1','0']	
 		ds.Rows = self.dimx
 		ds.Columns = self.dimy
 		ds.SliceThickness = self.slice_distance
-		ds.PatientPosition = 'HFS'
+
 		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
 		return ds
 	def read_trip_header(self,content):
@@ -242,29 +242,35 @@ class Cube(object):
 		so = Struct(self.format_str[0]+self.format_str[1]*self.dimx)
 		start=0
 		bytes_line = self.dimx*self.num_bytes
+		"""values = array.array(self.format_str[1])
+		fp = open(path,"rb")
+		values.read(fp,self.dimx*self.dimy*self.dimz)
+		fp.close()
+		ar = np.array(values)
+		ar = ar.astype(float)
+		cube = ar.reshape(102,256,256)"""
 		for i in range(self.dimz):
 			cube.append([])
 			for j in range(self.dimy):
 				cube[i].append([])
-				cube[i][j] = array(so.unpack(data[start:start+bytes_line]))
+				cube[i][j] = np.array(so.unpack(data[start:start+bytes_line]))
 				cube[i][j].astype(float)
 				start += bytes_line
-
 		self.cube = cube
 	def set_data_type(self,type):
-		if (type is int8):
+		if (type is np.int8):
 			self.data_type = "integer"
 			self.num_bytes = 1
-		elif(type is int16):
+		elif(type is np.int16):
 			self.data_type = "integer"
 			self.num_bytes = 2
-		elif(type is int32):
+		elif(type is np.int32):
 			self.data_type = "integer"
 			self.num_bytes = 4
-		elif(type is float):
+		elif(type is np.float):
 			self.data_type = "float"
 			self.num_bytes = 4
-		elif(type is double):
+		elif(type is np.double):
 			self.data_type = "double"
 			self.num_bytes = 8
 						
