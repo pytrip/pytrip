@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resource>
+  <object class="wxDialog" name="AptgExportDialog" subclass="TripExport.aptg_export.AptgExportDialog">
+    <object class="wxBoxSizer">
+      <orient>wxVERTICAL</orient>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <object class="sizeritem">
+            <object class="wxBoxSizer">
+              <object class="sizeritem">
+                <object class="wxTextCtrl" name="txtDICOMFolder">
+                  <style>wxTE_READONLY</style>
+                </object>
+                <option>1</option>
+                <flag>wxALIGN_LEFT|wxALIGN_CENTRE_VERTICAL</flag>
+              </object>
+              <object class="spacer">
+                <size>5,0</size>
+              </object>
+              <object class="sizeritem">
+                <object class="wxButton" name="btnFolderBrowse">
+                  <label>&amp;Browse...</label>
+                </object>
+              </object>
+            </object>
+            <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+          </object>
+          <label>Folder for Anonymized DICOM Files</label>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+        <border>3</border>
+      </object>
+      <object class="spacer">
+        <size>0,5</size>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <object class="sizeritem">
+            <object class="wxTextCtrl" name="txtName">
+		</object>
+            <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+          </object>
+          <label>Filename for output files</label>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+        <border>3</border>
+      </object>
+      <object class="spacer">
+        <size>0,5</size>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStaticBoxSizer">
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="checkDOS">
+              <label>DOS file</label>
+              <checked>1</checked>
+            </object>
+          </object>
+          <object class="sizeritem">
+            <object class="wxCheckBox" name="checkCTX">
+              <label>CTX file</label>
+              <checked>1</checked>
+            </object>
+          </object>
+		  <object class="sizeritem">
+            <object class="wxCheckBox" name="checkVDX">
+              <label>VDX file</label>
+              <checked>1</checked>
+            </object>
+          </object>
+          <label>Options</label>
+          <orient>wxVERTICAL</orient>
+        </object>
+        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+        <border>3</border>
+      </object>
+      <object class="spacer">
+        <size>0,5</size>
+      </object>
+      <object class="sizeritem">
+        <object class="wxStdDialogButtonSizer">
+          <object class="button">
+            <object class="wxButton" name="wxID_CANCEL">
+              <label>Cancel</label>
+            </object>
+          </object>
+          <object class="button">
+            <object class="wxButton" name="wxID_OK">
+              <label>Generate</label>
+              <default>1</default>
+              <focused>1</focused>
+            </object>
+          </object>
+        </object>
+        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+        <border>3</border>
+      </object>
+      <title>APTG CTX export</title>
+      <centered>1</centered>
+      <style>wxDEFAULT_DIALOG_STYLE</style>
+    </object>
+  </object>
+</resource>
