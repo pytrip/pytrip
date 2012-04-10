@@ -242,13 +242,6 @@ class Cube(object):
 		so = Struct(self.format_str[0]+self.format_str[1]*self.dimx)
 		start=0
 		bytes_line = self.dimx*self.num_bytes
-		"""values = array.array(self.format_str[1])
-		fp = open(path,"rb")
-		values.read(fp,self.dimx*self.dimy*self.dimz)
-		fp.close()
-		ar = np.array(values)
-		ar = ar.astype(float)
-		cube = ar.reshape(102,256,256)"""
 		for i in range(self.dimz):
 			cube.append([])
 			for j in range(self.dimy):
@@ -296,11 +289,11 @@ class Cube(object):
 		self.zoffset = int(round(ds.ImagePositionPatient[2]/ds.SliceThickness))
 		self.dimz = len(dcm["images"])
 		self.z_table = True
-		self.dicom_set_z_table(dcm)
+		self.set_z_table(dcm)
 		self.set_byteorder()
 		self.set_format_str()
 		self.header_set = True
-	def dicom_set_z_table(self,dcm):
+	def set_z_table(self,dcm):
 		self.slice_pos = []
 		for i in range(len(dcm["images"])):
 			self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))

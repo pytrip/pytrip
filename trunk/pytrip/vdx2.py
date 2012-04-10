@@ -19,7 +19,13 @@ try:
 	_dicom_loaded = True
 except:
 	_dicom_loaded = False
+"""
+VdxCube is the master class for dealing with vois structures, a vdxcube object contains VoiCube objects which represent a VOI, it 
+could be ex a lung or the tumor.
+The VoiCube contains Slices which correnspons to the CT slices, and the slices contains contour object, which contains the contour data, a slice can contain multiple, since TRiP only support one contour per slice for each voi, it is necessary to merge contour
 
+VdxCube can import both dicom data and TRiP data, and export in the thoose formats.
+"""
 class VdxCube:
 	def __init__(self,content,cube = None):
 		self.vois = []
@@ -58,7 +64,8 @@ class VdxCube:
 			if re.match("voi",line) is not None:
 					v = Voi("")
 					if self.version == "1.2":
-						i = v.read_vdx_old(content,i)
+						if not line.split()[5] == '0':
+							i = v.read_vdx_old(content,i)
 					else:
 						i = v.read_vdx(content,i)
 					self.add_voi(v)
@@ -170,7 +177,21 @@ class Voi:
 	def read_vdx_old(self,content,i):
 		line = content[i]
 		items = line.split()
-		
+		self.name = items[1]
+		self.type = int(items[3])
+		i+=1
+		slices = 10000
+		while i < len(content):
+			line = content[i]
+			if re.match("voi",line) is not None:
+				break
+			if re.match("#TransversalObjects",line) is not None
+				slices = int(line.split()[1])
+			if re.match("slice#")
+			i += 1
+		print items
+		return i-1
+			
 	def read_vdx(self,content,i):
 		line = content[i]
 		self.name = line.split()[1]
