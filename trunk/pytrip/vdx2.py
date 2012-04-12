@@ -185,9 +185,8 @@ class Voi:
 			line = content[i]
 			if re.match("voi",line) is not None:
 				break
-			if re.match("#TransversalObjects",line) is not None
+			if re.match("#TransversalObjects",line) is not None:
 				slices = int(line.split()[1])
-			if re.match("slice#")
 			i += 1
 		print items
 		return i-1
@@ -380,7 +379,7 @@ class Contour:
 		while i < len(content):
 			line = content[i]
 			if set_point:
-				if j >= points:
+				if j >= points-1:
 					break
 				con_dat = line.split()
 				self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
