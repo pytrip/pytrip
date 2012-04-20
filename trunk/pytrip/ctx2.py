@@ -25,8 +25,12 @@ class CtxCube(Cube):
 		if self.header_set is False:
 			self.read_dicom_header(dcm)
 		self.cube = []
+		intersect = dcm["images"][0].RescaleIntercept;
+		slope = dcm["images"][0].RescaleSlope;
+		print intersect;
 		for i in range(len(dcm["images"])):
-			self.cube.append(dcm["images"][i].pixel_array)
+			data = numpy.array(dcm["images"][i].pixel_array)*slope+intersect
+			self.cube.append(data)
 	def create_dicom(self):
 		data = []
 		if _dicom_loaded is False:
@@ -63,6 +67,7 @@ class CtxCube(Cube):
 			pixel_array = numpy.zeros((ds.Rows,ds.Columns),dtype=self.pydata_type)
 			pixel_array[:][:] = self.cube[i][:][:]
 			ds.PixelData = pixel_array.tostring()
+			ds.pixel_array = pixel_array
 			data.append(ds)
 		return data
 	def write_dicom(self,path):

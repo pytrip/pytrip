@@ -146,6 +146,7 @@ class Cube(object):
 		ds.AccessionNumber = ''  
 		ds.is_little_endian = True
 		ds.is_implicit_VR = True
+		ds.file_meta.TransferSyntaxUID = dicom.UID.ImplicitVRLittleEndian
 		ds.SOPClassUID = '1.2.3' #!!!!!!!!
 		ds.SOPInstanceUID = '1.2.3' #!!!!!!!!!!
 		ds.StudyInstanceUID = '1.2.3' #!!!!!!!!!!
@@ -251,13 +252,13 @@ class Cube(object):
 				start += bytes_line
 		self.cube = cube
 	def set_data_type(self,type):
-		if (type is np.int8):
+		if (type is np.int8 or type is np.uint8):
 			self.data_type = "integer"
 			self.num_bytes = 1
-		elif(type is np.int16):
+		elif(type is np.int16 or type is np.uint16):
 			self.data_type = "integer"
 			self.num_bytes = 2
-		elif(type is np.int32):
+		elif(type is np.int32 or type is np.uint32):
 			self.data_type = "integer"
 			self.num_bytes = 4
 		elif(type is np.float):

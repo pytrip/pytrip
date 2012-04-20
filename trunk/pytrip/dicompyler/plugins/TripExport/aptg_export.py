@@ -22,13 +22,19 @@ def pluginProperties():
 
 class plugin:
 	def __init__(self,parent):
+
 		self.parent = parent
-		pub.subscribe(self.on_update_patient,"patient.updated.raw_data")    
+
+		pub.subscribe(self.on_update_patient,"patient.updated.raw_data")
+
 		datapath = guiutil.get_data_dir()
 		userpath = os.path.join(datapath, 'plugins/TripExport/aptg_export.xrc');
+
+
 		self.res = XmlResource(userpath)
 	def on_update_patient(self,msg):
-		self.data = msg.data;
+		self.data = msg.data
+
 	def pluginMenu(self,evt):
 		data = self.data
 		dlgAptgDialog = self.res.LoadDialog(self.parent,"AptgExportDialog")
@@ -67,12 +73,11 @@ class plugin:
 		if dialog.set_vdx:
 			vdx = pytrip.vdx2.VdxCube("")
 			wx.CallAfter(progressFunc, 5, length,"Convert dicom to vdx")
-			try:
-				vdx.read_dicom(data)
-				wx.CallAfter(progressFunc, 6, length,"Write Vdx data")
-				vdx.write_to_trip(fullpath + ".vdx")
-			except:
-				print "No Contour data"
+			
+			vdx.read_dicom(data)
+			wx.CallAfter(progressFunc, 6, length,"Write Vdx data")
+			vdx.write_to_trip(fullpath + ".vdx")
+			print "No Contour data"
 			wx.CallAfter(progressFunc, 7, length,"Done")
 
 

@@ -251,6 +251,8 @@ class Voi:
 				self.slice_z.append(key)
 			self.slices[key].add_dicom_contour(data.Contours[i])
 	def get_thickness(self):
+		if len(self.slice_z) <= 1:
+			return 3
 		return abs(float(self.slice_z[1])-float(self.slice_z[0]))
 	def to_voxel_string(self):
 		if len(self.slices) is 0:
