@@ -19,8 +19,8 @@ def point_in_polygon(x,y,polygon):
 			return True
 	else:
 			return False 
-def array_to_point_array(points):
-	point = [[points[3*i],points[3*i+1],points[3*i+2]] for i in range(len(points)/3)]
+def array_to_point_array(points,offset):
+	point = [[points[3*i]-offset[0],points[3*i+1]-offset[1],points[3*i+2]] for i in range(len(points)/3)]
 	return point
 #find a short distance problaby not the shortest
 def short_distance_polygon_idx(poly1,poly2):

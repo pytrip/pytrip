@@ -71,7 +71,7 @@ class plugin:
 			except:
 				print "No Dose data"
 		if dialog.set_vdx:
-			vdx = pytrip.vdx2.VdxCube("")
+			vdx = pytrip.vdx2.VdxCube("",ctx)
 			wx.CallAfter(progressFunc, 5, length,"Convert dicom to vdx")
 			
 			vdx.read_dicom(data)

@@ -37,7 +37,7 @@ class VdxCube:
 		dcm = data["rtss"]
 		self.version = "2.0"
 		for i in range(len(dcm.ROIContours)):
-			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel)
+			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
 			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
 			self.add_voi(v)
 	def import_vdx(self,path):
@@ -150,7 +150,8 @@ class VdxCube:
 		dcm = self.create_dicom()
 		dcm.save_as(os.path.join(path,"rtss.dcm"))
 class Voi:
-	def __init__(self,name):
+	def __init__(self,name,cube=None):
+		self.cube= cube
 		self.name = name
 		self.type = 90
 		self.slice_z = []
@@ -247,7 +248,7 @@ class Voi:
 		for i in range(len(data.Contours)):
 			key = int(data.Contours[i].ContourData[2])
 			if not self.slices.has_key(key):
-				self.slices[key] = Slice()
+				self.slices[key] = Slice(self.cube)
 				self.slice_z.append(key)
 			self.slices[key].add_dicom_contour(data.Contours[i])
 	def get_thickness(self):
@@ -288,13 +289,18 @@ class Voi:
 		for k in self.slices.keys():
 			self.slices[k].concat_contour()
 class Slice:
-	def __init__(self):
+	def __init__(self,cube = None):
+		self.cube = cube
 		self.contour = []
 		return
 	def add_contour(self,contour):
 		self.contour.append(contour)
 	def add_dicom_contour(self,dcm):
-		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData)))
+		offset = [];
+		offset.append(self.cube.xoffset*self.cube.pixel_size)
+		offset.append(self.cube.yoffset*self.cube.pixel_size)
+			
+		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData,offset)))
 	def get_position(self):
 		if len(self.contour) == 0:
 			return None
@@ -359,7 +365,8 @@ class Slice:
 			self.contour.pop(i)
 		self.contour[0].concat()
 class Contour:
-	def __init__(self,contour):
+	def __init__(self,contour,cube=None):
+		self.cube = cube
 		self.children = []
 		self.contour = contour
 	def push(self,contour):

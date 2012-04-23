@@ -158,7 +158,7 @@ class Cube(object):
 		ds.ImageOrientationPatient = ['1','0','0','0','1','0']	
 		ds.Rows = self.dimx
 		ds.Columns = self.dimy
-		ds.SliceThickness = self.slice_distance
+		ds.SliceThickness = str(self.slice_distance)
 
 		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
 		return ds
