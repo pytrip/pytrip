@@ -31,6 +31,7 @@ class CtxCube(Cube):
 		for i in range(len(dcm["images"])):
 			data = numpy.array(dcm["images"][i].pixel_array)*slope+intersect
 			self.cube.append(data)
+	
 	def create_dicom(self):
 		data = []
 		if _dicom_loaded is False:

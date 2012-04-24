@@ -4,7 +4,7 @@
 
 import os, re, sys
 from error import *
-import res.point
+import res.point,string
 import struct
 from numpy import *
 from dicom.dataset import Dataset,FileDataset
@@ -40,6 +40,7 @@ class VdxCube:
 			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
 			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
 			self.add_voi(v)
+	
 	def import_vdx(self,path):
 		fp = open(path,"r")
 		vdx_data = fp.read().split('\n')
@@ -194,7 +195,7 @@ class Voi:
 			
 	def read_vdx(self,content,i):
 		line = content[i]
-		self.name = line.split()[1]
+		self.name = string.join(line.split()[1:],' ')
 		number_of_slices = 10000
 		i+=1
 		while i < len(content):
@@ -275,9 +276,11 @@ class Voi:
 		i = 0
 		thickness = self.get_thickness()
 		for k in self.slice_z:
+			sl = self.slices[k]
+			pos = sl.get_position()
 			out += "slice %d\n"%i
-			out += "slice_in_frame %.3f\n"%k
-			out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n"%(thickness,k-0.5*thickness,k+0.5*thickness)
+			out += "slice_in_frame %.3f\n"%pos
+			out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n"%(thickness,pos-0.5*thickness,pos+0.5*thickness)
 			out += "number_of_contours %d\n"%self.slices[k].number_of_contours()
 			out += self.slices[k].to_voxel_string()
 			i += 1
@@ -297,9 +300,9 @@ class Slice:
 		self.contour.append(contour)
 	def add_dicom_contour(self,dcm):
 		offset = [];
-		offset.append(self.cube.xoffset*self.cube.pixel_size)
-		offset.append(self.cube.yoffset*self.cube.pixel_size)
-			
+		offset.append(0)
+		offset.append(0)
+		offset.append(0)
 		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData,offset)))
 	def get_position(self):
 		if len(self.contour) == 0:
@@ -353,7 +356,7 @@ class Slice:
 		for i in range(len(self.contour)):
 			out += "contour %d\n"%i
 			out += "internal false\n"
-			out += "number_of_points %d\n"%self.contour[i].number_of_points()
+			out += "number_of_points %d\n"%(self.contour[i].number_of_points()+1)
 			out += self.contour[i].to_voxel_string()
 			out += "\n"
 		return out

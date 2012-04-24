@@ -42,22 +42,21 @@ class plugin:
 		if dlgAptgDialog.ShowModal() == wx.ID_OK:
 			fullpath = os.path.join(dlgAptgDialog.path,dlgAptgDialog.filename)
 			dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Creating Trip files ...")
-			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,data,fullpath,dlgProgress.OnUpdateProgress))
+			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,data,dlgAptgDialog.filename,fullpath,dlgProgress.OnUpdateProgress))
 			self.t.start()
 			dlgProgress.ShowModal()
 			dlgProgress.Destroy()
 		else:
 			pass
 		dlgAptgDialog.Destroy()
-	def CreateOutputThread(self,dialog,data,fullpath,progressFunc):
+	def CreateOutputThread(self,dialog,data,filename,fullpath,progressFunc):
 		length = 7
 		if dialog.set_ctx:
 			ctx = pytrip.ctx2.CtxCube()
 			wx.CallAfter(progressFunc, 1, length,"Convert dicom to ctx")
 			try:
 				ctx.read_dicom(data)
-				wx.CallAfter(progressFunc, 2, length,"Write header file")
-				ctx.write_trip_header(fullpath + ".hed")
+				ctx.patient_name = filename
 				wx.CallAfter(progressFunc, 3, length,"Write Ctx data")
 				ctx.write_trip_data(fullpath + ".ctx")
 			except:
@@ -77,8 +76,9 @@ class plugin:
 			vdx.read_dicom(data)
 			wx.CallAfter(progressFunc, 6, length,"Write Vdx data")
 			vdx.write_to_trip(fullpath + ".vdx")
-			print "No Contour data"
-			wx.CallAfter(progressFunc, 7, length,"Done")
+			wx.CallAfter(progressFunc, 6, length,"Write header file")
+		ctx.write_trip_header(fullpath + ".hed")
+		wx.CallAfter(progressFunc, 7, length,"Done")
 
 
 class AptgExportDialog(wx.Dialog):
