@@ -48,7 +48,7 @@ class plugin:
 				patient["images"] = c.create_dicom()
 			if os.path.isfile(path + ".ctx"):
 				d = pytrip.dos2.DosCube()
-				d.read_trip_data_file(path + ".ctx")
+				d.read_trip_data_file(path + ".dos")
 				patient["rtdose"] = d.create_dicom()
 				patient["rtplan"] = d.create_dicom_plan()
 
