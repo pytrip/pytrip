@@ -50,6 +50,7 @@ class plugin:
 				d = pytrip.dos2.DosCube()
 				d.read_trip_data_file(path + ".ctx")
 				patient["rtdose"] = d.create_dicom()
+				patient["rtplan"] = d.create_dicom_plan()
 
 			if os.path.isfile(path + ".vdx"):
 				v = pytrip.vdx2.VdxCube("")

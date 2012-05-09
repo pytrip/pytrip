@@ -55,6 +55,13 @@ class DosCube(Cube):
 		structure_ref.RefdSOPInstanceUID = '1.2.3'
 		ds.RefdStructureSets = Sequence([structure_ref])
 
+		dose_ref = Dataset()
+		dose_ref.DoseReferenceNumber = 1
+		dose_ref.DoseReferenceStructureType = 'SITE'
+		dose_ref.DoseReferenceType = 'TARGET'
+		dose_ref.TargetPrescriptionDose = 3.0 #Stupid
+		dose_ref.DoseReferenceDescription = "TUMOR"
+		ds.DoseReferences = Sequence([dose_ref])
 		return ds
 	def create_dicom(self):
 		if _dicom_loaded is False:
