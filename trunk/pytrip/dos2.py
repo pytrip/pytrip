@@ -78,7 +78,7 @@ class DosCube(Cube):
 		ds.SeriesDescription = 'RT Dose'
 		ds.DoseUnits = 'GY'
 		ds.DoseType = 'PHYSICAL'
-		ds.DoseGridScaling = 1e-2
+		ds.DoseGridScaling = 1.0/1000
 		ds.DoseSummationType = 'PLAN'
 		ds.SliceThickness = ''
 		ds.InstanceCreationDate = '19010101'

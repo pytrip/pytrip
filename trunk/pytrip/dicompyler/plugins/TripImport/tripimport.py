@@ -46,12 +46,12 @@ class plugin:
 				c = pytrip.ctx2.CtxCube()
 				c.read_trip_data_file(path + ".ctx")
 				patient["images"] = c.create_dicom()
-			if os.path.isfile(path + ".ctx"):
+			if os.path.isfile(path + ".dos"):
 				d = pytrip.dos2.DosCube()
 				d.read_trip_data_file(path + ".dos")
 				patient["rtdose"] = d.create_dicom()
 				patient["rtplan"] = d.create_dicom_plan()
-
+				patient["rxdose"] = 100.0
 			if os.path.isfile(path + ".vdx"):
 				v = pytrip.vdx2.VdxCube("")
 				v.import_vdx(path + ".vdx")

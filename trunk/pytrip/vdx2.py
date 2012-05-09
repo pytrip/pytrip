@@ -31,15 +31,16 @@ class VdxCube:
 		self.vois = []
 		self.cube = cube
 		self.version = "1.2"
-	def read_dicom(self,data):
+	def read_dicom(self,data,structure_ids = None):
 		if not data.has_key("rtss"):
 			raise InputError, "Input is not a valid rtss structure"
 		dcm = data["rtss"]
 		self.version = "2.0"
 		for i in range(len(dcm.ROIContours)):
-			v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
-			v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
-			self.add_voi(v)
+			if structure_ids is None or dcm.ROIContours[i].RefdROINumber in structure_ids:
+				v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
+				v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
+				self.add_voi(v)
 		self.cube.xoffset = 0
 		self.cube.yoffset = 0
 		self.cube.zoffset = 0

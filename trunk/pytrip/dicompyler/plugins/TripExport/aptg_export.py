@@ -26,15 +26,18 @@ class plugin:
 		self.parent = parent
 
 		pub.subscribe(self.on_update_patient,"patient.updated.raw_data")
+		pub.subscribe(self.on_structure_change,"structures.checked")
 
 		datapath = guiutil.get_data_dir()
 		userpath = os.path.join(datapath, 'plugins/TripExport/aptg_export.xrc');
-
+		self.structures = {}
 
 		self.res = XmlResource(userpath)
+	def on_structure_change(self,msg):
+		self.structures = msg.data;
 	def on_update_patient(self,msg):
 		self.data = msg.data
-
+		
 	def pluginMenu(self,evt):
 		data = self.data
 		dlgAptgDialog = self.res.LoadDialog(self.parent,"AptgExportDialog")
@@ -42,21 +45,23 @@ class plugin:
 		if dlgAptgDialog.ShowModal() == wx.ID_OK:
 			fullpath = os.path.join(dlgAptgDialog.path,dlgAptgDialog.filename)
 			dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Creating Trip files ...")
-			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,data,dlgAptgDialog.filename,fullpath,dlgProgress.OnUpdateProgress))
+			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,data,self.structures,dlgAptgDialog.filename,fullpath,dlgProgress.OnUpdateProgress))
 			self.t.start()
 			dlgProgress.ShowModal()
 			dlgProgress.Destroy()
 		else:
 			pass
 		dlgAptgDialog.Destroy()
-	def CreateOutputThread(self,dialog,data,filename,fullpath,progressFunc):
+	def CreateOutputThread(self,dialog,data,structures,filename,fullpath,progressFunc):
 		length = 7
+		ctx = pytrip.ctx2.CtxCube()
+		wx.CallAfter(progressFunc, 1, length,"Convert dicom to ctx")
+		ctx.read_dicom(data)
+		ctx.patient_name = filename
+
 		if dialog.set_ctx:
-			ctx = pytrip.ctx2.CtxCube()
-			wx.CallAfter(progressFunc, 1, length,"Convert dicom to ctx")
+		
 			try:
-				ctx.read_dicom(data)
-				ctx.patient_name = filename
 				wx.CallAfter(progressFunc, 3, length,"Write Ctx data")
 				ctx.write_trip_data(fullpath + ".ctx")
 			except:
@@ -73,7 +78,7 @@ class plugin:
 			vdx = pytrip.vdx2.VdxCube("",ctx)
 			wx.CallAfter(progressFunc, 5, length,"Convert dicom to vdx")
 			
-			vdx.read_dicom(data)
+			vdx.read_dicom(data,structures.keys())
 			wx.CallAfter(progressFunc, 6, length,"Write Vdx data")
 			vdx.write_to_trip(fullpath + ".vdx")
 			wx.CallAfter(progressFunc, 6, length,"Write header file")
