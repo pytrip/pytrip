@@ -1,105 +1,315 @@
-<?xml version="1.0" encoding="ISO-8859-1"?>
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <resource>
   <object class="wxDialog" name="AptgExportDialog" subclass="TripExport.aptg_export.AptgExportDialog">
-    <object class="wxBoxSizer">
-      <orient>wxVERTICAL</orient>
-      <object class="sizeritem">
-        <object class="wxStaticBoxSizer">
-          <object class="sizeritem">
-            <object class="wxBoxSizer">
-              <object class="sizeritem">
-                <object class="wxTextCtrl" name="txtDICOMFolder">
-                  <style>wxTE_READONLY</style>
-                </object>
-                <option>1</option>
-                <flag>wxALIGN_LEFT|wxALIGN_CENTRE_VERTICAL</flag>
-              </object>
-              <object class="spacer">
-                <size>5,0</size>
-              </object>
-              <object class="sizeritem">
-                <object class="wxButton" name="btnFolderBrowse">
-                  <label>&amp;Browse...</label>
-                </object>
-              </object>
-            </object>
-            <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-          </object>
-          <label>Folder for Anonymized DICOM Files</label>
-          <orient>wxVERTICAL</orient>
-        </object>
-        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-        <border>3</border>
-      </object>
-      <object class="spacer">
-        <size>0,5</size>
-      </object>
-      <object class="sizeritem">
-        <object class="wxStaticBoxSizer">
-          <object class="sizeritem">
-            <object class="wxTextCtrl" name="txtName">
+   <style>wxDEFAULT_DIALOG_STYLE</style>
+		<title>TRiP Export</title>
+		<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND | wxALL</flag>
+				<border>5</border>
+				<object class="wxNotebook" name="tabsTripExport">
+					<object class="notebookpage">
+						<label>General</label>
+						<selected>1</selected>
+						<object class="wxPanel" name="tabGeneral">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxALL|wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxStaticBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<label>Output folder</label>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+											<border>0</border>
+											<object class="wxBoxSizer">
+												<orient></orient>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxALIGN_LEFT|wxALL|wxLEFT</flag>
+													<border>0</border>
+													<object class="wxTextCtrl" name="txtDICOMFolder">
+														<style>wxTE_READONLY</style>
+														<size>300,-1</size>
+														<value></value>
+														<maxlength>0</maxlength>
+													</object>
+												</object>
+												<object class="spacer">
+													<option>0</option>
+													<flag>wxEXPAND</flag>
+													<border>0</border>
+													<size>5,0</size>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL|wxLEFT</flag>
+													<border>0</border>
+													<object class="wxButton" name="btnFolderBrowse">
+														<label>Browse...</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>0</option>
+									<flag></flag>
+									<border>0</border>
+									<size>0,5</size>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+									<border>3</border>
+									<object class="wxStaticBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<label>Filename for output files</label>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+											<border>0</border>
+											<object class="wxTextCtrl" name="txtName">
+												<value></value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>0</option>
+									<flag></flag>
+									<border>0</border>
+									<size>0,5</size>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
+									<border>3</border>
+									<object class="wxStaticBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<label>Options</label>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag></flag>
+											<border>0</border>
+											<object class="wxCheckBox" name="checkDOS">
+												<label>DOS file</label>
+												<checked>1</checked>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag></flag>
+											<border>0</border>
+											<object class="wxCheckBox" name="checkCTX">
+												<label>CTX file</label>
+												<checked>1</checked>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag></flag>
+											<border>0</border>
+											<object class="wxCheckBox" name="checkVDX">
+												<label>VDX file</label>
+												<checked>1</checked>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>0</option>
+									<flag></flag>
+									<border>0</border>
+									<size>0,5</size>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxEXPAND|wxFIXED_MINSIZE</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_CENTER_HORIZONTAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="wxID_OK">
+												<label>Export</label>
+												<default>0</default>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="notebookpage">
+						<label>Dose Cube</label>
+						<selected>0</selected>
+						<object class="wxPanel" name="tabDose">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxStaticBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<label>Generate Dose cube</label>
+										<object class="sizeritem">
+											<option>1</option>
+											<flag>wxALL|wxEXPAND</flag>
+											<border>0</border>
+											<object class="wxBoxSizer">
+												<orient>wxHORIZONTAL</orient>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag>wxALL|wxEXPAND|wxLEFT</flag>
+													<border>0</border>
+													<object class="wxTextCtrl" name="m_textCtrl3">
+														<style>wxTE_READONLY</style>
+														<size>300,-1</size>
+														<value></value>
+														<maxlength>0</maxlength>
+													</object>
+												</object>
+												<object class="spacer">
+													<option>0</option>
+													<flag>wxEXPAND</flag>
+													<border>5</border>
+													<size>5,0</size>
+												</object>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL</flag>
+													<border>0</border>
+													<object class="wxButton" name="btnDosecubeFolder">
+														<label>Browse...</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="spacer">
+									<option>0</option>
+									<flag>wxEXPAND</flag>
+									<border>0</border>
+									<size>0,5</size>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxALL|wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxStaticBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<label>Set Target Dose</label>
+										<object class="sizeritem">
+											<option>1</option>
+											<flag>wxEXPAND</flag>
+											<border>0</border>
+											<object class="wxGridSizer">
+												<rows>1</rows>
+												<cols>2</cols>
+												<vgap>0</vgap>
+												<hgap>0</hgap>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALL|wxEXPAND</flag>
+													<border>0</border>
+													<object class="wxCheckListBox" name="listStructures">
+														<content />
+													</object>
+												</object>
+												<object class="sizeritem">
+													<option>1</option>
+													<flag></flag>
+													<border>5</border>
+													<object class="wxBoxSizer">
+														<orient>wxVERTICAL</orient>
+														<object class="sizeritem">
+															<option>0</option>
+															<flag>wxALL</flag>
+															<border>5</border>
+															<object class="wxStaticText" name="m_staticText1">
+																<label>Target Dose</label>
+																<wrap>-1</wrap>
+															</object>
+														</object>
+														<object class="sizeritem">
+															<option>1</option>
+															<flag></flag>
+															<border>5</border>
+															<object class="wxBoxSizer">
+																<orient>wxHORIZONTAL</orient>
+																<object class="sizeritem">
+																	<option>0</option>
+																	<flag>wxALL|wxTOP</flag>
+																	<border>5</border>
+																	<object class="wxTextCtrl" name="m_textCtrl5">
+																		<value></value>
+																		<maxlength>0</maxlength>
+																	</object>
+																</object>
+																<object class="sizeritem">
+																	<option>0</option>
+																	<flag>wxALIGN_CENTER_VERTICAL|wxALL|wxTOP</flag>
+																	<border>5</border>
+																	<object class="wxStaticText" name="m_staticText2">
+																		<label>cGy</label>
+																		<wrap>-1</wrap>
+																	</object>
+																</object>
+																<object class="sizeritem">
+																	<option>0</option>
+																	<flag>wxALL</flag>
+																	<border>5</border>
+																	<object class="wxButton" name="btnSetDose">
+																		<label>Set</label>
+																		<default>0</default>
+																	</object>
+																</object>
+															</object>
+														</object>
+													</object>
+												</object>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxEXPAND</flag>
+											<border>5</border>
+											<object class="wxBoxSizer">
+												<orient>wxVERTICAL</orient>
+												<object class="sizeritem">
+													<option>0</option>
+													<flag>wxALIGN_CENTER|wxALL</flag>
+													<border>5</border>
+													<object class="wxButton" name="m_button11">
+														<label>Generate</label>
+														<default>0</default>
+													</object>
+												</object>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
 		</object>
-            <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-          </object>
-          <label>Filename for output files</label>
-          <orient>wxVERTICAL</orient>
-        </object>
-        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-        <border>3</border>
-      </object>
-      <object class="spacer">
-        <size>0,5</size>
-      </object>
-      <object class="sizeritem">
-        <object class="wxStaticBoxSizer">
-          <object class="sizeritem">
-            <object class="wxCheckBox" name="checkDOS">
-              <label>DOS file</label>
-              <checked>1</checked>
-            </object>
-          </object>
-          <object class="sizeritem">
-            <object class="wxCheckBox" name="checkCTX">
-              <label>CTX file</label>
-              <checked>1</checked>
-            </object>
-          </object>
-		  <object class="sizeritem">
-            <object class="wxCheckBox" name="checkVDX">
-              <label>VDX file</label>
-              <checked>1</checked>
-            </object>
-          </object>
-          <label>Options</label>
-          <orient>wxVERTICAL</orient>
-        </object>
-        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-        <border>3</border>
-      </object>
-      <object class="spacer">
-        <size>0,5</size>
-      </object>
-      <object class="sizeritem">
-        <object class="wxStdDialogButtonSizer">
-          <object class="button">
-            <object class="wxButton" name="wxID_CANCEL">
-              <label>Cancel</label>
-            </object>
-          </object>
-          <object class="button">
-            <object class="wxButton" name="wxID_OK">
-              <label>Generate</label>
-              <default>1</default>
-              <focused>1</focused>
-            </object>
-          </object>
-        </object>
-        <flag>wxALL|wxEXPAND|wxALIGN_CENTRE</flag>
-        <border>3</border>
-      </object>
-      <title>APTG CTX export</title>
-      <centered>1</centered>
-      <style>wxDEFAULT_DIALOG_STYLE</style>
-    </object>
   </object>
 </resource>

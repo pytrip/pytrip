@@ -20,6 +20,7 @@ class DosCube(Cube):
 	def __init__(self,cube = None):
 		super(DosCube,self).__init__(cube)
 		self.type = "DOS"
+                self.target_dose = 0
 	def read_dicom(self,dcm):
 		if not dcm.has_key("rtdose"):
 			raise InputError, "Data doesn't contain dose infomation"
@@ -59,7 +60,7 @@ class DosCube(Cube):
 		dose_ref.DoseReferenceNumber = 1
 		dose_ref.DoseReferenceStructureType = 'SITE'
 		dose_ref.DoseReferenceType = 'TARGET'
-		dose_ref.TargetPrescriptionDose = 3.0 #Stupid
+		dose_ref.TargetPrescriptionDose = self.target_dose
 		dose_ref.DoseReferenceDescription = "TUMOR"
 		ds.DoseReferences = Sequence([dose_ref])
 		return ds
@@ -78,7 +79,7 @@ class DosCube(Cube):
 		ds.SeriesDescription = 'RT Dose'
 		ds.DoseUnits = 'GY'
 		ds.DoseType = 'PHYSICAL'
-		ds.DoseGridScaling = 1.0/1000
+		ds.DoseGridScaling = self.target_dose/10**5
 		ds.DoseSummationType = 'PLAN'
 		ds.SliceThickness = ''
 		ds.InstanceCreationDate = '19010101'

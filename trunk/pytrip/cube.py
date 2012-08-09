@@ -10,8 +10,6 @@ try:
 except:
 	_dicom_loaded = False
 
-
-
 class Cube(object):
 	def __init__(self,cube = None):
 		if cube is not None:
@@ -61,6 +59,39 @@ class Cube(object):
 			self.zoffset = ""
 			self.dimz = ""
 			self.z_table = False     # list of slice#,pos(mm),thickness(mm),tilt
+        def indices_to_pos(self,indices):
+                pos = []
+                pos.append((indices[0]+0.5)*self.pixel_size+self.xoffset)
+                pos.append((indices[1]+0.5)*self.pixel_size+self.yoffset)
+                pos.append(indices[2]*self.slice_distance+self.zoffset)
+                return pos
+        def pos_to_indices(self,pos):
+                indices = []
+                indices.append(pos[0]/self.pixel_size-self.xoffset/self.pixel_size)
+                indices.append(pos[1]/self.pixel_size-self.yoffset/self.pixel_size)
+                indices.append(pos[2]/self.slice_distance-self.zoffset/self.slice_distance)
+                return indices
+        
+        
+        def load_from_structure(self,voi,preset = 0):      
+                data = np.zeros((self.dimz,self.dimy,self.dimx))
+                if preset != 0:
+                        for i_z in range(self.dimz):
+                                for i_y in range(self.dimy):
+                                        intersection = voi.get_row_intersections(self.indices_to_pos([0,i_y,i_z]))
+                                        if intersection is None:
+                                                break;
+                                        if len(intersection) > 0:
+                                                k = 0
+                                                for i_x in range(self.dimx):
+                                                        if self.indices_to_pos([i_x,0,0])[0] > intersection[k]:
+                                                                k = k+1
+                                                                if k >= (len(intersection)):
+                                                                        break;
+                                                        if k%2 == 1:
+                                                                data[i_z][i_y][i_x] = preset
+                self.cube = data
+                                               
  	def write_trip_header(self,path):
 		output_str = "version "+self.version+"\n"
 		output_str += "modality "+self.modality+"\n"
@@ -77,11 +108,11 @@ class Cube(object):
 		output_str += "pixel_size " + str(self.pixel_size) + "\n"
 		output_str += "slice_distance " + str(self.slice_distance) + "\n"
 		output_str += "slice_number " + str(self.slice_number) + "\n"
-		output_str += "xoffset " + str(self.xoffset) + "\n"
+		output_str += "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
 		output_str += "dimx " + str(self.dimx) + "\n"
-		output_str += "yoffset " + str(self.yoffset) + "\n"
+		output_str += "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
 		output_str += "dimy " + str(self.dimy) + "\n"
-		output_str += "zoffset " + str(self.zoffset) + "\n"
+		output_str += "zoffset " + str(int(round(self.zoffset/self.slice_distance))) + "\n"
 		output_str += "dimz " + str(self.dimz) + "\n"
 		if self.z_table is True:
 			output_str += "z_table yes\n"
@@ -164,10 +195,13 @@ class Cube(object):
 
 		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
 		return ds
+        def merge(self,cube):
+                self.cube = np.maximum(self.cube,cube.cube)
 	def read_trip_header(self,content):
 		i = 0
 		self.header_set = True
 		content = content.split('\n')
+                has_ztable = False
 		while i < len(content):
 			if re.match("version", content[i]) is not None:
 				self.version= content[i].split()[1]
@@ -211,11 +245,17 @@ class Cube(object):
 				self.dimz = int(content[i].split()[1])
 			if re.match("slice_no", content[i]) is not None:
 				self.slice_pos = map(float,range(self.slice_number))
+                                has_ztable = True
 				i += 1
 				for j in range(self.slice_number):
 					self.slice_pos[j] = float(content[i].split()[1])
 					i += 1
 			i += 1
+                self.zoffset = self.zoffset*self.slice_distance
+                if has_ztable is not True:
+                        self.slice_pos = map(float,range(self.slice_number))
+                        for i in range(self.slice_number):
+                                self.slice_pos[i] = self.zoffset+i*self.slice_distance
 		self.set_format_str()
 		self.set_number_of_bytes()
 			
@@ -275,8 +315,7 @@ class Cube(object):
 			raise ModuleNotLoadedError, "Dicom"
 		ds = dcm["images"][0]
 		self.version = "1.4"
-		_s = "%s %s ConvolutionKernel %s" %(ds.Manufacturer,ds.ManufacturersModelName,ds.ConvolutionKernel)
-		self.created_by = string.replace(_s," ","-")
+		self.created_by = "pytrip"
 		self.creation_info = "created by pytrip;"
 		self.primary_view = "transversal"
 		self.set_data_type(type(ds.pixel_array[0][0]))
@@ -285,11 +324,11 @@ class Cube(object):
 		self.pixel_size = ds.PixelSpacing[0]
 		self.slice_distance = ds.SliceThickness
 		self.slice_number = len(dcm["images"])
-		self.xoffset = int(round(ds.ImagePositionPatient[0]/ds.PixelSpacing[0]))
+		self.xoffset = ds.ImagePositionPatient[0]
 		self.dimx = ds.Rows
-		self.yoffset = int(round(ds.ImagePositionPatient[1]/ds.PixelSpacing[1]))
+		self.yoffset = ds.ImagePositionPatient[1]
 		self.dimy = ds.Columns
-		self.zoffset = int(round(ds.ImagePositionPatient[2]/ds.SliceThickness))
+		self.zoffset = ds.ImagePositionPatient[2]
 		self.dimz = len(dcm["images"])
 		self.z_table = True
 		self.set_z_table(dcm)

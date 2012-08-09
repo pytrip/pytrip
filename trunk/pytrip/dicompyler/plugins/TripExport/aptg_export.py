@@ -35,13 +35,13 @@ class plugin:
 		self.res = XmlResource(userpath)
 	def on_structure_change(self,msg):
 		self.structures = msg.data;
+
 	def on_update_patient(self,msg):
 		self.data = msg.data
 		
 	def pluginMenu(self,evt):
-		data = self.data
 		dlgAptgDialog = self.res.LoadDialog(self.parent,"AptgExportDialog")
-		dlgAptgDialog.init()
+		dlgAptgDialog.init(self.structures)
 		if dlgAptgDialog.ShowModal() == wx.ID_OK:
 			fullpath = os.path.join(dlgAptgDialog.path,dlgAptgDialog.filename)
 			dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Creating Trip files ...")
@@ -90,20 +90,32 @@ class AptgExportDialog(wx.Dialog):
 	def __init__(self):
 		pre = wx.PreDialog()
 		self.PostCreate(pre)
-	def init(self):
+	def init(self,data):
+                self.data = data
 		self.txtDICOMFolder = XRCCTRL(self,'txtDICOMFolder')
 		self.btnFolderBrowse = XRCCTRL(self,'btnFolderBrowse')
 		self.txtName = XRCCTRL(self,'txtName');
 		self.check_dos = XRCCTRL(self,'checkDOS');
 		self.check_ctx = XRCCTRL(self,'checkCTX');
 		self.check_vdx = XRCCTRL(self,'checkVDX');
-
+                self.listStructures = XRCCTRL(self,'listStructures')
+                self.btnSetDose = XRCCTRL(self,'btnSetDose')
 		
 		wx.EVT_BUTTON(self,XRCID('btnFolderBrowse'),self.on_folder_browse)
 		wx.EVT_BUTTON(self,wx.ID_OK,self.on_generate)
-		
+                wx.EVT_BUTTON(self,XRCID('btnSetDose'),self.on_dose_set)
+
+                wx.EVT_LISTBOX(self,XRCID('listStructures'),self.list_structures_item_selected)
+
+                for item in data:
+                        self.listStructures.Append(data[item]["name"])
+
 		pub.subscribe(self.on_import_prefs_change, 'general.dicom.import_location')	
 		pub.sendMessage('preferences.requested.value', 'general.dicom.import_location')
+        def on_dose_set(self,evt):
+                print "set"
+        def list_structures_item_selected(self,evt):
+                print "test"
  
 	def on_folder_browse(self,evt):
 		dlg = wx.DirDialog(

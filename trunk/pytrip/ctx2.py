@@ -33,6 +33,7 @@ class CtxCube(Cube):
 			self.cube.append(data)
 		if self.slice_pos[0] > self.slice_pos[1]:
 			self.slice_pos.reverse()
+                        self.zoffset = self.slice_pos[0]
 			self.cube.reverse()
 
 	

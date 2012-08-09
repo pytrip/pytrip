@@ -41,12 +41,9 @@ class VdxCube:
 				v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
 				v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
 				self.add_voi(v)
-		self.cube.xoffset = 0
-		self.cube.yoffset = 0
-		self.cube.zoffset = 0
-		shift = min(self.cube.slice_pos)
+		"""shift = min(self.cube.slice_pos)
 		for i in range(len(self.cube.slice_pos)):
-			self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift
+			self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 			
 	def import_vdx(self,path):
 		fp = open(path,"r")
@@ -139,7 +136,7 @@ class VdxCube:
 			roi_label.ObservationNumber = str(i+1)
 			roi_label.ReferencedROINumber = str(i+1)
 			roi_label.RefdROINumber = str(i+1)
-			roi_contours = self.vois[i].create_dicom_contour_data()
+			roi_contours = self.vois[i].create_dicom_contour_data(i)
 			roi_contours.RefdROINumber = str(i+1)
 			roi_contours.ReferencedROINumber = str(i+1)
 
@@ -164,6 +161,17 @@ class Voi:
 		self.type = 90
 		self.slice_z = []
 		self.slices = {}
+                self.define_colors()
+        def define_colors(self):
+                self.colors = []
+                self.colors.append([0,0,255])
+                self.colors.append([0,128,0])
+                self.colors.append([0,255,0])
+                self.colors.append([255,0,0])
+                self.colors.append([0,128,128])
+                self.colors.append([255,255,0])
+        def get_color(self,i):
+                return self.colors[i%len(self.colors)]
 	def create_dicom_label(self):
 		roi_label = Dataset()
 		roi_label.ROIObservationLabel = self.name
@@ -173,13 +181,13 @@ class Voi:
 		roi = Dataset()
 		roi.ROIName = self.name
 		return roi	
-	def create_dicom_contour_data(self):
+	def create_dicom_contour_data(self,i):
 		roi_contours = Dataset()
 		contours = []
 		for k in self.slices:
 			contours.extend(self.slices[k].create_dicom_contours())
 		roi_contours.Contours = Sequence(contours)
-		roi_contours.ROIDisplayColor = [255,204,255]
+		roi_contours.ROIDisplayColor = self.get_color(i)
 
 		return roi_contours
 
@@ -306,10 +314,10 @@ class Slice:
 	def add_contour(self,contour):
 		self.contour.append(contour)
 	def add_dicom_contour(self,dcm):
-		offset = [];
-		offset.append(self.cube.xoffset*self.cube.pixel_size)
+		offset = [0,0,0];
+		"""offset.append(self.cube.xoffset*self.cube.pixel_size)
 		offset.append(self.cube.yoffset*self.cube.pixel_size)
-		offset.append(min(self.cube.slice_pos))
+		offset.append(min(self.cube.slice_pos))"""
 		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData,offset)))
 	def get_position(self):
 		if len(self.contour) == 0:
