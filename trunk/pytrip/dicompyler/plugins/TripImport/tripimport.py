@@ -42,16 +42,38 @@ class plugin:
                 dlgAptgDialog = self.res.LoadDialog(self.parent,"AptgImportDialog")
 		dlgAptgDialog.init()
 		if dlgAptgDialog.ShowModal() == wx.ID_OK:
-			dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Importing TRiP Files ...")
+			self.without_progress(dlgAptgDialog)
+			"""dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Importing TRiP Files ...")
 			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,dlgAptgDialog,dlgProgress.OnUpdateProgress))
 			self.t.start()
 			dlgProgress.ShowModal()
-			dlgProgress.Destroy()
+			dlgProgress.Destroy()"""
 
                        
 		else:
 			pass
 		dlgAptgDialog.Destroy()
+	def without_progress(self,dlgAptgDialog):
+		patient = {}
+		length = 3
+                if dlgAptgDialog.checkCTX.GetValue() is True:
+			c = pytrip.ctx2.CtxCube()
+			c.read_trip_data_file(dlgAptgDialog.cleanpath + ".ctx")
+			patient["images"] = c.create_dicom()
+                if dlgAptgDialog.checkDOS.GetValue() is True:
+			d = pytrip.dos2.DosCube()
+			d.read_trip_data_file(dlgAptgDialog.cleanpath + ".dos")
+			dose = dlgAptgDialog.txtDose.GetValue()
+                        d.target_dose = float(dose)
+			patient["rtdose"] = d.create_dicom()
+                        patient["rxdose"] = float(dose)
+                        patient["rtplan"] = d.create_dicom_plan()
+
+                if dlgAptgDialog.checkVDX.GetValue() is True:
+			v = pytrip.vdx2.VdxCube("")
+			v.import_vdx(dlgAptgDialog.cleanpath + ".vdx")
+			patient["rtss"] = v.create_dicom()
+		pub.sendMessage('patient.updated.raw_data', patient)
 	def CreateOutputThread(self,dialog,dlgAptgDialog,progressFunc):
 		 patient = {}
 		 length = 3

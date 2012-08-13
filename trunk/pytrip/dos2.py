@@ -88,7 +88,7 @@ class DosCube(Cube):
 		ds.PixelRepresentation = 0
 		ds.StudyID = '1'
 		ds.SeriesNumber = 14
-		ds.GridFrameOffsetVector = self.slice_pos
+		ds.GridFrameOffsetVector = [x*self.slice_distance for x in range(self.dimz)]
 		#ds.SeriesInstanceUID = '1.2.4' #!!!!!!!!!!
 		ds.InstanceNumber = ''
 		ds.NumberofFrames = len(self.cube)

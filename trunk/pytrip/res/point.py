@@ -22,6 +22,21 @@ def point_in_polygon(x,y,polygon):
 def array_to_point_array(points,offset):
 	point = [[points[3*i]-offset[0],points[3*i+1]-offset[1],points[3*i+2]-offset[2]] for i in range(len(points)/3)]
 	return point
+def get_x_intersection(y,polygon):
+       intersections = []
+       x1 = polygon[0][0] 
+       y1 = polygon[0][1]
+       n = len(polygon)
+       for i in range(n+1):
+               x2 = polygon[i%n][0]
+               y2 = polygon[i%n][1]
+               if y > min(y1,y2):
+                       if y <= max(y1,y2):
+                                x = (x2-x1)/(y2-y1)*(y-y1)+x1
+                                intersections.append(x)
+               x1 = x2
+               y1 = y2
+       return intersections
 #find a short distance problaby not the shortest
 def short_distance_polygon_idx(poly1,poly2):
 	d=10000000

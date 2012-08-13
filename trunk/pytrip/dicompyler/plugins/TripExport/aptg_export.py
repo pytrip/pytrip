@@ -45,7 +45,7 @@ class plugin:
 		if dlgAptgDialog.ShowModal() == wx.ID_OK:
 			fullpath = os.path.join(dlgAptgDialog.path,dlgAptgDialog.filename)
 			dlgProgress = guiutil.get_progress_dialog(wx.GetApp().GetTopWindow(),"Creating Trip files ...")
-			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,data,self.structures,dlgAptgDialog.filename,fullpath,dlgProgress.OnUpdateProgress))
+			self.t = threading.Thread(target=self.CreateOutputThread,args=(dlgAptgDialog,self.data,self.structures,dlgAptgDialog.filename,fullpath,dlgProgress.OnUpdateProgress))
 			self.t.start()
 			dlgProgress.ShowModal()
 			dlgProgress.Destroy()
@@ -53,7 +53,7 @@ class plugin:
 			pass
 		dlgAptgDialog.Destroy()
 	def CreateOutputThread(self,dialog,data,structures,filename,fullpath,progressFunc):
-		length = 7
+		length = 8
 		ctx = pytrip.ctx2.CtxCube()
 		wx.CallAfter(progressFunc, 1, length,"Convert dicom to ctx")
 		ctx.read_dicom(data)
@@ -82,6 +82,20 @@ class plugin:
 			wx.CallAfter(progressFunc, 6, length,"Write Vdx data")
 			vdx.write_to_trip(fullpath + ".vdx")
 			wx.CallAfter(progressFunc, 6, length,"Write header file")
+
+		if dialog.create_dose_cube:
+			vois = dialog.preset_dosecubes
+			if len(vois) > 0:
+				cubes = []
+				maxdose = vois[max(vois.iterkeys(), key=lambda k: vois[k])]
+				print maxdose
+				for voi,dose in vois.items():
+					cube = pytrip.dos2.DosCube(ctx)
+					cube.load_from_structure(vdx.get_voi_by_name(voi),dose/maxdose*1000)
+					cubes.append(cube)
+				for i in range(1,len(cubes)):
+					cubes[0].merge(cubes[i])
+				cubes[0].write_trip_data(fullpath + ".target_dose.dos")
 		ctx.write_trip_header(fullpath + ".hed")
 		wx.CallAfter(progressFunc, 7, length,"Done")
 
@@ -154,6 +168,7 @@ class AptgExportDialog(wx.Dialog):
 		self.set_vdx = self.check_vdx.IsChecked()
 		self.set_dos = self.check_dos.IsChecked()
 		self.set_ctx = self.check_ctx.IsChecked()
+		self.create_dose_cube = self.check_generate_dosecube.IsChecked()
 
 		self.EndModal(wx.ID_OK)	
 

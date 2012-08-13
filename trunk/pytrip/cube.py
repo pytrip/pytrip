@@ -59,20 +59,24 @@ class Cube(object):
 			self.zoffset = ""
 			self.dimz = ""
 			self.z_table = False     # list of slice#,pos(mm),thickness(mm),tilt
-        def indices_to_pos(self,indices):
-                pos = []
-                pos.append((indices[0]+0.5)*self.pixel_size+self.xoffset)
-                pos.append((indices[1]+0.5)*self.pixel_size+self.yoffset)
-                pos.append(indices[2]*self.slice_distance+self.zoffset)
-                return pos
-        def pos_to_indices(self,pos):
-                indices = []
-                indices.append(pos[0]/self.pixel_size-self.xoffset/self.pixel_size)
-                indices.append(pos[1]/self.pixel_size-self.yoffset/self.pixel_size)
-                indices.append(pos[2]/self.slice_distance-self.zoffset/self.slice_distance)
-                return indices
         
-        
+     	def indices_to_pos(self,indices):
+     		pos = []
+        	pos.append((indices[0]+0.5)*self.pixel_size+self.xoffset)
+        	pos.append((indices[1]+0.5)*self.pixel_size+self.yoffset)
+        	pos.append(indices[2]*self.slice_distance+self.zoffset)
+        	return pos
+    	def pos_to_indices(self,pos):
+        	indices = []
+        	indices.append(int(pos[0]/self.pixel_size-self.xoffset/self.pixel_size))
+        	indices.append(int(pos[1]/self.pixel_size-self.yoffset/self.pixel_size))
+       	 	indices.append(int(pos[2]/self.slice_distance-self.zoffset/self.slice_distance))
+        	return indices
+    	def get_value_at_indice(self,indices):
+        	return self.cube[indices[2]][indices[1]][indices[0]]
+    	def get_value_at_pos(self,pos):
+        	return self.get_value_at_indice(self.pos_to_indices(pos))
+
         def load_from_structure(self,voi,preset = 0):      
                 data = np.zeros((self.dimz,self.dimy,self.dimx))
                 if preset != 0:

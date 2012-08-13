@@ -52,6 +52,11 @@ class VdxCube:
 		self.read_vdx(vdx_data)
 	def add_voi(self,voi):
 		self.vois.append(voi)
+	def get_voi_by_name(self,name):
+        	for voi in self.vois:
+            		if voi.name.lower() == name.lower():
+                		return voi
+        	raise InputError("Voi doesn't exist")
 	def read_vdx(self,content):
 		i = 0
 		n = len(content)
@@ -300,7 +305,19 @@ class Voi:
 			out += self.slices[k].to_voxel_string()
 			i += 1
 		return out
-
+    	def get_row_intersections(self,pos):
+        	slice = self.get_slice_at_pos(pos[2])
+       		if slice is None:
+            		return None
+        	return sort(slice.get_intersections(pos))
+	def get_slice_at_pos(self,z):
+        	thickness = self.get_thickness()/2
+        	for key in self.slices.keys():
+            		low = z - thickness
+            		high = z + thickness
+            		if (low < key and z > key) or (high > key and z <= key):
+                		return self.slices[key]
+        	return None
 	def number_of_slices(self):
 		return len(self.slices)
 	def concat_contour(self):
@@ -323,6 +340,12 @@ class Slice:
 		if len(self.contour) == 0:
 			return None
 		return self.contour[0].contour[0][2]
+	def get_intersections(self,pos):
+	        intersections = []
+	        for c in self.contour:
+	            intersections.extend(res.point.get_x_intersection(pos[1],c.contour))
+	        return intersections
+	
 	def read_vdx(self,content,i):
 		line = content[i]
 		number_of_contours = 0
