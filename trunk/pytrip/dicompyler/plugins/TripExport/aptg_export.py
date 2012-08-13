@@ -92,30 +92,52 @@ class AptgExportDialog(wx.Dialog):
 		self.PostCreate(pre)
 	def init(self,data):
                 self.data = data
-		self.txtDICOMFolder = XRCCTRL(self,'txtDICOMFolder')
-		self.btnFolderBrowse = XRCCTRL(self,'btnFolderBrowse')
-		self.txtName = XRCCTRL(self,'txtName');
-		self.check_dos = XRCCTRL(self,'checkDOS');
-		self.check_ctx = XRCCTRL(self,'checkCTX');
-		self.check_vdx = XRCCTRL(self,'checkVDX');
-		self.listStructures = XRCCTRL(self,'listStructures')
-		self.btnSetDose = XRCCTRL(self,'btnSetDose')
-		wx.EVT_BUTTON(self,XRCID('btnFolderBrowse'),self.on_folder_browse)
-		wx.EVT_BUTTON(self,wx.ID_OK,self.on_generate)
-        	wx.EVT_BUTTON(self,XRCID('btnSetDose'),self.on_dose_set)
-
-        	wx.EVT_LISTBOX(self,XRCID('listStructures'),self.list_structures_item_selected)
-
-		self.structure_dose = {}		
-        	for item in data:
-                	self.listStructures.Append(data[item]["name"])
-
+                self.init_general_tab()
+		self.init_dosecube_tab()
+		
 		pub.subscribe(self.on_import_prefs_change, 'general.dicom.import_location')	
 		pub.sendMessage('preferences.requested.value', 'general.dicom.import_location')
+
+        def init_general_tab(self):
+                self.txtDICOMFolder = XRCCTRL(self,'txtDICOMFolder')
+		self.btnFolderBrowse = XRCCTRL(self,'btnFolderBrowse')
+		self.txtName = XRCCTRL(self,'txtName');
+		self.check_dos = XRCCTRL(self,'checkDOS')
+		self.check_ctx = XRCCTRL(self,'checkCTX')
+		self.check_vdx = XRCCTRL(self,'checkVDX')
+                wx.EVT_BUTTON(self,XRCID('btnFolderBrowse'),self.on_folder_browse)
+		wx.EVT_BUTTON(self,wx.ID_OK,self.on_submit)
+
+
+        def init_dosecube_tab(self):
+                self.listStructures = XRCCTRL(self,'listStructures')
+                self.txtTargetDose = XRCCTRL(self,'txtTargetDose')
+		self.btnSetDose = XRCCTRL(self,'btnSetDose')
+                self.panel_target_dose = XRCCTRL(self,'panel_target_dose')
+                self.check_generate_dosecube = XRCCTRL(self,'check_generate_dosecube')
+                self.panel_target_dose.Enable(0)
+
+                wx.EVT_BUTTON(self,XRCID('btnSetDose'),self.on_dose_set)
+        	wx.EVT_LISTBOX(self,XRCID('listStructures'),self.list_structures_item_selected)
+                wx.EVT_CHECKBOX(self,XRCID('check_generate_dosecube'),self.show_targetdose)
+                
+                self.preset_dosecubes = {}
+
+        	for item in self.data:
+                	self.listStructures.Append(self.data[item]["name"])
+        def show_targetdose(self,evt): 
+                if self.check_generate_dosecube.IsChecked():
+                        self.panel_target_dose.Enable(1)
+                else:
+                        self.panel_target_dose.Enable(0)
+                     
         def on_dose_set(self,evt):
-                print "set"
+                key =  self.listStructures.GetString(self.listStructures.GetSelection())
+                self.preset_dosecubes[key] = float(self.txtTargetDose.GetValue()) 
         def list_structures_item_selected(self,evt):
-		print "test"
+                self.txtTargetDose.SetValue("")
+                if evt.GetString() in self.preset_dosecubes:
+                        self.txtTargetDose.SetValue(str(self.preset_dosecubes[evt.GetString()]))
 	def on_folder_browse(self,evt):
 		dlg = wx.DirDialog(
 			self, defaultPath=self.path,
@@ -127,7 +149,7 @@ class AptgExportDialog(wx.Dialog):
 	def on_import_prefs_change(self,msg):
 		self.path = unicode(msg.data)
 		self.txtDICOMFolder.SetValue(self.path)
-	def on_generate(self,evt):
+	def on_submit(self,evt):
 		self.filename = self.txtName.GetValue();
 		self.set_vdx = self.check_vdx.IsChecked()
 		self.set_dos = self.check_dos.IsChecked()
