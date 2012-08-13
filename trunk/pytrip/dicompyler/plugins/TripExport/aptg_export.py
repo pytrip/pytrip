@@ -98,25 +98,24 @@ class AptgExportDialog(wx.Dialog):
 		self.check_dos = XRCCTRL(self,'checkDOS');
 		self.check_ctx = XRCCTRL(self,'checkCTX');
 		self.check_vdx = XRCCTRL(self,'checkVDX');
-                self.listStructures = XRCCTRL(self,'listStructures')
-                self.btnSetDose = XRCCTRL(self,'btnSetDose')
-		
+		self.listStructures = XRCCTRL(self,'listStructures')
+		self.btnSetDose = XRCCTRL(self,'btnSetDose')
 		wx.EVT_BUTTON(self,XRCID('btnFolderBrowse'),self.on_folder_browse)
 		wx.EVT_BUTTON(self,wx.ID_OK,self.on_generate)
-                wx.EVT_BUTTON(self,XRCID('btnSetDose'),self.on_dose_set)
+        	wx.EVT_BUTTON(self,XRCID('btnSetDose'),self.on_dose_set)
 
-                wx.EVT_LISTBOX(self,XRCID('listStructures'),self.list_structures_item_selected)
+        	wx.EVT_LISTBOX(self,XRCID('listStructures'),self.list_structures_item_selected)
 
-                for item in data:
-                        self.listStructures.Append(data[item]["name"])
+		self.structure_dose = {}		
+        	for item in data:
+                	self.listStructures.Append(data[item]["name"])
 
 		pub.subscribe(self.on_import_prefs_change, 'general.dicom.import_location')	
 		pub.sendMessage('preferences.requested.value', 'general.dicom.import_location')
         def on_dose_set(self,evt):
                 print "set"
         def list_structures_item_selected(self,evt):
-                print "test"
- 
+		print "test"
 	def on_folder_browse(self,evt):
 		dlg = wx.DirDialog(
 			self, defaultPath=self.path,
