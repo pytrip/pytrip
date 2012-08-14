@@ -59,6 +59,36 @@ class Cube(object):
 			self.zoffset = ""
 			self.dimz = ""
 			self.z_table = False     # list of slice#,pos(mm),thickness(mm),tilt
+        def __add__(self,other):
+                c = type(self)(self)
+                if type(other) is type(self):
+                        c.cube = other.cube+self.cube
+                else:
+                        c.cube = self.cube+float(other)
+                return c
+        def __sub__(self,other):
+                c = type(self)(self)
+                if type(other) is type(self):
+                        c.cube = other.cube-self.cube
+                else:
+                        c.cube = self.cube-float(other)
+                return c
+        def __mul__(self,other):
+                c = type(self)(self)
+                if type(other) is type(self):
+                        c.cube = other.cube*self.cube
+                else:
+                        c.cube = self.cube*float(other)
+                return c
+        def __div__(self,other):
+                c = type(self)(self)
+                if type(other) is type(self):
+                        c.cube = other.cube*self.cube
+                else:
+                        c.cube = self.cube*float(other)
+                return c
+
+
         
      	def indices_to_pos(self,indices):
      		pos = []
@@ -285,15 +315,13 @@ class Cube(object):
 		cube_size = len(data)/self.num_bytes
 		if(cube_size != self.dimx*self.dimy*self.dimz):
 			raise IOError, "Header size and dose cube size are not consistent."
-		cube = []
+		cube = np.zeros((self.dimz,self.dimy,self.dimx))
 		so = Struct(self.format_str[0]+self.format_str[1]*self.dimx)
 		start=0
 		bytes_line = self.dimx*self.num_bytes
 		for i in range(self.dimz):
-			cube.append([])
 			for j in range(self.dimy):
-				cube[i].append([])
-				cube[i][j] = np.array(so.unpack(data[start:start+bytes_line]))
+                                cube[i][j][:] = np.array(so.unpack(data[start:start+bytes_line]))
 				cube[i][j].astype(float)
 				start += bytes_line
 		self.cube = cube

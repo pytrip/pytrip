@@ -24,17 +24,16 @@ class CtxCube(Cube):
 			raise InputError, "Data doesn't contain ct data"
 		if self.header_set is False:
 			self.read_dicom_header(dcm)
-		self.cube = []
+		self.cube = np.zeros((self.dimz,self.dimy,self.dimx))
 		intersect = dcm["images"][0].RescaleIntercept;
 		slope = dcm["images"][0].RescaleSlope;
-		print intersect;
 		for i in range(len(dcm["images"])):
 			data = numpy.array(dcm["images"][i].pixel_array)*slope+intersect
-			self.cube.append(data)
+                        self.cube[i][:][:] = data
 		if self.slice_pos[0] > self.slice_pos[1]:
 			self.slice_pos.reverse()
                         self.zoffset = self.slice_pos[0]
-			self.cube.reverse()
+                        self.cube = self.cube[::-1]
 
 	
 	def create_dicom(self):

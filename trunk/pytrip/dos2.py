@@ -26,9 +26,9 @@ class DosCube(Cube):
 			raise InputError, "Data doesn't contain dose infomation"
 		if self.header_set is False:
 			self.read_dicom_header(dcm)
-		self.cube = []
+		self.cube = numpy.zeros((self.dimz,self.dimy,self.dimx))
 		for i in range(len(dcm["rtdose"].pixel_array)):
-			self.cube.append(dcm["rtdose"].pixel_array[i])
+                        self.cube[i][:][:] = dcm["rtdose"].pixel_array[i]
 	def create_dicom_plan(self):
 		meta = Dataset()
 		meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'

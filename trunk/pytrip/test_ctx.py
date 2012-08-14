@@ -3,11 +3,10 @@ from dos2 import *
 from vdx2 import *
 import dicomhelper as dh
 
-dcm = dh.read_dicom_folder("../../../DicomData/")
+dcm = dh.read_dicom_folder("../../../DicomData/Dicompyler/")
 c = CtxCube()
 c.read_dicom(dcm)
+print c.cube[50][100][100]
+d=c+5
 
-v = VdxCube("",c)
-v.read_dicom(dcm)
-
-c.write_dicom('../testfiles/')
+print d.cube[50][100][100]
