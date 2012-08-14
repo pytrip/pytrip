@@ -95,8 +95,8 @@ class plugin:
 					cubes.append(cube)
 				for i in range(1,len(cubes)):
 					cubes[0].merge(cubes[i])
-				cubes[0].write_trip_data(fullpath + ".target_dose.dos")
-		ctx.write_trip_header(fullpath + ".hed")
+				cubes[0].write_trip_data(fullpath + ".target_dose.dos")		
+				cubes[0].write_trip_header(fullpath + ".target_dose.hed")
 		wx.CallAfter(progressFunc, 7, length,"Done")
 
 
