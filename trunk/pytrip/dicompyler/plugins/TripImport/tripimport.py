@@ -62,7 +62,7 @@ class plugin:
 			patient["images"] = c.create_dicom()
                 if dlgAptgDialog.checkDOS.GetValue() is True:
 			d = pytrip.dos2.DosCube()
-			d.read_trip_data_file(dlgAptgDialog.cleanpath + ".dos")
+			d.read_trip_data_file(dlgAptgDialog.cleanpath + ".dos",dlgAptgDialog.check_multiply_dose.GetValue())
 			dose = dlgAptgDialog.txtDose.GetValue()
                         d.target_dose = float(dose)
 			patient["rtdose"] = d.create_dicom()
@@ -85,7 +85,7 @@ class plugin:
                  if dlgAptgDialog.checkDOS.GetValue() is True:
 			wx.CallAfter(progressFunc,2,length,"Import DOS")
 			d = pytrip.dos2.DosCube()
-			d.read_trip_data_file(dlgAptgDialog.cleanpath + ".dos")
+			d.read_trip_data_file(dlgAptgDialog.cleanpath + ".dos",dlgAptgDialog.check_multiply_dose.GetValue())
 			dose = dlgAptgDialog.txtDose.GetValue()
                         d.target_dose = float(dose)
 			patient["rtdose"] = d.create_dicom()
@@ -130,6 +130,7 @@ class AptgImportDialog(wx.Dialog):
                 self.checkVDX = XRCCTRL(self,'checkVDX')
                 self.checkLET = XRCCTRL(self,'checkLET')
                 self.txtDose = XRCCTRL(self,'txtDose')
+		self.check_multiply_dose = XRCCTRL(self,'check_multiply_dose')
 
                 self.labelCTX = XRCCTRL(self,'labelCTX')
                 self.labelDOS = XRCCTRL(self,'labelDOS')

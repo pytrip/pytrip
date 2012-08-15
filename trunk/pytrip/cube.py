@@ -302,7 +302,7 @@ class Cube(object):
 		content = fp.read()
 		fp.close()	
 		self.read_trip_header(content)
-	def read_trip_data_file(self,path):
+	def read_trip_data_file(self,path,multiply_by_2 = False):
 		if self.header_set is False:
 			self.read_trip_header_file(path)
 		if os.path.isfile(path) is False:
@@ -324,6 +324,8 @@ class Cube(object):
                                 cube[i][j][:] = np.array(so.unpack(data[start:start+bytes_line]))
 				cube[i][j].astype(float)
 				start += bytes_line
+		if multiply_by_2 is True:
+			cube = cube*2
 		self.cube = cube
 	def set_data_type(self,type):
 		if (type is np.int8 or type is np.uint8):
