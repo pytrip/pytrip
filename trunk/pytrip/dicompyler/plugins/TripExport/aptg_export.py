@@ -64,6 +64,7 @@ class plugin:
 			try:
 				wx.CallAfter(progressFunc, 3, length,"Write Ctx data")
 				ctx.write_trip_data(fullpath + ".ctx")
+				ctx.write_trip_header(fullpath + ".hed")
 			except:
 				print "No CT data"
 		if dialog.set_dos:
@@ -113,7 +114,7 @@ class AptgExportDialog(wx.Dialog):
 		pub.sendMessage('preferences.requested.value', 'general.dicom.import_location')
 
         def init_general_tab(self):
-                self.txtDICOMFolder = XRCCTRL(self,'txtDICOMFolder')
+                self.txtOutFolder = XRCCTRL(self,'txtOutFolder')
 		self.btnFolderBrowse = XRCCTRL(self,'btnFolderBrowse')
 		self.txtName = XRCCTRL(self,'txtName');
 		self.check_dos = XRCCTRL(self,'checkDOS')
@@ -158,11 +159,11 @@ class AptgExportDialog(wx.Dialog):
 			message="Choose a folder to save the CTX files")
 		if dlg.ShowModal() == wx.ID_OK:
 			self.path = dlg.GetPath()
-			self.txtOutputFolder = dlg.GetPath()
+			self.txtOutFolder.SetValue(dlg.GetPath())
 		dlg.Destroy()
 	def on_import_prefs_change(self,msg):
 		self.path = unicode(msg.data)
-		self.txtDICOMFolder.SetValue(self.path)
+		self.txtOutFolder.SetValue(self.path)
 	def on_submit(self,evt):
 		self.filename = self.txtName.GetValue();
 		self.set_vdx = self.check_vdx.IsChecked()

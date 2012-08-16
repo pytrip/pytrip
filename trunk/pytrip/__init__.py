@@ -17,4 +17,5 @@ from hed import Header
 from ctx2 import CtxCube
 from dos2 import DosCube
 from vdx2 import VdxCube
+from let import LETCube
 from get_dvh  import GetDvh

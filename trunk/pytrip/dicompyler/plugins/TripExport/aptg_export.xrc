@@ -34,7 +34,7 @@
 													<option>1</option>
 													<flag>wxALIGN_LEFT|wxALL|wxLEFT</flag>
 													<border>0</border>
-													<object class="wxTextCtrl" name="txtDICOMFolder">
+													<object class="wxTextCtrl" name="txtOutFolder">
 														<style>wxTE_READONLY</style>
 														<size>300,-1</size>
 														<value></value>

@@ -73,6 +73,10 @@ class plugin:
 			v = pytrip.vdx2.VdxCube("")
 			v.import_vdx(dlgAptgDialog.cleanpath + ".vdx")
 			patient["rtss"] = v.create_dicom()
+		if dlgAptgDialog.checkLET.GetValue() is True:
+			l = pytrip.let.LETCube()
+			l.read_trip_data_file(dlgAptgDialog.cleanpath + ".dosemlet.dos")
+			patient["letdata"] = l
 		pub.sendMessage('patient.updated.raw_data', patient)
 	def CreateOutputThread(self,dialog,dlgAptgDialog,progressFunc):
 		 patient = {}
@@ -189,10 +193,10 @@ class AptgImportDialog(wx.Dialog):
                                 self.checkVDX.Enable(1)
                                 self.checkVDX.SetValue(1)
                                 self.labelVDX.SetLabel(self.filename + ".vdx")
-                        if os.path.isfile(self.cleanpath + ".let"):
+                        if os.path.isfile(self.cleanpath + ".dosemlet.dos"):
                                 self.checkLET.Enable(1)
                                 self.checkLET.SetValue(1)
-                                self.labelLET.SetLabel(self.filename + ".let")
+                                self.labelLET.SetLabel(self.filename + ".dosemlet.dos")
                 dlg.Destroy()
 
 
