@@ -41,6 +41,9 @@ class VdxCube:
 				v = Voi(dcm.RTROIObservations[i].ROIObservationLabel,self.cube)
 				v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
 				self.add_voi(v)
+                self.cube.xoffset = 0
+                self.cube.yoffset = 0
+                self.cube.zoffset = 0
 		"""shift = min(self.cube.slice_pos)
 		for i in range(len(self.cube.slice_pos)):
 			self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
@@ -331,10 +334,10 @@ class Slice:
 	def add_contour(self,contour):
 		self.contour.append(contour)
 	def add_dicom_contour(self,dcm):
-		offset = [0,0,0];
-		"""offset.append(self.cube.xoffset*self.cube.pixel_size)
-		offset.append(self.cube.yoffset*self.cube.pixel_size)
-		offset.append(min(self.cube.slice_pos))"""
+		offset = []
+		offset.append(self.cube.xoffset)
+		offset.append(self.cube.yoffset)
+		offset.append(min(self.cube.slice_pos))
 		self.contour.append(Contour(res.point.array_to_point_array(dcm.ContourData,offset)))
 	def get_position(self):
 		if len(self.contour) == 0:

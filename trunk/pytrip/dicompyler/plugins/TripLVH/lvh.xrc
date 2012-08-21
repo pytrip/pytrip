@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resource>
+  <object class="wxPanel" name="pluginLVH" subclass="TripLVH.lvh.pluginLVH">
+<object class="wxBoxSizer">
+			<orient>wxVERTICAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxEXPAND | wxALL</flag>
+				<border>0</border>
+				<object class="wxPanel" name="plotPanel">
+					<style>wxTAB_TRAVERSAL</style>
+				</object>
+			</object>
+		</object>
+  </object>
+</resource>

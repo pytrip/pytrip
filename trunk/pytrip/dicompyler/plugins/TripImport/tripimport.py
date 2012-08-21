@@ -56,6 +56,7 @@ class plugin:
 	def without_progress(self,dlgAptgDialog):
 		patient = {}
 		length = 3
+                v = pytrip.vdx2.VdxCube("")
                 if dlgAptgDialog.checkCTX.GetValue() is True:
 			c = pytrip.ctx2.CtxCube()
 			c.read_trip_data_file(dlgAptgDialog.cleanpath + ".ctx")
@@ -70,13 +71,15 @@ class plugin:
                         patient["rtplan"] = d.create_dicom_plan()
 
                 if dlgAptgDialog.checkVDX.GetValue() is True:
-			v = pytrip.vdx2.VdxCube("")
 			v.import_vdx(dlgAptgDialog.cleanpath + ".vdx")
 			patient["rtss"] = v.create_dicom()
 		if dlgAptgDialog.checkLET.GetValue() is True:
 			l = pytrip.let.LETCube()
 			l.read_trip_data_file(dlgAptgDialog.cleanpath + ".dosemlet.dos")
-			patient["letdata"] = l
+                        lvhs = {}
+                        for voi in v.vois:
+                                lvhs[voi.name] = l.calculate_lvh(voi)
+			patient["LVHs"] = lvhs
 		pub.sendMessage('patient.updated.raw_data', patient)
 	def CreateOutputThread(self,dialog,dlgAptgDialog,progressFunc):
 		 patient = {}
@@ -146,9 +149,9 @@ class AptgImportDialog(wx.Dialog):
                 wx.EVT_BUTTON(self,XRCID('btnBrowse'),self.on_folder_browse)
                 wx.EVT_BUTTON(self,XRCID('btnImport'),self.on_import)
                 wx.EVT_CHECKBOX(self,XRCID('checkDOS'),self.on_checkdos_click)
-
-		pub.subscribe(self.on_import_prefs_change, 'general.dicom.import_location')	
-		pub.sendMessage('preferences.requested.value', 'general.dicom.import_location')
+		
+                pub.subscribe(self.on_import_prefs_change, 'general.dicom')	
+		pub.sendMessage('preferences.requested.values', 'general.dicom')
         def on_import(self,evt):
 
                 if self.validate():
@@ -170,7 +173,11 @@ class AptgImportDialog(wx.Dialog):
                 self.txtDose.Enable(0)
 
         def on_import_prefs_change(self,msg):
-                self.path = unicode(msg.data)
+                print msg.data
+                if (msg.topic[2] == 'import_location'):
+                    self.path = unicode(msg.data)
+                elif (msg.topic[2] == 'import_location_setting'):
+                    self.import_location_setting = msg.data
 
         def on_folder_browse(self,evt):
                 dlg = wx.FileDialog(self, defaultDir = self.path,wildcard="Trip Header file (*.hed)|*.hed",message="Choose a Header File")
@@ -197,6 +204,10 @@ class AptgImportDialog(wx.Dialog):
                                 self.checkLET.Enable(1)
                                 self.checkLET.SetValue(1)
                                 self.labelLET.SetLabel(self.filename + ".dosemlet.dos")
+                        if (self.import_location_setting == "Remember Last Used"):
+                                pub.sendMessage('preferences.updated.value',
+                                                {'general.dicom.import_location':dlg.GetDirectory()})
+                                pub.sendMessage('preferences.requested.values', 'general.dicom')
                 dlg.Destroy()
 
 

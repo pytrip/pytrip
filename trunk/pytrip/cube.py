@@ -142,17 +142,23 @@ class Cube(object):
 		output_str += "pixel_size " + str(self.pixel_size) + "\n"
 		output_str += "slice_distance " + str(self.slice_distance) + "\n"
 		output_str += "slice_number " + str(self.slice_number) + "\n"
-		output_str += "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
+		#output_str += "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
+		output_str += "xoffset 0\n"
 		output_str += "dimx " + str(self.dimx) + "\n"
-		output_str += "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
+		#output_str += "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
+		output_str += "yoffset 0\n"
 		output_str += "dimy " + str(self.dimy) + "\n"
-		output_str += "zoffset " + str(int(round(self.zoffset/self.slice_distance))) + "\n"
+                output_str += "zoffset 0\n"
+
+		"""output_str += "zoffset " + str(int(round(self.zoffset/self.slice_distance))) + "\n" """
 		output_str += "dimz " + str(self.dimz) + "\n"
-		if self.z_table is True:
+                output_str += "z_table no\n"
+
+		"""if self.z_table is True:
 			output_str += "z_table yes\n"
 			output_str += "slice_no  position  thickness  gantry_tilt\n"
 			for i in range(len(self.slice_pos)):
-				output_str += "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],self.slice_distance,0)
+				output_str += "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],self.slice_distance,0)"""
 		f = open(path,"w+")
 		f.write(output_str)
 		f.close()
