@@ -111,8 +111,9 @@ class pluginLVH(wx.Panel):
         for i in msg.data:
             voi = msg.data[i]
             data = self.LVHs[voi["name"]]
-
-            self.subplot.plot(data[0][:],data[1][:],label=voi["name"])
+            color = [float(c)/255 for c in voi["color"]]
+            self.subplot.plot(data[0][:],data[1][:],label=voi["name"],color=color)
+	self.subplot.legend(fancybox=True,prop={'size':8})
         self.canvas.draw()
         self.checkedstructures = msg.data
 

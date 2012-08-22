@@ -10,6 +10,8 @@ __email__ = "bassler@phys.au.dk"
 class LETCube(Cube):
         def __init__(self,cube = None):
                 super(LETCube,self).__init__(cube)
+	def get_max(self):
+		return np.amax(self.cube)
         def calculate_lvh(self,voi): 
                 n_bins = 100
                 bins = np.zeros(n_bins,dtype=np.int)

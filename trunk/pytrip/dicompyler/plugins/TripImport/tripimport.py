@@ -80,6 +80,7 @@ class plugin:
                         for voi in v.vois:
                                 lvhs[voi.name] = l.calculate_lvh(voi)
 			patient["LVHs"] = lvhs
+			patient["letdata"] = l
 		pub.sendMessage('patient.updated.raw_data', patient)
 	def CreateOutputThread(self,dialog,dlgAptgDialog,progressFunc):
 		 patient = {}
