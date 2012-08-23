@@ -495,7 +495,7 @@ class pluginLetPlot(wx.Panel):
         if len(contours):
 
             # Set the color of the isodose line
-            color = wx.Colour(0, 0,
+            color = wx.Colour(143, 0,
                 255, int(self.isodose_fill_opacity*255/100))
             gc.SetBrush(wx.Brush(color))
             gc.SetPen(wx.Pen(tuple(color),
@@ -557,7 +557,8 @@ class pluginLetPlot(wx.Panel):
                 " mm Y: " + unicode('%.2f' % self.structurepixlut[1][ypos]) + \
                 " mm / X: " + unicode(xpos) + \
                 " px Y:" + unicode(ypos) + " px"
-
+            mmpos = [self.structurepixlut[0][xpos], self.structurepixlut[1][ypos], float(self.z)]
+            let_pos = self.letcube.get_value_at_pos(mmpos)
             # Lookup the current image and find the value of the current pixel
             image = self.images[self.imagenum-1]
             # Rescale the slope and intercept of the image if present
@@ -568,7 +569,7 @@ class pluginLetPlot(wx.Panel):
             else:
                 pixel_array = image.ds.pixel_array
             value = "Value: " + unicode(pixel_array[ypos, xpos])
-
+            value = value + " / LET: " + unicode('%.4g' % let_pos) + " keV/um"
             # Lookup the current dose plane and find the value of the current
             # pixel, if the dose has been loaded
             if not (self.dose == []):
@@ -659,13 +660,13 @@ class pluginLetPlot(wx.Panel):
 
     def OnMouseDown(self, evt):
         """Get the initial position of the mouse when dragging."""
-
         self.mousepos = evt.GetPosition()
+
 
     def OnMouseUp(self, evt):
         """Reset the cursor when the mouse is released."""
-
         self.SetCursor(wx.StockCursor(wx.CURSOR_DEFAULT))
+
 
     def OnMouseEnter(self, evt):
         """Set a flag when the cursor enters the window."""

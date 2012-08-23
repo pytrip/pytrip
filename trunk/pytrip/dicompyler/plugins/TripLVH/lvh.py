@@ -55,6 +55,7 @@ class pluginLVH(wx.Panel):
         #self.Bind(wx.EVT_SIZE, self._onSize)
         self.figure = Figure( None, 100 )
         self.canvas = FigureCanvasWxAgg( self.plotPanel, -1, self.figure )	
+        self.canvas.callbacks.connect('button_press_event',self.OnMouseDown)
 	self.ini_plot()
 
 	self.setSize()
@@ -85,7 +86,12 @@ class pluginLVH(wx.Panel):
         """Update and load the patient data."""
 	self.LVHs = msg.data["LVHs"]
         # show an empty plot when (re)loading a patient
-        
+
+    def OnKeyDown(self,evt):
+        print "Key"
+        return
+    def OnMouseDown(self,evt):
+        print str(evt.xdata) + ":" + str(evt.ydata)
 
     def OnDestroy(self, evt):
         """Unbind to all events before the plugin is destroyed."""
