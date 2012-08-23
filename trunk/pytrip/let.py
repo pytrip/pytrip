@@ -13,7 +13,7 @@ class LETCube(Cube):
 	def get_max(self):
 		return np.amax(self.cube)
         def calculate_lvh(self,voi): 
-                n_bins = 100
+                n_bins = 200
                 bins = np.zeros(n_bins,dtype=np.int)
                 data = np.zeros(self.dimz*self.dimy*self.dimx,dtype=np.float)
                 n_cube = 0

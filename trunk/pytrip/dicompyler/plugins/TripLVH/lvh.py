@@ -9,6 +9,7 @@ from dicompyler import dvhdata, guidvh
 from dicompyler import wxmpl
 from matplotlib.backends.backend_wxagg import FigureCanvasWxAgg
 from matplotlib.figure import Figure
+import matplotlib
 import numpy as np
 import os
 
@@ -56,10 +57,14 @@ class pluginLVH(wx.Panel):
         self.figure = Figure( None, 100 )
         self.canvas = FigureCanvasWxAgg( self.plotPanel, -1, self.figure )	
         self.canvas.callbacks.connect('button_press_event',self.OnMouseDown)
+        self.canvas.callbacks.connect('key_press_event',self.OnKeyPress)
+        self.canvas.callbacks.connect('scroll_event',self.OnMouseScroll)
+
 	self.ini_plot()
 
 	self.setSize()
         self.SetColor()
+	self.selected_voi = None
         # Set up pubsub
         pub.subscribe(self.OnUpdatePatient, 'patient.updated.raw_data')
         pub.subscribe(self.OnStructureCheck, 'structures.checked')
@@ -86,12 +91,27 @@ class pluginLVH(wx.Panel):
         """Update and load the patient data."""
 	self.LVHs = msg.data["LVHs"]
         # show an empty plot when (re)loading a patient
-
-    def OnKeyDown(self,evt):
-        print "Key"
+    def OnMouseScroll(self,evt):
+	if self.selected_voi is None:
+		return
+	steps = evt.step
+	self.nearest_i = self.nearest_i+steps
+	lvh = self.LVHs[self.selected_voi]
+	if self.nearest_i < 0:
+		self.nearest_i = 0
+	elif self.nearest_i >= len(lvh[0]):
+		self.nearest_i = len(lvh[0])-1
+        
+	self.nearest_point = [lvh[0][self.nearest_i],lvh[1][self.nearest_i]]
+	self.DrawLVH()
+    def OnKeyPress(self,evt):
         return
     def OnMouseDown(self,evt):
-        print str(evt.xdata) + ":" + str(evt.ydata)
+	if evt.button is 1:
+		self.FindNearestPoint([evt.xdata,evt.ydata])
+	elif evt.button is 3:
+		self.selected_voi = ""
+		self.nearest_point = None
 
     def OnDestroy(self, evt):
         """Unbind to all events before the plugin is destroyed."""
@@ -113,15 +133,46 @@ class pluginLVH(wx.Panel):
         # Make sure that the volume has been calculated for each structure
         # before setting it
 
-	self.ini_plot()
+	self.selected_voi = None
+	self.selected_vois = []
+	self.selected_vois_name = []
         for i in msg.data:
             voi = msg.data[i]
+	    self.selected_vois.append(voi)
+	    self.selected_vois_name.append(voi["name"])
+	self.DrawLVH()
+    def DrawLVH(self):
+	self.ini_plot()
+	for voi in self.selected_vois:
             data = self.LVHs[voi["name"]]
             color = [float(c)/255 for c in voi["color"]]
             self.subplot.plot(data[0][:],data[1][:],label=voi["name"],color=color)
+        if self.selected_voi is not None:
+		font = matplotlib.font_manager.FontProperties(size=8)
+		self.subplot.plot([self.nearest_point[0]],[self.nearest_point[1]],'o')
+		text = "Vol: " + unicode("%.2f"% (self.nearest_point[1]*100)) + "%\nLET: " + unicode("%.2f"%(self.nearest_point[0]))+" keV/um"
+		self.subplot.annotate(text, xy=(self.nearest_point[0], self.nearest_point[1]), xytext=(self.nearest_point[0]+10, self.nearest_point[1]),
+				            arrowprops=dict(arrowstyle="->",facecolor='black'),fontproperties=font)
+
 	self.subplot.legend(fancybox=True,prop={'size':8})
         self.canvas.draw()
-        self.checkedstructures = msg.data
+    def FindNearestPoint(self,pos):
+	dist = float('inf')
+	nearest = [0.0,0.0]
+	self.selected_voi = None
+	for key,lvhs in self.LVHs.items():
+		if key in self.selected_vois_name:
+			i = 0
+			for x,y in zip(lvhs[0],lvhs[1]):
+				dist2 = (pos[0]-x)**2+((pos[1]-y)*pos[0])**2 
+				if dist > dist2:
+					nearest = [x,y]
+					dist = dist2
+					self.selected_voi = key
+					self.nearest_i = i
+				i= i+1
+	self.nearest_point = nearest
+	self.DrawLVH()
 
     def OnStructureSelect(self, msg):
         """Load the constraints for the currently selected structure."""

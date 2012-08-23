@@ -174,7 +174,6 @@ class AptgImportDialog(wx.Dialog):
                 self.txtDose.Enable(0)
 
         def on_import_prefs_change(self,msg):
-                print msg.data
                 if (msg.topic[2] == 'import_location'):
                     self.path = unicode(msg.data)
                 elif (msg.topic[2] == 'import_location_setting'):

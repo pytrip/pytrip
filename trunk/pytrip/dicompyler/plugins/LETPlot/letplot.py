@@ -85,7 +85,12 @@ class pluginLetPlot(wx.Panel):
         # Set up preferences
         self.preferences = [
             {'Drawing Settings':
-                [{'name':'Isodose Line Style',
+		    [{'name':'Plot Type',
+			'type':'choice',
+			'values':['Contour','Waterfall'],
+			'default':'Contour',
+			'callback':'2dview.drawingprefs.plot_type'},
+		{'name':'Isodose Line Style',
                  'type':'choice',
                'values':drawingstyles,
               'default':'Solid',
@@ -227,6 +232,8 @@ class pluginLetPlot(wx.Panel):
             self.structure_line_style = msg.data
         elif (msg.topic[2] == 'structure_fill_opacity'):
             self.structure_fill_opacity = msg.data
+	elif (msg.topic[2] == 'plot_type'):
+            self.plot_type = msg.data
         self.Refresh()
 
     def DrawStructure(self, structure, gc, position, prone, feetfirst):
