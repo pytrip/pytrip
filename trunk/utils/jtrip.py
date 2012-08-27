@@ -1,17 +1,23 @@
-import sys
+import sys,os
 from pytrip.cube import Cube
+from pytrip.dos2 import DosCube
+from pytrip.ctx2 import CtxCube
+from pytrip.vdx2 import VdxCube
+from pytrip.let import LETCube
+
 def is_number(s):
         try:
                 float(s)
                 return True
         except ValueError:
                 return False
-   
-action = sys.argv[1]
-output = "cube"
-if "-o" in sys.argv:
-	output = sys.argv[sys.argv.index("-o")+1]
-if action in ["add","div","sub","mul"]:
+def get_parameter(param):
+        try:
+                i = sys.argv.index(param)
+                return sys.argv[i+1]
+        except ValueError:
+                return None
+def use_operators(action,args):
 	file_a = sys.argv[2]
 	file_b = sys.argv[3]
         if is_number(file_a) is True:
@@ -32,8 +38,50 @@ if action in ["add","div","sub","mul"]:
 		c = a/b
 	if action == "mul":
 		c = a*b
-	c.write_trip_data(output + ".dos")
-	c.write_trip_header(output + ".hed")
+        return c
+def create_cube():
+        type = get_parameter("-t")
+        if type == "dose":
+                headerfile = get_parameter('-hed')
+                vdxfile = get_parameter('-structures')
+                voiname = get_parameter('-target')
+                dose = get_parameter('-dose')
+                if dose == None:
+                        dose = 1000
+                c = Cube()
+                c.read_trip_header_file(headerfile)
+                v = VdxCube("")
+                v.import_vdx(vdxfile)
+                voi = v.get_voi_by_name(voiname)
+
+                c.load_from_structure(voi,dose)
+                return c
+        elif type == 'lvh':
+                headerfile = get_parameter('-hed')
+                vdxfile = get_parameter('-structures')
+                voiname = get_parameter('-target')
+                l = LETCube()
+                l.read_trip_data_file(os.path.splitext(headerfile)[0] + ".dos")
+                v = VdxCube("")
+                v.import_vdx(vdxfile)
+                voi = v.get_voi_by_name(voiname)
+                l.write_lvh_to_file(voi,get_parameter('-o'))
+
+
+
+action = sys.argv[1]
+output = "cube"
+if "-o" in sys.argv:
+	output = sys.argv[sys.argv.index("-o")+1]
+if action in ["add","div","sub","mul"]:
+        c = use_operators(action,sys.argv)
+elif action == "create":
+        c = create_cube()
+else:
+        exit()
+if c is not None:
+        c.write_trip_data(output + ".dos")
+        c.write_trip_header(output + ".hed")
                 
 
 

@@ -284,7 +284,7 @@ class Voi:
 			return ""	
 
 		out = "\n"
-		out += "voi %s\n"%self.name
+		out += "voi %s\n"%(self.name.replace(" ","_"))
 		out += "key empty\n"
 		out += "type %s\n"%self.type
 		out += "\n"

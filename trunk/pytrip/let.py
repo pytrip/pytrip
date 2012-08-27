@@ -48,5 +48,14 @@ class LETCube(Cube):
                         lvh[1][i] = float(bins[i])/float(bins[0])
                         lvh[0][i] = max/n_bins*(i+1)
                 return lvh
+        def write_lvh_to_file(self,voi,path):
+                lvh = self.calculate_lvh(voi)
+                output = ""
+                for vol,let in zip(lvh[0],lvh[1]):
+                        output += "%.4e\t%.4e\n"%(vol,let)
+                f = open(path+".dvh","w+")
+                f.write(output)
+                f.close()
+                
 
                     
