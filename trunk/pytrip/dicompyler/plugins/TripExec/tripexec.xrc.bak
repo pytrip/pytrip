@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<resource>
+  <object class="wxPanel" name="pluginTripExec" subclass="TripExec.tripexec.pluginTripExec">
+		<style>wxTAB_TRAVERSAL</style>
+<object class="wxBoxSizer">
+			<orient>wxHORIZONTAL</orient>
+			<object class="sizeritem">
+				<option>1</option>
+				<flag>wxALIGN_LEFT|wxALL|wxEXPAND</flag>
+				<border>5</border>
+				<object class="wxListbook" name="m_listbook1">
+					<style>wxLB_LEFT</style>
+					<object class="listbookpage">
+						<label>General</label>
+						<selected>0</selected>
+						<object class="wxPanel" name="tab_general">
+							<style>wxTAB_TRAVERSAL</style>
+						</object>
+					</object>
+					<object class="listbookpage">
+						<label>Setup Dose</label>
+						<selected>0</selected>
+						<object class="wxPanel" name="tab_dose">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="m_staticText3">
+										<label>Select a structure in the panel at left at se dose</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>1</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxVERTICAL</orient>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="listbookpage">
+						<label>Beams</label>
+						<selected>1</selected>
+						<object class="wxPanel" name="tab_beams">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxGrid" name="m_grid4" />
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="listbookpage">
+						<label>Optimisation</label>
+						<selected>0</selected>
+						<object class="wxPanel" name="tab_optimise">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="label">
+										<label>Setup Optimization algorithms</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag></flag>
+									<border>5</border>
+									<object class="wxGridSizer">
+										<rows>2</rows>
+										<cols>2</cols>
+										<vgap>0</vgap>
+										<hgap>0</hgap>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText">
+												<label>Iterations</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="m_textCtrl2">
+												<value>500</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText22">
+												<label>Method</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxChoice" name="drop_opt_method">
+												<selection>0</selection>
+												<content>
+													<item>Bio</item>
+													<item>Phys</item>
+												</content>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText23">
+												<label>Principle</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxChoice" name="drop_opt_principle">
+												<selection>0</selection>
+												<content>
+													<item>H2OBased</item>
+													<item>CT Based</item>
+												</content>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText24">
+												<label>Dose Algorithm</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxChoice" name="drop_opt_dosealg">
+												<selection>0</selection>
+												<content>
+													<item>classic</item>
+													<item>all points</item>
+													<item>multiplescatter</item>
+												</content>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText25">
+												<label>Bio algorithm</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxChoice" name="drop_opt_bioalg">
+												<selection>0</selection>
+												<content>
+													<item>Classic</item>
+													<item>Low dose</item>
+												</content>
+											</object>
+										</object>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+					<object class="listbookpage">
+						<label>Output</label>
+						<selected>0</selected>
+						<object class="wxPanel" name="m_panel12">
+							<style>wxTAB_TRAVERSAL</style>
+							<object class="wxBoxSizer">
+								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxStaticText" name="m_staticText4">
+										<label>Set what output TRiP should generate</label>
+										<wrap>-1</wrap>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxCheckBox" name="check_out_dose">
+										<label>Dose</label>
+										<checked>1</checked>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL</flag>
+									<border>5</border>
+									<object class="wxCheckBox" name="check_out_let">
+										<label>LET</label>
+										<checked>1</checked>
+									</object>
+								</object>
+							</object>
+						</object>
+					</object>
+				</object>
+			</object>
+		</object>
+  </object>
+</resource>

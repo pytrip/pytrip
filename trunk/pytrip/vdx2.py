@@ -244,17 +244,17 @@ class Voi:
 		return i-1
 	def get_roi_type_number(self,type_name):
 		if type_name == 'EXTERNAL':
-			return 10
+			return 0
 		elif type_name == 'AVOIDANCE':
-			return 2
+			return 0
 		elif type_name == 'ORGAN':
-			return 2
+			return 0
 		elif type_name == 'GTV':
 			return 1
 		elif type_name == 'CTV':
 			return 1
 		else:
-			return 90
+			return 0
 	def get_roi_type_name(self,type_id):
 		if type_id == 10:
 			return "EXTERNAL"
@@ -262,6 +262,8 @@ class Voi:
 			return 'AVOIDANCE'
 		elif type_id == 1:
 			return 'CTV'
+                elif type_id == 0:
+                        return 'other'
 		return '' 
 	def read_dicom(self,info,data):
 		if not data.has_key("Contours"):
