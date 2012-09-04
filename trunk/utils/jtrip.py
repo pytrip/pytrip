@@ -41,10 +41,11 @@ def use_operators(action,args):
         return c
 def create_cube():
         type = get_parameter("-t")
+	headerfile = get_parameter('-hed')
+       	vdxfile = get_parameter('-structures')
+	if vdxfile == None:
+		vdxfile = os.path.splitext(headerfile)[0] + ".vdx"
         if type == "dose":
-                headerfile = get_parameter('-hed')
-                vdxfile = get_parameter('-structures')
-                voiname = get_parameter('-target')
                 dose = get_parameter('-dose')
                 if dose == None:
                         dose = 1000
@@ -57,8 +58,6 @@ def create_cube():
                 c.load_from_structure(voi,dose)
                 return c
         elif type == 'lvh':
-                headerfile = get_parameter('-hed')
-                vdxfile = get_parameter('-structures')
                 voiname = get_parameter('-target')
                 l = LETCube()
                 l.read_trip_data_file(os.path.splitext(headerfile)[0] + ".dos")
@@ -71,6 +70,11 @@ def create_cube():
 
 action = sys.argv[1]
 output = "cube"
+if "-h" in sys.argv:
+	f = open("help")
+	content = f.read()
+	f.close()
+	print content
 if "-o" in sys.argv:
 	output = sys.argv[sys.argv.index("-o")+1]
 if action in ["add","div","sub","mul"]:

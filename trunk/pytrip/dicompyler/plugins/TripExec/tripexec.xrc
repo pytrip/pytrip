@@ -15,15 +15,118 @@
 						<selected>0</selected>
 						<object class="wxPanel" name="tab_general">
 							<style>wxTAB_TRAVERSAL</style>
-								<object class="wxBoxSizer">
+							<object class="wxBoxSizer">
 								<orient>wxVERTICAL</orient>
 								<object class="sizeritem">
 									<option>0</option>
-									<flag>wxALL</flag>
+									<flag>wxEXPAND</flag>
 									<border>5</border>
-									<object class="wxButton" name="btn_run">
-										<label>Run</label>
-										<default>0</default>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText10">
+												<size>80,-1</size>
+												<label>Server:</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_server">
+												<size>200,-1</size>
+												<value>titan.phys.au.dk</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText11">
+												<size>80,-1</size>
+												<label>Username:</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_username">
+												<size>100,-1</size>
+												<value>jato</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText12">
+												<size>80,-1</size>
+												<label>Password:</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_password">
+												<style>wxTE_PASSWORD</style>
+												<size>100,-1</size>
+												<value></value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxVERTICAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxButton" name="btn_run">
+												<label>Run</label>
+												<default>0</default>
+											</object>
+										</object>
+									</object>
+								</object>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxALL|wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxTextCtrl" name="txt_log">
+										<style>wxTE_MULTILINE|wxTE_READONLY</style>
+										<value></value>
+										<maxlength>0</maxlength>
 									</object>
 								</object>
 							</object>
@@ -31,11 +134,37 @@
 					</object>
 					<object class="listbookpage">
 						<label>Setup Dose</label>
-						<selected>1</selected>
+						<selected>0</selected>
 						<object class="wxPanel" name="tab_dose">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">
 								<orient>wxVERTICAL</orient>
+								<object class="sizeritem">
+									<option>0</option>
+									<flag>wxEXPAND</flag>
+									<border>5</border>
+									<object class="wxBoxSizer">
+										<orient>wxHORIZONTAL</orient>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALIGN_CENTER_VERTICAL|wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText13">
+												<label>Target Dose in Gy</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_dose">
+												<value>68.0</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+									</object>
+								</object>
 								<object class="sizeritem">
 									<option>0</option>
 									<flag>wxALL</flag>
@@ -54,7 +183,7 @@
 										<object class="sizeritem">
 											<option>0</option>
 											<flag>wxALL</flag>
-											<border>5</border>	
+											<border>5</border>
 											<object class="wxGrid" name="grid_dose" />
 										</object>
 									</object>
@@ -88,7 +217,7 @@
 											<option>0</option>
 											<flag>wxALL</flag>
 											<border>5</border>
-											<object class="wxChoice" name="drop_beams_projectile">
+											<object class="wxChoice" name="drop_projectile">
 												<selection>0</selection>
 												<content>
 													<item>Hydrogen</item>
@@ -109,7 +238,7 @@
 					</object>
 					<object class="listbookpage">
 						<label>Optimisation</label>
-						<selected>0</selected>
+						<selected>1</selected>
 						<object class="wxPanel" name="tab_optimise">
 							<style>wxTAB_TRAVERSAL</style>
 							<object class="wxBoxSizer">
@@ -145,8 +274,44 @@
 											<option>0</option>
 											<flag>wxALL</flag>
 											<border>5</border>
-											<object class="wxTextCtrl" name="m_textCtrl2">
+											<object class="wxTextCtrl" name="txt_iterations">
 												<value>500</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText14">
+												<label>eps</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_eps">
+												<value>1e-3</value>
+												<maxlength>0</maxlength>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText15">
+												<label>geps</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxTextCtrl" name="txt_geps">
+												<value>1e-4</value>
 												<maxlength>0</maxlength>
 											</object>
 										</object>
@@ -205,7 +370,7 @@
 											<option>0</option>
 											<flag>wxALL</flag>
 											<border>5</border>
-											<object class="wxChoice" name="drop_opt_dosealg">
+											<object class="wxChoice" name="drop_dosealg">
 												<selection>0</selection>
 												<content>
 													<item>classic</item>
@@ -232,6 +397,30 @@
 												<content>
 													<item>Classic</item>
 													<item>Low dose</item>
+												</content>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxStaticText" name="m_staticText17">
+												<label>Opt Algorithm</label>
+												<wrap>-1</wrap>
+											</object>
+										</object>
+										<object class="sizeritem">
+											<option>0</option>
+											<flag>wxALL</flag>
+											<border>5</border>
+											<object class="wxChoice" name="drop_optalg">
+												<selection>0</selection>
+												<content>
+													<item>cl</item>
+													<item>cg</item>
+													<item>gr</item>
+													<item>bf</item>
+													<item>fr</item>
 												</content>
 											</object>
 										</object>
