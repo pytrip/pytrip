@@ -106,7 +106,6 @@ class Cube(object):
         	return self.cube[indices[2]][indices[1]][indices[0]]
     	def get_value_at_pos(self,pos):
         	return self.get_value_at_indice(self.pos_to_indices(pos))
-
         def load_from_structure(self,voi,preset = 0):      
                 data = np.zeros((self.dimz,self.dimy,self.dimx))
                 if preset != 0:
@@ -235,7 +234,7 @@ class Cube(object):
 
 		ds.PixelSpacing = [self.pixel_size, self.pixel_size]
 		return ds
-        def merge(self,cube):
+	def merge(self,cube):
                 self.cube = np.maximum(self.cube,cube.cube)
 	def read_trip_header(self,content):
 		i = 0
@@ -321,7 +320,7 @@ class Cube(object):
 		cube_size = len(data)/self.num_bytes
 		if(cube_size != self.dimx*self.dimy*self.dimz):
 			raise IOError, "Header size and dose cube size are not consistent."
-		cube = np.zeros((self.dimz,self.dimy,self.dimx))
+		cube = np.zeros((self.dimz,self.dimy,self.dimx),dtype=self.pydata_type)
 		so = Struct(self.format_str[0]+self.format_str[1]*self.dimx)
 		start=0
 		bytes_line = self.dimx*self.num_bytes

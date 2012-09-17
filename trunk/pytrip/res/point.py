@@ -19,6 +19,10 @@ def point_in_polygon(x,y,polygon):
 			return True
 	else:
 			return False 
+def max_list(a,b):
+	return [max(x,y) for x,y in zip(a,b)]
+def min_list(a,b):
+	return [min(x,y) for x,y in zip(a,b)]
 def array_to_point_array(points,offset):
 	point = [[points[3*i]-offset[0],points[3*i+1]-offset[1],points[3*i+2]-offset[2]] for i in range(len(points)/3)]
 	return point

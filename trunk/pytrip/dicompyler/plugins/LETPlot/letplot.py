@@ -223,7 +223,6 @@ class pluginLetPlot(wx.Panel):
 
     def OnDrawingPrefsChange(self, msg):
         """When the drawing preferences change, update the drawing styles."""
-
         if (msg.topic[2] == 'isodose_line_style'):
             self.isodose_line_style = msg.data
         elif (msg.topic[2] == 'isodose_fill_opacity'):
