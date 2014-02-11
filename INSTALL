@@ -1,0 +1,32 @@
+-- REQUIREMENTS: --
+
+Debian/Ubuntu:
+
+python-dev
+python-matplotlib
+python-paramiko
+python-dicom
+python-wxgtk2.8
+
+Fedora:
+
+python-matplotlib
+python-paramiko
+wxPython
+python-matplotlib-wx
+
+python-setuptools       # this installs "easy_install"
+easy_install pydicom    # run this, since pydicom not in Fedora repository
+
+
+-- INSTALLATION: --
+as root:
+
+python ./setup.py install
+
+
+
+--START THE GUI: --
+
+pytrip-gui
+
