@@ -1,19 +1,3 @@
-"""
-    This file is part of PyTRiP.
-
-    libdedx is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libdedx is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
-"""
 from ..dos import DosCube
 from ..let import LETCube
 import os
@@ -184,7 +168,8 @@ class TripExecuter(object):
             output.extend(self.create_exec_plan(incube="target_dose"))
         else:
             output.extend(self.create_exec_plan())
-        output.extend(self.create_exec_opt())
+        if self.plan.get_optimize():
+            output.extend(self.create_exec_opt())
         
         name = self.plan_name
         output.extend(self.create_exec_output(name,fields))
@@ -205,9 +190,10 @@ class TripExecuter(object):
                 output.append('dose "' + name  + '." /calculate ' + window_str + ' bioalgorithm(' + self.plan.get_bio_algorithm()   + ') biological norbe write')
             if self.plan.get_out_dose_mean_let() is True:
                 output.append('dose "' + name  + '." /calculate ' + window_str + ' field(*) dosemeanlet write')
-            if self.plan.get_out_field() is True:
+            if self.plan.get_out_field() is True and self.plan.get_optimize() is True:
                 for i,field in enumerate(fields):
                     output.append('field %d /write file(%s.rst) reverseorder '%(i+1,field.get_name()))
+                    field.set_rasterfile(self.working_path+'//'+self.folder_name+'//'+field.get_name())
         return output
     def create_exec_plan(self,incube=""):
         output = []
@@ -287,24 +273,44 @@ class TripExecuter(object):
         return output
     def create_exec_field(self,fields):
         output = []
-        for i,val in enumerate(fields):
-            field = "field " + str(i+1) + " / new "
-            field += "fwhm(%d) "%(val.get_fwhm())
-            raster = val.get_rasterstep()
-            if not raster[0] is 0 and not raster[1] is 0:
-                field += "raster(%.2f,%.2f) "%(raster[0],raster[1])
-            gantry,couch = angles_to_trip(val.get_gantry(),val.get_couch()) 
-            field += "couch(" + str(couch) + ") "
-            field += "gantry(" + str(gantry) + ") "
-            if len(val.get_target()) is not 0:
-                field += "target(" + val.get_target() + ") "
-            if val.get_doseextension() > 0.0001:
-                field += "doseext(" + str(val.get_doseextension()) + ") "
-            field += "contourext(" + str(val.get_contourextension()) + ") "
-            if val.get_zsteps() > 0.001:
-                field += "zsteps(" + str(val.get_zsteps()) + ") "
-            field += 'proj(' + val.get_projectile() + ')'
-            output.append(field)
+        if self.plan.get_optimize():
+            for i,val in enumerate(fields):
+                field = "field " + str(i+1) + " / new "
+                field += "fwhm(%d) "%(val.get_fwhm())
+                raster = val.get_rasterstep()
+                if not raster[0] is 0 and not raster[1] is 0:
+                    field += "raster(%.2f,%.2f) "%(raster[0],raster[1])
+                gantry,couch = angles_to_trip(val.get_gantry(),val.get_couch()) 
+                field += "couch(" + str(couch) + ") "
+                field += "gantry(" + str(gantry) + ") "
+                if len(val.get_target()) is not 0:
+                    field += "target(" + val.get_target() + ") "
+                if val.get_doseextension() > 0.0001:
+                    field += "doseext(" + str(val.get_doseextension()) + ") "
+                field += "contourext(" + str(val.get_contourextension()) + ") "
+                if val.get_zsteps() > 0.001:
+                    field += "zsteps(" + str(val.get_zsteps()) + ") "
+                field += 'proj(' + val.get_projectile() + ')'
+                output.append(field)
+        else:
+            for i,val in enumerate(fields):
+                field = 'field 1 /read file(' + val.get_rasterfile() + '.rst)'
+                field += "fwhm(%d) "%(val.get_fwhm())
+                raster = val.get_rasterstep()
+                if not raster[0] is 0 and not raster[1] is 0:
+                    field += "raster(%.2f,%.2f) "%(raster[0],raster[1])
+                gantry,couch = angles_to_trip(val.get_gantry(),val.get_couch()) 
+                field += "couch(" + str(couch) + ") "
+                field += "gantry(" + str(gantry) + ") "
+                if len(val.get_target()) is not 0:
+                    field += "target(" + val.get_target() + ") "
+                if val.get_doseextension() > 0.0001:
+                    field += "doseext(" + str(val.get_doseextension()) + ") "
+                field += "contourext(" + str(val.get_contourextension()) + ") "
+                if val.get_zsteps() > 0.001:
+                    field += "zsteps(" + str(val.get_zsteps()) + ") "
+                field += 'proj(' + val.get_projectile() + ')'
+                output.append(field)
         return output
     def create_exec_oar(self,oar_list):
         output = []
@@ -514,8 +520,10 @@ class TripExecuter(object):
     def prepare_folder(self):
         self.filepath = self.path + self.plan_name
         if os.path.exists(self.path):
-            shutil.rmtree(self.path)
-        os.makedirs(self.path)
+            pass
+            #shutil.rmtree(self.path)
+        else:
+            os.makedirs(self.path)
     def run_trip(self):
         if self.plan.remote:
             self.run_trip_remote()
@@ -583,7 +591,8 @@ class TripExecuter(object):
             
         self.projectile_dose_level[projectile] = np.max(dosecube.cube)
         output.extend(self.create_exec_plan(incube="target_dose_%s"%self.projectiles[projectile]["name"]))
-        output.extend(self.create_exec_opt())
+        if self.plan.get_optimize() is True:
+            output.extend(self.create_exec_opt())
         
         name = self.plan_name + "_" + self.projectiles[projectile]["name"]
         output.extend(self.create_exec_output(name,fields))

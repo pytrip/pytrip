@@ -1,19 +1,3 @@
-"""
-    This file is part of PyTRiP.
-
-    libdedx is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libdedx is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
-"""
 from pytripobj import *
 from ..error import *
 class Field(pytripObj):
@@ -26,6 +10,7 @@ class Field(pytripObj):
         self.rasterstep = [2,2]
         self.doseextension = 1.2
         self.contourextension = 0.6
+        self.rasterfile = None;
         
         self.zsteps = 1.0
         self.projectile = 'C'
@@ -34,6 +19,10 @@ class Field(pytripObj):
         
     def get_name(self):
         return self.name
+    def set_rasterfile(self,path):
+        self.rasterfile = path
+    def get_rasterfile(self):
+        return self.rasterfile;
     def set_name(self,name):
         self.name = name
     def is_selected(self):
