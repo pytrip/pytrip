@@ -2,7 +2,7 @@
 
 from pytrip.vdx import *
 #from numpy import zeros
-#~ from pylab import *
+from pylab import *
 
 class GetDvh(object):
     'This class produces DVHs.'    

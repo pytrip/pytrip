@@ -1,59 +1,54 @@
-"""
-    This file is part of PyTRiP.
-
-    libdedx is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libdedx is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
-"""
 import numpy
 import numpy as np
 from error import *
 from cube import *
-import pytriplib as plib
 
 __author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
 
 class LETCube(Cube):
-    def __init__(self,cube = None):
-        super(LETCube,self).__init__(cube)
-    def write(self,path):
-        f_split = os.path.splitext(path)
-        header_file = f_split[0] + ".dosemlet.hed"
-        dos_file = f_split[0] + ".dosemlet.dos"
-        self.write_trip_header(header_file)
-        self.write_trip_data(dos_file)
-    def get_max(self):
+        def __init__(self,cube = None):
+                super(LETCube,self).__init__(cube)
+	def get_max(self):
 		return np.amax(self.cube)
-    def calculate_lvh(self,voi):
-		pos = 0
-		size = numpy.array([self.pixel_size,self.pixel_size,self.slice_distance])
-		lv = numpy.zeros(3000)
-		for i in range(self.dimz):
-			pos += self.slice_distance
-			slice = voi.get_slice_at_pos(pos)
-			if slice is not None:
-				lv += plib.calculate_lvh_slice(self.cube[i],numpy.array(slice.contour[0].contour),size)
-		
-		cubes = sum(lv)
-		lvh = numpy.cumsum(lv[::-1])[::-1]/cubes
-		min_let = numpy.where(lvh >= 0.98)[0][-1]
-		max_let = numpy.where(lvh <= 0.02)[0][0]
-		area = cubes*size[0]*size[1]*size[2]/1000
-		mean = numpy.dot(lv,range(0,3000))/cubes
-		return (lvh,min_let,max_let,mean,area)
-    
-    def write_lvh_to_file(self,voi,path):
+        def calculate_lvh(self,voi): 
+                n_bins = 200
+                bins = np.zeros(n_bins,dtype=np.int)
+                data = np.zeros(self.dimz*self.dimy*self.dimx,dtype=np.float)
+                n_cube = 0
+                volume = 0
+                for i_z in range(self.dimz):
+                        for i_y in range(self.dimy):
+                                intersection = voi.get_row_intersections(self.indices_to_pos([0,i_y,i_z]))
+                                if intersection is None:
+                                        break;
+                                if len(intersection) > 0:
+                                        k = 0
+                                        for i_x in range(self.dimx):
+                                                if self.indices_to_pos([i_x,0,0])[0] > intersection[k]:
+                                                        k = k+1
+                                                        if k >= (len(intersection)):
+                                                                break;
+                                                        if k%2 == 1:
+                                                                data[n_cube] = self.cube[i_z][i_y][i_x]
+                                                                n_cube = n_cube+1
+                lvh_data = data[0:n_cube]
+                volume = self.pixel_size**2*self.slice_distance*n_cube
+                max = np.amax(lvh_data)
+                max = max + 1e-3
+                for point in lvh_data:
+                        i = int(point/max*n_bins)
+                        bins[i] = bins[i]+1
+                for i in range(n_bins-2,-1,-1):
+                        bins[i] = bins[i] + bins[i+1]
+                lvh = np.zeros((2,n_bins),dtype=numpy.float)
+
+                for i in range(n_bins):
+                        lvh[1][i] = float(bins[i])/float(bins[0])
+                        lvh[0][i] = max/n_bins*(i+1)
+                return lvh
+        def write_lvh_to_file(self,voi,path):
                 lvh = self.calculate_lvh(voi)
                 output = ""
                 for vol,let in zip(lvh[0],lvh[1]):

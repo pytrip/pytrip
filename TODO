@@ -1,0 +1,71 @@
+pytrip/dos.py:71:        # TODO: warn user that header is taken from "self", not "other".
+pytrip/dos.py:121:        # TODO fix the format. I dont know if we may encounter signed data?
+pytrip/dos.py:149:        # TODO: verify x-y order at tranpose
+pytrip/dos.py:154:        # TODO this will only go well if x and y are equaliy large. 
+pytrip/dos.py:190:        c.cube = swapaxes(c.cube,1,2) #  TODO Arrrrgh!
+pytrip/dos.py:349:        # TODO: some error again. When LET dont swap.
+pytrip/hed.py:178:            # TODO: may be half bin error here
+pytrip/hed.py:230:        # TODO: understand and include offset
+pytrip/hed.py:238:        # TODO: understand and include offset
+pytrip/hed.py:243:        # TODO: understand and include offset
+pytrip/hed.py:249:        # TODO: understand and include offset
+pytrip/hed.py:291:        self.num_bytes = 2      # TODO: guess most are 16 bit ints.
+pytrip/hed.py:292:        self.byte_order = "vms" # TODO: make system dependent.
+pytrip/hed.py:299:        self.xoffset = 0 # TODO: not ok
+pytrip/hed.py:301:        self.yoffset = 0 # TODO: not ok
+pytrip/hed.py:303:        self.zoffset = 0 # TODO: not ok
+pytrip/hed.py:305:        self.z_table = False # TODO: add feature.
+pytrip/hed.py:308:        # build position table. TODO: may be 0.5*slice_thick wrong.
+pytrip/hed.py:328:        # TODO: handle different versions? This is currently 1.4
+pytrip/hed.py:339:                # TODO: implement gantry tilt.
+pytrip/vdx.py:26:        # TODO: rename variables to a clear an consistent notation (position, bin, id)
+pytrip/vdx.py:33:                self.slice_in_frame = (self.slice-1) * self.header.slice_distance # TODO bin 0.5 error? 
+pytrip/vdx.py:42:                    # TODO: consider sorting slices for inc. slice position?
+pytrip/vdx.py:43:                    # TODO: probably some dict missing as well.
+pytrip/vdx.py:50:                # TODO: no idea what this is.
+pytrip/vdx.py:60:            # TODO: currently only one contour is supported.
+pytrip/vdx.py:94:                    # TODO: translate into real coordinate system
+pytrip/vdx.py:95:                    # TODO note that z is missing
+pytrip/vdx.py:107:                    # TODO: think which way is better:
+pytrip/vdx.py:113:                    self.vertices = ones((actual_points+1,2)) # see TODO above.
+pytrip/vdx.py:181:        # TODO not very good, we depend on VOI assignment being terminated by "type" string
+pytrip/vdx.py:220:        # TODO: test if countour exists in slice at all.
+pytrip/vdx.py:245:        # TODO: this one could add two contours to one.
+pytrip/vdx.py:249:        # TODO: implement this.
+pytrip/vdx.py:254:        # TODO: put short and long filenames into object
+pytrip/vdx.py:319:                    # TODO check what slice we got, and put it into the right place
+pytrip/vdx.py:332:        if self.version != "2.0": # TODO: do less than 2.0 instead of true match
+pytrip/vdx.py:351:                # TODO check what slice we got, and put it into the right place
+pytrip/vdx.py:390:# TODO Add lookup function for PTV,TARGET, OAR etc.
+pytrip/vdx.py:444:        #TODO: how to get number of ROIs properly?
+pytrip/vdx.py:447:        # TODO
+pytrip/vdx.py:458:        # BIG TODO: fix structure of classes:
+pytrip/vdx.py:480:        # TODO alignment checking.
+pytrip/vdx.py:519:                # TODO obsolete? this is integrated as self.
+pytrip/vdx.py:557:            # TODO: i am not sure if this is right.
+pytrip/vdx.py:567:        # TODO this is a mess: there are 
+pytrip/vdx.py:581:        # TODO: think very carefully whether this is ok solution.
+pytrip/pygtktrip.py:62:        # TODO: come up with a better solution?
+pytrip/pygtktrip.py:217:        # TODO: find more elegant solution ?
+pytrip/pygtktrip.py:411:        # TODO ---------------- OER -----------------------------
+pytrip/pygtktrip.py:508:            # TODO: do better.
+pytrip/pygtktrip.py:578:        # TODO: multiple file support for DOS,CTX,VDX.
+pytrip/pygtktrip.py:609:            self.fname_ctx = filename #TODO: use name in object instead.
+pytrip/pygtktrip.py:698:        # TODO: dos and ctx object should be the same,
+pytrip/pygtktrip.py:747:        # TODO: only create instances if data are available.
+pytrip/pygtktrip.py:762:                # TODO : climb and append voi tree.
+pytrip/pygtktrip.py:764:                #    # TODO: move VOILIST into VDX Class, or find beter solv.
+pytrip/pygtktrip.py:790:        col.pack_start(cellr_check, False)   # TODO: fix GtkWarning
+pytrip/pygtktrip.py:861:        col.pack_start(cellr_check, False)   # TODO: fix GtkWarning
+pytrip/pygtktrip.py:910:        _iter_str="0:"+str(_voi_idx)  # TODO: is there a better method?
+pytrip/pygtktrip.py:911:        # TODO: fix NoneType error
+pytrip/pygtktrip.py:919:        _iter_str="0:"+str(_voi_idx)  # TODO: is there a better method?
+pytrip/pygtktrip.py:920:        # TODO: fix NoneType error
+pytrip/pygtktrip.py:928:        _iter_str="0:"+str(_voi_idx)  # TODO: is there a better method?
+pytrip/pygtktrip.py:986:            _iter_str="0:"+str(i)  # TODO: is tehre a better method?
+pytrip/ctx.py:55:        # TODO: this one could add two ctx cubes.
+pytrip/ctx.py:59:        # TODO: implement this.
+pytrip/ctx.py:63:	    # TODO: fix indentions.
+pytrip/ctx.py:97:            # TODO fix the format. I dont know if we may encounter signed data?
+pytrip/ctx.py:136:            # TODO this will only go well if x and y are equaliy large. 
+pytrip/ctx.py:220:                    # TODO: build it properly at numpy level.

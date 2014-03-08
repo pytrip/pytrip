@@ -1,824 +1,670 @@
+#! /usr/bin/env python
+"""Reads .VDX file from TRiP and Virtuos
+
+bla bla bla
 """
-    This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    libdedx is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
-"""
 import os, re, sys
-from error import *
-import res.point,string
-from res.point import *
 import struct
 from numpy import *
-import time
-import pytriplib as plib
-import dos
-import copy
-from math import pi
-import matplotlib._cntr as cntr
-try:
-	import dicom
-	from dicom.dataset import Dataset,FileDataset
-	from dicom.sequence import Sequence
-	_dicom_loaded = True
-except:
-	_dicom_loaded = False
+from pytrip.hed import Header
 
-
-__author__ = "Niels Bassler and Jakob Toftegaard"
+__author__ = "Niels Bassler"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
-try:
-    import dicom
-    _dicom_loaded = True
-except:
-    _dicom_loaded = False
-"""
-VdxCube is the master class for dealing with vois structures, a vdxcube object contains VoiCube objects which represent a VOI, it
-could be ex a lung or the tumor.
-The VoiCube contains Slices which correnspons to the CT slices, and the slices contains contour object, which contains the contour data, a slice can contain multiple, since TRiP only support one contour per slice for each voi, it is necessary to merge contour
 
-VdxCube can import both dicom data and TRiP data, and export in the thoose formats.
-"""
-class VdxCube:
-    def __init__(self,content,cube = None):
-        self.vois = []
-        self.cube = cube
-        self.version = "1.2"
-    def read_dicom(self,data,structure_ids = None):
-        if not data.has_key("rtss"):
-            raise InputError, "Input is not a valid rtss structure"
-        dcm = data["rtss"]
-        self.version = "2.0"
-        for i in range(len(dcm.ROIContours)):
-            if structure_ids is None or dcm.ROIContours[i].RefdROINumber in structure_ids:
-                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode('iso-8859-1'),self.cube)
-                v.read_dicom(dcm.RTROIObservations[i],dcm.ROIContours[i])
-                self.add_voi(v)
-        self.cube.xoffset = 0
-        self.cube.yoffset = 0
-        self.cube.zoffset = 0
-        """shift = min(self.cube.slice_pos)
-        for i in range(len(self.cube.slice_pos)):
-                self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
-    def get_voi_names(self):
-        names = []
-        for voi in self.vois:
-            names.append(voi.name)
-        return names
-    def __str__(self):
-        return self.get_voi_names
 
-    def add_voi(self,voi):
-        self.vois.append(voi)
-    def get_voi_by_name(self,name):
-        for voi in self.vois:
-            if voi.name.lower() == name.lower():
-                return voi
-        raise InputError("Voi doesn't exist")
+class Slice(object):
 
-    def import_vdx(self,path):
-        self.read_vdx(path)
-    def read(self,path):
-        self.read_vdx(path)
-    def read_vdx(self,path):
-        fp = open(path,"r")
-        content = fp.read().split('\n')
-        fp.close()
-        i = 0
-        n = len(content)
-        header_full = False
-        number_of_vois = 0
-        while(i < n):
-            line = content[i]
-            if not header_full:
-                if re.match("vdx_file_version",line) is not None:
-                    self.version = line.split()[1]
-                elif re.match("all_indices_zero_based",line) is not None:
-                    self.zero_based = True
-                elif re.match("number_of_vois",line) is not None:
-                    number_of_vois = int(line.split()[1])
-            if re.match("voi",line) is not None:
-                v = Voi(line.split()[1],self.cube)
-                if self.version == "1.2":
-                    if not line.split()[5] == '0':
-                        i = v.read_vdx_old(content,i)
-                else:
-                    i = v.read_vdx(content,i)
-                self.add_voi(v)
-                header_full = True
-            i+=1
+    def __init__(self,i,content,header = None):
+        done = False
+        self._id = 0 # placeholder for an identifier
+        self.header = header
+        self.number_of_points = None
 
-    def concat_contour(self):
-        for i in range(len(self.vois)):
-            self.vois[i].concat_contour()
-    def number_of_vois(self):
-        return len(self.vois)
-    def write_to_voxel(self,path):
-        fp = open(path,"wb+")
-        fp.write("vdx_file_version %s\n"%self.version)
-        fp.write("all_indices_zero_based\n")
-        fp.write("number_of_vois %d\n"%self.number_of_vois())
-        self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
-        for i in range(len(self.vois)):
-            fp.write(self.vois[i].to_voxel_string().encode('ascii', 'ignore'))
-        fp.close()
-    def write_to_trip(self,path):
-        self.concat_contour()
-        self.write_to_voxel(path)
-    def write(self,path):
-        self.write_to_trip(path)
-    def create_dicom(self):
-        if _dicom_loaded is False:
-            raise ModuleNotLoadedError, "Dicom"
-        meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
-        meta.MediaStorageSOPInstanceUID = "1.2.3"
-        meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta, preamble="\0"*128)
-        if self.cube is not None:
-            ds.PatientsName = self.patient_name
-        else:
-            ds.PatientsName = ""
-        ds.PatientID = "123456"
-        ds.PatientsSex = '0'
-        ds.PatientsBirthDate = '19010101'
-        ds.SpecificCharacterSet = 'ISO_IR 100'
-        ds.AccessionNumber = ''
-        ds.is_little_endian = True
-        ds.is_implicit_VR = True
-        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
-        ds.SOPInstanceUID = '1.2.3' #!!!!!!!!!!
-        ds.StudyInstanceUID = '1.2.3' #!!!!!!!!!!
-        ds.SeriesInstanceUID = '1.2.3' #!!!!!!!!!!
-        ds.FrameofReferenceUID = '1.2.3' #!!!!!!!!!
-        ds.SeriesDate = '19010101' #!!!!!!!!
-        ds.ContentDate = '19010101' #!!!!!!
-        ds.StudyDate = '19010101' #!!!!!!!
-        ds.SeriesTime = '000000' #!!!!!!!!!
-        ds.StudyTime = '000000' #!!!!!!!!!!
-        ds.ContentTime = '000000' #!!!!!!!!!
-        ds.StructureSetLabel = ''
-        ds.StructureSetDate = ''
-        ds.StructureSetTime = ''
-        ds.Modality = 'RTSTRUCT'
-        roi_label_list = []
-        roi_data_list = []
-        roi_structure_roi_list = []
+        # the vdx slice number is random and not related to anything, dont use.
+        # TODO: rename variables to a clear an consistent notation (position, bin, id)
+        while not(done):
+            if content[i].split()[0] == "slice#":  # FIRST SLICE IS CALLED "1" IN OLD VERSION
+                # this is old VDX version. 
+                # I do not know what the succeeding coordinates are.
+                # looks like simple min max values.
+                self.slice = int(content[i].split()[1])
+                self.slice_in_frame = (self.slice-1) * self.header.slice_distance # TODO bin 0.5 error? 
+                self.thickness = self.header.slice_distance 
 
-        for i in range(self.number_of_vois()):
-            roi_label = self.vois[i].create_dicom_label()
-            roi_label.ObservationNumber = str(i+1)
-            roi_label.ReferencedROINumber = str(i+1)
-            roi_label.RefdROINumber = str(i+1)
-            roi_contours = self.vois[i].create_dicom_contour_data(i)
-            roi_contours.RefdROINumber = str(i+1)
-            roi_contours.ReferencedROINumber = str(i+1)
+            elif re.match("slice", content[i]) is not None: # FIRST SLICE IS CALLED "0" IN 2.0 VERSION
+                if content[i].split()[0] == "slice":                
+                    self.slice = int(content[i].split()[1]) 
+                elif re.match("slice_in_frame", content[i]) is not None:
+                    # this is the thing to use. Slice position in mm. 
+                    self.slice_in_frame = float(content[i].split()[1])
+                    # TODO: consider sorting slices for inc. slice position?
+                    # TODO: probably some dict missing as well.
 
-            roi_structure_roi = self.vois[i].create_dicom_structure_roi()
-            roi_structure_roi.ROINumber = str(i+1)
+            if re.search("thickness", content[i]) is not None:
+                str_list = content[i].split()
+                self.thickness = float(str_list[ str_list.index("start_pos")+1 ])
+                #self.thickness = float(content[i].split()[1])
+            if re.search("reference", content[i]) is not None:
+                # TODO: no idea what this is.
+                pass
+            if re.search("start_pos", content[i]) is not None:
+                self.start_pos = float(str_list[ str_list.index("start_pos")+1 ])
+    #                self.start_pos = float(content[i].split()[4])
+            if re.search("stop_pos", content[i]) is not None:
+                self.stop_pos = float(str_list[ str_list.index("start_pos")+1 ])
+                #self.stop_pos = float(content[i].split()[6])
+            if re.match("number_of_contours", content[i]) is not None:
+                self.number_of_contours = float(content[i].split()[1])             
+            # TODO: currently only one contour is supported.
+            if re.match("internal", content[i]) is not None:
+                if (content[i].split()[1]) == "true":
+                    self.internal = True
+                else: 
+                    self.internal = False                
+            if re.match("number_of_points", content[i]) is not None:
+                number_of_points = int(content[i].split()[1])             
+                self.number_of_points = number_of_points
+                # init array for data
+                self.points = ones((number_of_points,6)) 
+                self.vertices = ones((number_of_points,2))
+                #j = 0
+                for j in range(number_of_points):
+                    i += 1
+                    self.points[j] = map(float,content[i].split())
+                    # print self.point
+                    self.vertices[j] = (self.points[j][0], self.points[j][1])
 
-            roi_structure_roi_list.append(roi_structure_roi)
-            roi_label_list.append(roi_label)
-            roi_data_list.append(roi_contours)
-        ds.RTROIObservations = Sequence(roi_label_list)
-        ds.ROIContours = Sequence(roi_data_list)
-        ds.StructureSetROIs = Sequence(roi_structure_roi_list)
-        return ds
+                done = True
 
-    def write_dicom(self,path):
-        dcm = self.create_dicom()
-        dcm.save_as(os.path.join(path,"rtss.dcm"))
-def voi_point_cmp(a,b):
-    if abs(a[1]-b[1]) < 0.2:
-        c = a[0]-b[0]
-    else:
-        c = a[1]-b[1]
-    if c < 0:
-        return -1
-    else:
-        return 1
-def create_cube(cube,name,center,width,height,depth):
-    v = Voi(name,cube)
-    for i in range(0,cube.dimz):
-        z = i*cube.slice_distance
-        if z >= center[2]-depth/2 and z <= center[2]+depth/2:
-            s = Slice(cube)
-            points = []
-            points.append([center[0]-width/2,center[1]-height/2,z])
-            points.append([center[0]+width/2,center[1]-height/2,z])
-            points.append([center[0]+width/2,center[1]+height/2,z])
-            points.append([center[0]-width/2,center[1]+height/2,z])
-            points.append(points[0])
-            c = Contour(points,cube)
-            s.add_contour(c)
-            v.add_slice(s)
-    return v
-def create_voi_from_cube(cube,name):
-    v = Voi(name,cube)
-    for i in range(cube.dimz):
-        x,y = np.meshgrid(np.arange(len(cube.cube[0,0])),np.arange(len(cube.cube[0])))
-        isodose_obj = cntr.Cntr(x,y,cube.cube[i])
-        contour = isodose_obj.trace(100)
-        s = Slice(cube)
-        if not len(contour):
-            continue
-        points = np.zeros((len(contour[0]),3))
-        points[:,0:2] = contour[0]*cube.pixel_size
-        
-        points[:,2] = i*cube.slice_distance
-        c = Contour(points,cube)
-        s.add_contour(c)
-        
-        v.add_slice(s)
-    return v
-            
-def create_cylinder(cube,name,center,radius,depth):
-    v = Voi(name,cube)
-    t = np.linspace(0,2*pi,100)
-    p = zip(center[0]+radius*cos(t),center[1]+radius*sin(t))
-    for i in range(0,cube.dimz):
-        z = i*cube.slice_distance
-        if z >= center[2]-depth/2 and z <= center[2]+depth/2:
-            s = Slice(cube)
-            points = [[x[0],x[1],z] for x in p]
-            c = Contour(points,cube)
-            s.add_contour(c)
-            v.add_slice(s)
-    return v
-def create_sphere(cube,name,center,radius):
-    v = Voi(name,cube)
-    t = np.linspace(0,2*pi,100)
-    p = zip(cos(t),sin(t))
-    for i in range(0,cube.dimz):
-        z = i*cube.slice_distance
-        if z >= center[2]-radius and z <= center[2]+radius:
-            r = (radius**2-(z-center[2])**2)**0.5
-            s = Slice(cube)
-            points = [[center[0]+r*x[0],center[1]+r*x[1],z] for x in p]
-            c = Contour(points,cube)
-            s.add_contour(c)
-            v.add_slice(s)
-    return v
-class Voi:
-    sagital = 2
-    coronal = 1
 
-    def __init__(self,name,cube=None):
-        self.cube= cube
-        self.name = name
-        self.is_concated = False
-        self.type = 90
-        self.slice_z = []
-        self.slices = {}
-        self.color = [124,0,0]
-        self.define_colors()
-    def create_copy(self,margin=0):
-        voi = copy.deepcopy(self)
-        if not margin == 0:
-            pass
-        return voi
-    def get_voi_cube(self):
-        if hasattr(self,"voi_cube"):
-            return self.voi_cube
-        self.voi_cube = dos.DosCube(self.cube)
-        self.voi_cube.load_from_structure(self,1000)
-        return self.voi_cube
-    def add_slice(self,slice):
-        key = int(slice.get_position()*100)
-        self.slice_z.append(key)
-        self.slices[key] = slice
-    def get_name(self):
-        return self.name
-    
-    def calculate_bad_angles(self,voi):
-        pass
+            # TRIP VERSION TRIP VERSION TRIP VERSION
+            if re.match("points", content[i]) is not None:
+                if content[i].split()[0] == "#points":
+                    str_list = content[i].split()
+                    self.number_of_points = int(str_list[ str_list.index("#points")+1 ])             
 
-    def concat_to_3d_polygon(self):
-        self.concat_contour()
-        data = []
-        for slice in self.slices:
-            data.extend(self.slices[slice].contour[0].contour)
-        self.polygon3d = array(data)
-    def get_3d_polygon(self):
-        if not hasattr(self,"polygon3d"):
-            self.concat_to_3d_polygon()
-        return self.polygon3d
-    def create_point_tree(self):
-        points = {}
-        self.concat_contour()
-        slice_keys = sorted(self.slices.keys())
-        for key in slice_keys:
-            contour = self.slices[key].contour[0].contour
-            p = {}
-            for x in contour:
-            	p[x[0],x[1],x[2]] = []		
-            points.update(p)
-        n_slice = len(slice_keys)
-        last_contour = None
-        for i,key in enumerate(slice_keys):
-            contour = self.slices[key].contour[0].contour
-            n_points = len(contour)
-            if i < n_slice-1:
-                next_contour = self.slices[slice_keys[i+1]].contour[0].contour 
-            else:
-                next_contour = None
-            for j,point in enumerate(contour):
-                j2 = (j+1)%(n_points-2)
-                point2 = contour[j2]
-                points[(point[0],point[1],point[2])].append(point2) 
-                points[(point2[0],point2[1],point2[2])].append(point)
-                if next_contour is not None:
-                    point3 = res.point.get_nearest_point(point,next_contour)
-                    points[(point[0],point[1],point[2])].append(point3)
-                    points[(point3[0],point3[1],point3[2])].append(point)
-                if last_contour is not None:
-                    point4 = res.point.get_nearest_point(point,last_contour)
-                    if not point4 in points[(point[0],point[1],point[2])]:
-                        points[(point[0],point[1],point[2])].append(point4)
-                        points[(point4[0],point4[1],point4[2])].append(point)
-            last_contour = contour
-        self.points = points
-        
-    def get_2d_projection_on_basis(self,basis,offset = None):
-        a = array(basis[0])
-        b = array(basis[1])
-        self.concat_contour()
-        bas = array([a,b])
-        data = self.get_3d_polygon()
-        product = dot(data,transpose(bas))
-        
-        compare = (self.cube.pixel_size)
-        filtered = plib.filter_points(product,compare/2)
-        filtered = array(sorted(filtered,cmp=voi_point_cmp))
-        filtered = plib.points_to_contour(filtered)
-        product = filtered;
+                if content[i].split()[0] == "points":
+                    str_list = content[i].split()
+                    str_list.remove("points") # "points" is first element in this list.
+                    temp = array(map(float,str_list))
+                    actual_points = len(temp)/2
+                    temp2 = temp.reshape(actual_points,2)
+                    # TODO: translate into real coordinate system
+                    # TODO note that z is missing
+                    #
+                    # TRiPpos -> Real pos:
+                    # It seems that TRiP uses 16 bins per real bin.
+                    # thus: conversion factor is pixel_size / 16.0
+                    #
+                    # Therefore we had to load the header data earlier.
+                        #
+                    temp2 = self.header.pixel_size/16.0 * temp2
+                    #
+                    # in order to be compatible with 2.0 virtuos vdx format
+                    # the first point is repeated.
+                    # TODO: think which way is better:
+                    #     1) Ignore last point in 2.0
+                    # or  2) repeat 1st point on older version
+                    # currently we do 2) for the vertices map.
+                    # and nothing for the points[]
+                    self.points = ones((actual_points,6))
+                    self.vertices = ones((actual_points+1,2)) # see TODO above.
+                    self.points[:actual_points,:2] = temp2
+                    for j in range(actual_points):
+                        self.vertices[j] = (self.points[j][0], self.points[j][1])
+                    self.vertices[-1] = (self.points[0][0],self.points[0][1])
+                    if self.number_of_points == None:
+                        self.number_of_points = actual_points
+                    elif self.number_of_points != actual_points:
+                        print "VDX: bummer. Error code 120."
+                        sys.exit()
+                    done = True
 
-        
-        
-        if offset is not None:
-            offset_proj = array([dot(offset,a),dot(offset,b)])
-            product = product[:] - offset_proj
-        return product
-    def get_2d_slice(self,plane,depth):
-        self.concat_contour()
-        points1 = []
-        points2 = []
-        for key in sorted(self.slice_z):
-            slice = self.slices[key]
-            if plane is self.sagital:
-                point = sorted(plib.slice_on_plane(array(slice.contour[0].contour),plane,depth),key = lambda x: x[1])
-            elif plane is self.coronal:
-                point = sorted(plib.slice_on_plane(array(slice.contour[0].contour),plane,depth),key = lambda x: x[0])
-            if len(point) > 0:
-                points2.append(point[-1])
-                if len(point) > 1:
-                    points1.append(point[0])
-        s = None
-        if len(points1) > 0:
-            points1.extend(reversed(points2))
-            points1.append(points1[0])
-            s = Slice()
-            s.add_contour(Contour(points1))
-        return s
-    def define_colors(self):
-        self.colors = []
-        self.colors.append([0,0,255])
-        self.colors.append([0,128,0])
-        self.colors.append([0,255,0])
-        self.colors.append([255,0,0])
-        self.colors.append([0,128,128])
-        self.colors.append([255,255,0])
-    def calculate_center(self):
-        if hasattr(self,"center_pos"):
-            return self.center_pos
-        self.concat_contour()
-        tot_volume = 0
-        center_pos = array([0,0,0])
-        for key in self.slices:
-            center,area = self.slices[key].calculate_center()
-            tot_volume += area
-            center_pos += area*center
-        self.center_pos = center_pos/tot_volume
-        return center_pos/tot_volume
-    
-    def get_color(self,i=None):
-        if i is None:
-            return self.color
-        return self.colors[i%len(self.colors)]
-    def set_color(self,color):
-        self.color = color
-        
-    def create_dicom_label(self):
-        roi_label = Dataset()
-        roi_label.ROIObservationLabel = self.name
-        roi_label.RTROIInterpretedType = self.get_roi_type_name(self.type)
-        return roi_label
-    def create_dicom_structure_roi(self):
-        roi = Dataset()
-        roi.ROIName = self.name
-        return roi
-    def create_dicom_contour_data(self,i):
-        roi_contours = Dataset()
-        contours = []
-        for k in self.slices:
-            contours.extend(self.slices[k].create_dicom_contours())
-        roi_contours.Contours = Sequence(contours)
-        roi_contours.ROIDisplayColor = self.get_color(i)
-
-        return roi_contours
-
-    def read_vdx_old(self,content,i):
-        line = content[i]
-        items = line.split()
-        self.name = items[1]
-        self.type = int(items[3])
-        i+=1
-        slices = 10000
-        while i < len(content):
-            line = content[i]
-            if re.match("voi",line) is not None:
-                break
-            if re.match("#TransversalObjects",line) is not None:
-                slices = int(line.split()[1])
+    #                print "Completed slice."
+    #                print
+    #            print "line number i"
             i += 1
-        print items
-        return i-1
 
-    def read_vdx(self,content,i):
-        line = content[i]
-        self.name = string.join(line.split()[1:],' ')
-        number_of_slices = 10000
-        i+=1
-        while i < len(content):
-            line = content[i]
-            if re.match("key",line) is not None:
-                self.key = line.split()[1]
-            elif re.match("type",line) is not None:
-                self.type = int(line.split()[1])
-            elif re.match("number_of_slices",line) is not None:
-                number_of_slices = int(line.split()[1])
-            elif re.match("slice",line) is not None:
-                s = Slice()
-                i = s.read_vdx(content,i)
-                key = int((float(s.get_position())-min(self.cube.slice_pos))*100)
-                self.slice_z.append(key)
-                self.slices[key] = s
-            elif re.match("voi",line) is not None:
-                break
-            elif len(self.slices) >= number_of_slices:
-                break
+
+class Contour(object):
+    def __init__(self,i,content):
+        # read until first slice
+        done = False
+        while not(done):
+            #self.slice = [] # Not needed (yet)
+            if re.match("reference_frame", content[i]) is not None:
+                # dont know what this means.
+                pass
+                
+            if re.match("origin", content[i]) is not None:
+                self.origin = [ float(content[i].split()[1]), \
+                                    float(content[i].split()[2]),\
+                                    float(content[i].split()[3])]
+                
+            if re.match("point_on_x_axis", content[i]) is not None:
+                self.point_on_x_axis = [ float(content[i].split()[1]), \
+                                             float(content[i].split()[2]),\
+                                             float(content[i].split()[3])]                
+
+            if re.match("point_on_y_axis", content[i]) is not None:
+                self.point_on_y_axis = [ float(content[i].split()[1]), \
+                                             float(content[i].split()[2]),\
+                                             float(content[i].split()[3])]
+
+            if re.match("point_on_z_axis", content[i]) is not None:
+                self.point_on_z_axis = [ float(content[i].split()[1]), \
+                                             float(content[i].split()[2]),\
+                                             float(content[i].split()[3])]
             i += 1
-        return i-1
-    def get_roi_type_number(self,type_name):
-        if type_name == 'EXTERNAL':
-            return 0
-        elif type_name == 'AVOIDANCE':
-            return 0
-        elif type_name == 'ORGAN':
-            return 0
-        elif type_name == 'GTV':
-            return 1
-        elif type_name == 'CTV':
-            return 1
-        else:
-            return 0
-    def get_roi_type_name(self,type_id):
-        if type_id == 10:
-            return "EXTERNAL"
-        elif type_id == 2:
-            return 'AVOIDANCE'
-        elif type_id == 1:
-            return 'CTV'
-        elif type_id == 0:
-            return 'other'
-        return ''
-    def read_dicom(self,info,data):
-        if not data.has_key("Contours"):
-            return
-        type_name = info.RTROIInterpretedType
-        self.type = self.get_roi_type_number(typename)
-        self.color = data.ROIDisplayColor
-        for i in range(len(data.Contours)):
-            key = int((float(data.Contours[i].ContourData[2])-min(self.cube.slice_pos))*100)
-            if not self.slices.has_key(key):
-                self.slices[key] = Slice(self.cube)
-                self.slice_z.append(key)
-            self.slices[key].add_dicom_contour(data.Contours[i])
-    def get_thickness(self):
-        if len(self.slice_z) <= 1:
-            return 3
-        return abs(float(self.slice_z[1])-float(self.slice_z[0]))/100
-    def to_voxel_string(self):
-        if len(self.slices) is 0:
-            return ""
 
-        out = "\n"
-        out += "voi %s\n"%(self.name.replace(" ","_"))
-        out += "key empty\n"
-        out += "type %s\n"%self.type
-        out += "\n"
-        out += "contours\n"
-        out += "reference_frame\n"
-        out += " origin 0.000 0.000 0.000\n"
-        out += " point_on_x_axis 1.000 0.000 0.000\n"
-        out += " point_on_y_axis 0.000 1.000 0.000\n"
-        out += " point_on_z_axis 0.000 0.000 1.000\n"
-        out += "number_of_slices %d\n"%self.number_of_slices()
-        out += "\n"
-        i = 0
-        thickness = self.get_thickness()
-        for k in self.slice_z:
-            sl = self.slices[k]
-            pos = sl.get_position()
-            out += "slice %d\n"%i
-            out += "slice_in_frame %.3f\n"%pos
-            out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n"%(thickness,pos-0.5*thickness,pos+0.5*thickness)
-            out += "number_of_contours %d\n"%self.slices[k].number_of_contours()
-            out += self.slices[k].to_voxel_string()
-            i += 1
-        return out
-    def get_row_intersections(self,pos):
-        slice = self.get_slice_at_pos(pos[2])
-        if slice is None:
-            return None
-        return sort(slice.get_intersections(pos))
-    def get_slice_at_pos(self,z):
-        thickness = self.get_thickness()/2*100
-        for key in self.slices.keys():
-            key = key
-            low = z*100 - thickness
-            high = z*100 + thickness
-            if (low < key and z*100 > key) or (high > key and z*100 <= key):
-                return self.slices[key]
-        return None
-    def number_of_slices(self):
-        return len(self.slices)
-    def concat_contour(self):
-        if not self.is_concated:
-            for k in self.slices.keys():
-                self.slices[k].concat_contour()
-        self.is_concated  = True
-    def get_min_max(self):
-        temp_min,temp_max = None,None
-        if hasattr(self,"temp_min"):
-            return self.temp_min,self.temp_max
-        for key in self.slices:
-            if temp_min is None:
-                temp_min,temp_max = self.slices[key].get_min_max()
-            else:
-                min1,max1 = self.slices[key].get_min_max()
-                temp_min = res.point.min_list(temp_min,min1)
-                temp_max = res.point.max_list(temp_max,max1)
-        self.temp_min = temp_min
-        self.temp_max = temp_max
-        return temp_min,temp_max
+            if re.match("number_of_slices", content[i]) is not None:
+                self.nslices = int(content[i].split()[1])
+                done = True
 
-class Slice:
-    def __init__(self,cube = None):
-        self.cube = cube
+
+
+class Voi(object):
+    def __init__(self,i,content):
+
+        self.slice = [] 
         self.contour = []
-        return
-    def add_contour(self,contour):
-        self.contour.append(contour)
-    def add_dicom_contour(self,dcm):
-        offset = []
-        offset.append(float(self.cube.xoffset))
-        offset.append(float(self.cube.yoffset))
-        offset.append(float(min(self.cube.slice_pos)))
-        self.contour.append(Contour(res.point.array_to_point_array(array(dcm.ContourData,dtype=float),offset)))
-    def get_position(self):
-        if len(self.contour) == 0:
-            return None
-        return self.contour[0].contour[0][2]
-    def get_intersections(self,pos):
-        intersections = []
-        for c in self.contour:
-            intersections.extend(res.point.get_x_intersection(pos[1],c.contour))
-        return intersections
-    def calculate_center(self):
-        tot_area = 0
-        center_pos = array([0,0,0])
-        for contour in self.contour:
-            center, area = contour.calculate_center()
-            tot_area += area
-            center_pos += area*center
-        return (center_pos/tot_area,tot_area)
+        self.prepared = False # index whether mask is prepared
+        self.lut_slice = [] # lookup table for slice index <-> slice position
 
-    def read_vdx(self,content,i):
-        line = content[i]
-        number_of_contours = 0
-        i += 1
-        while i < len(content):
-            line = content[i]
-            if re.match("slice_in_frame",line) is not None:
-                self.slice_in_frame = float(line.split()[1])
-            elif re.match("thickness",line) is not None:
-                items = line.split()
-                self.thickness = float(items[1])
-                if(len(items) == 7):
-                    self.start_pos = float(items[4])
-                    self.stop_pos = float(items[6])
-                else:
-                    self.start_pos = float(items[3])
-                    self.stop_pos = float(items[5])
+        self.name = None
+        self.key = None
+        self.type = None
 
-            elif re.match("number_of_contours",line) is not None:
-                number_of_contours = int(line.split()[1])
-            elif re.match("contour",line) is not None:
-                c = Contour([])
-                i = c.read_vdx(content,i)
-                self.add_contour(c)
-            elif re.match("slice",line) is not None:
-                break
-            elif self.contour >= number_of_contours:
-                break
-            i += 1
-        return i-1
-    def create_dicom_contours(self):
-        contour_list = []
-        for i in range(len(self.contour)):
-            con = Dataset()
-            contour = []
-            for p in self.contour[i].contour:
-                contour.extend([p[0],p[1],p[2]])
-            con.ContourData = contour
-            con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = self.contour[i].number_of_points()
-            contour_list.append(con)
-        return contour_list
-
-    def to_voxel_string(self):
-        out = ""
-        for i in range(len(self.contour)):
-            out += "contour %d\n"%i
-            out += "internal false\n"
-            out += "number_of_points %d\n"%(self.contour[i].number_of_points()+1)
-            out += self.contour[i].to_voxel_string()
-            out += "\n"
-        return out
-    def number_of_contours(self):
-        return len(self.contour)
-    def concat_contour(self):
-        for i in range(len(self.contour)-1,0,-1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].concat()
-    def remove_inner_contours(self):
-        for i in range(len(self.contour)-1,0,-1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].remove_inner_contours()
-    def get_min_max(self):
-        temp_min,temp_max = self.contour[0].get_min_max()
-        for i in range(1,len(self.contour)):
-            min1,max1 = self.contour[i].get_min_max()
-            temp_min = res.point.min_list(temp_min,min1)
-            temp_max = res.point.max_list(temp_max,max1)
-        return temp_min,temp_max
-
-
-class Contour:
-    def __init__(self,contour,cube=None):
-        self.cube = cube
-        self.children = []
-        self.contour = contour
-    def push(self,contour):
-        for i in range(len(self.children)):
-            if(self.children[i].contains_contour(contour)):
-                self.children[i].push(contour)
-                return
-        self.add_child(contour)
-    def calculate_center(self):
-        points = self.contour
-        points.append(points[-1])
-        points = array(points)
-        dx_dy = array([points[i+1]-points[i] for i in range(len(points)-1)])
-        if abs(points[0,2]-points[1,2]) < 0.01:
-            area = -sum(points[0:len(points)-1,1]*dx_dy[:,0])
-            paths = array((dx_dy[:,0]**2+dx_dy[:,1]**2)**0.5)
-        elif abs(points[0,1]-points[1,1]) < 0.01:
-            area = -sum(points[0:len(points)-1,2]*dx_dy[:,0])
-            paths = array((dx_dy[:,0]**2+dx_dy[:,2]**2)**0.5)
-        elif abs(points[0,0]-points[1,0]) < 0.01:
-            area = -sum(points[0:len(points)-1,2]*dx_dy[:,1])
-            paths = array((dx_dy[:,1]**2+dx_dy[:,2]**2)**0.5)
-        total_path = sum(paths)
-        
-        center = array([sum(points[0:len(points)-1,0]*paths)/total_path,sum(points[0:len(points)-1:,1]*paths)/total_path,points[0,2]])
-        
-        #~ center = 0.5*array([sum((points[0:len(points)-1,0]**2)*dx_dy[:,1])/area,-sum((points[0:len(points)-1:,1]**2)*dx_dy[:,0])/area,points[0,2]])
-        return (center,area)
-    def get_min_max(self):
-        min_x = amin(array(self.contour)[:,0])
-        min_y = amin(array(self.contour)[:,1])
-        min_z = amin(array(self.contour)[:,2])
-
-        max_x = amax(array(self.contour)[:,0])
-        max_y = amax(array(self.contour)[:,1])
-        max_z = amax(array(self.contour)[:,2])
-        return ([min_x, min_y,min_z],[max_x,max_y,max_z])
-
-    def to_voxel_string(self):
-        out = ""
-        for i in range(len(self.contour)):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n"%(self.contour[i][0],self.contour[i][1],self.contour[i][2],0,0,0)
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n"%(self.contour[0][0],self.contour[0][1],self.contour[0][2],0,0,0)
-        return out
-    def read_vdx(self,content,i):
-        set_point = False
-        points = 0
         j = 0
-        while i < len(content):
-            line = content[i]
-            if set_point:
-                if j >= points-1:
-                    break
-                con_dat = line.split()
-                self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
-                j += 1
-            else:
-                if re.match("internal_false",line) is not None:
-                    self.internal_false = True
-                if re.match("number_of_points",line) is not None:
-                    points = int(line.split()[1])
-                    set_point = True
-
+        # TODO not very good, we depend on VOI assignment being terminated by "type" string
+        while self.type == None:
+            #print i,":",content[i]
+            str_list = content[i].split()
+            if re.search("voi", content[i]) is not None:
+            # this will work even if multiple entries are found on one line.
+            # the value is always the next item after the search key
+                self.name = str_list[ str_list.index("voi")+1 ]
+        #print content[i]
+                #print "VDX: found voi", self.name
+            if re.search("key", content[i]) is not None:
+                self.key = str_list[ str_list.index("key")+1 ]
+            if re.search("type", content[i]) is not None:
+                self.type = str_list[ str_list.index("type")+1 ]
+        #print "VDX: found type", self.type
             i += 1
-        return i-1
-    def add_child(self,contour):
-        remove_idx = []
-        for i in range(len(self.children)):
-            if(contour.contains_contour(self.children[i])):
-                contour.push(self.children[i])
-                remove_idx.append(i)
-        remove_idx.sort(reverse=True)
-        for i in remove_idx:
-            self.children.pop(i)
-        self.children.append(contour)
-    def number_of_points(self):
-        return len(self.contour)
-    def has_childs(self):
-        if(len(self.children) > 0):
-            return True
-        return False
-    def print_child(self,level):
-        for i in range(len(self.children)):
-            print level*'\t',
-            print self.children[i].contour
-            self.children[i].print_child(level+1)
+            j += 1
+            if j > 3:
+                print "VDX: something bad happend. Code 188."
+                sys.exit()
+            
+        #print "Found voi name: ", self.name
 
-    def contains_contour(self,contour):
-        return res.point.point_in_polygon(contour.contour[0][0],contour.contour[0][1],self.contour)
-    def concat(self):
-        for i in range(len(self.children)):
-            self.children[i].concat()
-        while(len(self.children) > 1):
-            d = -1
-            i1 = 0
-            i2 = 0
-            child = 0
-            for i in range(1,len(self.children)):
-                i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour,self.children[i].contour)
-                if(d == -1 or d_temp < d):
-                    d = d_temp
-                    child = i
-            i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour,self.contour)
-            if d_temp < d:
-                self.merge(self.children[0])
-                self.children.pop(0)
-            else:
-                self.children[0].merge(self.children[child])
-                self.children.pop(child)
-        if(len(self.children) == 1):
-            self.merge(self.children[0])
-            self.children.pop(0)
-    def remove_inner_contours(self):
-        for i in range(len(children)):
-            self.children[i].children = []
-    def merge(self,contour):
-        if(len(self.contour) == 0):
-            self.contour = contour.contour
+    def bin2slice(self,bin):
+        """Supposed to return a slice at position realpos (mm)"""
+        return self.lut_slice[bin]
+
+    def slice2bin(self,realpos):
+        """Supposed to return a slice at position realpos (mm)"""
+        #print "TEST2:", realpos, 
+        #print self.lut_slice
+
+        try:
+                return self.lut_slice.index(realpos)
+        except:
+            #if there is no slice in this VOI, return -1
+            #print "nope."
+            return -1
+
+        # TODO: test if countour exists in slice at all.
+        # in fact only slices WITH contours exist in this list.
+
+
+class Vdx(object):
+    def __init__(self, filename=None):
+        """ .vdx file handling."""
+        print "init vdx"
+        self.type  = "VDX"
+        self.type_aux = None
+        self.name = None
+        self.name_aux = None
+        self.filename = filename
+        self.min = 0
+        self.max = 0
+        if filename != None:
+            self.read(filename)
+            
+    def __str__(self):
+        # print some statistics about the cube
+        # len, min, max, and header info.
+        return("Not implemented yet.")    
+    
+    def __add__(self):
+        print "Not implemented."
+        # TODO: this one could add two contours to one.
+
+    def new(self):
+        print "Not implemented."
+        # TODO: implement this.
+
+    def read(self,filename):
+
+        """ Read a .vdx file."""
+        # TODO: put short and long filenames into object
+        FileIsRead = False        
+        
+        fname_split = os.path.splitext(filename)
+        fname = fname_split[0]
+
+        fname_hed = fname + ".hed"
+        if os.path.isfile(fname_hed) is False:
+            fname_hed = fname +".HED"
+            if os.path.isfile(fname_hed) is False:
+                raise IOError,  "VDX: Could not find file " \
+                      + fname + ".hed or " + fname + ".HED"
+
+        # read auxilliary data from *.hed
+        print "VDX: read header file", fname_hed
+        self.header = Header(fname_hed)
+
+        #print 'initialized with filename',  filename        
+        if os.path.isfile(filename) is False:
+            raise IOError,  "VDX: Could not find file " + filename
+        else:
+            hedinput_file = open( filename , 'r')
+            content = hedinput_file.readlines()
+            hedinput_file.close()
+            data_length = len(content)
+            print "VDX: read", data_length,  "lines of data from header file."
+            i = 0
+            next_voi = 0
+            next_contour = 0
+            next_slice = 0
+
+        # first check which kind of vdx version we have got.
+        self.version = "(none)"
+        for i in range(data_length):
+                if re.match("vdx_file_version", content[i]) is not None:
+                    self.version= content[i].split()[1]
+
+        self.voi = []
+        i = 0 # restart
+
+        # VIRTUOS VERSION VIRTUOS VERSION VIRTUOS VERSION
+        if self.version == "2.0":
+                while i < data_length:
+                    #print "parsing line",  i,  content[i]
+                    if re.match("all_indices_zero_based", content[i]) is not None:
+                        self.all_indices_zero_based = True
+                    if re.match("number_of_vois", content[i]) is not None:
+                        self.numberofvois = content[i].split()[1]
+
+                    if re.match("voi", content[i]) is not None:
+                        # found a VOI
+#                        print "Found a VOI."
+                        self.voi.append(Voi(i,content))
+                        #self.voiname = 
+                        next_voi += 1
+
+                    if re.match("contours", content[i]) is not None:
+                        # read the contours
+#                        print "Found a Contour"
+                        self.voi[next_voi-1].contour.append(Contour(i,content))
+                        next_contour += 1
+
+                    if re.match("slice", content[i]) is not None:
+                        if content[i].split()[0] == "slice":
+                            # print "Found a Slice"
+                    # TODO check what slice we got, and put it into the right place
+                    # No, we cannot do this, because the first slice and its position is
+                # not possibly mentioned in the vdx file.
+                # therefore this will remain unsorted.
+                # instead provide a function which returns a slice at a given position.
+                            self.voi[next_voi-1].slice.append(Slice(i,content,self.header))
+                # append the position to lookup_table
+                            self.voi[next_voi-1].lut_slice.append(self.voi[next_voi-1].slice[-1].slice_in_frame)
+                            next_slice += 1
+                    i += 1
+                FileIsRead = True
+
+        # TRIP VERSION TRIP VERSION TRIP VERION TRIP VERSION
+        if self.version != "2.0": # TODO: do less than 2.0 instead of true match
+            print "VDX: TRiP style .vdx file."
+            while i < data_length:
+                #print "parse",  i,  content[i]
+
+                if re.match("voi", content[i]) is not None:
+                    #print "VDX: Found a VOI a la TRiP."
+                    self.voi.append(Voi(i,content))
+                    next_voi += 1
+
+                if re.match("contours", content[i]) is not None:
+                    # read the contours
+#                        print "Found a Contour"
+                    self.voi[next_voi-1].contour.append(Contour(i,content))
+                    next_contour += 1
+            #print "parse2",  i,  content[i]
+                if re.match("slice#", content[i]) is not None:
+                    if content[i].split()[0] == "slice#":
+                        #print "Found a Slice", next_slice
+                # TODO check what slice we got, and put it into the right place
+                # No, we cannot do this, because the first slice and its position is
+                # not possibly mentioned in the vdx file.
+                # therefore this will remain unsorted.
+                # instead provide a function which returns a slice at a given position.
+                            self.voi[next_voi-1].slice.append(Slice(i,content,self.header))
+                # append the position to lookup_table
+                # slice_in_frame contains real coordinates, not bins.
+                            self.voi[next_voi-1].lut_slice.append(self.voi[next_voi-1].slice[-1].slice_in_frame)
+                            next_slice += 1
+                i += 1
+                FileIsRead = True
+            print "Found", next_voi-1, "VOIs"
+
+        self.numberofvois = next_voi-1    
+        for i in range(self.numberofvois):
+            print "VDX VOI: %20s - Slices: %i" %(self.voi[i].name, len(self.voi[i].slice))
+
+        print "VDX: _fix_vdx"
+        
+        self._fix_vdx()
+        # for convenience
+        self.xmin = self.header.xmin
+        self.ymin = self.header.ymin
+        self.zmin = self.header.zmin
+        self.xmax = self.header.xmax
+        self.ymax = self.header.ymax
+        self.zmax = self.header.zmax
+        self.rxmin = self.header.bin2pos(self.xmin)
+        self.rymin = self.header.bin2pos(self.ymin)
+        self.rzmin = self.header.bin2slice(self.zmin)
+        self.rxmax = self.header.bin2pos(self.xmax)
+        self.rymax = self.header.bin2pos(self.ymax)
+        self.rzmax = self.header.bin2slice(self.zmax)
+
+
+
+        print "VDX: done ReadVdx. ------------------------"
+        
+# TODO Add lookup function for PTV,TARGET, OAR etc.
+
+#    def __del__(self):
+#        object.__del__(self)
+#    print 'deleted'
+
+#    def __del__(self):
+#            object.__del__(self)
+#            self.__del__(self)
+#            print 'deleted'
+    
+    def show_version(self):
+        print self.version
+
+
+    def _point_in_polygon(self,polySides,polyX,polyY,x,y):
+        """
+        //  int    polySides  =  how many corners the polygon has
+        //  float  polyX[]    =  horizontal coordinates of corners
+        //  float  polyY[]    =  vertical coordinates of corners
+        //  float  x, y       =  point to be tested
+        """
+        oddNodes = False
+        j = polySides - 1
+
+    #    print "Point:",x,y
+    #    print "There are",polySides,"polynomium edges/sides."
+
+        for i in range(polySides):
+            if (polyY[i] < y and polyY[j] >= y or  polyY[j] < y and polyY[i] >= y):
+                if (polyX[i]+(y-polyY[i])/(polyY[j]-polyY[i])*(polyX[j]-polyX[i]) < x):
+                    oddNodes = not(oddNodes)
+            j=i
+        return oddNodes
+
+
+
+
+
+    def import_dicom(self,filename):
+        """ Build a VDX object from a dicom object. """
+
+        if _dicom_loaded == False:
+            print "pydicom not installed or not available."
+            return(None)
+
+        if os.path.isfile(filename) == False:
+            print "VDX, dicom_import: cant find file:", filename
+        self.header = Header() # empty header object
+        #self.
+        rt = dicom.read_file(filename)
+        if rt.Modality != "RTSTRUCT":
+            print "This is not a RTSTRUCT file:", filename, rt.Modality
+            return(None)
+        #TODO: how to get number of ROIs properly?
+        _vois = len(rt.ROIContours) # _vois = number of ROIs/VOIs
+
+        # TODO
+        #
+        # dont know how to get the contour names?
+        # loop over all ROIs
+        #     loop over all contours (there may be one or more per slice)
+        #         rt.ROIContours[0].Contours[0].NumberofContourPoints
+        #         rt.ROIContours[0].Contours[0].ContourData # contains flat array.
+        #         update lut. # which is common for all contours
+        # fill the header with what is possible.
+        #
+
+        # BIG TODO: fix structure of classes:
+        # VDX --> VOI[] --> Contours[]
+        # and
+        # VDX.VOI[].Contours[].GetContourMaskFromSliceNumber(slice_number)
+        # or
+        # VDX.VOI[].Contours[].GetContourMaskFromSlicePosition(position_in_mm)    
+        # or something similar.
+        #
+        # but obviously, in order to produce this, one needs the header, aargh!
+        # GRRR.
+        #
+    def _fix_vdx(self):
+        """ _header is the object from ReadHeader() """
+        # this can be moved into ReadVdx
+        # get # of slices:
+        print "VDX: VdxRead: number of slices in HED:", self.header.slice_number
+        print "VDX: First slice is at:", self.header.bin2slice(0), "mm"
+        print "VDX: And x y bins are:", self.header.dimx, self.header.dimy
+
+        # build VOI cubes
+        self.mask = []
+
+        # TODO alignment checking.
+        #print self.voi
+
+        # init empty vois. calculating all takes too long time.    
+
+        for _cv in range(len(self.voi)):
+            #print "FIX VDX, voi:", _cv
+            # _cv is current voi
+                # create empty cube for 1st VOI
+            self.mask.append(zeros((self.header.dimx,self.header.dimy,self.header.slice_number),bool)) # inits to False
+
+        print "VDX: done fix_vdx. ------------------------"
+
+    def _calc_voi(self,_cv):
+        if self.voi[_cv].prepared == True:
+            print "VDX: voi already calculated/prepared"
             return
-        i1, i2, d = res.point.short_distance_polygon_idx(self.contour,contour.contour)
-        con = []
-        for i in range(i1+1):
-            con.append(self.contour[i])
-        for i in range(i2,len(contour.contour)):
-            con.append(contour.contour[i])
-        for i in range(i2+1):
-            con.append(contour.contour[i])
-        for i in range(i1,len(self.contour)):
-            con.append(self.contour[i])
-        self.contour = con
-        return
+
+            print "VDX: Calculate voi number:",_cv, "which is",self.voi[_cv].name
+        print "VDX: slice LUT:", self.voi[_cv].lut_slice
+        for _cs in range(self.header.slice_number):            
+            #_cs is current slice
+            
+            # lookup index for _cs
+            _Rcs = self.header.bin2slice(_cs) # _Rcs holds the real position of slice.
+            # does it exist for this VOI?
+
+            _vsi =  self.voi[_cv].slice2bin(_Rcs)
+            # _vsi = VDX Slice Index, due to *** internal translation
+            #print "VDX:_cs, _Rcs, _vsi:", _cs, _Rcs, _vsi
+
+
+            if _vsi != -1:
+                #print "Slice:", _cs,"at",_Rcs,"mm"
+                # ok, we have a contour here.
+                _slice = self.voi[_cv].slice[_vsi]
+
+                #print "This slice contains", _slice.number_of_points, "points."
+
+                # TODO obsolete? this is integrated as self.
+                # this contains the slice data
+                _Rxmin = _slice.points[:,0].min() # these are real positions in mm
+                _Rxmax = _slice.points[:,0].max()
+                _Rymin = _slice.points[:,1].min()
+                _Rymax = _slice.points[:,1].max()
+                
+                _xmin = self.header.pos2bin(_Rxmin) # these are the translated bin positions
+                _xmax = self.header.pos2bin(_Rxmax)
+                _ymin = self.header.pos2bin(_Rymin)
+                _ymax = self.header.pos2bin(_Rymax)
+                x1 = _slice.points[:_slice.number_of_points-1,0]
+                y1 = _slice.points[:_slice.number_of_points-1,1]
+                x2 = _slice.points[1:,0]
+                y2 = _slice.points[1:,1]
+                
+                gradients = (x2-x1)/(y2-y1)
+                
+                #print "VDX ranges (bins):", _xmin,_xmax,_ymin,_ymax
+                #print "VDX ranges (real):", _Rxmin,_Rxmax,_Rymin,_Rymax
+                
+                for y in range(_ymin,_ymax):
+                    Ry = self.header.bin2pos(y)
+                    mask = logical_or(logical_and(y1 < Ry, y2 >= Ry),logical_and(y2 < Ry, y1 >= Ry))
+                    xline=self.header.posar2bin((Ry-y1[mask])*gradients[mask]+x1[mask])
+                    xline.sort()
+                    i = 1
+                    result = zeros(size(self.mask[_cv][:,y,_cs]),bool)
+                    while i < size(xline):
+                        result[xline[i-1]:xline[i]+1]=True
+                        i += 2
+                        
+                    
+                    self.mask[_cv][:,y,_cs]=result
+
+
+                        #print "VDX True at,", _x,_y,_cs
+
+            # TODO: i am not sure if this is right.
+        print "VDX: swap axes", _cv
+        self.mask[_cv] = swapaxes(self.mask[_cv],0,1)
+        self.voi[_cv].prepared = True    # mark that this is prepared.
+        print "VDX: done _calc_voi. ------------------------"
+
+
+    def get_slice_vertices(self, _slice, _voinr):
+        # fix index, which starts in zero (heavens forbid!)
+        _slice -= 1
+        # TODO this is a mess: there are 
+        #    i) Absolute slice positions in mm
+        #    ii) absolute slice numbers
+        #    iii) a slice lookup table.
+        _aslice = self.header.bin2slice(_slice)  # translate slice bin to absolute position in mm
+        _bslice = self.voi[_voinr].slice2bin(_aslice) # get proper slice number in LUT of current VOI.
+        #print "slice bin:", _slice, _aslice, _bslice
+        #print self.voi[_voinr].slice[_bslice].vertices
+        if _bslice == -1: # no data here.
+            return None
+        else:
+            return (self.voi[_voinr].slice[_bslice].vertices)
+
+    def get_slice(self, _idx, _slice,_voinr):
+        # TODO: think very carefully whether this is ok solution.
+        # fix index, which starts in zero (heavens forbid!)
+        _slice -= 1
+        
+        self._calc_voi(_voinr)
+        _cube = self.mask[_voinr]
+
+
+        print "x size:" , len(_cube[:,0,0])
+        print "y size:" , len(_cube[0,:,0])
+        print "z size:" , len(_cube[0,0,:])
+
+
+#            if type(_slice) == type(1): # int type only supported yet.
+
+        if _idx == "x":
+            V = _cube[_slice,:,:]
+            print "VDX: slice at x=",_slice,"which is at",self.header.bin2pos(_slice),"mm"
+        if _idx == "y":
+            V = _cube[:,_slice,:]
+            print "VDX: slice at y=",_slice,"which is at",self.header.bin2pos(_slice),"mm"
+        if _idx == "z":
+            V = _cube[:,:,_slice]
+            print "VDX: slice at z=",_slice,"which is at",self.header.bin2slice(_slice),"mm"
+
+
+        # add half a millimeter to convert from points to bins.
+        xmin = self.header.xoffset+0.5
+        ymin = self.header.yoffset+0.5
+        zmin = self.header.zoffset+0.5
+        xmax = xmin + self.header.dimx
+        ymax = ymin + self.header.dimy
+        zmax = zmin + self.header.dimz
+
+        print "X Y Z ranges: ", xmin,xmax, ymin,ymax, zmin, zmax
+
+        x = arange(xmin,xmax,1) * self.header.pixel_size
+        y = arange(ymin,ymax,1) * self.header.pixel_size
+        z = (arange(zmin,zmax,1) * self.header.slice_distance) + self.header.bin2slice(0)
+#            print "X Y Z arange: ", len(x),len(y),len(z)
+        # convert to real coordinates.
+        xmin *= self.header.pixel_size
+        xmax *= self.header.pixel_size
+        ymin *= self.header.pixel_size
+        ymax *= self.header.pixel_size
+        zmin = self.header.bin2slice(0) # position of first slice
+        zmax = zmax * self.header.slice_distance + zmin
+        print "Real X Y Z ranges in mm: ", xmin,xmax, ymin,ymax, zmin, zmax
+
+        # plottes der med sz, saa ser vi x langs x og y langs y.
+        # plottes der med sy, saa ser vi z langs x og x langs y
+        # plottes der med sx, saa ser vi y langs x og z langs y
+
+        if _idx == "x":
+            X,Y = meshgrid(z,y)
+        if _idx == "y":
+            X,Y = meshgrid(z,x)
+        if _idx == "z":
+            X,Y = meshgrid(x,y)
+
+        print "VDX SHAPE: ", X.shape, Y.shape, V.shape
+        print "VDX: done _get_slice. ------------------------"
+        return X,Y,V
+
+
+
+    
+if __name__ == '__main__':    #code to execute if called from command-line
+
+    from optparse import OptionParser
+
+    parser = OptionParser()
+#   parser.add_option("-d", "--delta X", dest="dx",
+#                 help="Side length of cube to calculate in mm", metavar="int")
+
+    (options, args) = parser.parse_args()
+
+    if len(args) == 0:
+        print "Usage:"
+        sys.exit()
+
+    filename = args[0]
+    V = Vdx(filename)
+
+
+# from pytrip import *
+# V = ReadVdx("testfiles/CBS303000.vdx")
+# V.voi[0].slice[1].point
+#dir(v.voi[0].slice[1])
+#['__class__', '__delattr__', '__dict__', '__doc__', '__getattribute__', '__hash__', '__init__', '__module__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__str__', '__weakref__', 'itnernal', 'number_of_contours', 'number_of_points', 'points', 'slice', 'slice_in_frame', 'start_pos', 'stop_pos', 'thickness', 'vertices']
