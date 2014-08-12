@@ -27,7 +27,6 @@ It is mainly supposed for batch processing, but an experimental GUI is also incl
 
 --- HOW TO DO STUFF ---
 
-
 from pytrip import *
 
 # read a dose cube, divide by 2.0, and write to a new cube:
