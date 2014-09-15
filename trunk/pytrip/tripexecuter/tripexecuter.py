@@ -184,7 +184,7 @@ class TripExecuter(object):
             window_str = " window(%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) "%(window[0],window[1],window[2],window[3],window[4],window[5])
         
         if self.plan.get_out_phys_dose() is True:
-            output.append('dose "' + name + '." /calculate  ' + window_str + '  field(*) write')
+            output.append('dose "' + name + '." /calculate  dosealgorithm(' + self.plan.get_dose_algorithm() + ')' + window_str + '  field(*) write')
         if last:
             if self.plan.get_out_bio_dose() is True:
                 output.append('dose "' + name  + '." /calculate ' + window_str + ' bioalgorithm(' + self.plan.get_bio_algorithm()   + ') biological norbe write')
@@ -238,9 +238,9 @@ class TripExecuter(object):
         spc_folder = self.plan.get_spc_folder()
         sis_file = self.plan.get_sis_file()
         if len(ddd_folder) > 0:
-            output.append('ddd "%s" / read'%ddd_folder)
+            output.append('ddd "%s/*" / read'%ddd_folder)
         if len(spc_folder) > 0:
-            output.append('spc "%s" / read'%spc_folder)
+            output.append('spc "%s/*" / read'%spc_folder)
         if len(sis_file) > 0:
             output.append('sis "%s" / read'%sis_file)
         else:
@@ -283,8 +283,9 @@ class TripExecuter(object):
                 gantry,couch = angles_to_trip(val.get_gantry(),val.get_couch()) 
                 field += "couch(" + str(couch) + ") "
                 field += "gantry(" + str(gantry) + ") "
+                target = val.get_target()
                 if len(val.get_target()) is not 0:
-                    field += "target(" + val.get_target() + ") "
+                    field += "target(%.1f,%.1f,%.1f) "%(target[0],target[1],target[2])
                 if val.get_doseextension() > 0.0001:
                     field += "doseext(" + str(val.get_doseextension()) + ") "
                 field += "contourext(" + str(val.get_contourextension()) + ") "
@@ -315,7 +316,7 @@ class TripExecuter(object):
     def create_exec_oar(self,oar_list):
         output = []
         for oar in oar_list:
-            output.append("voi " + oar.get_name().replace(" ","_") + " / maxdosefraction(" + oar.get_max_dose_fraction() + ") oarset")
+            output.append("voi " + oar.get_name().replace(" ","_") + " / maxdosefraction(" + str(oar.get_max_dose_fraction()) + ") oarset")
         return output
     
     def split_fields(self,proj):
