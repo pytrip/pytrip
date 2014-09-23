@@ -184,7 +184,7 @@ class TripExecuter(object):
             window_str = " window(%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) "%(window[0],window[1],window[2],window[3],window[4],window[5])
         
         if self.plan.get_out_phys_dose() is True:
-            output.append('dose "' + name + '." /calculate  dosealgorithm(' + self.plan.get_dose_algorithm() + ')' + window_str + '  field(*) write')
+            output.append('dose "' + name + '." /calculate  alg(' + self.plan.get_dose_algorithm() + ')' + window_str + '  field(*) write')
         if last:
             if self.plan.get_out_bio_dose() is True:
                 output.append('dose "' + name  + '." /calculate ' + window_str + ' bioalgorithm(' + self.plan.get_bio_algorithm()   + ') biological norbe write')
@@ -212,7 +212,7 @@ class TripExecuter(object):
         opt += self.plan.get_opt_method() + " "
         opt += "iterations(" + str(self.plan.get_iterations()) +  ") "
         opt += "dosealgorithm(" + self.plan.get_dose_algorithm() + ") "
-        #~ opt += "" + self.plan.get_opt_princip() + " "
+        opt += "" + self.plan.get_opt_princip() + " "
         opt += "geps(" + str(self.plan.get_geps()) + ") "
         opt += "eps(" + str(self.plan.get_eps()) + ") "
         opt += "optalgorithm(" + self.plan.get_opt_algorithm() + ") "
