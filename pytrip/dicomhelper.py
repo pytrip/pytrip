@@ -33,7 +33,10 @@ def read_dicom_folder(path):
 	folder = os.listdir(path)
 	for item in folder:
 		if os.path.splitext(item)[1] == ".dcm":
-			dcm = dicom.read_file(os.path.join(path,item))
+			if (dicom.__version__ >= "0.9.5"):
+			    dcm = dicom.read_file(os.path.join(path,item),force=True)
+			else:
+			    dcm = dicom.read_file(os.path.join(path,item))
 			if dcm.Modality == "CT":
 				if not data.has_key("images"):
 					data["images"] = []
