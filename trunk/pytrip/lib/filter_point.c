@@ -1310,6 +1310,11 @@ static PyObject * calculate_wepl(PyObject *self, PyObject *args)
     }
     return PyArray_Return(vec_out);    
 }
+static PyObject * raytracing(PyObject *self, PyObject *args)
+{
+	
+}
+
 /*Plane: 1 is coronal and 2 is sagital*/
 static PyObject * slice_on_plane(PyObject *self, PyObject *args)
 {
@@ -1828,6 +1833,7 @@ static PyMethodDef pytriplibMethods[] = {
 {"calculate_dose_center",(PyCFunction)calculate_dose_center,METH_VARARGS},
 {"split_by_plane",(PyCFunction)split_by_plane,METH_VARARGS},
 {"extend_cube",(PyCFunction)extend_cube,METH_VARARGS},
+{"raytracing",(PyCFunction)raytracing,METH_VARARGS},
 {NULL,NULL}
 };
 PyMODINIT_FUNC initpytriplib(void){

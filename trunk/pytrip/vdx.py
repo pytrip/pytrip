@@ -504,8 +504,10 @@ class Voi:
             return 'other'
         return ''
     def read_dicom(self,info,data):
-        if not data.has_key("Contours"):
+       
+        if "Contours" in data.dir() and not "ContourSequence" in data.dir():
             return
+        
         type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(typename)
         self.color = data.ROIDisplayColor
