@@ -505,7 +505,7 @@ class Voi:
         return ''
     def read_dicom(self,info,data):
        
-        if "Contours" in data.dir() and not "ContourSequence" in data.dir():
+        if not "Contours" in data.dir() and not "ContourSequence" in data.dir():
             return
         
         type_name = info.RTROIInterpretedType
