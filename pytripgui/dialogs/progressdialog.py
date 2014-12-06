@@ -19,7 +19,11 @@ if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
     #from wx.lib.pubsub import setuparg1
 else:
-    from wx.lib.pubsub import Publisher as pub
+    try:
+        from wx.lib.pubsub import Publisher as pub
+    except:
+        from wx.lib.pubsub import setupkwargs
+        from wx.lib.pubsub import pub
 from wx.xrc import XmlResource, XRCCTRL, XRCID
 
 class ProgressDialog(wx.Dialog):

@@ -23,7 +23,11 @@ if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
     from wx.lib.pubsub import setuparg1
 else:
-    from wx.lib.pubsub import Publisher as pub
+    try:
+        from wx.lib.pubsub import Publisher as pub
+    except:
+        from wx.lib.pubsub import setuparg1
+        from wx.lib.pubsub import pub
 
 
 class LeftMenuTree(wx.TreeCtrl):
@@ -479,7 +483,8 @@ class LeftMenuTree(wx.TreeCtrl):
     def new_empty_plan(self,evt):
         self.data.plans.add_plan(TripPlan())
     def generate_voi_menu(self,node):
-        if get_class_name(self.GetItemData(self.GetItemParent(self.GetItemParent(node))).GetData()) == "TripPlan":
+        data = self.GetItemData(self.GetItemParent(self.GetItemParent(node)))
+        if data is not None and get_class_name(data.GetData()) == "TripPlan":
             return self.context_menu["TripVoi"]
         return self.context_menu["MainVoi"]
     def on_leftmenu_rightclick(self,evt):
@@ -495,7 +500,8 @@ class LeftMenuTree(wx.TreeCtrl):
             
             menu_points = self.context_menu[menu_name]
             if type(menu_points) is not list:
-                    menu_points = menu_points(self.selected_item)
+                menu_points = menu_points(self.selected_item)
+             
             menu = self.build_menu(menu_points,selected_data)
             self.PopupMenu(menu,evt.GetPoint())
             menu.Destroy()
