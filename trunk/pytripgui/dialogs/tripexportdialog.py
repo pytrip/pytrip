@@ -17,11 +17,6 @@
 import wx
 import sys
 
-if getattr(sys, 'frozen', False):
-    from wx.lib.pubsub import pub
-    from wx.lib.pubsub import setuparg1
-else:
-    from wx.lib.pubsub import Publisher as pub
 
 from pytrip.error import *
 import os,sys
@@ -29,7 +24,11 @@ if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
     from wx.lib.pubsub import setuparg1
 else:
-    from wx.lib.pubsub import Publisher as pub
+    try:
+        from wx.lib.pubsub import Publisher as pub
+    except:
+        from wx.lib.pubsub import setuparg1
+        from wx.lib.pubsub import pub
 
 from wx.xrc import XmlResource, XRCCTRL, XRCID
 

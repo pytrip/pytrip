@@ -23,7 +23,11 @@ if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
     from wx.lib.pubsub import setuparg1
 else:
-    from wx.lib.pubsub import Publisher as pub
+    try:
+        from wx.lib.pubsub import Publisher as pub
+    except:
+        from wx.lib.pubsub import setuparg1
+        from wx.lib.pubsub import pub
 
 
 class TripExportCubeDialog(wx.Dialog):
