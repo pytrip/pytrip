@@ -17,6 +17,7 @@
 import os,re
 import numpy as np
 from file_parser import *
+import dicom
 
 class Rst:
     def __init__(self):
@@ -28,6 +29,9 @@ class Rst:
         return self.machines
     def calculate_total_energi(self):
         return
+    def load_dicom(self,path):
+        data = dicom.read_file(path)
+        
     def load_field(self,path):
         with open(path,mode='r') as f:
             data = f.read()

@@ -237,7 +237,7 @@ def create_voi_from_cube(cube,name):
         points[:,0:2] = contour[0]*cube.pixel_size
         
         points[:,2] = i*cube.slice_distance
-        c = Contour(points,cube)
+        c = Contour(points.tolist(),cube)
         s.add_contour(c)
         
         v.add_slice(s)
@@ -511,12 +511,16 @@ class Voi:
         type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(typename)
         self.color = data.ROIDisplayColor
-        for i in range(len(data.Contours)):
-            key = int((float(data.Contours[i].ContourData[2])-min(self.cube.slice_pos))*100)
+        if "Contours" in data.dir():
+            contours =  data.Contours
+        else:
+            contours =  data.ContourSequence
+        for i in range(len(contours)):
+            key = int((float(contours[i].ContourData[2])-min(self.cube.slice_pos))*100)
             if not self.slices.has_key(key):
                 self.slices[key] = Slice(self.cube)
                 self.slice_z.append(key)
-            self.slices[key].add_dicom_contour(data.Contours[i])
+            self.slices[key].add_dicom_contour(contours[i])
     def get_thickness(self):
         if len(self.slice_z) <= 1:
             return 3
