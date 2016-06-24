@@ -5,6 +5,8 @@ Credits
 Development Lead
 ----------------
 
+* Jakob Toftegaard
+* Niels Bassler
 * Leszek Grzanka <leszek.grzanka@gmail.com>
 
 Contributors

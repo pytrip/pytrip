@@ -1,3 +1,3 @@
-bashplotlib
 numpy>=1.10.4
-scipy
+pydicom>=0.9.5
+matplotlib>=0.99
