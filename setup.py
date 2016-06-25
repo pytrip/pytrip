@@ -157,7 +157,8 @@ setuptools.setup(
             'pytrip98.run_pytrip98:main',
         ],
     },
-    cmdclass=get_cmdclass(),
+    cmdclass=get_cmdclass()
+)
 
 #setup(name='pytrip',
 #      description='Python scripts for TRiP and virtuos',
