@@ -26,7 +26,10 @@ import time
 import gc
 import os
 from multiprocessing import Process, Queue
-from queue import Empty
+try:
+    from queue import Empty
+except ImportError:
+    from Queue import Empty
 import pytrip
 
 
