@@ -15,7 +15,7 @@
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
 import pytrip.rst, pytrip.ddd, pytrip.field, time, pytrip.dos, pytrip.ctx, pytrip.vdx, pytrip.paths
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 import numpy as np
 from pytrip.res.point import *
 import os

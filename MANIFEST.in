@@ -19,3 +19,9 @@
   prune .travis
   prune install_deps.sh
 
+  include GPL_LICENSE
+  include INSTALL
+  recursive-include pytrip *.c
+  recursive-include pytrip *.py
+  recursive-include scripts *.py
+  recursive-include utils *.py

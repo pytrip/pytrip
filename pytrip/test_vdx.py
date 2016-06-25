@@ -18,7 +18,7 @@ from pytrip.ctx import *
 from pytrip.dos import *
 from pytrip.vdx import *
 import pytrip.dicomhelper as dh
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from numpy import *
 from pytrip.res.point import *
 

@@ -26,7 +26,7 @@ v = VdxCube(c)
 # v.read_vdx("/home/jato/Projects/TRiP/robustness/data/test1.vdx")
 #
 # # ~ d.target_dose = 4.0
-g = PlotUtil()
+#g = PlotUtil()
 # g.set_ct(c)
 # # ~ add vois that should be plottet
 # g.add_voi(v.get_voi_by_name("ptv"))

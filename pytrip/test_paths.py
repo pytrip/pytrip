@@ -23,7 +23,7 @@ from pytrip.dos import *
 import pytrip.dicomhelper as dh
 import numpy
 import threading
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonym2")
 c = CtxCube()

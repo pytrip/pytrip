@@ -17,7 +17,7 @@
 from pytrip import VdxCube
 from pytrip.let import *
 from numpy import *
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 l = LETCube()
 # l.read_trip_data_file("/home/jato/Projects/TRiP/2012_TEST/1/test.dosemlet.dos")
