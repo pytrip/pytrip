@@ -22,9 +22,9 @@ import matplotlib.pyplot as plt
 from numpy import *
 from pytrip.res.point import *
 
-dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonymiseret/")  
-c = CtxCube()
-c.read_dicom(dcm)
-
-v = VdxCube("",c)
-v.read_dicom(dcm)
+# dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonymiseret/")
+# c = CtxCube()
+# c.read_dicom(dcm)
+#
+# v = VdxCube("",c)
+# v.read_dicom(dcm)

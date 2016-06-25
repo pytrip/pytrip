@@ -17,9 +17,9 @@
 import wx
 import sys
 
-
 from pytrip.error import *
-import os,sys
+import os, sys
+
 if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
     from wx.lib.pubsub import setuparg1
@@ -32,61 +32,67 @@ else:
 
 from wx.xrc import XmlResource, XRCCTRL, XRCID
 
+
 class TripExportDialog(wx.Dialog):
     def __init__(self):
         pre = wx.PreDialog()
         self.PostCreate(pre)
-    def Init(self,plan):
+
+    def Init(self, plan):
         self.output_path = ''
-        self.drop_type = XRCCTRL(self,"drop_type")
-        self.txt_prefix = XRCCTRL(self,"txt_prefix")
+        self.drop_type = XRCCTRL(self, "drop_type")
+        self.txt_prefix = XRCCTRL(self, "txt_prefix")
         self.txt_prefix.SetValue(plan.get_name())
-            
-        self.label_folder = XRCCTRL(self,"label_folder")
-        
-        wx.EVT_BUTTON(self,XRCID("btn_cancel"),self.close)
-        wx.EVT_BUTTON(self,XRCID("btn_browse"),self.browse_folder)
-        wx.EVT_BUTTON(self,XRCID("btn_generate"),self.generate)
+
+        self.label_folder = XRCCTRL(self, "label_folder")
+
+        wx.EVT_BUTTON(self, XRCID("btn_cancel"), self.close)
+        wx.EVT_BUTTON(self, XRCID("btn_browse"), self.browse_folder)
+        wx.EVT_BUTTON(self, XRCID("btn_generate"), self.generate)
         self.plan = plan
-        
-        pub.subscribe(self.on_patient_updated,"patient.loaded")
-        pub.subscribe(self.on_export_voxelplan_changed,"general.export.voxelplan")
-        pub.sendMessage("settings.value.request","general.export.voxelplan")
-        pub.sendMessage("patient.request",None)
-    def on_export_voxelplan_changed(self,msg):
+
+        pub.subscribe(self.on_patient_updated, "patient.loaded")
+        pub.subscribe(self.on_export_voxelplan_changed, "general.export.voxelplan")
+        pub.sendMessage("settings.value.request", "general.export.voxelplan")
+        pub.sendMessage("patient.request", None)
+
+    def on_export_voxelplan_changed(self, msg):
         if not msg.data is None:
             self.output_path = msg.data
             self.label_folder.SetLabel(self.output_path)
-    def on_patient_updated(self,msg):
+
+    def on_patient_updated(self, msg):
         self.data = msg.data
-    def browse_folder(self,evt):
+
+    def browse_folder(self, evt):
         dlg = wx.DirDialog(
-			self,
+            self,
             defaultPath=self.output_path,
-			message="Choose where the plan should be placed")
+            message="Choose where the plan should be placed")
         if dlg.ShowModal() == wx.ID_OK:
             path = dlg.GetPath()
             self.output_path = path
-            pub.sendMessage("settings.value.updated",{"general.export.voxelplan":path})
+            pub.sendMessage("settings.value.updated", {"general.export.voxelplan": path})
             self.label_folder.SetLabel(path)
-    def generate(self,evt):
-        idx =  self.drop_type.GetSelection()
+
+    def generate(self, evt):
+        idx = self.drop_type.GetSelection()
         file_prefix = self.txt_prefix.GetValue()
         if len(file_prefix) == 0:
             raise InputError("File Prefix should be specified")
-        if not hasattr(self,"output_path"):
+        if not hasattr(self, "output_path"):
             raise InputError("Output folder should be specified")
-        path = os.path.join(self.output_path,file_prefix)
+        path = os.path.join(self.output_path, file_prefix)
         exec_path = path + ".exec"
         ctx = self.data.get_images().get_voxelplan()
         if idx == 0:
-            self.plan.save_data(ctx,path)
-            self.plan.save_exec(ctx,exec_path)
+            self.plan.save_data(ctx, path)
+            self.plan.save_exec(ctx, exec_path)
         elif idx == 1:
-            self.plan.save_exec(ctx,exec_path)
+            self.plan.save_exec(ctx, exec_path)
         elif idx == 2:
-            self.plan.save_data(ctx,path)
-        self.Close()
-    def close(self,evt):
+            self.plan.save_data(ctx, path)
         self.Close()
 
+    def close(self, evt):
+        self.Close()

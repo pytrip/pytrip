@@ -20,17 +20,18 @@ from pytrip.ctx import *
 from pytrip.guiutil import *
 
 c = CtxCube()
-c.read("/home/jato/Projects/TRiP/robustness/data/test1.ctx")
-
+# c.read("/home/jato/Projects/TRiP/robustness/data/test1.ctx")
+#
 v = VdxCube(c)
-v.read_vdx("/home/jato/Projects/TRiP/robustness/data/test1.vdx")
-
-# ~ d.target_dose = 4.0
+# v.read_vdx("/home/jato/Projects/TRiP/robustness/data/test1.vdx")
+#
+# # ~ d.target_dose = 4.0
 g = PlotUtil()
-g.set_ct(c)
-# ~ add vois that should be plottet
-g.add_voi(v.get_voi_by_name("ptv"))
-# ~ g.add_voi(v.get_voi_by_name("tumor"))
-# ~ Plot slice number 80
-g.plot(80)
-g.plot(81)
+# g.set_ct(c)
+# # ~ add vois that should be plottet
+# g.add_voi(v.get_voi_by_name("ptv"))
+# # ~ g.add_voi(v.get_voi_by_name("tumor"))
+# # ~ Plot slice number 80
+# g.plot(80)
+# g.plot(81)
+pass

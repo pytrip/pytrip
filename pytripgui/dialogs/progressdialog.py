@@ -14,10 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-import wx,sys
+import wx, sys
+
 if getattr(sys, 'frozen', False):
     from wx.lib.pubsub import pub
-    #from wx.lib.pubsub import setuparg1
+    # from wx.lib.pubsub import setuparg1
 else:
     try:
         from wx.lib.pubsub import Publisher as pub
@@ -26,10 +27,12 @@ else:
         from wx.lib.pubsub import pub
 from wx.xrc import XmlResource, XRCCTRL, XRCID
 
+
 class ProgressDialog(wx.Dialog):
     def __init__(self):
         pre = wx.PreDialog()
         self.PostCreate(pre)
-    def Init(self,close):
+
+    def Init(self, close):
         close.set_action(self.Close)
         pass
