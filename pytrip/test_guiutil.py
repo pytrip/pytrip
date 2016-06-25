@@ -14,27 +14,23 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from vdx import *
-from dos import *
-from ctx import *
-from guiutil import *
-
+from pytrip.vdx import *
+from pytrip.dos import *
+from pytrip.ctx import *
+from pytrip.guiutil import *
 
 c = CtxCube()
 c.read("/home/jato/Projects/TRiP/robustness/data/test1.ctx")
 
-
-
 v = VdxCube(c)
 v.read_vdx("/home/jato/Projects/TRiP/robustness/data/test1.vdx")
 
-
-#~ d.target_dose = 4.0
+# ~ d.target_dose = 4.0
 g = PlotUtil()
 g.set_ct(c)
-#~ add vois that should be plottet
+# ~ add vois that should be plottet
 g.add_voi(v.get_voi_by_name("ptv"))
-#~ g.add_voi(v.get_voi_by_name("tumor"))
-#~ Plot slice number 80
+# ~ g.add_voi(v.get_voi_by_name("tumor"))
+# ~ Plot slice number 80
 g.plot(80)
 g.plot(81)

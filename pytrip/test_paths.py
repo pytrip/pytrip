@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from paths import *
+from pytrip.paths import *
 import time
-from res.point import *
-from ctx import *
-from vdx import *
-from dos import *
-import dicomhelper as dh
+from pytrip.res.point import *
+from pytrip.ctx import *
+from pytrip.vdx import *
+from pytrip.dos import *
+import pytrip.dicomhelper as dh
 import numpy
 import threading
 import matplotlib.pyplot as plt
@@ -40,7 +40,7 @@ voi.create_point_tree()
 #~ exit()
 p = DensityCube(c)
 projection = DensityProjections(p)
-#~ print projection.calculate_angle_quality(voi,110,0)
+#~ print(projection.calculate_angle_quality(voi,110,0)
 grid = projection.calculate_quality_grid(voi,range(0,360,2),range(-90,90,2))
 numpy.save("../plotdata",grid)
 exit()
@@ -62,7 +62,7 @@ voi.create_point_tree()
 #~ exit()
 p = DensityCube(c)
 projection = DensityProjections(p)
-#~ print projection.calculate_angle_quality(voi,110,0)
+#~ print(projection.calculate_angle_quality(voi,110,0)
 grid2 = projection.calculate_quality_grid(voi,range(0,360,10),range(-90,90,10))
 #~ numpy.save("../plotdata",grid)
 
@@ -72,16 +72,16 @@ plt.show()
 
 
 
-#~ print projection.calculate_angle_quality(voi,130,30)
+#~ print(projection.calculate_angle_quality(voi,130,30)
 #~ for angle in angles:
 gantry = 90
 couch = 0
-print projection.calculate_angle_quality(voi,gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 exit()
 #~ gantry,couch = angles_from_trip(gantry,couch)
 data,start,basis = projection.calculate_projection(voi,gantry,couch)
-#~ print voi.calculate_center()
-#~ print start
+#~ print(voi.calculate_center()
+#~ print(start
 contour = voi.get_2d_projection_on_basis(basis,start)
 #~ gradient = numpy.gradient(data)
 #~ data = (gradient[0]**2+gradient[1]**2)**0.5
@@ -91,60 +91,52 @@ plt.colorbar()
 plt.show()
 exit()
 
-#~ print 
+#~ print(
 gantry = 100
 couch =  -60
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 
 gantry = 270
 couch =  70
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = -110
 couch =  10
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = 270
 couch =  50
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = 180
 couch =  0
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = -30
 couch =  60
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = 100
 couch =  40
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = 110
 couch =  10
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
-print
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 gantry = 0
 couch =  -90
-print gantry,couch
-print projection.calculate_angle_quality(voi,gantry,couch)
+print(gantry,couch)
+print(projection.calculate_angle_quality(voi,gantry,couch))
 
 
 angles = [[100,-60],[270,70],[-110,10],[270,50],[180,0],[-30,60],[100,40],[110,10],[0,-90]]
@@ -154,8 +146,8 @@ for angle in angles:
     contour = voi.get_2d_projection_on_basis(basis,start)
     gradient = numpy.gradient(data)
     data = (gradient[0]**2+gradient[1]**2)**0.5
-    #~ print start
-    #~ print basis
+    #~ print(start
+    #~ print(basis
     plt.imshow(data,vmax=5.0)
     plt.colorbar()
     plt.plot(contour[:,1]/c.pixel_size,contour[:,0]/c.pixel_size,'r')
