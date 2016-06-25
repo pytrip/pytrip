@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from ctx import *
-from dos import *
-from vdx import *
-import dicomhelper as dh
+from pytrip.ctx import *
+from pytrip.dos import *
+from pytrip.vdx import *
+import pytrip.dicomhelper as dh
 import matplotlib.pyplot as plt
 from numpy import *
-from res.point import *
+from pytrip.res.point import *
 
 dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonymiseret/")  
 c = CtxCube()

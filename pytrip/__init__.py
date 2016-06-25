@@ -19,15 +19,15 @@ __author__ = "Jakob Toftegaard, Niels Bassler"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
 
-from ctx import CtxCube
-from dos import DosCube
-from vdx import VdxCube
-from paths import DensityCube
+from pytrip.ctx import CtxCube
+from pytrip.dos import DosCube
+from pytrip.vdx import VdxCube
+from pytrip.paths import DensityCube
 #import paths
-from rst import Rst
-from let import LETCube
-from get_dvh  import GetDvh
-import dicomhelper
-import res
-import guiutil
-import tripexecuter
+from pytrip.rst import Rst
+from pytrip.let import LETCube
+from pytrip.get_dvh  import GetDvh
+import pytrip.dicomhelper
+import pytrip.res
+import pytrip.guiutil
+import pytrip.tripexecuter

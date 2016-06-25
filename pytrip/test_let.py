@@ -14,10 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from let import * 
-from vdx2 import *
+from pytrip import VdxCube
+from pytrip.let import *
 from numpy import *
 import matplotlib.pyplot as plt
+
 l = LETCube()
 l.read_trip_data_file("/home/jato/Projects/TRiP/2012_TEST/1/test.dosemlet.dos")
 
@@ -26,7 +27,5 @@ v.import_vdx("/home/jato/Projects/TRiP/2012_TEST/1/test.vdx")
 tumor = v.get_voi_by_name("Tumor Bed")
 lvh = l.calculate_lvh(tumor)
 
-
-
-plt.plot(lvh[0],lvh[1])
+plt.plot(lvh[0], lvh[1])
 plt.show()

@@ -14,22 +14,30 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytripobj import *
+from pytrip.tripexecuter.pytripobj import *
 import copy
+
+
 class Voi(object):
-    def __init__(self,name,voi):
+    def __init__(self, name, voi):
         self.name = name
         self.selected = False
         self.voxelplan_voi = voi
+
     def get_color(self):
         return self.voxelplan_voi.get_color()
+
     def is_selected(self):
         return self.selected
+
     def toogle_selected(self):
         self.selected = not self.selected
+
     def get_voi_data(self):
         return self.voxelplan_voi
+
     def get_name(self):
         return self.name
+
     def copy(self):
         return copy.deepcopy(self)

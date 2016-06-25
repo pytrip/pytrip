@@ -14,13 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from dosecube import *
-from field import *
-from fieldcollection import *
-from tripexecuter import *
-from tripplan import *
-from tripplancollection import *
-from tripvoi import *
-from voi import *
-from voicollection import *
-from rbehandler import *
+from pytrip.tripexecuter.dosecube import *
+from pytrip.tripexecuter.field import *
+from pytrip.tripexecuter.fieldcollection import *
+from pytrip.tripexecuter.tripexecuter import *
+from pytrip.tripexecuter.tripplan import *
+from pytrip.tripexecuter.tripplancollection import *
+from pytrip.tripexecuter.tripvoi import *
+from pytrip.tripexecuter.voi import *
+from pytrip.tripexecuter.voicollection import *
+from pytrip.tripexecuter.rbehandler import *

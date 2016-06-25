@@ -14,16 +14,16 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from ctx import *
-from dos import *
-from vdx import *
-import dicomhelper as dh
+from pytrip.ctx import *
+from pytrip.dos import *
+from pytrip.vdx import *
+import pytrip.dicomhelper as dh
 
 c = CtxCube()
 c.read("../../../DicomData/test/test2.ctx")
 c.write("../../../DicomData/test/test2.ctx")
 
-print c.cube[50][100][100]
+print(c.cube[50][100][100])
 d=c+5
 
-print d.cube[50][100][100]
+print(d.cube[50][100][100])

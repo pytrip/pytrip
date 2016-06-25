@@ -1,3 +1,4 @@
 numpy>=1.10.4
 pydicom>=0.9.5
 matplotlib>=0.99
+scipy

@@ -121,7 +121,7 @@ with open('README.rst') as readme_file:
 setuptools.setup(
     name='pytrip98',
     version=get_version(),
-    packages=['pytrip98'],
+    packages=setuptools.find_packages(),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
@@ -153,32 +153,26 @@ setuptools.setup(
     ],
     entry_points={
         'console_scripts': [
-            'run_pytrip98=' + \
-            'pytrip98.run_pytrip98:main',
+            'pytripgui=' + \
+            'pytripgui.main:start',
         ],
     },
+    package_data={'pytrip': ['data/*.dat'],
+                    'pytripgui' : ['res/*']},
+    install_requires=[
+        'matplotlib',
+        'numpy',
+        'pydicom',
+        'scipy'
+    ],
     cmdclass=get_cmdclass()
 )
 
 #setup(name='pytrip',
 #      description='Python scripts for TRiP and virtuos',
-#      author='Jakob Toftegaard, Niels Bassler',
-#      author_email='bassler@phys.au.dk',
-#      url='http://aptg-trac.phys.au.dk/pytrip/',
 #      # TODO: this does not look correct,
 #      # why do the subdirectories have to be specified explicitly here?
 #      packages=['pytrip','pytrip.res','pytrip.tripexecuter',
 #                'pytripgui','pytripgui.dialogs','pytripgui.panels'],
-#      #
-#      #install_requires = requires,
-#      package_data={'pytrip': ['data/*.dat'],
-#                    'pytripgui' : ['res/*']},
 #      scripts=['scripts/pytrip-gui'
 #               ],
-#      version='0.1',
-#      )
-
-#requires = [
-#    'matplotlib>=0.99',
-#    'numpy>=1.2.1',
-#    'pydicom>=0.9.5',]
