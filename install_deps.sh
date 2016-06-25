@@ -20,8 +20,8 @@ apt_install() {
 brew_install() {
     PYTHON_VERSION=$1
 #    brew update
-    PYTHON2_CMD="pwd"
-    PYTHON3_CMD="pwd"
+    PYTHON2_CMD="brew install freetype"
+    PYTHON3_CMD="brew install freetype"
     choose_python_version "$PYTHON_VERSION" "$PYTHON2_CMD" "$PYTHON3_CMD"
 }
 
