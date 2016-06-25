@@ -236,9 +236,8 @@ class Cube(object):
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i in range(len(self.slice_pos)):
                 output_str += "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],self.slice_distance,0)"""
-        f = open(path,"wb+")
-        f.write(output_str)
-        f.close()
+        with open(path,"w+") as f:
+            f.write(output_str)
 
     def set_byteorder(self,endian=None):
         if endian == None:
