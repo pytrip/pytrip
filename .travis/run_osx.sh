@@ -8,12 +8,9 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
-if [[ $TOXENV == py27* ]] ;
+if [[ $TOXENV == py27* ]] || [[ $TOXENV == py32* ]] ;
 then
-    PATH="$HOME/Library/Python/2.7/bin:$PATH"
-    tox --notest
-    tox -- -n 8
-
+    echo "TESTS DISABLED"
 else
     pyenv exec tox --notest -e $TOXENV
     pyenv exec tox -- -n 8
