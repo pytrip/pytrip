@@ -30,8 +30,9 @@ pip install --user --upgrade versioneer
 if [[ $TOXENV == py27* ]] ; then exit 0; fi
 
 
-# For Python 3, first install pyenv
+# For Python 3, first install pyenv (and deps)
 brew update || brew update
+brew install freetype
 brew unlink pyenv && brew install pyenv && brew link pyenv
 
 # setup pyenv
