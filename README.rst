@@ -1,6 +1,6 @@
-===============================
+======
 pytrip
-===============================
+======
 
 .. image:: https://img.shields.io/pypi/v/pytrip.svg
         :target: https://pypi.python.org/pypi/pytrip
@@ -77,9 +77,13 @@ Latest unstable version, directly GIT repository, using::
     pip install setuptools versioneer
     pip install git+https://github.com/pytrip/pytrip.git
 
-To unistall, simply use::
+To upgrade, type::
 
-    pip uninstall beprof
+    pip install -U pytrip98
+
+To uninstall, simply use::
+
+    pip uninstall pytrip98
 
 Documentation
 =============
@@ -94,7 +98,10 @@ PyTRiP is a python package for working with TRiP and VIRTUOS/VOXELPLAN files.
 It is mainly supposed for batch processing, but an experimental GUI is also included.
 
 
-HOW TO DO STUFF::
+HOW TO DO STUFF
+---------------
+
+Run::
 
     from pytrip import *
 
