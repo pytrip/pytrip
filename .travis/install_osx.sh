@@ -29,6 +29,8 @@ pip install --user --upgrade versioneer
 # For native python 2.7 we can jump out
 if [[ $TOXENV == py27* ]] ; then exit 0; fi
 
+# For native python 3.2 we disable tests
+if [[ $TOXENV == py32* ]] ; then exit 0; fi
 
 # For Python 3, first install pyenv (and deps)
 brew update || brew update
