@@ -14,10 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-#__path__ = ["panels","dialogs"]
+# __path__ = ["panels","dialogs"]
 __all__ = ['util']
-from main import start,MainFrame
-import dialogs
-import panels
-import util
-
+from pytripgui.main import start, MainFrame
+import pytripgui.dialogs
+import pytripgui.panels
+import pytripgui.util

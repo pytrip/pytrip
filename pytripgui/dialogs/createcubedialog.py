@@ -24,46 +24,47 @@ class CreateCubeDialog(wx.Dialog):
     def __init__(self):
         pre = wx.PreDialog()
         self.PostCreate(pre)
-    def Init(self,parent):
+
+    def Init(self, parent):
         self.parent = parent
-        self.txt_name = XRCCTRL(self,"txt_name")
+        self.txt_name = XRCCTRL(self, "txt_name")
         self.txt_name.SetValue("test")
-        
-        self.txt_hu = XRCCTRL(self,"txt_hu")
+
+        self.txt_hu = XRCCTRL(self, "txt_hu")
         self.txt_hu.SetValue("0")
-        
-        self.txt_dimx = XRCCTRL(self,"txt_dimx")
+
+        self.txt_dimx = XRCCTRL(self, "txt_dimx")
         self.txt_dimx.SetValue("512")
-        
-        self.txt_dimy = XRCCTRL(self,"txt_dimy")
+
+        self.txt_dimy = XRCCTRL(self, "txt_dimy")
         self.txt_dimy.SetValue("512")
-        
-        self.txt_dimz = XRCCTRL(self,"txt_dimz")
+
+        self.txt_dimz = XRCCTRL(self, "txt_dimz")
         self.txt_dimz.SetValue("100")
-        
-        self.txt_pixelsize = XRCCTRL(self,"txt_pixelsize")
+
+        self.txt_pixelsize = XRCCTRL(self, "txt_pixelsize")
         self.txt_pixelsize.SetValue("1")
-        
-        self.txt_slicedistance = XRCCTRL(self,"txt_slicedistance")
+
+        self.txt_slicedistance = XRCCTRL(self, "txt_slicedistance")
         self.txt_slicedistance.SetValue("3")
-        
-        wx.EVT_BUTTON(self,XRCID("btn_create"),self.submit)
-        wx.EVT_BUTTON(self,XRCID("btn_cancel"),self.close)
-    def close(self,evt):
+
+        wx.EVT_BUTTON(self, XRCID("btn_create"), self.submit)
+        wx.EVT_BUTTON(self, XRCID("btn_cancel"), self.close)
+
+    def close(self, evt):
         self.Close()
-    def submit(self,evt):
+
+    def submit(self, evt):
         dimx = int(self.txt_dimx.GetValue())
         dimy = int(self.txt_dimy.GetValue())
         dimz = int(self.txt_dimz.GetValue())
         pixelsize = float(self.txt_pixelsize.GetValue())
         slice_distance = float(self.txt_slicedistance.GetValue())
         hu = int(self.txt_hu.GetValue())
-    
+
         cube = CtxCube()
         cube.patient_name = self.txt_name.GetValue()
-        cube.create_empty_cube(hu,dimx,dimy,dimz,pixelsize,slice_distance)
+        cube.create_empty_cube(hu, dimx, dimy, dimz, pixelsize, slice_distance)
         self.parent.data = data.PytripData()
         self.parent.data.load_ctx_cube(cube)
         self.Close()
-        
-        

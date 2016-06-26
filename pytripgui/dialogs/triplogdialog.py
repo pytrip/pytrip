@@ -22,22 +22,24 @@ class TripLogDialog(wx.Dialog):
     def __init__(self):
         pre = wx.PreDialog()
         self.PostCreate(pre)
-    def Init(self,tripexecuter):
+
+    def Init(self, tripexecuter):
         self.tripexecuter = tripexecuter
         self.tripexecuter.add_log_listener(self)
-        self.txt_log = XRCCTRL(self,"txt_log")
-        
-        wx.EVT_BUTTON(self,XRCID("btn_ok"),self.close)
-        self.btn_ok = XRCCTRL(self,"btn_ok")
+        self.txt_log = XRCCTRL(self, "txt_log")
+
+        wx.EVT_BUTTON(self, XRCID("btn_ok"), self.close)
+        self.btn_ok = XRCCTRL(self, "btn_ok")
         self.btn_ok.Enable(False)
-        self.check_close = XRCCTRL(self,"check_close")
-        
-    def close(self,evt):
+        self.check_close = XRCCTRL(self, "check_close")
+
+    def close(self, evt):
         self.Close()
+
     def finish(self):
         self.btn_ok.Enable(True)
         if self.check_close.IsChecked():
             self.Close()
-    
-    def write(self,txt):
-        self.txt_log.AppendText("%s\n"%txt)
+
+    def write(self, txt):
+        self.txt_log.AppendText("%s\n" % txt)

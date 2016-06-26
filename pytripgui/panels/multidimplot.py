@@ -22,7 +22,6 @@ from mpl_toolkits.mplot3d import Axes3D
 import numpy as np
 import threading
 
-
 from numpy import ogrid, sin
 from traits.api import HasTraits, Instance
 from traitsui.api import View, Item
@@ -32,29 +31,33 @@ from mayavi.modules.api import IsoSurface
 
 from mayavi.core.ui.api import SceneEditor, MlabSceneModel
 
+
 class MultiDimPanel(HasTraits):
     scene = Instance(MlabSceneModel, ())
 
     # The layout of the panel created by Traits
     view = View(Item('scene', editor=SceneEditor(), resizable=True,
-                    show_label=False),
-                    resizable=True)
-    def __init__(self,parent):
+                     show_label=False),
+                resizable=True)
+
+    def __init__(self, parent):
         HasTraits.__init__(self)
         # Create some data, and plot it using the embedded scene's engine
-        
+
         self.parent = parent
-        pub.subscribe(self.on_patient_loaded,"patient.loaded")
-        pub.subscribe(self.voi_changed,"voi.selection_changed")
+        pub.subscribe(self.on_patient_loaded, "patient.loaded")
+        pub.subscribe(self.voi_changed, "voi.selection_changed")
+
     def Init(self):
         pass
-    def on_patient_loaded(self,msg):
+
+    def on_patient_loaded(self, msg):
         self.data = msg.data
         ct_data = self.data.voxelplan_images
         x, y, z = ogrid[0:1:ct_data.dimx, 0:1:ct_data.dimy, 0:1:ct_data.dimz]
         src = ArraySource(scalar_data=ct_data.cube)
         self.scene.engine.add_source(src)
         src.add_module(IsoSurface())
-        
-    def voi_changed(self,msg):
+
+    def voi_changed(self, msg):
         pass

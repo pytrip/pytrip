@@ -20,13 +20,14 @@ from wx.xrc import XmlResource, XRCCTRL, XRCID
 
 class TripVoiDialog(wx.Dialog):
     def __init__(self):
-		pre = wx.PreDialog()
-		self.PostCreate(pre)
-    def Init(self,plan):
+        pre = wx.PreDialog()
+        self.PostCreate(pre)
+
+    def Init(self, plan):
         self.plan = plan
-        
-    def save_and_close(self,evt):
-                
+
+    def save_and_close(self, evt):
         self.Close()
-    def close(self,evt):
+
+    def close(self, evt):
         self.Close()
