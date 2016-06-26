@@ -46,9 +46,7 @@ matrix:
             - TOXENV=packaging
             - PYPIUSER=grzanka
             #  pypi secured password (PYPIPASS variable), you need to update it to your own if you want to use it
-            - secure: "PYPI_PASS_ENCRYPTED_TO_BE_REPLACED"
-            #  Code Climate secured token (CODECLIMATE_REPO_TOKEN variable), you need to update it to your own if you want to use it
-            - secure: "CODE_CLIMATE_TOKEN_TO_BE_REPLACED"
+            - secure: "WLg9eOFwGwH2riVdcl2mdUjzBIx4NaamMmB6XNOtAl91cPK/LtchLaMVMjVlPKMchQ/cCVpVgjiqRgEUPLz40sfv+DqmcnZH7UXE4kpUuUtFECTpIqc69Ohzn82JdrKQIaH0FWPTjRvxZgV+b6KWo8TK71VFANPpQTuhfaRJ+laKj1S5ikwg4c1zj6kqYefGHhvdvs5LtBXEZ9UQg+dkuWK8mrnl/gpZUuR7P8o+wofv2X510kHrV8WkUDfk9JmfpRyTmpvJcawl5CpGeov7c6wz5+nKNg+Fki5qft2TEb6DsHCMOBI6UviMvROSPgNs/C4tI5zNtabs+61uwU2vHsEiOuHGbmMcfGaOyjumQPcyBz3bvQ+e7ZA1ZyYipw4ihU9M7sPZtmwSlxE2ECXXy/MjPyVharTiy3rGAYwT4rH+F8fubsYeYtFax4IUFQfq3DXS9YUCJ82bCRnDlzLZ5MLy/4WL+sL7nMLR9ApkN97MWkv+aqmYjvKG0N519HSVJwuptWkoCok8E7e3zi5nOiG5eJ/0f4TVlEyOPrxeCtWCOPATXb54vSz7GPvMgTx4CKFmNbe5sLhx1A8cuOikA1Keyii8VKda8LVr7gXDh8BvgcL/CIAF/pALf2cDL224Gy8Mlz32PqBJMSKuopeIRKnj2eN3GBL1t9GuiXb8oRg="
         - os: osx
           language: generic
           env: TOXENV=py35
@@ -90,8 +88,6 @@ script:
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
 
 after_success:
-  # send coverage data
-  - if [[ $TRAVIS_PULL_REQUEST == "false" ]] && [[ $TRAVIS_OS_NAME == "linux" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/send_coverage.sh ; fi
   # deploy to normal if tag is present
   - if [[ $TRAVIS_TAG != "" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi ; fi
 
