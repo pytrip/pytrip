@@ -140,7 +140,7 @@ setuptools.setup(
         'Topic :: Software Development :: Build Tools',
 
         # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: MIT License',
+        'License :: OSI Approved :: GPL License',
 
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
@@ -151,14 +151,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-    entry_points={
-        'console_scripts': [
-            'pytripgui=' + \
-            'pytripgui.main:start',
-        ],
-    },
-    package_data={'pytrip': ['data/*.dat'],
-                    'pytripgui' : ['res/*']},
+    package_data={'pytrip': ['data/*.dat']},
     install_requires=[
         'matplotlib',
         'numpy',
@@ -172,7 +165,4 @@ setuptools.setup(
 #      description='Python scripts for TRiP and virtuos',
 #      # TODO: this does not look correct,
 #      # why do the subdirectories have to be specified explicitly here?
-#      packages=['pytrip','pytrip.res','pytrip.tripexecuter',
-#                'pytripgui','pytripgui.dialogs','pytripgui.panels'],
-#      scripts=['scripts/pytrip-gui'
-#               ],
+#      packages=['pytrip','pytrip.res','pytrip.tripexecuter'],

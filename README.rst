@@ -95,7 +95,8 @@ WHAT IS THIS ?
 --------------
 
 PyTRiP is a python package for working with TRiP and VIRTUOS/VOXELPLAN files.
-It is mainly supposed for batch processing, but an experimental GUI is also included.
+It is mainly supposed for batch processing, but an experimental GUI is also included
+(see pytrip/pytripgui repo).
 
 
 HOW TO DO STUFF
