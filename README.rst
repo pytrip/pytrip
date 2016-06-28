@@ -62,7 +62,7 @@ Overview
 
 .. end-badges
 
-PyTRiP
+Overv.io issue board: https://overv.io/pytrip/pytrip/
 
 
 Installation
