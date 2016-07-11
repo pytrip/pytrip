@@ -62,8 +62,7 @@ class ReadGd(object):
 
         argv_len = len(sys.argv)
         i = 0
-        print '\n# Running the conversion scrip gd2dat.py'
-        print 
+        print('\n# Running the conversion scrip gd2dat.py')
         for par in sys.argv:
             if par == 'agr':
                 self.agr = True 
@@ -77,15 +76,15 @@ class ReadGd(object):
 
         
         if self.filename == None:
-            print "No file name has been specified"
+            print("No file name has been specified")
         else:
-            print "# Reading the file " + self.filename + " with gd2dat.py"
+            print("# Reading the file " + self.filename + " with gd2dat.py")
             self.read()
 
        
     def read(self):
         if os.path.isfile(self.filename) is False:
-            raise IOError,  "Could not find file " + self.filename
+            raise IOError("Could not find file " + self.filename)
         
 
         gd_file = open(self.filename, 'r')
@@ -104,39 +103,37 @@ class ReadGd(object):
                 else:
                     break
                     
-            if (line[s] == 'x' or line[s] == 'X' ):
+            if line[s] == 'x' or line[s] == 'X':
                 line_len = len(line)
                 self.xlabel = line[s+2:line_len-1]
                     
-            elif (line[s] == 'y' or line[s] == 'Y' ):
+            elif line[s] == 'y' or line[s] == 'Y':
                 line_len = len(line)
                 self.ylabel = line[s+2:line_len-1]
-            elif (line[s] == 'h' or line[s] == 'H' or 
-                  line[s] == 'a' or line[s] == 'A'):
-
+            elif line[s] == 'h' or line[s] == 'H' or line[s] == 'a' or line[s] == 'A':
                 line_len = len(line)
                 p = 0
                 while p < line_len:
                     l2 = line[p:p+2]
                     legend_Bool = False
-                    if (l2 == 'x ' or l2 == 'X '):
+                    if l2 == 'x ' or l2 == 'X ':
                         self.head.append('x')
                         self.h += 1
                         self.legend.append("x")
                         legend_Bool= False
-                    elif (l2 == 'y(' or l2 == 'Y('):
+                    elif l2 == 'y(' or l2 == 'Y(':
                         self.head.append('y')
                         self.h += 1
                         legend_Bool= True
-                    elif (l2 == 'm(' or l2 == 'M('):
+                    elif l2 == 'm(' or l2 == 'M(':
                         self.head.append('m')
                         self.h += 1
                         legend_Bool= True
-                    elif (l2 == 'n(' or l2 == 'N('):
+                    elif l2 == 'n(' or l2 == 'N(':
                         self.head.append('n')
                         self.h += 1
                         legend_Bool= True
-                    elif (l2 == 'l(' or l2 == 'L('):
+                    elif l2 == 'l(' or l2 == 'L(':
                         self.head.append('l')
                         self.h += 1
                         legend_Bool= True
@@ -145,13 +142,13 @@ class ReadGd(object):
                         legend_Bool = False
                         t = p+1
                         while t < line_len:
-                            if  (line[t] == ')' ):
+                            if  line[t] == ')' :
                                 self.legend.append(line[p+2:t])
                                 if (self.LET_Bool):
-                                    if (line[p+2:t] == "mb^DoseLETme^"):
+                                    if line[p+2:t] == "mb^DoseLETme^":
                                         self.head[self.h-1] = "y"
                                         self.legend[self.h-1] = "DoseLET"
-                                    if (line[p+2:t] == "mb^LETme^"):
+                                    if line[p+2:t] == "mb^LETme^":
                                         self.head[self.h-1] = "y"
                                         self.legend[self.h-1] = "FluenceLET"
                                         
@@ -160,11 +157,10 @@ class ReadGd(object):
                             else:
                                 t += 1
                     p += 1
-#                print '# h = ',h, head[:h] # debug line
 
-            elif (line[s] == 'n' or line[s] == 'N'  ):
+            elif line[s] == 'n' or line[s] == 'N'  :
                 break
-            elif (line[s].isdigit() or line[s] == '-' ):
+            elif line[s].isdigit() or line[s] == '-' :
                                
                 line_len = len(line)
 #                print len(line)     debug line
@@ -203,10 +199,10 @@ class ReadGd(object):
         out_file_name = self.filename[:len_file_name-2]
         if (self.agr):
             out_file_name += "agr"              
-            print '# Writing data in a ".agr" file fragment: ' + out_file_name
+            print('# Writing data in a ".agr" file fragment: ' + out_file_name)
         else:
             out_file_name += "dat"              
-            print '# Writing data in a ".dat" file: ' + out_file_name
+            print('# Writing data in a ".dat" file: ' + out_file_name)
             
         out_file = open(out_file_name, 'w')
 
@@ -260,12 +256,12 @@ class ReadGd(object):
 
 #            print self.head[num]  # debug line
 
-            if (self.head[num] == "x"):
+            if self.head[num] == "x":
                 continue
 
-            elif  (self.head[num] == 'y' or self.head[num] == 'm' ): # normal data
+            elif self.head[num] == 'y' or self.head[num] == 'm' : # normal data
 
-                if (self.head[num] == 'm'):
+                if self.head[num] == 'm':
                     str_hd = self.legend[num]  
                     head_len = len(str_hd)
                     j = 0

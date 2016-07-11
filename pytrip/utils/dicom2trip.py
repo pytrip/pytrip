@@ -1,12 +1,10 @@
 #!/usr/bin/env python
 
-from pytrip import *
-import dicomhelper
 import sys
 
-basename = sys.argv[2]
+from pytrip import CtxCube, dicomhelper
 
-print basename
+basename = sys.argv[2]
 
 # import DICOM
 dcm = dicomhelper.read_dicom_folder(sys.argv[1])

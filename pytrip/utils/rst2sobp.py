@@ -1,7 +1,8 @@
 #! /usr/bin/env python
-from rst_read import *
 
 import sys
+
+from pytrip.utils.rst_read import RstfileRead
 
 file = sys.argv[1]
 

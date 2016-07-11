@@ -5,6 +5,8 @@ import sys
 from pylab import *
 from optparse import OptionParser
 
+from pytrip.utils.rst_read import RstfileRead
+
 parser = OptionParser()
 parser.add_option("-s", "--submachine", dest="subm",
                   help="Select submachine to plot.", metavar="int")
@@ -16,7 +18,7 @@ file = args[0]
 
 sm = 1 # default
 fac = 1000 
-if options.subm != None:
+if options.subm is not None:
     sm = int(options.subm)
 if options.fac != None:
     fac = int(options.fac)
@@ -25,7 +27,7 @@ a = RstfileRead(file)
 
 # convert data in submachine to a nice array
 b = a.submachine[sm]
-print "Submachine: ", sm, " - Energy:", b.energy, "MeV/u"
+print("Submachine: ", sm, " - Energy:", b.energy, "MeV/u")
 cc = array(b.particles)
 
 cc = cc / cc.max() * fac

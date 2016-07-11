@@ -2,9 +2,9 @@
 """ convert gd files to xmgrace readable ascii data.
 """
 
-
 import sys
 import os
+
 
 class ReadGd(object):
     'read file'
@@ -12,8 +12,7 @@ class ReadGd(object):
     def __init__(self, filename):
 
         if os.path.isfile(filename) is False:
-            raise IOError,  "Could not find file " + filename
-        
+            raise IOError("Could not find file " + filename)
 
         gd_file = open(filename, 'r')
         gd_lines = gd_file.readlines()
@@ -21,7 +20,7 @@ class ReadGd(object):
         first = True
         ignore_rest = False
         for line in gd_lines:
-            if not(line[0].isdigit()):
+            if not (line[0].isdigit()):
                 string = "#" + line
                 if first == False:
                     ignore_rest = True
@@ -34,6 +33,6 @@ class ReadGd(object):
 
             sys.stdout.write(string)
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     ReadGd(sys.argv[1])
