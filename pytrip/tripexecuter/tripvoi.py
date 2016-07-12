@@ -14,12 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytrip.tripexecuter.pytripobj import *
+from pytrip.tripexecuter import pytripObj
 
 
 class TripVoi(pytripObj):
     def __init__(self, voi):
-        self.save_fields = ["name", "target", "max_dose_fraction", "oar", "dose", "hu_offset", "hu_value",
+        self.save_fields = ["name", "target", "max_dose_fraction",
+                            "oar", "dose", "hu_offset", "hu_value",
                             "dose_percent", "cube_value"]
         self._voi = voi
         self.name = voi.get_name()

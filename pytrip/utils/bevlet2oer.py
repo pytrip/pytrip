@@ -38,7 +38,7 @@ class ReadGd(object):
         for line in gd_lines:
             if not (line[0].isdigit()):
                 string = "#" + line
-                if first == False:
+                if not first:
                     ignore_rest = True
             else:
                 first = False

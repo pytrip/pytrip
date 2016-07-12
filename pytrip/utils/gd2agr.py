@@ -12,7 +12,7 @@ import os
 
 
 class ReadGd(object):
-    'read file'
+    """read file"""
 
     def __init__(self, filename):
 
@@ -22,8 +22,6 @@ class ReadGd(object):
         gd_file = open(filename, 'r')
         gd_lines = gd_file.readlines()
         gd_file.close()
-        first = True
-        ignore_rest = False
 
         header = "# Grace project file\n# \n@version 50122 \n"
         header += "@page size 842, 595 \n@page scroll 5% \n"
@@ -61,10 +59,15 @@ class ReadGd(object):
                 string += ' "\n@    yaxis  label char size 1.500000\n'
                 string += '@    yaxis  ticklabel char size 1.250000\n'
 
-            elif line[s] == 'h' or line[s] == 'H' or line[s] == 'a' or line[s] == 'A' or line[s] == 'n' or line[
-                s] == 'N':
+            elif line[s] == 'h' \
+                    or line[s] == 'H' \
+                    or line[s] == 'a' \
+                    or line[s] == 'A' \
+                    or line[s] == 'n' \
+                    or line[s] == 'N':
                 count += 1
-                string = '\n@    s' + str(count) + ' comment "' + filename + ' "\n'
+                string = '\n@    s' + str(count) + \
+                         ' comment "' + filename + ' "\n'
                 line_len = len(line)
                 p = s + 1
 

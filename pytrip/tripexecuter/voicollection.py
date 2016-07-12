@@ -14,9 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytrip.tripexecuter.pytripobj import *
-from ..util import *
+from pytrip.tripexecuter import pytripObj
 from pytrip.tripexecuter.tripvoi import TripVoi
+from pytrip.util import get_class_name
 
 
 class VoiCollection(pytripObj):
@@ -73,7 +73,7 @@ class VoiCollection(pytripObj):
         if voi in self.vois:
             return False
         if get_class_name(self.parent) == "TripPlan":
-            if not TripVoi in voi.__class__.__bases__:
+            if TripVoi not in voi.__class__.__bases__:
                 voi = TripVoi(voi)
             for v in self.vois:
                 if v._voi is voi._voi:

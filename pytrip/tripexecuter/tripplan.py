@@ -1,4 +1,4 @@
-from pytrip.tripexecuter.pytripobj import *
+from pytrip.tripexecuter import pytripObj
 from pytrip.tripexecuter.fieldcollection import FieldCollection
 from pytrip.tripexecuter.voicollection import VoiCollection
 from pytrip.tripexecuter.tripexecuter import TripExecuter

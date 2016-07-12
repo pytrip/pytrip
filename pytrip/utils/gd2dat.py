@@ -1,9 +1,9 @@
 #! /usr/bin/env python
 """ Reads .gd files and can convert them into (xmgrace readable) ascii data.
 
-    Can be used in the command line 
+    Can be used in the command line
 
-    Mendatory arguments:
+    Mandatory arguments:
     Name      Type       Default  Description
     filename  STRING     ""       File name of .gd file, should be first.
 
@@ -12,10 +12,10 @@
     exp       STRING     "exp"    if "exp": Export data of .gd into a .dat file
     agr       STRING     ""       if "agr": Export data of .gd into a .agr file
     LET       STRING     "LET"    if "LET": Export also data entitled "DoseLET"
-    
+
     Example:
     1) reading the file foo.gd and exporting it as ascii file foo.dat
-    python gd2dat.py foo.gd 
+    python gd2dat.py foo.gd
 
     2) reading the file foo.gd and exporting it as xmgrace file foo.agr
     python gd2dat.py foo.gd agr
@@ -54,8 +54,6 @@ class ReadGd(object):
         self.agr = agr
         self.LET_Bool = LET
 
-        argv_len = len(sys.argv)
-        i = 0
         print('\n# Running the conversion scrip gd2dat.py')
         for par in sys.argv:
             if par == 'agr':
@@ -66,7 +64,7 @@ class ReadGd(object):
             elif par[:3] == 'exp':
                 self.export_Bool = True
 
-        if self.filename == None:
+        if self.filename is None:
             print("No file name has been specified")
         else:
             print("# Reading the file " + self.filename + " with gd2dat.py")
@@ -99,7 +97,10 @@ class ReadGd(object):
             elif line[s] == 'y' or line[s] == 'Y':
                 line_len = len(line)
                 self.ylabel = line[s + 2:line_len - 1]
-            elif line[s] == 'h' or line[s] == 'H' or line[s] == 'a' or line[s] == 'A':
+            elif line[s] == 'h' \
+                    or line[s] == 'H' \
+                    or line[s] == 'a' \
+                    or line[s] == 'A':
                 line_len = len(line)
                 p = 0
                 while p < line_len:
@@ -161,13 +162,14 @@ class ReadGd(object):
         num = 0
         while num < self.h:
             ydat = []
-            if (self.head[num] == "x"):
+            if self.head[num] == "x":
                 for ele in self.indata:
                     self.xdata.append(ele[num])
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
-            elif (self.head[num] == 'y' or self.head[num] == 'm' \
-                          or self.head[num] == 'n'):  # normal data
+            elif self.head[num] == 'y' \
+                    or self.head[num] == 'm' \
+                    or self.head[num] == 'n':  # normal data
                 for ele in self.indata:
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
@@ -212,27 +214,22 @@ class ReadGd(object):
         num = -1
         counter = 0
 
-        ### debug lines
         #        print self.h
         #        print self.head
         #        print self.legend
         #        print "length self.data ", len(self.data)
         #        print "length self.xdata ", len(self.xdata)
         #        exit()
-        ### end debug
 
         while num < self.h - 1:
 
             num += 1
-            ###
             # The following feature is still under development
             #            title = self.legend[num]
             #            if (title == "Survival" or title == "SpecDose" \
             #                    or title == "PhysDose" ):
             #                print '# Skip data with the title "' + title + '"'
             #                continue
-            ###
-
             #            print self.head[num]  # debug line
 
             if self.head[num] == "x":
@@ -242,7 +239,6 @@ class ReadGd(object):
 
                 if self.head[num] == 'm':
                     str_hd = self.legend[num]
-                    head_len = len(str_hd)
                     j = 0
                     for sign in str_hd:
                         if sign == '*':
@@ -273,7 +269,7 @@ class ReadGd(object):
             else:
                 continue
 
-            ### special handling for 'm'
+            # special handling for 'm'
             #
             # A column with the header 'm' should be multiplied with the
             # column to the left of it (cf GD manual).
@@ -298,7 +294,7 @@ class ReadGd(object):
 
                 counter += 1
 
-### end special handling for 'm'
+# end special handling for 'm'
 
 if __name__ == '__main__':
     ReadGd(sys.argv[1], LET=True, exp=True)

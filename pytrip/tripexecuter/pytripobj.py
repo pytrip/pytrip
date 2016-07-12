@@ -14,19 +14,21 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
+
+
 class pytripObj(object):
     def save(self):
         data = {}
-        if hasattr(self,"save_fields"):
+        if hasattr(self, "save_fields"):
             for field in self.save_fields:
-                item = getattr(self,field)
-                if hasattr(item,"save"):
+                item = getattr(self, field)
+                if hasattr(item, "save"):
                     data[field] = item.save()
                 elif type(item) is list:
                     if len(item) > 0:
                         data[field] = []
                         for i in item:
-                            if hasattr(i,"save"):
+                            if hasattr(i, "save"):
                                 data[field].append(i.save())
                             else:
                                 data[field].append(i)
@@ -34,7 +36,7 @@ class pytripObj(object):
                     if len(item) > 0:
                         data[field] = {}
                         for i in item.keys():
-                            if hasattr(item[i],"save"):
+                            if hasattr(item[i], "save"):
                                 data[field][i] = item[i].save()
                             else:
                                 data[field] = item

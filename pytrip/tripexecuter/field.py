@@ -1,4 +1,4 @@
-from pytrip.tripexecuter.pytripobj import *
+from pytrip.tripexecuter import pytripObj
 from ..error import *
 
 
@@ -13,7 +13,7 @@ class Field(pytripObj):
         self.rasterstep = [2, 2]
         self.doseextension = 1.2
         self.contourextension = 0.6
-        self.rasterfile = None;
+        self.rasterfile = None
 
         self.zsteps = 1.0
         self.projectile = 'C'
@@ -27,7 +27,7 @@ class Field(pytripObj):
         self.rasterfile = path
 
     def get_rasterfile(self):
-        return self.rasterfile;
+        return self.rasterfile
 
     def set_name(self, name):
         self.name = name

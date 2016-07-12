@@ -14,8 +14,8 @@ def main(args=sys.argv[1:]):
     c = CtxCube()
     c.read_dicom(dcm)
 
-    c.write_trip_header(basename+".hed")
-    c.write_trip_data(basename+".ctx")
+    c.write_trip_header(basename + ".hed")
+    c.write_trip_data(basename + ".ctx")
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

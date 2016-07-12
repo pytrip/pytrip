@@ -4,14 +4,13 @@
 
 import os
 import re
-import sys
 
 __author__ = "Niels Bassler"
 __version__ = "1.0"
 __email__ = "n.bassler@dkfz.de"
 
 
-# to do : add proper destructors
+# TODO add proper destructors
 
 class SubMachine(object):
     'Define for each submachine.'
@@ -27,11 +26,6 @@ class SubMachine(object):
         self.xpos = [0] * subm_size
         self.ypos = [0] * subm_size
         self.particles = [0] * subm_size
-
-    #    def __del__(self):
-    #	    self.__del__(self)
-    #            object.__del__(self)
-    #            print 'submachine deleted'
 
     def fillData(self, xx, yy, pp, n):
         # print "fill data:", n,  len(self.xpos)
@@ -59,7 +53,7 @@ class RstfileRead(object):
             print("read", data_length, "lines of data.")
             i = 0
 
-            submachine_counter = 0
+            subm_counter = 0
             self.submachine = []
             while i < data_length:
                 # print "parsing line",  i,  content[i]
@@ -94,31 +88,37 @@ class RstfileRead(object):
                     # found a submachine, now do the data parsing
                     # print "found one submachine at",  i
 
-                    # get an estimate of the submachine blocksize. It may be smaller, but certainly not larger than this.
+                    # get an estimate of the submachine blocksize.
+                    # It may be smaller, but certainly not larger than this.
                     i_stored = i
                     submachine_size = 0
                     i += 1
-                    while (i < data_length) and (re.match("submachine#", content[i]) is None):
+                    while (i < data_length) and \
+                            (re.match("submachine#", content[i]) is None):
                         submachine_size += 1
                         i += 1
                     i = i_stored  # go back to the start of this submachine
 
                     data_counter = 0
-                    self.submachine.append(SubMachine(int(content[i].split()[1]), \
-                                                      float(content[i].split()[2]), \
-                                                      int(content[i].split()[3]), \
-                                                      float(content[i].split()[4]) \
-                                                      , submachine_size))
+                    self.submachine.append(SubMachine(
+                        int(content[i].split()[1]),
+                        float(content[i].split()[2]),
+                        int(content[i].split()[3]),
+                        float(content[i].split()[4]),
+                        submachine_size))
 
                     i += 1
                     # now read the submachine
                     escape = False
-                    while (i < data_length) and (re.match("submachine#", content[i]) is None) and (escape == False):
+                    while (i < data_length) and \
+                            (re.match("submachine#", content[i]) is None) \
+                            and (escape is False):
                         # print "subloop", i,  content[i]
                         if re.match("stepsize", content[i]) is not None:
-                            ttt = int(content[i].split()[1])
-                            self.submachine[submachine_counter].stepsizex = int(content[i].split()[1])
-                            self.submachine[submachine_counter].stepsizey = int(content[i].split()[2])
+                            self.submachine[subm_counter].stepsizex = \
+                                int(content[i].split()[1])
+                            self.submachine[subm_counter].stepsizey = \
+                                int(content[i].split()[2])
                         else:
                             temp = content[i].split()
                             if len(temp) == 3:
@@ -126,33 +126,37 @@ class RstfileRead(object):
                                     x = float(temp[0])
                                     y = float(temp[1])
                                     z = float(temp[2])
-                                    # print "filldata", x, y, z, data_counter
-                                    self.submachine[submachine_counter].fillData(x, y, z, data_counter)
+                                    self.submachine[subm_counter].fillData(
+                                        x, y, z, data_counter)
                                     data_counter += 1
-                                except ValueError:  # handles when some other comment is inserted before the next "submachine" line
+                                except ValueError:
+                                    # handles when some other comment is
+                                    # inserted before the next "submachine"
+                                    # line
                                     # print "escape", i, data_counter
                                     escape = True
 
                         i += 1
-                    self.submachine[submachine_counter].size = data_counter  # number of entries in submachine
+                    # number of entries in submachine
+                    self.submachine[subm_counter].size = data_counter
+
                     # resize elements properly
                     # print "dc:", data_counter
-                    self.submachine[submachine_counter].xpos = self.submachine[submachine_counter].xpos[0:data_counter]
-                    self.submachine[submachine_counter].ypos = self.submachine[submachine_counter].ypos[0:data_counter]
-                    self.submachine[submachine_counter].particles = self.submachine[submachine_counter].particles[
-                                                                    0:data_counter]
-                    submachine_counter += 1
+                    # TODO shorten variable names
+                    self.submachine[subm_counter].xpos = \
+                        self.submachine[subm_counter].xpos[:data_counter]
+
+                    self.submachine[subm_counter].ypos = \
+                        self.submachine[subm_counter].ypos[:data_counter]
+
+                    self.submachine[subm_counter].particles = \
+                        self.submachine[subm_counter].particles[:data_counter]
+                    subm_counter += 1
                 ################################
                 else:
                     i = i + 1
-            print("found", submachine_counter, "submachines.")
-            self.submachines = submachine_counter
-
-
-        #    def __del__(self):
-        #            object.__del__(self)
-        #            self.__del__(self)
-        #            print 'deleted'
+            print("found", subm_counter, "submachines.")
+            self.submachines = subm_counter
 
     def showVersion(self):
         print(self.version)
