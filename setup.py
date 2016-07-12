@@ -82,10 +82,6 @@ def clean_cache():
     except ImportError:
         importlib.invalidate_caches()
 
-#setup (name = 'pytriplib',
-#       version = '0.1',
-#       include_dirs = [np.get_include()],
-#       description = 'help functions for pytrip',
 #       ext_modules = [module1])
 
 def get_version():
@@ -158,11 +154,13 @@ setuptools.setup(
         'pydicom',
         'scipy'
     ],
+    entry_points={
+        'console_scripts': [
+            'trip2dicom=' + \
+            'trip.utils.trip2dicom:main',
+            'dicom2trip=' + \
+            'trip.utils.dicom2trip:main',
+        ],
+    },
     cmdclass=get_cmdclass()
 )
-
-#setup(name='pytrip',
-#      description='Python scripts for TRiP and virtuos',
-#      # TODO: this does not look correct,
-#      # why do the subdirectories have to be specified explicitly here?
-#      packages=['pytrip','pytrip.res','pytrip.tripexecuter'],

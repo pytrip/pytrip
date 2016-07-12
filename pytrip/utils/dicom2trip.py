@@ -4,18 +4,18 @@ import sys
 
 from pytrip import CtxCube, dicomhelper
 
-basename = sys.argv[2]
 
-# import DICOM
-dcm = dicomhelper.read_dicom_folder(sys.argv[1])
-c = CtxCube()
-c.read_dicom(dcm)
+def main(args=sys.argv[1:]):
 
-c.write_trip_header(basename+".hed")
-c.write_trip_data(basename+".ctx")
+    basename = args[1]
 
-#v = VdxCube("",c)
-#v.read_dicom(dcm)
-#v.write_to_trip(basename+".vdx")
+    # import DICOM
+    dcm = dicomhelper.read_dicom_folder(args[0])
+    c = CtxCube()
+    c.read_dicom(dcm)
 
-exit()
+    c.write_trip_header(basename+".hed")
+    c.write_trip_data(basename+".ctx")
+
+if __name__ == '__main__':
+    sys.exit(main(sys.argv[1:]))

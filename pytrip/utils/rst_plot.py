@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-from rst_read import *
 
 import sys
 from pylab import *
@@ -20,7 +19,7 @@ sm = 1 # default
 fac = 1000 
 if options.subm is not None:
     sm = int(options.subm)
-if options.fac != None:
+if options.fac is not None:
     fac = int(options.fac)
 
 a = RstfileRead(file)
