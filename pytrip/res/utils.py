@@ -14,8 +14,11 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-def get_max(a,b):
-    return [max(x,y) for x,y in zip(a,b)]
-def get_min(a,b):
-    return [min(x,y) for x,y in zip(a,b)]
-    
+
+
+def get_max(a, b):
+    return [max(x, y) for x, y in zip(a, b)]
+
+
+def get_min(a, b):
+    return [min(x, y) for x, y in zip(a, b)]

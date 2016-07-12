@@ -14,13 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
+
+
 class InputError(Exception):
-	def __init__(self,msg):
-		self.msg = msg
-	def __str__(self):
-		return repr(self.msg)
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return repr(self.msg)
+
+
 class ModuleNotLoadedError(Exception):
-	def __init__(self,msg):
-		self.msg = msg
-	def __str__(self):
-		return repr(self.msg)
+    def __init__(self, msg):
+        self.msg = msg
+
+    def __str__(self):
+        return repr(self.msg)

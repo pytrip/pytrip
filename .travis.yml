@@ -26,9 +26,6 @@ matrix:
           python: 3.5
           env: TOXENV=py35
         - os: linux
-          python: 3.5-dev
-          env: TOXENV=py35
-        - os: linux
           python: nightly
           env: TOXENV=py36
         - os: linux
@@ -84,7 +81,7 @@ install:
 
 # if scipy is used, then installation from pip last longer than 10min, thus we add travis_wait
 script:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 8 ; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 1 ; fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
 
 after_success:

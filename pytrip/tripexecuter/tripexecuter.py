@@ -1,5 +1,3 @@
-from ..dos import DosCube
-from ..let import LETCube
 import os
 import shutil
 
@@ -10,10 +8,12 @@ except:
 
 import copy
 import uuid
-from ..vdx import VdxCube
+from pytrip.vdx import VdxCube
 from subprocess import *
-from ..res.point import *
-from ..error import *
+from pytrip.res.point import *
+from pytrip.error import *
+from pytrip.dos import DosCube
+from pytrip.let import LETCube
 import pytrip
 
 
@@ -67,10 +67,14 @@ class TripExecuter(object):
             basis = get_basis_from_angles(field.get_gantry(), field.get_couch())
             basis = basis[0]
             basis = np.array(
-                [basis[0] / cube1.pixel_size, basis[1] / cube1.pixel_size, basis[2] / cube1.slice_distance])
-            basis = basis / np.max(np.abs(basis))
+                [basis[0] / cube1.pixel_size,
+                 basis[1] / cube1.pixel_size,
+                 basis[2] / cube1.slice_distance])
+            basis /= np.max(np.abs(basis))
 
-            d.cube = pytriplib.create_field_shadow(cube1.cube, cube2.cube, np.array(basis, dtype=np.double))
+            d.cube = pytriplib.create_field_shadow(cube1.cube,
+                                                   cube2.cube,
+                                                   np.array(basis, dtype=np.double))
             target_cube -= d
             shadow_cubes.append(d)
 

@@ -1,21 +1,25 @@
-from pytrip.tripexecuter.pytripobj import *
+from pytrip.tripexecuter.pytripobj import pytripObj
 from pytrip.tripexecuter.fieldcollection import FieldCollection
 from pytrip.tripexecuter.voicollection import VoiCollection
-from pytrip.tripexecuter.tripexecuter import TripExecuter
-from ..dos import DosCube
-from ..let import LETCube
+from pytrip.tripexecuter.tripexecuter import TripExecuter, InputError
+from pytrip.dos import DosCube
+from pytrip.let import LETCube
 from pytrip.tripexecuter.dosecube import DoseCube
 import os
 
 
 class TripPlan(pytripObj):
     def __init__(self, name="", comment=""):
-        self.save_fields = ["fields", "vois", "remote", "servername", "username", "password", "working_dir",
-                            "ddd_folder", "spc_folder", "sis_file", "res_tissue_type", "target_tissue_type", "name",
+        self.save_fields = ["fields", "vois", "remote", "servername",
+                            "username", "password", "working_dir",
+                            "ddd_folder", "spc_folder", "sis_file",
+                            "res_tissue_type", "target_tissue_type", "name",
                             "comment"]
         self.save_fields.extend(
-            ["iterations", "opt_method", "opt_princip", "dose_alg", "bio_alg", "opt_alg", "eps", "geps",
-             "out_phys_dose", "out_bio_dose", "out_dose_mean_let", "out_field", "out_mean_let", "dose_percent"])
+            ["iterations", "opt_method", "opt_princip", "dose_alg",
+             "bio_alg", "opt_alg", "eps", "geps",
+             "out_phys_dose", "out_bio_dose", "out_dose_mean_let",
+             "out_field", "out_mean_let", "dose_percent"])
         self.fields = FieldCollection(self)
         self.vois = VoiCollection(self)
         self.remote = False
@@ -358,10 +362,8 @@ class TripPlan(pytripObj):
     def add_field(self, field):
         return self.fields.add_field(field)
 
-    def remove_field(field):
+    def remove_field(self, field):
         self.fields.remove(field)
-        # ~ def get_rbe_tissue(self):
-        # ~ return self.rbe_files.keys()
 
     def get_field_datasource(self):
         return self.fields

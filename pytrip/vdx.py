@@ -14,21 +14,22 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-import os, re, sys
-from pytrip.error import *
-import pytrip.res.point, string
-from pytrip.res.point import *
-import struct
-from numpy import *
-import time
-import pytrip as plib
-import pytrip.dos
+import os
+import re
+import sys
 import copy
-from math import pi
+from math import pi, cos, sin
+import struct
+import numpy as np
+import time
+import string
 import matplotlib._cntr as cntr
 
+from pytrip.error import InputError, ModuleNotLoadedError
+import pytrip as plib
+import pytrip.dos
+
 try:
-    import dicom
     from dicom.dataset import Dataset, FileDataset
     from dicom.sequence import Sequence
 
@@ -109,7 +110,7 @@ class VdxCube:
         n = len(content)
         header_full = False
         number_of_vois = 0
-        while (i < n):
+        while i < n:
             line = content[i]
             if not header_full:
                 if re.match("vdx_file_version", line) is not None:
@@ -231,7 +232,7 @@ def create_cube(cube, name, center, width, height, depth):
     v = Voi(name, cube)
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
-        if z >= center[2] - depth / 2 and z <= center[2] + depth / 2:
+        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             points = []
             points.append([center[0] - width / 2, center[1] - height / 2, z])
@@ -271,7 +272,7 @@ def create_cylinder(cube, name, center, radius, depth):
     p = zip(center[0] + radius * cos(t), center[1] + radius * sin(t))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
-        if z >= center[2] - depth / 2 and z <= center[2] + depth / 2:
+        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             points = [[x[0], x[1], z] for x in p]
             c = Contour(points, cube)
@@ -286,7 +287,7 @@ def create_sphere(cube, name, center, radius):
     p = zip(cos(t), sin(t))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
-        if z >= center[2] - radius and z <= center[2] + radius:
+        if center[2] - radius <= z <= center[2] + radius:
             r = (radius ** 2 - (z - center[2]) ** 2) ** 0.5
             s = Slice(cube)
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
@@ -319,7 +320,7 @@ class Voi:
     def get_voi_cube(self):
         if hasattr(self, "voi_cube"):
             return self.voi_cube
-        self.voi_cube = dos.DosCube(self.cube)
+        self.voi_cube = pytrip.DosCube(self.cube)
         self.voi_cube.load_from_structure(self, 1000)
         return self.voi_cube
 
@@ -339,7 +340,7 @@ class Voi:
         data = []
         for slice in self.slices:
             data.extend(self.slices[slice].contour[0].contour)
-        self.polygon3d = array(data)
+        self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
         if not hasattr(self, "polygon3d"):
@@ -371,11 +372,11 @@ class Voi:
                 points[(point[0], point[1], point[2])].append(point2)
                 points[(point2[0], point2[1], point2[2])].append(point)
                 if next_contour is not None:
-                    point3 = res.point.get_nearest_point(point, next_contour)
+                    point3 = pytrip.res.point.get_nearest_point(point, next_contour)
                     points[(point[0], point[1], point[2])].append(point3)
                     points[(point3[0], point3[1], point3[2])].append(point)
                 if last_contour is not None:
-                    point4 = res.point.get_nearest_point(point, last_contour)
+                    point4 = pytrip.res.point.get_nearest_point(point, last_contour)
                     if not point4 in points[(point[0], point[1], point[2])]:
                         points[(point[0], point[1], point[2])].append(point4)
                         points[(point4[0], point4[1], point4[2])].append(point)
@@ -383,21 +384,21 @@ class Voi:
         self.points = points
 
     def get_2d_projection_on_basis(self, basis, offset=None):
-        a = array(basis[0])
-        b = array(basis[1])
+        a = np.array(basis[0])
+        b = np.array(basis[1])
         self.concat_contour()
-        bas = array([a, b])
+        bas = np.array([a, b])
         data = self.get_3d_polygon()
-        product = dot(data, transpose(bas))
+        product = np.dot(data, np.transpose(bas))
 
         compare = (self.cube.pixel_size)
         filtered = plib.filter_points(product, compare / 2)
-        filtered = array(sorted(filtered, cmp=voi_point_cmp))
+        filtered = np.array(sorted(filtered, cmp=voi_point_cmp))
         filtered = plib.points_to_contour(filtered)
-        product = filtered;
+        product = filtered
 
         if offset is not None:
-            offset_proj = array([dot(offset, a), dot(offset, b)])
+            offset_proj = np.array([np.dot(offset, a), np.dot(offset, b)])
             product = product[:] - offset_proj
         return product
 
@@ -408,9 +409,15 @@ class Voi:
         for key in sorted(self.slice_z):
             slice = self.slices[key]
             if plane is self.sagital:
-                point = sorted(plib.slice_on_plane(array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                point = sorted(
+                    plib.slice_on_plane(
+                        np.array(slice.contour[0].contour), plane, depth),
+                    key=lambda x: x[1])
             elif plane is self.coronal:
-                point = sorted(plib.slice_on_plane(array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                point = sorted(
+                    plib.slice_on_plane(
+                        np.array(slice.contour[0].contour), plane, depth),
+                    key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -437,7 +444,7 @@ class Voi:
             return self.center_pos
         self.concat_contour()
         tot_volume = 0
-        center_pos = array([0, 0, 0])
+        center_pos = np.array([0, 0, 0])
         for key in self.slices:
             center, area = self.slices[key].calculate_center()
             tot_volume += area
@@ -544,11 +551,11 @@ class Voi:
 
     def read_dicom(self, info, data):
 
-        if not "Contours" in data.dir() and not "ContourSequence" in data.dir():
+        if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
             return
 
         type_name = info.RTROIInterpretedType
-        self.type = self.get_roi_type_number(typename)
+        self.type = self.get_roi_type_number(np.typename)
         self.color = data.ROIDisplayColor
         if "Contours" in data.dir():
             contours = data.Contours
@@ -591,7 +598,7 @@ class Voi:
             out += "slice %d\n" % i
             out += "slice_in_frame %.3f\n" % pos
             out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n" % (
-            thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
+                thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
             out += "number_of_contours %d\n" % self.slices[k].number_of_contours()
             out += self.slices[k].to_voxel_string()
             i += 1
@@ -601,7 +608,7 @@ class Voi:
         slice = self.get_slice_at_pos(pos[2])
         if slice is None:
             return None
-        return sort(slice.get_intersections(pos))
+        return np.sort(slice.get_intersections(pos))
 
     def get_slice_at_pos(self, z):
         thickness = self.get_thickness() / 2 * 100
@@ -609,7 +616,7 @@ class Voi:
             key = key
             low = z * 100 - thickness
             high = z * 100 + thickness
-            if (low < key and z * 100 > key) or (high > key and z * 100 <= key):
+            if (low < key < 100 * z) or (high > key >= 100 * z):
                 return self.slices[key]
         return None
 
@@ -631,8 +638,8 @@ class Voi:
                 temp_min, temp_max = self.slices[key].get_min_max()
             else:
                 min1, max1 = self.slices[key].get_min_max()
-                temp_min = res.point.min_list(temp_min, min1)
-                temp_max = res.point.max_list(temp_max, max1)
+                temp_min = pytrip.res.point.min_list(temp_min, min1)
+                temp_max = pytrip.res.point.max_list(temp_max, max1)
         self.temp_min = temp_min
         self.temp_max = temp_max
         return temp_min, temp_max
@@ -652,7 +659,9 @@ class Slice:
         offset.append(float(self.cube.xoffset))
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
-        self.contour.append(Contour(res.point.array_to_point_array(array(dcm.ContourData, dtype=float), offset)))
+        self.contour.append(Contour(
+            pytrip.res.point.array_to_point_array(
+                np.array(dcm.ContourData, dtype=float), offset)))
 
     def get_position(self):
         if len(self.contour) == 0:
@@ -662,17 +671,18 @@ class Slice:
     def get_intersections(self, pos):
         intersections = []
         for c in self.contour:
-            intersections.extend(res.point.get_x_intersection(pos[1], c.contour))
+            intersections.extend(
+                pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
     def calculate_center(self):
         tot_area = 0
-        center_pos = array([0, 0, 0])
+        center_pos = np.array([0, 0, 0])
         for contour in self.contour:
             center, area = contour.calculate_center()
             tot_area += area
             center_pos += area * center
-        return (center_pos / tot_area, tot_area)
+        return center_pos / tot_area, tot_area
 
     def read_vdx(self, content, i):
         line = content[i]
@@ -685,7 +695,7 @@ class Slice:
             elif re.match("thickness", line) is not None:
                 items = line.split()
                 self.thickness = float(items[1])
-                if (len(items) == 7):
+                if len(items) == 7:
                     self.start_pos = float(items[4])
                     self.stop_pos = float(items[6])
                 else:
@@ -747,8 +757,8 @@ class Slice:
         temp_min, temp_max = self.contour[0].get_min_max()
         for i in range(1, len(self.contour)):
             min1, max1 = self.contour[i].get_min_max()
-            temp_min = res.point.min_list(temp_min, min1)
-            temp_max = res.point.max_list(temp_max, max1)
+            temp_min = pytrip.res.point.min_list(temp_min, min1)
+            temp_max = pytrip.res.point.max_list(temp_max, max1)
         return temp_min, temp_max
 
 
@@ -760,7 +770,7 @@ class Contour:
 
     def push(self, contour):
         for i in range(len(self.children)):
-            if (self.children[i].contains_contour(contour)):
+            if self.children[i].contains_contour(contour):
                 self.children[i].push(contour)
                 return
         self.add_child(contour)
@@ -768,42 +778,41 @@ class Contour:
     def calculate_center(self):
         points = self.contour
         points.append(points[-1])
-        points = array(points)
-        dx_dy = array([points[i + 1] - points[i] for i in range(len(points) - 1)])
+        points = np.array(points)
+        dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -sum(points[0:len(points) - 1, 1] * dx_dy[:, 0])
-            paths = array((dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5)
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 0])
-            paths = array((dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 1])
-            paths = array((dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
         total_path = sum(paths)
 
-        center = array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
+        center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
                         sum(points[0:len(points) - 1:, 1] * paths) / total_path, points[0, 2]])
 
-        # ~ center = 0.5*array([sum((points[0:len(points)-1,0]**2)*dx_dy[:,1])/area,-sum((points[0:len(points)-1:,1]**2)*dx_dy[:,0])/area,points[0,2]])
-        return (center, area)
+        return center, area
 
     def get_min_max(self):
-        min_x = amin(array(self.contour)[:, 0])
-        min_y = amin(array(self.contour)[:, 1])
-        min_z = amin(array(self.contour)[:, 2])
+        min_x = np.amin(np.array(self.contour)[:, 0])
+        min_y = np.amin(np.array(self.contour)[:, 1])
+        min_z = np.amin(np.array(self.contour)[:, 2])
 
-        max_x = amax(array(self.contour)[:, 0])
-        max_y = amax(array(self.contour)[:, 1])
-        max_z = amax(array(self.contour)[:, 2])
-        return ([min_x, min_y, min_z], [max_x, max_y, max_z])
+        max_x = np.amax(np.array(self.contour)[:, 0])
+        max_y = np.amax(np.array(self.contour)[:, 1])
+        max_z = np.amax(np.array(self.contour)[:, 2])
+        return [min_x, min_y, min_z], [max_x, max_y, max_z]
 
     def to_voxel_string(self):
         out = ""
         for i in range(len(self.contour)):
             out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-            self.contour[i][0], self.contour[i][1], self.contour[i][2], 0, 0, 0)
+                self.contour[i][0], self.contour[i][1], self.contour[i][2], 0, 0, 0)
         out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-        self.contour[0][0], self.contour[0][1], self.contour[0][2], 0, 0, 0)
+            self.contour[0][0], self.contour[0][1], self.contour[0][2], 0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
@@ -831,7 +840,7 @@ class Contour:
     def add_child(self, contour):
         remove_idx = []
         for i in range(len(self.children)):
-            if (contour.contains_contour(self.children[i])):
+            if contour.contains_contour(self.children[i]):
                 contour.push(self.children[i])
                 remove_idx.append(i)
         remove_idx.sort(reverse=True)
@@ -843,7 +852,7 @@ class Contour:
         return len(self.contour)
 
     def has_childs(self):
-        if (len(self.children) > 0):
+        if len(self.children) > 0:
             return True
         return False
 
@@ -854,42 +863,43 @@ class Contour:
             self.children[i].print_child(level + 1)
 
     def contains_contour(self, contour):
-        return res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
+        return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
         for i in range(len(self.children)):
             self.children[i].concat()
-        while (len(self.children) > 1):
+        while len(self.children) > 1:
             d = -1
             i1 = 0
             i2 = 0
             child = 0
             for i in range(1, len(self.children)):
-                i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour,
-                                                                                self.children[i].contour)
-                if (d == -1 or d_temp < d):
+                i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
+                                                                                       self.children[i].contour)
+                if d == -1 or d_temp < d:
                     d = d_temp
                     child = i
-            i1_temp, i2_temp, d_temp = res.point.short_distance_polygon_idx(self.children[0].contour, self.contour)
+            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
+                                                                                   self.contour)
             if d_temp < d:
                 self.merge(self.children[0])
                 self.children.pop(0)
             else:
                 self.children[0].merge(self.children[child])
                 self.children.pop(child)
-        if (len(self.children) == 1):
+        if len(self.children) == 1:
             self.merge(self.children[0])
             self.children.pop(0)
 
     def remove_inner_contours(self):
-        for i in range(len(children)):
+        for i in range(len(self.children)):
             self.children[i].children = []
 
     def merge(self, contour):
-        if (len(self.contour) == 0):
+        if len(self.contour) == 0:
             self.contour = contour.contour
             return
-        i1, i2, d = res.point.short_distance_polygon_idx(self.contour, contour.contour)
+        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
         con = []
         for i in range(i1 + 1):
             con.append(self.contour[i])

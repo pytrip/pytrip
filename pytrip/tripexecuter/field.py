@@ -1,10 +1,11 @@
-from pytrip.tripexecuter.pytripobj import *
-from ..error import *
+from pytrip.error import InputError
+from pytrip.tripexecuter.pytripobj import pytripObj
 
 
 class Field(pytripObj):
     def __init__(self, name):
-        self.save_fields = ["name", "gantry", "couch", "fwhm", "rasterstep", "doseextension", "contourextension",
+        self.save_fields = ["name", "gantry", "couch", "fwhm", "rasterstep",
+                            "doseextension", "contourextension",
                             "zsteps", "projectile", "target"]
         self.name = name
         self.gantry = 0.0
@@ -13,7 +14,7 @@ class Field(pytripObj):
         self.rasterstep = [2, 2]
         self.doseextension = 1.2
         self.contourextension = 0.6
-        self.rasterfile = None;
+        self.rasterfile = None
 
         self.zsteps = 1.0
         self.projectile = 'C'
@@ -27,7 +28,7 @@ class Field(pytripObj):
         self.rasterfile = path
 
     def get_rasterfile(self):
-        return self.rasterfile;
+        return self.rasterfile
 
     def set_name(self, name):
         self.name = name
@@ -50,9 +51,9 @@ class Field(pytripObj):
                 raise Exception()
             self.gantry = angle
 
-
         except Exception as e:
-            raise InputError("Gantry angle shoud be a number between 0 and 360")
+            raise InputError("Gantry angle shoud be a "
+                             "number between 0 and 360")
 
     def get_couch(self):
         return self.couch
@@ -68,7 +69,8 @@ class Field(pytripObj):
                 raise Exception()
             self.rasterstep = [a, b]
         except Exception as e:
-            raise InputError("Rastersteps should be larger than 0 and numbers")
+            raise InputError("Rastersteps should be "
+                             "larger than 0 and numbers")
 
     def set_couch(self, angle):
         if type(angle) is str and not len(angle):
@@ -80,7 +82,8 @@ class Field(pytripObj):
             self.couch = angle
 
         except Exception as e:
-            raise InputError("Couch angle shoud be a number between 0 and 360")
+            raise InputError("Couch angle shoud be "
+                             "a number between 0 and 360")
 
     def set_doseextension(self, doseextension):
         try:
@@ -150,8 +153,11 @@ class Field(pytripObj):
         target = target.split(",")
         if len(target) is 3:
             try:
-                self.target = [float(target[0]), float(target[1]), float(target[2])]
+                self.target = [float(target[0]),
+                               float(target[1]),
+                               float(target[2])]
                 return
             except Exception as e:
                 pass
-        raise InputError("Target should be empty or in the format x,y,z")
+        raise InputError("Target should be empty "
+                         "or in the format x,y,z")

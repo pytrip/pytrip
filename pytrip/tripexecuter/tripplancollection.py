@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with libdedx.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytrip.tripexecuter.pytripobj import *
+from pytrip.tripexecuter.pytripobj import pytripObj
 
 
 class TripPlanCollection(pytripObj):
