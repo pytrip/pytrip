@@ -157,9 +157,9 @@ setuptools.setup(
     entry_points={
         'console_scripts': [
             'trip2dicom=' + \
-            'trip.utils.trip2dicom:main',
+            'pytrip.utils.trip2dicom:main',
             'dicom2trip=' + \
-            'trip.utils.dicom2trip:main',
+            'pytrip.utils.dicom2trip:main',
         ],
     },
     cmdclass=get_cmdclass()
