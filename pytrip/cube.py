@@ -376,16 +376,16 @@ class Cube(object):
             if re.match("dimz", content[i]) is not None:
                 self.dimz = int(content[i].split()[1])
             if re.match("slice_no", content[i]) is not None:
-                self.slice_pos = map(float, range(self.slice_number))
+                self.slice_pos = [float(i) for i in range(self.slice_number)]
                 has_ztable = True
                 i += 1
                 for j in range(self.slice_number):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
             i += 1
-        self.zoffset = self.zoffset * self.slice_distance
+        self.zoffset *= self.slice_distance
         if has_ztable is not True:
-            self.slice_pos = map(float, range(self.slice_number))
+            self.slice_pos = [float(i) for i in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
         self.set_format_str()
@@ -414,11 +414,11 @@ class Cube(object):
         cube = np.fromfile(path, dtype=self.pydata_type)
         if self.byte_order == "aix":
             cube = cube.byteswap()
-        if (len(cube) != self.dimx * self.dimy * self.dimz):
+        if len(cube) != self.dimx * self.dimy * self.dimz:
             raise IOError("Header size and dose cube size are not consistent.")
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2 is True:
-            cube = cube * 2
+            cube *= 2
         self.cube = cube
 
     def set_data_type(self, type):
