@@ -19,7 +19,8 @@ class TestTrip2Dicom(unittest.TestCase):
         # get plans from https://neptun.phys.au.dk/~bassler/TRiP/
         bname = "TST003"
         fname = bname + ".tar.gz"
-        urllib2.urlretrieve("https://neptun.phys.au.dk/~bassler/TRiP/" + fname, fname)
+        if not os.path.exists(fname):
+            urllib2.urlretrieve("https://neptun.phys.au.dk/~bassler/TRiP/" + fname, fname)
         tfile = tarfile.open(fname, 'r:gz')
         tfile.extractall(".")
 
@@ -27,7 +28,8 @@ class TestTrip2Dicom(unittest.TestCase):
 
     def test_check(self):
         tmpdir = tempfile.mkdtemp()
-        self.assertRaises(SystemExit, pytrip.utils.trip2dicom.main, [self.cube000, tmpdir])
+        pytrip.utils.trip2dicom.main([self.cube000, tmpdir])
+#        self.assertRaises(SystemExit, pytrip.utils.trip2dicom.main, [self.cube000, tmpdir])
 
 
 class TestDicom2Trip(unittest.TestCase):
