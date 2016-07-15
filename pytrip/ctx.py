@@ -64,6 +64,7 @@ class CtxCube(Cube):
 
         for i in range(len(self.cube)):
             ds = self.create_dicom_base()
+            ds.preamble = ""  # TODO is it correct ???
             ds.Modality = 'CT'
             ds.SamplesperPixel = 1
             ds.BitsAllocated = self.num_bytes * 8
