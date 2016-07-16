@@ -53,4 +53,4 @@ MORE DOCUMENTATION
 Full documentation can be found here:
 https://pytrip.readthedocs.io/
 
-If you would like to download the code and modify it, read first  :ref:`technical-label`.
+If you would like to download the code and modify it, read first `this <docs/technical.rst>`__.
