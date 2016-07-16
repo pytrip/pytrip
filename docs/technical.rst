@@ -1,6 +1,8 @@
-======
-pytrip
-======
+.. _technical-label:
+
+=======================
+Technical documentation
+=======================
 
 .. image:: https://img.shields.io/pypi/v/pytrip.svg
         :target: https://pypi.python.org/pypi/pytrip
