@@ -1,24 +1,25 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-import pytrip.rst, pytrip.ddd, pytrip.field, time, pytrip.dos, pytrip.ctx, pytrip.vdx, pytrip.paths
-#import matplotlib.pyplot as plt
-import numpy as np
-from pytrip.res.point import *
-import os
+# import os
+# import numpy as np
+# import pytrip.rst, pytrip.ddd, pytrip.field, time, \
+#     pytrip.dos, pytrip.ctx, pytrip.vdx, pytrip.paths
+# #import matplotlib.pyplot as plt
+# from pytrip.res.point import *
 #
 # path = "/home/jato/Projects/TRiP/robustness/Carbon_Head/3mm"
 # datafiles = os.listdir(path)
