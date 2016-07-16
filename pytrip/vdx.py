@@ -166,7 +166,6 @@ class VdxCube:
             ds.PatientsName = self.patient_name
         else:
             ds.PatientsName = ""
-        ds.preamble = "" # TODO is it correct ???
         ds.PatientID = "123456"
         ds.PatientsSex = '0'
         ds.PatientsBirthDate = '19010101'
