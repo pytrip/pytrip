@@ -297,7 +297,7 @@ class Cube(object):
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta, preamble="\0" * 128)
+        ds = FileDataset("file", {}, file_meta=meta)
         ds.PatientsName = self.patient_name
         ds.PatientID = "123456"
         ds.PatientsSex = '0'
