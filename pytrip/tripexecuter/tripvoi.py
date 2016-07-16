@@ -1,19 +1,21 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
+from pytrip.error import InputError
+
 from pytrip.tripexecuter.pytripobj import pytripObj
 
 
@@ -46,7 +48,8 @@ class TripVoi(pytripObj):
         if dose is None:
             return None
         if self.dvh is None:
-            (self.dvh, self.min_dose, self.max_dose, self.mean, area) = dose.calculate_dvh(self._voi.get_voi_data())
+            (self.dvh, self.min_dose, self.max_dose, self.mean, area) = \
+                dose.calculate_dvh(self._voi.get_voi_data())
         return self.dvh
 
     def set_dose_percent(self, ion, dose_percent):
@@ -55,7 +58,7 @@ class TripVoi(pytripObj):
         self.dose_percent[ion] = float(dose_percent)
 
     def get_dose_percent(self, ion):
-        if self.dose_percent.has_key(ion):
+        if ion in self.dose_percent:
             return self.dose_percent[ion]
         return None
 
@@ -75,7 +78,7 @@ class TripVoi(pytripObj):
         try:
             value = float(value)
             self.hu_offset = value
-        except Exception as e:
+        except Exception:
             raise InputError("HU Offset should be a number")
 
     def get_hu_value(self):
@@ -88,7 +91,7 @@ class TripVoi(pytripObj):
         try:
             value = float(value)
             self.hu_value = value
-        except Exception as e:
+        except Exception:
             raise InputError("HU Value should be a number")
 
     def get_dose(self):
@@ -101,7 +104,8 @@ class TripVoi(pytripObj):
         if let is None:
             return None
         if self.lvh is None:
-            (self.lvh, self.min_let, self.max_let, self.let, area) = let.calculate_lvh(self._voi.get_voi_data())
+            (self.lvh, self.min_let, self.max_let, self.let, area) = \
+                let.calculate_lvh(self._voi.get_voi_data())
         return self.lvh
 
     def clean_cache(self):
@@ -127,8 +131,9 @@ class TripVoi(pytripObj):
             if max_dose_fraction < 0:
                 raise Exception()
             self.max_dose_fraction = max_dose_fraction
-        except Exception as e:
-            raise InputError("Max dose fraction should be a number and between 0 and 1")
+        except Exception:
+            raise InputError("Max dose fraction should be "
+                             "a number between 0 and 1")
 
     def set_dose(self, dose):
         try:
@@ -136,8 +141,8 @@ class TripVoi(pytripObj):
             if dose < 0:
                 raise Exception()
             self.dose = dose
-        except Exception as e:
-            raise InputError("Dose should be a number and larger or equal to 0")
+        except Exception:
+            raise InputError("Dose should be a number larger or equal to 0")
 
     def toogle_target(self):
         if self.is_oar() is True:
