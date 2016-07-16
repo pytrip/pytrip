@@ -25,5 +25,3 @@
   recursive-include pytrip *.py
   recursive-include scripts *.py
   recursive-include utils *.py
-include versioneer.py
-include pytrip/_version.py
