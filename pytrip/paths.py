@@ -142,11 +142,11 @@ class DensityProjections:
             return [gantry, couch]
         grid = self.calculate_quality_list(voi,
                                            np.linspace(gantry,
-                                                          gantry + margin,
-                                                          3),
+                                                       gantry + margin,
+                                                       3),
                                            np.linspace(couch,
-                                                          couch + margin,
-                                                          3),
+                                                       couch + margin,
+                                                       3),
                                            avoid=avoid)
         min_item = min(grid, key=lambda x: x["data"][0])
         return self.optimize_angle(voi,
@@ -249,10 +249,10 @@ class DensityProjections:
         min_window, max_window = voi.get_min_max()
         size = np.array(max_window) - np.array(min_window)
         window_size = np.array([((sin(couch) * size[1]) ** 2 +
-                                    (cos(couch) * size[2]) ** 2) ** 0.5,
-                                   ((sin(gantry) * size[0]) ** 2 +
-                                    (cos(gantry) * size[1]) ** 2 +
-                                    (sin(couch) * size[2]) ** 2) ** 0.5]) * 2
+                                (cos(couch) * size[2]) ** 2) ** 0.5,
+                                ((sin(gantry) * size[0]) ** 2 +
+                                (cos(gantry) * size[1]) ** 2 +
+                                (sin(couch) * size[2]) ** 2) ** 0.5]) * 2
 
         dimension = window_size / self.cube.pixel_size
         dimension = np.int16(dimension)
@@ -268,9 +268,8 @@ class DensityProjections:
                                         np.array(basis) * step_length,
                                         dimension,
                                         np.array([self.cube.pixel_size,
-                                                     self.cube.pixel_size,
-                                                     self.cube.slice_distance]
-                                                    ))
+                                                  self.cube.pixel_size,
+                                                  self.cube.slice_distance]))
         data *= step_length
         return data, start, [b, c]
 
