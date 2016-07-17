@@ -1,35 +1,36 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytrip.paths import *
-import time
-from pytrip.res.point import *
-from pytrip.ctx import *
-from pytrip.vdx import *
-from pytrip.dos import *
-import pytrip.dicomhelper as dh
-import numpy
-import threading
-#import matplotlib.pyplot as plt
+# from pytrip.paths import *
+# import time
+# from pytrip.res.point import *
+# from pytrip.ctx import *
+# from pytrip.vdx import *
+# from pytrip.dos import *
+# import pytrip.dicomhelper as dh
+# import numpy
+# import threading
+# #import matplotlib.pyplot as plt
 
-#dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonym2")
-c = CtxCube()
-#c.read_dicom(dcm)
-#~ c.write_trip_data("../../../DicomData/test/test.ctx")
-#~ c.write_trip_header("../../../DicomData/test/test.hed")
+# dcm = dh.read_dicom_folder(
+# "../../../DicomData/Til Jacob T anonymiseret/Anonym2")
+# c = CtxCube()
+# c.read_dicom(dcm)
+# ~ c.write_trip_data("../../../DicomData/test/test.ctx")
+# ~ c.write_trip_header("../../../DicomData/test/test.hed")
 
 # v = VdxCube("",c)
 # v.read_dicom(dcm)
@@ -45,9 +46,8 @@ c = CtxCube()
 # numpy.save("../plotdata",grid)
 # exit()
 
-
-
-# dcm = dh.read_dicom_folder("../../../DicomData/Til Jacob T anonymiseret/Anonymiseret")
+# dcm = dh.read_dicom_folder(
+# "../../../DicomData/Til Jacob T anonymiseret/Anonymiseret")
 # c = CtxCube()
 # c.read_dicom(dcm)
 # #~ c.write_trip_data("../../../DicomData/test/test.ctx")
@@ -63,7 +63,8 @@ c = CtxCube()
 # p = DensityCube(c)
 # projection = DensityProjections(p)
 # #~ print(projection.calculate_angle_quality(voi,110,0)
-# grid2 = projection.calculate_quality_grid(voi,range(0,360,10),range(-90,90,10))
+# grid2 = projection.calculate_quality_grid(
+# voi,range(0,360,10),range(-90,90,10))
 # #~ numpy.save("../plotdata",grid)
 #
 # plt.imshow(grid/grid2)
@@ -139,7 +140,8 @@ c = CtxCube()
 # print(projection.calculate_angle_quality(voi,gantry,couch))
 #
 #
-# angles = [[100,-60],[270,70],[-110,10],[270,50],[180,0],[-30,60],[100,40],[110,10],[0,-90]]
+# angles = [[100,-60],[270,70],[-110,10],[270,50],[180,0],
+# [-30,60],[100,40],[110,10],[0,-90]]
 # #~ angles = [[180,90]]
 # for angle in angles:
 #     data,start,basis = projection.calculate_projection(voi,angle[0],angle[1])

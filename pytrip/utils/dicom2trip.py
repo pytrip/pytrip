@@ -7,6 +7,10 @@ from pytrip import CtxCube, dicomhelper
 
 def main(args=sys.argv[1:]):
 
+    if len(args) != 2:
+        print("\tusage: dicom2trip folder basename")
+        exit()
+
     basename = args[1]
 
     # import DICOM

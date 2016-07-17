@@ -11,7 +11,7 @@ def main(args=sys.argv[1:]):
           "Niels Bassler (bassler@phys.au.dk) and \n\t"
           "Jakob Toftegaard (jakob.toftegaard@gmail.com)")
 
-    if len(sys.argv) != 3:
+    if len(args) != 2:
         print("\tusage: trip2dicom.py headerfile output_folder")
         print("\ttrip2dicom.py tripfile.hed dicomfolder/")
         exit()
