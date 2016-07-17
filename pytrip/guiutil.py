@@ -16,7 +16,6 @@
 """
 
 import numpy as np
-import time
 
 try:
     import matplotlib.pyplot as plt
@@ -38,7 +37,7 @@ class PlotUtil:
         self.dosecontour_levels = []
         self.let_plot = "colorwash"
         self.dose_axis = "auto"
-        self.colormap_dose = plt.get_cmap(None);
+        self.colormap_dose = plt.get_cmap(None)
         self.colormap_let = plt.get_cmap(None)
         self.fields = []
         self.figure = plt
@@ -73,16 +72,20 @@ class PlotUtil:
             size = self.get_size()
             width = float(size[0]) / self.zoom * 100.0
             height = float(size[1]) / self.zoom * 100.0
-            center = [float(size[0]) * self.center[0] / 100, float(size[1]) * self.center[1] / 100]
+            # TODO center never used, why ?
+            # center = [float(size[0]) * self.center[0] / 100,
+            #           float(size[1]) * self.center[1] / 100]
             if offset[0] < 0:
                 self.center[0] += (-offset[0]) * 100 / float(size[0])
             elif offset[0] + width > size[0]:
-                self.center[0] -= (offset[0] + width - size[0]) * 100 / float(size[0])
+                self.center[0] -= (offset[0] + width - size[0]) * 100 / \
+                    float(size[0])
 
             if offset[1] < 0:
                 self.center[1] += (-offset[1]) * 100 / float(size[1])
             elif offset[1] + height > size[1]:
-                self.center[1] -= (offset[1] + height - size[1]) * 100 / float(size[1])
+                self.center[1] -= (offset[1] + height - size[1]) * 100 / \
+                    float(size[1])
         else:
             self.zoom = zoom
 
@@ -90,7 +93,8 @@ class PlotUtil:
         size = self.get_size()
         width = float(size[0]) / self.zoom * 100.0
         height = float(size[1]) / self.zoom * 100.0
-        center = [float(size[0]) * self.center[0] / 100, float(size[1]) * self.center[1] / 100]
+        center = [float(size[0]) * self.center[0] / 100,
+                  float(size[1]) * self.center[1] / 100]
         offset = [center[0] - width / 2, center[1] - height / 2]
         return offset
 
