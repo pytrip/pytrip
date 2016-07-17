@@ -1,5 +1,5 @@
 Welcome to pytrip98's documentation!
-================================================================
+====================================
 
 Contents:
 
@@ -7,6 +7,7 @@ Contents:
    :maxdepth: 2
 
    readme
+   technical
    contributing
    authors
 
