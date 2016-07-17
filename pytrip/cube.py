@@ -14,12 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-import os, re, string, sys
-from pytrip.error import *
-from struct import *
+import os
+import re
+import string
+import sys
+from struct import pack
+
 import numpy as np
-import array
-import pytrip.util
 
 try:
     import dicom
@@ -28,6 +29,8 @@ try:
     _dicom_loaded = True
 except:
     _dicom_loaded = False
+
+from pytrip.error import InputError, ModuleNotLoadedError
 
 
 class Cube(object):
@@ -57,7 +60,8 @@ class Cube(object):
             self.slice_pos = cube.slice_pos
             self.set_format_str()
             self.set_number_of_bytes()
-            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+            self.cube = np.zeros((self.dimz, self.dimy, self.dimx),
+                                 dtype=cube.pydata_type)
         else:
             self.header_set = False
             self.version = "2.0"
@@ -128,10 +132,12 @@ class Cube(object):
         return idx * self.slice_distance + self.zoffset
 
     def pos_to_indices(self, pos):
-        indices = []
-        indices.append(int(pos[0] / self.pixel_size - self.xoffset / self.pixel_size))
-        indices.append(int(pos[1] / self.pixel_size - self.yoffset / self.pixel_size))
-        indices.append(int(pos[2] / self.slice_distance - self.zoffset / self.slice_distance))
+        indices = [int(pos[0] / self.pixel_size -
+                       self.xoffset / self.pixel_size),
+                   int(pos[1] / self.pixel_size -
+                       self.yoffset / self.pixel_size),
+                   int(pos[2] / self.slice_distance -
+                       self.zoffset / self.slice_distance)]
         return indices
 
     def get_value_at_indice(self, indices):
@@ -141,32 +147,45 @@ class Cube(object):
         return self.get_value_at_indice(self.pos_to_indices(pos))
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
-        eq = util.evaluator(equation);
-        data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
-        x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
-        y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
+        # TODO why eq not being used ?
+        # eq = util.evaluator(equation)
+        # TODO why data not being used ?
+        # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
+        x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - \
+            center[0]
+        y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - \
+            center[1]
         xv, yv = np.meshgrid(x, y)
 
     def load_from_structure(self, voi, preset=0, data_type=np.int16):
-        data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
+        data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)),
+                        dtype=data_type)
         if preset != 0:
             for i_z in range(self.dimz):
                 for i_y in range(self.dimy):
-                    intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                    intersection = voi.get_row_intersections(
+                        self.indices_to_pos([0, i_y, i_z]))
                     if intersection is None:
-                        break;
+                        break
                     if len(intersection) > 0:
                         k = 0
                         for i_x in range(self.dimx):
-                            if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
-                                k = k + 1
+                            if self.indices_to_pos([i_x, 0, 0])[0] > \
+                                    intersection[k]:
+                                k += 1
                                 if k >= (len(intersection)):
-                                    break;
+                                    break
                             if k % 2 == 1:
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
-    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance):
+    def create_empty_cube(self,
+                          value,
+                          dimx,
+                          dimy,
+                          dimz,
+                          pixel_size,
+                          slice_distance):
         self.dimx = dimx
         self.dimy = dimy
         self.dimz = dimz
@@ -182,32 +201,36 @@ class Cube(object):
     def override_cube_values(self, voi, value):
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
-                intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                intersection = voi.get_row_intersections(
+                    self.indices_to_pos([0, i_y, i_z]))
                 if intersection is None:
-                    break;
+                    break
                 if len(intersection) > 0:
                     k = 0
                     for i_x in range(self.dimx):
-                        if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
-                            k = k + 1
+                        if self.indices_to_pos([i_x, 0, 0])[0] > \
+                                intersection[k]:
+                            k += 1
                             if k >= (len(intersection)):
-                                break;
+                                break
                         if k % 2 == 1:
                             self.cube[i_z][i_y][i_x] = value
 
     def set_offset_cube_values(self, voi, value):
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
-                intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                intersection = voi.get_row_intersections(
+                    self.indices_to_pos([0, i_y, i_z]))
                 if intersection is None:
-                    break;
+                    break
                 if len(intersection) > 0:
                     k = 0
                     for i_x in range(self.dimx):
-                        if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
-                            k = k + 1
+                        if self.indices_to_pos([i_x, 0, 0])[0] > \
+                                intersection[k]:
+                            k += 1
                             if k >= (len(intersection)):
-                                break;
+                                break
                         if k % 2 == 1:
                             self.cube[i_z][i_y][i_x] += value
 
@@ -220,35 +243,40 @@ class Cube(object):
         output_str += "data_type " + self.data_type + "\n"
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
         output_str += "byte_order " + self.byte_order + "\n"
-        if (self.patient_name == ""):
+        if self.patient_name == "":
             self.patient_name = "Anonyme"
         output_str += "patient_name " + self.patient_name + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        # output_str += "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
+        # output_str +=
+        # "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
         output_str += "xoffset 0\n"
         output_str += "dimx " + str(self.dimx) + "\n"
-        # output_str += "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
+        # output_str +=
+        # "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
         output_str += "yoffset 0\n"
         output_str += "dimy " + str(self.dimy) + "\n"
         output_str += "zoffset 0\n"
 
-        """output_str += "zoffset " + str(int(round(self.zoffset/self.slice_distance))) + "\n" """
+        # """output_str += "zoffset " +
+        # str(int(round(self.zoffset/self.slice_distance))) + "\n" """
         output_str += "dimz " + str(self.dimz) + "\n"
         output_str += "z_table no\n"
 
-        """if self.z_table is True:
-            output_str += "z_table yes\n"
-            output_str += "slice_no  position  thickness  gantry_tilt\n"
-            for i in range(len(self.slice_pos)):
-                output_str += "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],self.slice_distance,0)"""
+        # """if self.z_table is True:
+        #     output_str += "z_table yes\n"
+        #     output_str += "slice_no  position  thickness  gantry_tilt\n"
+        #     for i in range(len(self.slice_pos)):
+        #         output_str +=
+        # "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],
+        # self.slice_distance,0)"""
         with open(path, "w+") as f:
             f.write(output_str)
 
     def set_byteorder(self, endian=None):
-        if endian == None:
+        if endian is None:
             endian = sys.byteorder
         if endian == 'little':
             self.byte_order = "vms"
@@ -343,7 +371,8 @@ class Cube(object):
                 self.created_by = string.lstrip(content[i], "created_by ")
                 self.created_by = string.rstrip(self.created_by)
             if re.match("creation_info", content[i]) is not None:
-                self.creation_info = string.lstrip(content[i], "creation_info ")
+                self.creation_info = string.lstrip(content[i],
+                                                   "creation_info ")
                 self.creation_info = string.rstrip(self.creation_info)
             if re.match("primary_view", content[i]) is not None:
                 self.primary_view = content[i].split()[1]
@@ -376,7 +405,7 @@ class Cube(object):
             if re.match("dimz", content[i]) is not None:
                 self.dimz = int(content[i].split()[1])
             if re.match("slice_no", content[i]) is not None:
-                self.slice_pos = [float(i) for i in range(self.slice_number)]
+                self.slice_pos = [float(j) for j in range(self.slice_number)]
                 has_ztable = True
                 i += 1
                 for j in range(self.slice_number):
@@ -385,7 +414,7 @@ class Cube(object):
             i += 1
         self.zoffset *= self.slice_distance
         if has_ztable is not True:
-            self.slice_pos = [float(i) for i in range(self.slice_number)]
+            self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
         self.set_format_str()
@@ -417,24 +446,24 @@ class Cube(object):
         if len(cube) != self.dimx * self.dimy * self.dimz:
             raise IOError("Header size and dose cube size are not consistent.")
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
-        if multiply_by_2 is True:
+        if multiply_by_2:
             cube *= 2
         self.cube = cube
 
     def set_data_type(self, type):
-        if (type is np.int8 or type is np.uint8):
+        if type is np.int8 or type is np.uint8:
             self.data_type = "integer"
             self.num_bytes = 1
-        elif (type is np.int16 or type is np.uint16):
+        elif type is np.int16 or type is np.uint16:
             self.data_type = "integer"
             self.num_bytes = 2
-        elif (type is np.int32 or type is np.uint32):
+        elif type is np.int32 or type is np.uint32:
             self.data_type = "integer"
             self.num_bytes = 4
-        elif (type is np.float):
+        elif type is np.float:
             self.data_type = "float"
             self.num_bytes = 4
-        elif (type is np.double):
+        elif type is np.double:
             self.data_type = "double"
             self.num_bytes = 8
 
@@ -450,8 +479,9 @@ class Cube(object):
         self.patient_name = ds.PatientsName
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])
-        self.slice_distance = abs(
-            float(dcm["images"][0].ImagePositionPatient[2]) - float(dcm["images"][1].ImagePositionPatient[2]))
+        self.slice_distance = abs(float(
+            dcm["images"][0].ImagePositionPatient[2]) - float(
+            dcm["images"][1].ImagePositionPatient[2]))
         self.slice_number = len(dcm["images"])
         self.xoffset = float(ds.ImagePositionPatient[0])
         self.dimx = int(ds.Rows)
@@ -468,7 +498,8 @@ class Cube(object):
     def set_z_table(self, dcm):
         self.slice_pos = []
         for i in range(len(dcm["images"])):
-            self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
+            self.slice_pos.append(
+                float(dcm["images"][i].ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
         cube = np.array(self.cube, dtype=self.pydata_type)
@@ -480,7 +511,7 @@ class Cube(object):
         f = open(path, "wb+")
         out = ""
         _format = self.format_str[0] + self.format_str[1] * self.dimx
-        i = 0
+        # i = 0 TODO why not used ?
         for image in self.cube:
             out = ""
             for line in image:
