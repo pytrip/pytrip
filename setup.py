@@ -66,8 +66,9 @@ def setup_versioneer():
             # "python versioneer install"
             subprocess.check_output(["python", exe_path, "install"])
 
-#module1 = Extension('pytriplib',
+# module1 = Extension('pytriplib',
 #                    sources = ['pytrip/lib/filter_point.c'])
+
 
 def clean_cache():
     '''
@@ -83,6 +84,7 @@ def clean_cache():
         importlib.invalidate_caches()
 
 #       ext_modules = [module1])
+
 
 def get_version():
     '''

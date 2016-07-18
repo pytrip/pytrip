@@ -14,19 +14,21 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-def parse_to_var(data,var,stoptag=""):
+
+
+def parse_to_var(data, var, stoptag=""):
     out = {}
     i = 0
     if type(data) is str:
         data = data.split()
     for line in data:
         if line.find(stoptag) > -1:
-            break            
+            break
         items = line.split()
-        if var.has_key(items[0]):
+        if items[0] in var:
             if len(items) > 1:
-                out[var[items[0]]] = line.replace(items[0] + " ","")
+                out[var[items[0]]] = line.replace(items[0] + " ", "")
             else:
                 out[var[items[0]]] = True
         i += 1
-    return out,i
+    return out, i

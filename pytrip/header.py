@@ -14,12 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-import string
-
-try:
-    import dicom
-except:
-    pass
 import sys
 
 
@@ -79,12 +73,11 @@ class AptgHeader:
         elif self.header_type == AptgType.CTX:
             data = self.data["images"][0]
             self.slice_number = len(self.data["images"])
-        #	_s = "%s %s ConvolutionKernel %s" %(data.Manufacturer,data.ManufacturersModelName,data.ConvolutionKernel)
         self.created_by = ""  # string.replace(_s," ","-")
         self.creation_info = "created by aptg_export;"
         self.primary_view = "transversal"
         self.version = "1.4"
-        self.modality = data.Modality;
+        self.modality = data.Modality
         self.data_type = "integer"
         self.patient_name = data.PatientsName
         self.number_bytes = data.BitsStored / 8
@@ -103,7 +96,7 @@ class AptgHeader:
         self.dimz = self.slice_number
 
     def set_byte_order(self):
-        endian = sys.byteorder;
+        endian = sys.byteorder
         if endian == "little":
             self.byte_order = "vms"
             self.byte_format = "<"
@@ -112,4 +105,4 @@ class AptgHeader:
             self.byte_format = ">"
 
     def load_voxel(self, path):
-        return;
+        return
