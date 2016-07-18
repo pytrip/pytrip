@@ -1,27 +1,24 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 import os
 import re
-import sys
 import copy
 from math import pi, cos, sin
-import struct
 import numpy as np
-import time
 import string
 import matplotlib._cntr as cntr
 
@@ -40,35 +37,37 @@ except:
 __author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
 __email__ = "bassler@phys.au.dk"
-try:
-    import dicom
-
-    _dicom_loaded = True
-except:
-    _dicom_loaded = False
-"""
-VdxCube is the master class for dealing with vois structures, a vdxcube object contains VoiCube objects which represent a VOI, it
-could be ex a lung or the tumor.
-The VoiCube contains Slices which correnspons to the CT slices, and the slices contains contour object, which contains the contour data, a slice can contain multiple, since TRiP only support one contour per slice for each voi, it is necessary to merge contour
-
-VdxCube can import both dicom data and TRiP data, and export in the thoose formats.
-"""
 
 
 class VdxCube:
+    """
+    VdxCube is the master class for dealing with vois structures,
+    a vdxcube object contains VoiCube objects which represent a VOI,
+    it could be ex a lung or the tumor.
+    The VoiCube contains Slices which correnspons to the CT slices,
+    and the slices contains contour object, which contains the contour data,
+    a slice can contain multiple, since TRiP only support one contour per slice
+    for each voi, it is necessary to merge contour
+
+    VdxCube can import both dicom data and TRiP data,
+    and export in the those formats.
+    """
+
     def __init__(self, content, cube=None):
         self.vois = []
         self.cube = cube
         self.version = "1.2"
 
     def read_dicom(self, data, structure_ids=None):
-        if not data.has_key("rtss"):
+        if "rtss" not in data:
             raise InputError("Input is not a valid rtss structure")
         dcm = data["rtss"]
         self.version = "2.0"
         for i in range(len(dcm.ROIContours)):
-            if structure_ids is None or dcm.ROIContours[i].RefdROINumber in structure_ids:
-                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode('iso-8859-1'), self.cube)
+            if structure_ids is None or \
+                    dcm.ROIContours[i].RefdROINumber in structure_ids:
+                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode(
+                    'iso-8859-1'), self.cube)
                 v.read_dicom(dcm.RTROIObservations[i], dcm.ROIContours[i])
                 self.add_voi(v)
         self.cube.xoffset = 0
@@ -109,7 +108,7 @@ class VdxCube:
         i = 0
         n = len(content)
         header_full = False
-        number_of_vois = 0
+#        number_of_vois = 0
         while i < n:
             line = content[i]
             if not header_full:
@@ -117,8 +116,9 @@ class VdxCube:
                     self.version = line.split()[1]
                 elif re.match("all_indices_zero_based", line) is not None:
                     self.zero_based = True
-                elif re.match("number_of_vois", line) is not None:
-                    number_of_vois = int(line.split()[1])
+#                TODO number_of_vois not used
+#                elif re.match("number_of_vois", line) is not None:
+#                    number_of_vois = int(line.split()[1])
             if re.match("voi", line) is not None:
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -249,7 +249,9 @@ def create_cube(cube, name, center, width, height, depth):
 def create_voi_from_cube(cube, name):
     v = Voi(name, cube)
     for i in range(cube.dimz):
-        x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
+        x, y = np.meshgrid(
+            np.arange(len(cube.cube[0, 0])),
+            np.arange(len(cube.cube[0])))
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(100)
         s = Slice(cube)
@@ -290,7 +292,9 @@ def create_sphere(cube, name, center, radius):
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius ** 2 - (z - center[2]) ** 2) ** 0.5
             s = Slice(cube)
-            points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
+            points = [[center[0] + r * x[0],
+                       center[1] + r * x[1],
+                       z] for x in p]
             c = Contour(points, cube)
             s.add_contour(c)
             v.add_slice(s)
@@ -363,7 +367,8 @@ class Voi:
             contour = self.slices[key].contour[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[slice_keys[i + 1]].contour[0].contour
+                next_contour = self.slices[
+                    slice_keys[i + 1]].contour[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -372,12 +377,14 @@ class Voi:
                 points[(point[0], point[1], point[2])].append(point2)
                 points[(point2[0], point2[1], point2[2])].append(point)
                 if next_contour is not None:
-                    point3 = pytrip.res.point.get_nearest_point(point, next_contour)
+                    point3 = pytrip.res.point.get_nearest_point(point,
+                                                                next_contour)
                     points[(point[0], point[1], point[2])].append(point3)
                     points[(point3[0], point3[1], point3[2])].append(point)
                 if last_contour is not None:
-                    point4 = pytrip.res.point.get_nearest_point(point, last_contour)
-                    if not point4 in points[(point[0], point[1], point[2])]:
+                    point4 = pytrip.res.point.get_nearest_point(point,
+                                                                last_contour)
+                    if point4 not in points[(point[0], point[1], point[2])]:
                         points[(point[0], point[1], point[2])].append(point4)
                         points[(point4[0], point4[1], point4[2])].append(point)
             last_contour = contour
@@ -487,13 +494,14 @@ class Voi:
         self.name = items[1]
         self.type = int(items[3])
         i += 1
-        slices = 10000
+#        slices = 10000
         while i < len(content):
             line = content[i]
             if re.match("voi", line) is not None:
                 break
-            if re.match("#TransversalObjects", line) is not None:
-                slices = int(line.split()[1])
+#            TODO slices never used - does it make sense ?
+#            if re.match("#TransversalObjects", line) is not None:
+#                slices = int(line.split()[1])
             i += 1
         print(items)
         return i - 1
@@ -514,7 +522,8 @@ class Voi:
             elif re.match("slice", line) is not None:
                 s = Slice()
                 i = s.read_vdx(content, i)
-                key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
+                key = int((float(s.get_position()) -
+                           min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
             elif re.match("voi", line) is not None:
@@ -551,10 +560,10 @@ class Voi:
 
     def read_dicom(self, info, data):
 
-        if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
+        if "Contours" not in data.dir() and \
+                "ContourSequence" not in data.dir():
             return
 
-        type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(np.typename)
         self.color = data.ROIDisplayColor
         if "Contours" in data.dir():
@@ -562,8 +571,9 @@ class Voi:
         else:
             contours = data.ContourSequence
         for i in range(len(contours)):
-            key = int((float(contours[i].ContourData[2]) - min(self.cube.slice_pos)) * 100)
-            if not self.slices.has_key(key):
+            key = int((float(contours[i].ContourData[2]) -
+                       min(self.cube.slice_pos)) * 100)
+            if key not in self.slices:
                 self.slices[key] = Slice(self.cube)
                 self.slice_z.append(key)
             self.slices[key].add_dicom_contour(contours[i])
@@ -597,9 +607,11 @@ class Voi:
             pos = sl.get_position()
             out += "slice %d\n" % i
             out += "slice_in_frame %.3f\n" % pos
-            out += "thickness %.3f reference start_pos %.3f stop_pos %.3f\n" % (
-                thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
-            out += "number_of_contours %d\n" % self.slices[k].number_of_contours()
+            out += "thickness %.3f reference " \
+                   "start_pos %.3f stop_pos %.3f\n" % \
+                   (thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
+            out += "number_of_contours %d\n" % \
+                   self.slices[k].number_of_contours()
             out += self.slices[k].to_voxel_string()
             i += 1
         return out
@@ -733,7 +745,8 @@ class Slice:
         for i in range(len(self.contour)):
             out += "contour %d\n" % i
             out += "internal false\n"
-            out += "number_of_points %d\n" % (self.contour[i].number_of_points() + 1)
+            out += "number_of_points %d\n" % \
+                   (self.contour[i].number_of_points() + 1)
             out += self.contour[i].to_voxel_string()
             out += "\n"
         return out
@@ -779,7 +792,8 @@ class Contour:
         points = self.contour
         points.append(points[-1])
         points = np.array(points)
-        dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
+        dx_dy = np.array([points[i + 1] - points[i]
+                          for i in range(len(points) - 1)])
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -sum(points[0:len(points) - 1, 1] * dx_dy[:, 0])
             paths = np.array((dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5)
@@ -791,8 +805,10 @@ class Contour:
             paths = np.array((dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
         total_path = sum(paths)
 
-        center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
-                        sum(points[0:len(points) - 1:, 1] * paths) / total_path, points[0, 2]])
+        center = np.array([sum(points[0:len(points) - 1, 0] * paths) /
+                           total_path,
+                          sum(points[0:len(points) - 1:, 1] * paths) /
+                           total_path, points[0, 2]])
 
         return center, area
 
@@ -810,9 +826,15 @@ class Contour:
         out = ""
         for i in range(len(self.contour)):
             out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-                self.contour[i][0], self.contour[i][1], self.contour[i][2], 0, 0, 0)
+                self.contour[i][0],
+                self.contour[i][1],
+                self.contour[i][2],
+                0, 0, 0)
         out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-            self.contour[0][0], self.contour[0][1], self.contour[0][2], 0, 0, 0)
+            self.contour[0][0],
+            self.contour[0][1],
+            self.contour[0][2],
+            0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
@@ -825,7 +847,10 @@ class Contour:
                 if j >= points - 1:
                     break
                 con_dat = line.split()
-                self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
+                self.contour.append([
+                    float(con_dat[0]),
+                    float(con_dat[1]),
+                    float(con_dat[2])])
                 j += 1
             else:
                 if re.match("internal_false", line) is not None:
@@ -833,7 +858,6 @@ class Contour:
                 if re.match("number_of_points", line) is not None:
                     points = int(line.split()[1])
                     set_point = True
-
             i += 1
         return i - 1
 
@@ -863,24 +887,27 @@ class Contour:
             self.children[i].print_child(level + 1)
 
     def contains_contour(self, contour):
-        return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
+        return pytrip.res.point.point_in_polygon(
+            contour.contour[0][0],
+            contour.contour[0][1],
+            self.contour)
 
     def concat(self):
         for i in range(len(self.children)):
             self.children[i].concat()
         while len(self.children) > 1:
             d = -1
-            i1 = 0
-            i2 = 0
             child = 0
             for i in range(1, len(self.children)):
-                i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
-                                                                                       self.children[i].contour)
+                i1_temp, i2_temp, d_temp = \
+                    pytrip.res.point.short_distance_polygon_idx(
+                        self.children[0].contour, self.children[i].contour)
                 if d == -1 or d_temp < d:
                     d = d_temp
                     child = i
-            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
-                                                                                   self.contour)
+            i1_temp, i2_temp, d_temp = \
+                pytrip.res.point.short_distance_polygon_idx(
+                    self.children[0].contour, self.contour)
             if d_temp < d:
                 self.merge(self.children[0])
                 self.children.pop(0)
@@ -899,7 +926,8 @@ class Contour:
         if len(self.contour) == 0:
             self.contour = contour.contour
             return
-        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
+        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(
+            self.contour, contour.contour)
         con = []
         for i in range(i1 + 1):
             con.append(self.contour[i])

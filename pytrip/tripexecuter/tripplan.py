@@ -86,7 +86,7 @@ class TripPlan(pytripObj):
         self.dose_percent[ion] = float(dose_percent)
 
     def get_dose_percent(self, ion):
-        if self.dose_percent.has_key(ion):
+        if ion in self.dose_percent:
             return self.dose_percent[ion]
         return None
 
@@ -111,7 +111,7 @@ class TripPlan(pytripObj):
         t.save_data(path)
         for dos in self.dosecubes:
             dos.get_dosecube().write(path + "." + dos.get_type() + ".dos")
-        if not self.letcube is None:
+        if self.letcube is not None:
             self.letcube.write(path + "." + "dosmeanlet.dos")
 
     def get_projectile(self):
@@ -197,7 +197,7 @@ class TripPlan(pytripObj):
         return self.eps
 
     def get_geps(self):
-        return self.geps;
+        return self.geps
 
     def get_bio_algorithm(self):
         return self.bio_alg
@@ -265,7 +265,7 @@ class TripPlan(pytripObj):
         for cube in self.dosecubes:
             if cube.get_type() == type:
                 dos = cube
-        if not dos is None:
+        if dos is not None:
             self.dosecubes.remove(dos)
             self.clean_cache()
         return dos
@@ -302,7 +302,7 @@ class TripPlan(pytripObj):
                 raise Exception()
             self.eps = value
         except Exception as e:
-            raise InputError("eps shoud be a number Larger than 0")
+            raise InputError("eps shoud be a number Larger than 0" + e)
 
     def set_geps(self, value):
         try:
@@ -312,7 +312,7 @@ class TripPlan(pytripObj):
             self.geps = value
 
         except Exception as e:
-            raise InputError("geps shoud be a number Larger than 0")
+            raise InputError("geps shoud be a number Larger than 0" + e)
 
     def set_iterations(self, value):
         try:
@@ -321,7 +321,7 @@ class TripPlan(pytripObj):
                 raise Exception()
             self.iterations = value
         except Exception as e:
-            raise InputError("iterations shoud be a number Larger than 0")
+            raise InputError("iterations shoud be a number Larger than 0" + e)
 
     def set_bio_algorithm(self, value):
         self.bio_alg = value

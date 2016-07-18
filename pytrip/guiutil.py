@@ -1,19 +1,22 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
+
+import numpy as np
+
 try:
     import matplotlib.pyplot as plt
     import matplotlib
@@ -21,8 +24,6 @@ try:
 except:
     pass
 
-import numpy as np
-import time
 import pytrip.res.point
 
 
@@ -36,7 +37,7 @@ class PlotUtil:
         self.dosecontour_levels = []
         self.let_plot = "colorwash"
         self.dose_axis = "auto"
-        self.colormap_dose = plt.get_cmap(None);
+        self.colormap_dose = plt.get_cmap(None)
         self.colormap_let = plt.get_cmap(None)
         self.fields = []
         self.figure = plt
@@ -71,16 +72,20 @@ class PlotUtil:
             size = self.get_size()
             width = float(size[0]) / self.zoom * 100.0
             height = float(size[1]) / self.zoom * 100.0
-            center = [float(size[0]) * self.center[0] / 100, float(size[1]) * self.center[1] / 100]
+            # TODO center never used, why ?
+            # center = [float(size[0]) * self.center[0] / 100,
+            #           float(size[1]) * self.center[1] / 100]
             if offset[0] < 0:
                 self.center[0] += (-offset[0]) * 100 / float(size[0])
             elif offset[0] + width > size[0]:
-                self.center[0] -= (offset[0] + width - size[0]) * 100 / float(size[0])
+                self.center[0] -= (offset[0] + width - size[0]) * 100 / \
+                    float(size[0])
 
             if offset[1] < 0:
                 self.center[1] += (-offset[1]) * 100 / float(size[1])
             elif offset[1] + height > size[1]:
-                self.center[1] -= (offset[1] + height - size[1]) * 100 / float(size[1])
+                self.center[1] -= (offset[1] + height - size[1]) * 100 / \
+                    float(size[1])
         else:
             self.zoom = zoom
 
@@ -88,7 +93,8 @@ class PlotUtil:
         size = self.get_size()
         width = float(size[0]) / self.zoom * 100.0
         height = float(size[1]) / self.zoom * 100.0
-        center = [float(size[0]) * self.center[0] / 100, float(size[1]) * self.center[1] / 100]
+        center = [float(size[0]) * self.center[0] / 100,
+                  float(size[1]) * self.center[1] / 100]
         offset = [center[0] - width / 2, center[1] - height / 2]
         return offset
 
@@ -99,11 +105,13 @@ class PlotUtil:
         size = self.get_size()
         width = float(size[0]) / self.zoom * 100.0
         height = float(size[1]) / self.zoom * 100.0
-        scale_factor = self.fig_ct.get_figure().get_size_inches()[0] * self.fig_ct.get_figure().get_dpi() / width / 2
+        scale_factor = self.fig_ct.get_figure().get_size_inches()[0] * \
+            self.fig_ct.get_figure().get_dpi() / width / 2
 
-        center = [float(size[0]) * self.center[0] / 100, float(size[1]) * self.center[1] / 100]
-        center[0] = center[0] - float(offset[0]) / scale_factor
-        center[1] = center[1] + float(offset[1]) / scale_factor / self.aspect
+        center = [float(size[0]) * self.center[0] / 100,
+                  float(size[1]) * self.center[1] / 100]
+        center[0] -= float(offset[0]) / scale_factor
+        center[1] += float(offset[1]) / scale_factor / self.aspect
 
         off = [center[0] - width / 2, center[1] - height / 2]
 
@@ -208,7 +216,9 @@ class PlotUtil:
         self.vois.remove(voi)
 
     def set_contrast(self, contrast):
-        if (contrast[0] >= contrast[1] or contrast[1] > 2000 or contrast[0] < -1000):
+        if contrast[0] >= contrast[1] or \
+                contrast[1] > 2000 or \
+                contrast[0] < -1000:
             return
         self.contrast = contrast
         if hasattr(self, "fig_ct"):
@@ -216,12 +226,14 @@ class PlotUtil:
 
     def pixel_to_pos(self, pixel):
         if self.plot_plan == "Transversal":
-            pos = [pixel[0] * self.ctx.pixel_size, pixel[1] * self.ctx.pixel_size]
+            pos = [pixel[0] * self.ctx.pixel_size,
+                   pixel[1] * self.ctx.pixel_size]
         elif self.plot_plan == "Sagital":
             pos = [(self.ctx.dimy - pixel[0]) * self.ctx.pixel_size,
                    (self.ctx.dimz - pixel[1]) * self.ctx.slice_distance]
         elif self.plot_plan == "Coronal":
-            pos = [pixel[0] * self.ctx.pixel_size, (self.ctx.dimz - pixel[1]) * self.ctx.slice_distance]
+            pos = [pixel[0] * self.ctx.pixel_size,
+                   (self.ctx.dimz - pixel[1]) * self.ctx.slice_distance]
         return [pixel, pos]
 
     def get_contrast(self):
@@ -261,8 +273,11 @@ class PlotUtil:
             self.aspect = self.ctx.slice_distance / self.ctx.pixel_size
 
         if not hasattr(self, "fig_ct"):
-            self.fig_ct = self.figure.imshow(ct_data, cmap=plt.get_cmap("gray"), vmin=self.contrast[0],
-                                             vmax=self.contrast[1], aspect=self.aspect)
+            self.fig_ct = self.figure.imshow(ct_data,
+                                             cmap=plt.get_cmap("gray"),
+                                             vmin=self.contrast[0],
+                                             vmax=self.contrast[1],
+                                             aspect=self.aspect)
         else:
             self.fig_ct.set_data(ct_data)
 
@@ -277,7 +292,8 @@ class PlotUtil:
             self.figure.axes.get_yaxis().set_visible(False)
             if not hasattr(self, "contrast_bar"):
                 cax = self.figure.figure.add_axes([0.1, 0.1, 0.03, 0.8])
-                self.contrast_bar = self.figure.figure.colorbar(self.fig_ct, cax=cax)
+                self.contrast_bar = self.figure.figure.colorbar(
+                    self.fig_ct, cax=cax)
         # ~
         self.clean_plot()
         self.plot_dose(idx)
@@ -295,19 +311,23 @@ class PlotUtil:
                         data.append(np.array(contour.contour))
                         plot = True
                 elif self.plot_plan == "Sagital":
-                    slice = voi.get_2d_slice(voi.sagital, idx * self.ctx.pixel_size)
-                    if not slice is None:
+                    slice = voi.get_2d_slice(voi.sagital,
+                                             idx * self.ctx.pixel_size)
+                    if slice is not None:
                         data.append(np.array(slice.contour[0].contour))
                         plot = True
                 elif self.plot_plan == "Coronal":
-                    slice = voi.get_2d_slice(voi.coronal, idx * self.ctx.pixel_size)
-                    if not slice is None:
+                    slice = voi.get_2d_slice(voi.coronal,
+                                             idx * self.ctx.pixel_size)
+                    if slice is not None:
                         data.append(np.array(slice.contour[0].contour))
                         plot = True
                 data = self.points_to_plane(data)
                 if plot:
                     for d in data:
-                        self.figure.plot(d[:, 0], d[:, 1], color=(np.array(voi.get_color()) / 255.0))
+                        self.figure.plot(
+                            d[:, 0], d[:, 1],
+                            color=(np.array(voi.get_color()) / 255.0))
         # set zoom
         size = self.get_size()
         width = float(size[0]) / self.zoom * 100.0
@@ -337,11 +357,23 @@ class PlotUtil:
                 data[:, 0] /= self.ctx.pixel_size
                 data[:, 1] /= self.ctx.pixel_size
             elif self.plot_plan == "Sagital":
-                data[:, 0] = (-data[:, 1] + self.ctx.pixel_size * self.ctx.dimx) / self.ctx.pixel_size
-                data[:, 1] = (-data[:, 2] + self.ctx.slice_distance * self.ctx.dimz) / self.ctx.slice_distance
+                data[:, 0] = (-data[:, 1] +
+                              self.ctx.pixel_size *
+                              self.ctx.dimx) / \
+                    self.ctx.pixel_size
+                data[:, 1] = (-data[:, 2] +
+                              self.ctx.slice_distance *
+                              self.ctx.dimz) / \
+                    self.ctx.slice_distance
             elif self.plot_plan == "Coronal":
-                data[:, 0] = (-data[:, 0] + self.ctx.pixel_size * self.ctx.dimy) / self.ctx.pixel_size
-                data[:, 1] = (-data[:, 2] + self.ctx.slice_distance * self.ctx.dimz) / self.ctx.slice_distance
+                data[:, 0] = (-data[:, 0] +
+                              self.ctx.pixel_size *
+                              self.ctx.dimy) / \
+                    self.ctx.pixel_size
+                data[:, 1] = (-data[:, 2] +
+                              self.ctx.slice_distance *
+                              self.ctx.dimz) / \
+                    self.ctx.slice_distance
         return d
 
     def plot_fields(self, idx):
@@ -355,23 +387,25 @@ class PlotUtil:
             return
 
         target = targets[0].get_voi().get_voi_data()
-        center = target.calculate_center()
+        # center = target.calculate_center() # TODO why not used ?
         data = None
         if self.plot_plan == "Transversal":
             slice = target.get_slice_at_pos(self.ctx.slice_to_z(idx))
-            if not slice is None:
+            if slice is not None:
                 for contour in slice.contour:
                     data = np.array(contour.contour)
             vec = np.array([0, 0, 1])
         elif self.plot_plan == "Sagital":
-            slice = target.get_2d_slice(target.sagital, idx * self.ctx.pixel_size)
-            if not slice is None:
+            slice = target.get_2d_slice(target.sagital,
+                                        idx * self.ctx.pixel_size)
+            if slice is not None:
                 for contour in slice.contour:
                     data = np.array(contour.contour)
             vec = np.array([0, 1, 0])
         elif self.plot_plan == "Coronal":
-            slice = target.get_2d_slice(target.coronal, idx * self.ctx.pixel_size)
-            if not slice is None:
+            slice = target.get_2d_slice(target.coronal,
+                                        idx * self.ctx.pixel_size)
+            if slice is not None:
                 for contour in slice.contour:
                     data = np.array(contour.contour)
             vec = np.array([1, 0, 0])
@@ -384,7 +418,7 @@ class PlotUtil:
 
             gantry = f.get_gantry()
             couch = f.get_couch()
-            field_vec = -res.point.get_basis_from_angles(gantry, couch)[0]
+            field_vec = -pytrip.get_basis_from_angles(gantry, couch)[0]
 
             field_vec = field_vec - np.dot(field_vec, vec) * vec
 
@@ -393,7 +427,8 @@ class PlotUtil:
 
             field_vec /= np.linalg.norm(field_vec)
             cross_vec = np.cross(field_vec, vec)
-            proj = np.dot(data - slice.calculate_center()[0], np.transpose(cross_vec))
+            proj = np.dot(data - slice.calculate_center()[0],
+                          np.transpose(cross_vec))
             idx_min = np.where(min(proj) == proj)[0][0]
             idx_max = np.where(max(proj) == proj)[0][0]
             point_min = data[idx_min]
@@ -409,8 +444,10 @@ class PlotUtil:
             plot_data = self.points_to_plane(plot_data)
 
             color = np.array([124, 252, 0]) / 255.0
-            self.figure.plot(plot_data[0][:, 0], plot_data[0][:, 1], color=color)
-            self.figure.plot(plot_data[1][:, 0], plot_data[1][:, 1], color=color)
+            self.figure.plot(plot_data[0][:, 0], plot_data[0][:, 1],
+                             color=color)
+            self.figure.plot(plot_data[1][:, 0], plot_data[1][:, 1],
+                             color=color)
 
     def clear_dose_view(self):
         if hasattr(self, "fig_dose"):
@@ -464,13 +501,21 @@ class PlotUtil:
             plot_data = dos_data / float(self.factor)
             plot_data[plot_data <= self.min_dose] = self.min_dose
             if not hasattr(self, "fig_dose") or not self.scale == scale:
-                self.fig_dose = self.figure.imshow(plot_data, cmap=cmap, vmax=(self.max_dose), aspect=self.aspect)
+                self.fig_dose = self.figure.imshow(plot_data,
+                                                   cmap=cmap,
+                                                   vmax=(self.max_dose),
+                                                   aspect=self.aspect)
                 if not self.draw_in_gui:
-                    bar = self.figure.colorbar()
+                    pass
+                    # TODO why bar is not used ?
+                    # bar = self.figure.colorbar()
                 else:
-                    if not hasattr(self, "dose_bar") and not hasattr(self, "let_bar"):
-                        cax = self.figure.figure.add_axes([0.9, 0.1, 0.03, 0.8])
-                        self.dose_bar = self.figure.figure.colorbar(self.fig_dose, cax=cax)
+                    if not hasattr(self, "dose_bar") and \
+                            not hasattr(self, "let_bar"):
+                        cax = self.figure.figure.add_axes(
+                            [0.9, 0.1, 0.03, 0.8])
+                        self.dose_bar = self.figure.figure.colorbar(
+                            self.fig_dose, cax=cax)
                 if scale == "abs":
                     self.dose_bar.set_label("Dose (Gy)")
                 else:
@@ -479,12 +524,15 @@ class PlotUtil:
                 self.fig_dose.set_data(plot_data)
             self.scale = scale
         elif self.dose_plot == "contour":
-            x, y = np.meshgrid(np.arange(len(dos_data[0])), np.arange(len(dos_data)))
+            x, y = np.meshgrid(np.arange(len(dos_data[0])),
+                               np.arange(len(dos_data)))
             isodose_obj = cntr.Cntr(x, y, dos_data)
             for con in self.dosecontour_levels:
                 contour = isodose_obj.trace(con["doselevel"] * 10)
                 if len(contour) > 0:
-                    self.figure.plot(contour[0][:, 0], contour[0][:, 1], con["color"])
+                    self.figure.plot(contour[0][:, 0],
+                                     contour[0][:, 1],
+                                     con["color"])
 
     def plot_text(self, idx):
         size = self.get_size()
@@ -500,15 +548,29 @@ class PlotUtil:
         elif self.plot_plan == "Coronal":
             slices = self.ctx.dimx
             slice_dist = self.ctx.pixel_size
-        self.figure.text(offset[0], offset[1] + 3.0 / self.zoom * 100,
-                         "Slice #: %d/%d\nSlice Position: %.1f mm" % (idx, slices, idx * slice_dist), color="white",
-                         va="top", fontsize=8)
-        self.figure.text(offset[0] + width / self.zoom * 100, offset[1] + 3.0 / self.zoom * 100,
-                         "W / L: %d / %d" % (self.contrast[1], self.contrast[0]), ha="right", color="white", va="top",
+        self.figure.text(offset[0],
+                         offset[1] + 3.0 / self.zoom * 100,
+                         "Slice #: %d/%d\n"
+                         "Slice Position: %.1f mm" % (idx,
+                                                      slices,
+                                                      idx * slice_dist),
+                         color="white",
+                         va="top",
                          fontsize=8)
-
-        self.figure.text(offset[0], offset[1] + (height - 5) / self.zoom * 100, self.plot_plan, color="white",
-                         va="bottom", fontsize=8)
+        self.figure.text(offset[0] + width / self.zoom * 100,
+                         offset[1] + 3.0 / self.zoom * 100,
+                         "W / L: %d / %d" % (self.contrast[1],
+                                             self.contrast[0]),
+                         ha="right",
+                         color="white",
+                         va="top",
+                         fontsize=8)
+        self.figure.text(offset[0],
+                         offset[1] + (height - 5) / self.zoom * 100,
+                         self.plot_plan,
+                         color="white",
+                         va="bottom",
+                         fontsize=8)
 
     def plot_let(self, idx):
         if not hasattr(self, "let"):
@@ -539,13 +601,23 @@ class PlotUtil:
 
             let_data[let_data <= self.min_let] = self.min_let
             if not hasattr(self, "fig_let"):
-                self.fig_let = self.figure.imshow(let_data, cmap=cmap, vmax=(self.max_let), aspect=self.aspect)
+                self.fig_let = self.figure.imshow(
+                    let_data,
+                    cmap=cmap,
+                    vmax=(self.max_let),
+                    aspect=self.aspect)
                 if not self.draw_in_gui:
-                    bar = self.figure.colorbar()
+                    pass
+                    # TODO why bar is not used ?
+                    # bar = self.figure.colorbar()
                 else:
-                    if not hasattr(self, "let_bar") and not hasattr(self, "dose_bar"):
-                        cax = self.figure.figure.add_axes([0.9, 0.1, 0.03, 0.8])
-                        self.let_bar = self.figure.figure.colorbar(self.fig_let, cax=cax)
+                    if not hasattr(self, "let_bar") and \
+                            not hasattr(self, "dose_bar"):
+                        cax = self.figure.figure.add_axes(
+                            [0.9, 0.1, 0.03, 0.8])
+                        self.let_bar = self.figure.figure.colorbar(
+                            self.fig_let,
+                            cax=cax)
                         self.let_bar.set_label("LET (keV/um)")
             else:
                 self.fig_let.set_data(let_data)

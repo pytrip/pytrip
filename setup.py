@@ -1,13 +1,16 @@
+import os
 import setuptools
 from pkg_resources import parse_version
 
+import numpy as np
+
 
 def pip_command_output(pip_args):
-    '''
+    """
     Get output (as a string) from pip command
     :param pip_args: list o pip switches to pass
     :return: string with results
-    '''
+    """
     import sys
     import pip
     from io import StringIO
@@ -23,10 +26,10 @@ def pip_command_output(pip_args):
 
 
 def setup_versioneer():
-    '''
+    """
     Generate (temporarily) versioneer.py file in project root directory
     :return:
-    '''
+    """
     try:
         # assume versioneer.py was generated using "versioneer install" command
         import versioneer
@@ -66,15 +69,13 @@ def setup_versioneer():
             # "python versioneer install"
             subprocess.check_output(["python", exe_path, "install"])
 
-#module1 = Extension('pytriplib',
-#                    sources = ['pytrip/lib/filter_point.c'])
 
 def clean_cache():
-    '''
+    """
     Python won't realise that new module has appeared in the runtime
     We need to clean the cache of module finders. Hacking again
     :return:
-    '''
+    """
     import importlib
     try:  # Python ver < 3.3
         vermod = importlib.import_module("versioneer")
@@ -82,13 +83,12 @@ def clean_cache():
     except ImportError:
         importlib.invalidate_caches()
 
-#       ext_modules = [module1])
 
 def get_version():
-    '''
+    """
     Get project version (using versioneer)
     :return: string containing version
-    '''
+    """
     setup_versioneer()
     clean_cache()
     import versioneer
@@ -101,10 +101,10 @@ def get_version():
 
 
 def get_cmdclass():
-    '''
+    """
     Get setuptools command class
     :return:
-    '''
+    """
     setup_versioneer()
     clean_cache()
     import versioneer
@@ -113,6 +113,12 @@ def get_cmdclass():
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
+
+extensions = [setuptools.Extension(
+    'pytriplib',
+    sources=[os.path.join('pytrip', 'lib', 'filter_point.c')],
+    extra_compile_args=['-fopenmp', '-fpic'],
+    extra_link_args=['-lgomp'])]
 
 setuptools.setup(
     name='pytrip98',
@@ -154,6 +160,8 @@ setuptools.setup(
         'pydicom',
         'scipy'
     ],
+    include_dirs=[np.get_include()],
+    ext_modules=extensions,
     entry_points={
         'console_scripts': [
             'trip2dicom=' + \

@@ -51,7 +51,7 @@ class Field(pytripObj):
                 raise Exception()
             self.gantry = angle
 
-        except Exception as e:
+        except Exception:
             raise InputError("Gantry angle shoud be a "
                              "number between 0 and 360")
 
@@ -68,7 +68,7 @@ class Field(pytripObj):
             if a < 0 or b < 0:
                 raise Exception()
             self.rasterstep = [a, b]
-        except Exception as e:
+        except Exception:
             raise InputError("Rastersteps should be "
                              "larger than 0 and numbers")
 
@@ -81,7 +81,7 @@ class Field(pytripObj):
                 raise Exception()
             self.couch = angle
 
-        except Exception as e:
+        except Exception:
             raise InputError("Couch angle shoud be "
                              "a number between 0 and 360")
 
@@ -91,7 +91,7 @@ class Field(pytripObj):
             if doseextension < 0:
                 raise Exception()
             self.doseextension = doseextension
-        except Exception as e:
+        except Exception:
             raise InputError("Doseextension should be larger 0")
 
     def get_doseextension(self):
@@ -103,7 +103,7 @@ class Field(pytripObj):
             if contourextension < 0:
                 raise Exception()
             self.contourextension = contourextension
-        except Exception as e:
+        except Exception:
             raise InputError("Contourextension should be larger 0")
 
     def get_contourextension(self):
@@ -115,7 +115,7 @@ class Field(pytripObj):
             if zsteps < 0:
                 raise Exception()
             self.zsteps = zsteps
-        except Exception as e:
+        except Exception:
             raise InputError("ZSteps should be larger 0")
 
     def get_zsteps(self):
@@ -131,7 +131,7 @@ class Field(pytripObj):
                 raise Exception()
             self.fwhm = fwhm
 
-        except Exception as e:
+        except Exception:
             raise InputError("Fwhm shoud be a number and larger than 0")
 
     def get_projectile(self):
@@ -157,7 +157,8 @@ class Field(pytripObj):
                                float(target[1]),
                                float(target[2])]
                 return
-            except Exception as e:
+            except Exception:
+                # TODO fix that !
                 pass
         raise InputError("Target should be empty "
                          "or in the format x,y,z")

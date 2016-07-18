@@ -1,18 +1,18 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 import numpy as np
 from math import pi, sin, cos, acos, asin
@@ -21,8 +21,10 @@ from math import pi, sin, cos, acos, asin
 def get_basis_from_angles(gantry, couch):
     gantry /= 180.0 / pi
     couch /= -180.0 / pi
-    a = -np.array([sin(gantry) * cos(couch), -cos(gantry), sin(couch) * sin(gantry)])
-    c = -np.array([sin(gantry + pi / 2) * cos(couch), -cos(gantry + pi / 2), sin(couch) * sin(gantry + pi / 2)])
+    a = -np.array([sin(gantry) * cos(couch),
+                   -cos(gantry), sin(couch) * sin(gantry)])
+    c = -np.array([sin(gantry + pi / 2) * cos(couch),
+                   -cos(gantry + pi / 2), sin(couch) * sin(gantry + pi / 2)])
     b = np.cross(a, c)
     return [a, b, c]
 
@@ -89,8 +91,8 @@ def min_list(a, b):
 
 
 def array_to_point_array(points, offset):
-    point = [[points[3 * i] - offset[0], points[3 * i + 1] - offset[1], points[3 * i + 2] - offset[2]] for i in
-             range(len(points) / 3)]
+    point = [[points[3 * i] - offset[0], points[3 * i + 1] - offset[1],
+              points[3 * i + 2] - offset[2]] for i in range(len(points) / 3)]
     return point
 
 
@@ -98,8 +100,10 @@ def get_area_contour(polygon):
     points = np.zeros((len(polygon), 2))
     points[0:len(polygon)] = np.array(polygon)[:, 0:2]
     points[-1] = np.array(polygon[0])
-    dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
-    points = np.array([(points[i + 1] + points[i]) / 2 for i in range(len(points) - 1)])
+    dx_dy = np.array([points[i + 1] - points[i]
+                      for i in range(len(points) - 1)])
+    points = np.array([(points[i + 1] + points[i]) / 2
+                       for i in range(len(points) - 1)])
     area = -sum(points[:, 1] * dx_dy[:, 0])
     return area
 
@@ -121,7 +125,7 @@ def get_x_intersection(y, polygon):
     return intersections
 
 
-# find a short distance problaby not the shortest
+# find a short distance probably not the shortest
 def short_distance_polygon_idx(poly1, poly2):
     d = 10000000
     n1 = len(poly1)
@@ -129,22 +133,26 @@ def short_distance_polygon_idx(poly1, poly2):
     i1 = 0
     i2 = 0
     for i in range(n2):
-        d1 = (poly2[i][0] - poly1[i1][0]) ** 2 + (poly2[i][1] - poly1[i1][1]) ** 2
+        d1 = (poly2[i][0] - poly1[i1][0]) ** 2 + \
+             (poly2[i][1] - poly1[i1][1]) ** 2
         if d1 < d:
             i2 = i
             d = d1
     for i in range(n1):
-        d2 = (poly2[i2][0] - poly1[i][0]) ** 2 + (poly2[i2][1] - poly1[i][1]) ** 2
+        d2 = (poly2[i2][0] - poly1[i][0]) ** 2 + \
+             (poly2[i2][1] - poly1[i][1]) ** 2
         if d2 < d:
             i1 = i
             d = d2
     for i in range(n2):
-        d1 = (poly2[i][0] - poly1[i1][0]) ** 2 + (poly2[i][1] - poly1[i1][1]) ** 2
+        d1 = (poly2[i][0] - poly1[i1][0]) ** 2 + \
+             (poly2[i][1] - poly1[i1][1]) ** 2
         if d1 < d:
             i2 = i
             d = d1
     for i in range(n1):
-        d2 = (poly2[i2][0] - poly1[i][0]) ** 2 + (poly2[i2][1] - poly1[i][1]) ** 2
+        d2 = (poly2[i2][0] - poly1[i][0]) ** 2 + \
+             (poly2[i2][1] - poly1[i][1]) ** 2
         if d2 < d:
             i1 = i
             d = d2

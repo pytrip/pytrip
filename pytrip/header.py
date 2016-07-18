@@ -1,25 +1,19 @@
 """
     This file is part of PyTRiP.
 
-    libdedx is free software: you can redistribute it and/or modify
+    PyTRiP is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
 
-    libdedx is distributed in the hope that it will be useful,
+    PyTRiP is distributed in the hope that it will be useful,
     but WITHOUT ANY WARRANTY; without even the implied warranty of
     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with libdedx.  If not, see <http://www.gnu.org/licenses/>
+    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-import string
-
-try:
-    import dicom
-except:
-    pass
 import sys
 
 
@@ -79,12 +73,11 @@ class AptgHeader:
         elif self.header_type == AptgType.CTX:
             data = self.data["images"][0]
             self.slice_number = len(self.data["images"])
-        #	_s = "%s %s ConvolutionKernel %s" %(data.Manufacturer,data.ManufacturersModelName,data.ConvolutionKernel)
         self.created_by = ""  # string.replace(_s," ","-")
         self.creation_info = "created by aptg_export;"
         self.primary_view = "transversal"
         self.version = "1.4"
-        self.modality = data.Modality;
+        self.modality = data.Modality
         self.data_type = "integer"
         self.patient_name = data.PatientsName
         self.number_bytes = data.BitsStored / 8
@@ -103,7 +96,7 @@ class AptgHeader:
         self.dimz = self.slice_number
 
     def set_byte_order(self):
-        endian = sys.byteorder;
+        endian = sys.byteorder
         if endian == "little":
             self.byte_order = "vms"
             self.byte_format = "<"
@@ -112,4 +105,4 @@ class AptgHeader:
             self.byte_format = ">"
 
     def load_voxel(self, path):
-        return;
+        return
