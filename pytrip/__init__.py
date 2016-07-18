@@ -22,10 +22,10 @@ from pytrip.paths import DensityCube
 from pytrip.rst import Rst
 from pytrip.let import LETCube
 from pytrip.get_dvh import GetDvh
-import pytrip.dicomhelper
-import pytrip.res
-import pytrip.guiutil
-import pytrip.tripexecuter
+# import pytrip.dicomhelper
+# import pytrip.res
+# import pytrip.guiutil
+# import pytrip.tripexecuter
 
 __all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube',
            'LETCube', 'dicomhelper', 'res', 'guiutil', 'Rst']

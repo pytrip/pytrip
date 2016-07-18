@@ -20,11 +20,6 @@ import os
 from math import sin, cos
 from multiprocessing import Process, Queue
 
-try:
-    from queue import Empty
-except ImportError:
-    from Queue import Empty
-
 import numpy as np
 from scipy import interpolate
 
