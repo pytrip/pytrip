@@ -8,6 +8,7 @@
   recursive-include docs *.rst
   recursive-include pytrip98 *.py
   recursive-include tests *.py
+  recursive-include tests *.tar.gz
   include versioneer.py
   include pytrip98/_version.py
 
@@ -25,3 +26,4 @@
   recursive-include pytrip *.py
   recursive-include scripts *.py
   recursive-include utils *.py
+
