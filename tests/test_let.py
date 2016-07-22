@@ -27,9 +27,9 @@ import tests.test_base
 
 class TestLet(unittest.TestCase):
     def setUp(self):
-        tests.test_base.get_files()
-        self.let001 = os.path.join("TST003", "tst003001.dosemlet.dos")
-        self.vdx000 = os.path.join("TST003", "tst003000.vdx")
+        testdir = tests.test_base.get_files()
+        self.let001 = os.path.join(testdir, "tst003001.dosemlet.dos")
+        self.vdx000 = os.path.join(testdir, "tst003000.vdx")
 
     def test_read(self):
         l = LETCube()

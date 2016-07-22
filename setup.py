@@ -123,7 +123,7 @@ extensions = [setuptools.Extension(
 setuptools.setup(
     name='pytrip98',
     version=get_version(),
-    packages=setuptools.find_packages(),
+    packages=setuptools.find_packages(exclude="tests"),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',

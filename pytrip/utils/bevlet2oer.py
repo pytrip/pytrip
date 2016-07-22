@@ -19,10 +19,8 @@ class ReadGd(object):
         if (_dataset > 2):
             print("DOS: Error- only 0,1,2 OER set available. Got:", _dataset)
         path = os.path.dirname(__file__)
-        path_data = (
-            os.path.join(path, "data/OER_barendsen.dat"),
-            os.path.join(path, "data/OER_furusawa_HSG_C12.dat"),
-            os.path.join(path, "data/OER_furusawa_V79_C12.dat"))
+        path_data = (os.path.join(path, "data/OER_barendsen.dat"), os.path.join(path, "data/OER_furusawa_HSG_C12.dat"),
+                     os.path.join(path, "data/OER_furusawa_V79_C12.dat"))
         fd = open(path_data[_dataset], 'r')
         lines = fd.readlines()
         fd.close()

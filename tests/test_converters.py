@@ -10,8 +10,8 @@ import pytrip.utils.dicom2trip
 
 class TestTrip2Dicom(unittest.TestCase):
     def setUp(self):
-        get_files()
-        self.cube000 = os.path.join("TST003", "tst003000")
+        testdir = get_files()
+        self.cube000 = os.path.join(testdir, "tst003000")
 
     def test_generate(self):
         # create temp dir

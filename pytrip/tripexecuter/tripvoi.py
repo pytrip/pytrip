@@ -21,8 +21,7 @@ from pytrip.tripexecuter.pytripobj import pytripObj
 
 class TripVoi(pytripObj):
     def __init__(self, voi):
-        self.save_fields = ["name", "target", "max_dose_fraction",
-                            "oar", "dose", "hu_offset", "hu_value",
+        self.save_fields = ["name", "target", "max_dose_fraction", "oar", "dose", "hu_offset", "hu_value",
                             "dose_percent", "cube_value"]
         self._voi = voi
         self.name = voi.get_name()
@@ -48,8 +47,7 @@ class TripVoi(pytripObj):
         if dose is None:
             return None
         if self.dvh is None:
-            (self.dvh, self.min_dose, self.max_dose, self.mean, area) = \
-                dose.calculate_dvh(self._voi.get_voi_data())
+            (self.dvh, self.min_dose, self.max_dose, self.mean, area) = dose.calculate_dvh(self._voi.get_voi_data())
         return self.dvh
 
     def set_dose_percent(self, ion, dose_percent):
@@ -104,8 +102,7 @@ class TripVoi(pytripObj):
         if let is None:
             return None
         if self.lvh is None:
-            (self.lvh, self.min_let, self.max_let, self.let, area) = \
-                let.calculate_lvh(self._voi.get_voi_data())
+            (self.lvh, self.min_let, self.max_let, self.let, area) = let.calculate_lvh(self._voi.get_voi_data())
         return self.lvh
 
     def clean_cache(self):
@@ -132,8 +129,7 @@ class TripVoi(pytripObj):
                 raise Exception()
             self.max_dose_fraction = max_dose_fraction
         except Exception:
-            raise InputError("Max dose fraction should be "
-                             "a number between 0 and 1")
+            raise InputError("Max dose fraction should be " "a number between 0 and 1")
 
     def set_dose(self, dose):
         try:

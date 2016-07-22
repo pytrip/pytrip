@@ -8,11 +8,10 @@ from pytrip.utils.rst_read import RstfileRead
 
 def main(args=sys.argv[1:]):
     parser = OptionParser()
-    parser.add_option("-s", "--submachine", dest="subm",
-                      help="Select submachine to plot.", metavar="int")
-    parser.add_option("-f", "--factor", dest="fac",
-                      help="Factor for scaling the blobs. "
-                           "Default is 1000.", metavar="int")
+    parser.add_option("-s", "--submachine", dest="subm", help="Select submachine to plot.", metavar="int")
+    parser.add_option(
+        "-f", "--factor", dest="fac", help="Factor for scaling the blobs. "
+        "Default is 1000.", metavar="int")
     (options, args) = parser.parse_args(args)
 
     file = args[0]

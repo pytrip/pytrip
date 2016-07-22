@@ -34,9 +34,7 @@ try:
 except:
     _dicom_loaded = False
 
-__author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
-__email__ = "bassler@phys.au.dk"
 
 
 class VdxCube:
@@ -64,10 +62,8 @@ class VdxCube:
         dcm = data["rtss"]
         self.version = "2.0"
         for i in range(len(dcm.ROIContours)):
-            if structure_ids is None or \
-                    dcm.ROIContours[i].RefdROINumber in structure_ids:
-                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode(
-                    'iso-8859-1'), self.cube)
+            if structure_ids is None or dcm.ROIContours[i].RefdROINumber in structure_ids:
+                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode('iso-8859-1'), self.cube)
                 v.read_dicom(dcm.RTROIObservations[i], dcm.ROIContours[i])
                 self.add_voi(v)
         self.cube.xoffset = 0
@@ -108,7 +104,7 @@ class VdxCube:
         i = 0
         n = len(content)
         header_full = False
-#        number_of_vois = 0
+        #        number_of_vois = 0
         while i < n:
             line = content[i]
             if not header_full:
@@ -234,12 +230,11 @@ def create_cube(cube, name, center, width, height, depth):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
-            points = []
-            points.append([center[0] - width / 2, center[1] - height / 2, z])
-            points.append([center[0] + width / 2, center[1] - height / 2, z])
-            points.append([center[0] + width / 2, center[1] + height / 2, z])
-            points.append([center[0] - width / 2, center[1] + height / 2, z])
-            points.append(points[0])
+            points = [
+                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z],
+                [center[0] - width / 2, center[1] - height / 2, z]
+            ]
             c = Contour(points, cube)
             s.add_contour(c)
             v.add_slice(s)
@@ -249,9 +244,7 @@ def create_cube(cube, name, center, width, height, depth):
 def create_voi_from_cube(cube, name):
     v = Voi(name, cube)
     for i in range(cube.dimz):
-        x, y = np.meshgrid(
-            np.arange(len(cube.cube[0, 0])),
-            np.arange(len(cube.cube[0])))
+        x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(100)
         s = Slice(cube)
@@ -290,11 +283,9 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r = (radius ** 2 - (z - center[2]) ** 2) ** 0.5
+            r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
-            points = [[center[0] + r * x[0],
-                       center[1] + r * x[1],
-                       z] for x in p]
+            points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
             c = Contour(points, cube)
             s.add_contour(c)
             v.add_slice(s)
@@ -367,8 +358,7 @@ class Voi:
             contour = self.slices[key].contour[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[
-                    slice_keys[i + 1]].contour[0].contour
+                next_contour = self.slices[slice_keys[i + 1]].contour[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -377,13 +367,11 @@ class Voi:
                 points[(point[0], point[1], point[2])].append(point2)
                 points[(point2[0], point2[1], point2[2])].append(point)
                 if next_contour is not None:
-                    point3 = pytrip.res.point.get_nearest_point(point,
-                                                                next_contour)
+                    point3 = pytrip.res.point.get_nearest_point(point, next_contour)
                     points[(point[0], point[1], point[2])].append(point3)
                     points[(point3[0], point3[1], point3[2])].append(point)
                 if last_contour is not None:
-                    point4 = pytrip.res.point.get_nearest_point(point,
-                                                                last_contour)
+                    point4 = pytrip.res.point.get_nearest_point(point, last_contour)
                     if point4 not in points[(point[0], point[1], point[2])]:
                         points[(point[0], point[1], point[2])].append(point4)
                         points[(point4[0], point4[1], point4[2])].append(point)
@@ -417,14 +405,10 @@ class Voi:
             slice = self.slices[key]
             if plane is self.sagital:
                 point = sorted(
-                    plib.slice_on_plane(
-                        np.array(slice.contour[0].contour), plane, depth),
-                    key=lambda x: x[1])
+                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    plib.slice_on_plane(
-                        np.array(slice.contour[0].contour), plane, depth),
-                    key=lambda x: x[0])
+                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -494,7 +478,7 @@ class Voi:
         self.name = items[1]
         self.type = int(items[3])
         i += 1
-#        slices = 10000
+        #        slices = 10000
         while i < len(content):
             line = content[i]
             if re.match("voi", line) is not None:
@@ -522,8 +506,7 @@ class Voi:
             elif re.match("slice", line) is not None:
                 s = Slice()
                 i = s.read_vdx(content, i)
-                key = int((float(s.get_position()) -
-                           min(self.cube.slice_pos)) * 100)
+                key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
             elif re.match("voi", line) is not None:
@@ -571,8 +554,7 @@ class Voi:
         else:
             contours = data.ContourSequence
         for i in range(len(contours)):
-            key = int((float(contours[i].ContourData[2]) -
-                       min(self.cube.slice_pos)) * 100)
+            key = int((float(contours[i].ContourData[2]) - min(self.cube.slice_pos)) * 100)
             if key not in self.slices:
                 self.slices[key] = Slice(self.cube)
                 self.slice_z.append(key)
@@ -671,9 +653,10 @@ class Slice:
         offset.append(float(self.cube.xoffset))
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
-        self.contour.append(Contour(
-            pytrip.res.point.array_to_point_array(
-                np.array(dcm.ContourData, dtype=float), offset)))
+        self.contour.append(
+            Contour(pytrip.res.point.array_to_point_array(
+                np.array(
+                    dcm.ContourData, dtype=float), offset)))
 
     def get_position(self):
         if len(self.contour) == 0:
@@ -683,8 +666,7 @@ class Slice:
     def get_intersections(self, pos):
         intersections = []
         for c in self.contour:
-            intersections.extend(
-                pytrip.res.point.get_x_intersection(pos[1], c.contour))
+            intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
     def calculate_center(self):
@@ -792,23 +774,20 @@ class Contour:
         points = self.contour
         points.append(points[-1])
         points = np.array(points)
-        dx_dy = np.array([points[i + 1] - points[i]
-                          for i in range(len(points) - 1)])
+        dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -sum(points[0:len(points) - 1, 1] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5)
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5)
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 1])
-            paths = np.array((dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5)
+            paths = np.array((dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5)
         total_path = sum(paths)
 
-        center = np.array([sum(points[0:len(points) - 1, 0] * paths) /
-                           total_path,
-                          sum(points[0:len(points) - 1:, 1] * paths) /
-                           total_path, points[0, 2]])
+        center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
+                           sum(points[0:len(points) - 1:, 1] * paths) / total_path, points[0, 2]])
 
         return center, area
 
@@ -825,16 +804,10 @@ class Contour:
     def to_voxel_string(self):
         out = ""
         for i in range(len(self.contour)):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-                self.contour[i][0],
-                self.contour[i][1],
-                self.contour[i][2],
-                0, 0, 0)
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (
-            self.contour[0][0],
-            self.contour[0][1],
-            self.contour[0][2],
-            0, 0, 0)
+            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[i][0], self.contour[i][1], self.contour[i][2], 0,
+                                                         0, 0)
+        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1], self.contour[0][2], 0, 0,
+                                                     0)
         return out
 
     def read_vdx(self, content, i):
@@ -847,10 +820,7 @@ class Contour:
                 if j >= points - 1:
                     break
                 con_dat = line.split()
-                self.contour.append([
-                    float(con_dat[0]),
-                    float(con_dat[1]),
-                    float(con_dat[2])])
+                self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
                 j += 1
             else:
                 if re.match("internal_false", line) is not None:
@@ -887,10 +857,7 @@ class Contour:
             self.children[i].print_child(level + 1)
 
     def contains_contour(self, contour):
-        return pytrip.res.point.point_in_polygon(
-            contour.contour[0][0],
-            contour.contour[0][1],
-            self.contour)
+        return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
         for i in range(len(self.children)):
@@ -926,8 +893,7 @@ class Contour:
         if len(self.contour) == 0:
             self.contour = contour.contour
             return
-        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(
-            self.contour, contour.contour)
+        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
         con = []
         for i in range(i1 + 1):
             con.append(self.contour[i])

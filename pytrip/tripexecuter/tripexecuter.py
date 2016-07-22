@@ -66,19 +66,13 @@ class TripExecuter(object):
         for i, field in enumerate(p1["fields"]):
             d = DosCube(cube1)
 
-            basis = get_basis_from_angles(field.get_gantry(),
-                                          field.get_couch())
+            basis = get_basis_from_angles(field.get_gantry(), field.get_couch())
             basis = basis[0]
-            basis = np.array(
-                [basis[0] / cube1.pixel_size,
-                 basis[1] / cube1.pixel_size,
-                 basis[2] / cube1.slice_distance])
+            basis = np.array([basis[0] / cube1.pixel_size, basis[1] / cube1.pixel_size,
+                              basis[2] / cube1.slice_distance])
             basis /= np.max(np.abs(basis))
 
-            d.cube = pytriplib.create_field_shadow(cube1.cube,
-                                                   cube2.cube,
-                                                   np.array(basis,
-                                                            dtype=np.double))
+            d.cube = pytriplib.create_field_shadow(cube1.cube, cube2.cube, np.array(basis, dtype=np.double))
             target_cube -= d
             shadow_cubes.append(d)
 
@@ -102,21 +96,12 @@ class TripExecuter(object):
             self.execute_simple()
         else:
             self.execute_mult_proj()
-        if os.path.exists(os.path.join(self.path, self.plan_name) +
-                          ".bio.dos") and \
-                self.plan.get_out_bio_dose():
-            self.plan.load_dose(os.path.join(self.path, self.plan_name) +
-                                ".bio.dos", "bio", self.target_dose)
-        if os.path.exists(os.path.join(self.path, self.plan_name) +
-                          ".phys.dos") and \
-                self.plan.get_out_phys_dose():
-            self.plan.load_dose(os.path.join(self.path, self.plan_name) +
-                                ".phys.dos", "phys", self.target_dose)
-        if os.path.exists(os.path.join(self.path, self.plan_name) +
-                          ".phys.dos") and \
-                self.plan.get_out_dose_mean_let():
-            self.plan.load_let(os.path.join(self.path, self.plan_name) +
-                               ".dosemlet.dos")
+        if os.path.exists(os.path.join(self.path, self.plan_name) + ".bio.dos") and self.plan.get_out_bio_dose():
+            self.plan.load_dose(os.path.join(self.path, self.plan_name) + ".bio.dos", "bio", self.target_dose)
+        if os.path.exists(os.path.join(self.path, self.plan_name) + ".phys.dos") and self.plan.get_out_phys_dose():
+            self.plan.load_dose(os.path.join(self.path, self.plan_name) + ".phys.dos", "phys", self.target_dose)
+        if os.path.exists(os.path.join(self.path, self.plan_name) + ".phys.dos") and self.plan.get_out_dose_mean_let():
+            self.plan.load_let(os.path.join(self.path, self.plan_name) + ".dosemlet.dos")
         self.finish()
 
     def ini_execute(self):
@@ -141,12 +126,9 @@ class TripExecuter(object):
             for projectile in self.execute_order:
                 self.calculate_rest_dose(projectile)
                 if a == i - 1:
-                    self.create_trip_exec_mult_proj(projectile,
-                                                    first=(a is 0))
+                    self.create_trip_exec_mult_proj(projectile, first=(a is 0))
                 else:
-                    self.create_trip_exec_mult_proj(projectile,
-                                                    last=False,
-                                                    first=(a is 0))
+                    self.create_trip_exec_mult_proj(projectile, last=False, first=(a is 0))
                 self.run_trip()
 
                 self.split_fields(projectile)
@@ -171,8 +153,7 @@ class TripExecuter(object):
                 dose_level = int(voi.get_dose() / self.target_dose * 1000)
                 if dose_level == 0:
                     dose_level = -1
-                temp.load_from_structure(voi.get_voi().get_voi_data(),
-                                         dose_level)
+                temp.load_from_structure(voi.get_voi().get_voi_data(), dose_level)
                 if i == 0:
                     dosecube = temp * 1
                 else:
@@ -201,35 +182,23 @@ class TripExecuter(object):
         window = self.plan.get_window()
         window_str = ""
         if len(window) is 6:
-            window_str = " window(%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) " % (
-                window[0], window[1], window[2],
-                window[3], window[4], window[5])
+            window_str = " window(%.2f,%.2f,%.2f,%.2f,%.2f,%.2f) " % (window[0], window[1], window[2], window[3],
+                                                                      window[4], window[5])
 
         if self.plan.get_out_phys_dose() is True:
-            output.append(
-                'dose "' + name +
-                '." /calculate  alg(' +
-                self.plan.get_dose_algorithm() + ')' +
-                window_str + '  field(*) write')
+            output.append('dose "' + name + '." /calculate  alg(' + self.plan.get_dose_algorithm() + ')' + window_str +
+                          '  field(*) write')
         if last:
             if self.plan.get_out_bio_dose() is True:
-                output.append(
-                    'dose "' + name + '." /calculate ' +
-                    window_str + ' bioalgorithm(' +
-                    self.plan.get_bio_algorithm() +
-                    ') biological norbe write')
+                output.append('dose "' + name + '." /calculate ' + window_str + ' bioalgorithm(' +
+                              self.plan.get_bio_algorithm() + ') biological norbe write')
             if self.plan.get_out_dose_mean_let() is True:
-                output.append('dose "' + name +
-                              '." /calculate ' + window_str +
-                              ' field(*) dosemeanlet write')
+                output.append('dose "' + name + '." /calculate ' + window_str + ' field(*) dosemeanlet write')
             if self.plan.get_out_field() is True and \
                     self.plan.get_optimize() is True:
                 for i, field in enumerate(fields):
-                    output.append('field %d /write file(%s.rst) reverseorder '
-                                  % (i + 1, field.get_name()))
-                    field.set_rasterfile(self.working_path +
-                                         '//' + self.folder_name +
-                                         '//' + field.get_name())
+                    output.append('field %d /write file(%s.rst) reverseorder ' % (i + 1, field.get_name()))
+                    field.set_rasterfile(self.working_path + '//' + self.folder_name + '//' + field.get_name())
         return output
 
     def create_exec_plan(self, incube=""):
@@ -268,8 +237,7 @@ class TripExecuter(object):
         output.append("dedx * /delete")
         output.append('dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read')
         output.append('hlut "$TRIP98/DATA/19990211.hlut" / read')
-        output.append("scancap / offh2o(1.709) rifi(3) bolus(0.000) "
-                      "minparticles(5000) path(none)")
+        output.append("scancap / offh2o(1.709) rifi(3) bolus(0.000) " "minparticles(5000) path(none)")
         output.append("random 1000")
         return output
 
@@ -310,8 +278,7 @@ class TripExecuter(object):
             if not self.plan.get_res_tissue_type() == "" and \
                     not self.plan.get_res_tissue_type() \
                     == self.plan.get_target_tissue_type():
-                rbe = self.rbe.get_rbe_by_name(
-                    self.plan.get_target_tissue_type())
+                rbe = self.rbe.get_rbe_by_name(self.plan.get_target_tissue_type())
                 output.append("rbe %s /read" % (rbe.get_path()))
 
         return output
@@ -325,14 +292,12 @@ class TripExecuter(object):
                 raster = val.get_rasterstep()
                 if not raster[0] is 0 and not raster[1] is 0:
                     field += "raster(%.2f,%.2f) " % (raster[0], raster[1])
-                gantry, couch = angles_to_trip(val.get_gantry(),
-                                               val.get_couch())
+                gantry, couch = angles_to_trip(val.get_gantry(), val.get_couch())
                 field += "couch(" + str(couch) + ") "
                 field += "gantry(" + str(gantry) + ") "
                 target = val.get_target()
                 if len(val.get_target()) is not 0:
-                    field += "target(%.1f,%.1f,%.1f) " % (
-                        target[0], target[1], target[2])
+                    field += "target(%.1f,%.1f,%.1f) " % (target[0], target[1], target[2])
                 if val.get_doseextension() > 0.0001:
                     field += "doseext(" + str(val.get_doseextension()) + ") "
                 field += "contourext(" + str(val.get_contourextension()) + ") "
@@ -347,8 +312,7 @@ class TripExecuter(object):
                 raster = val.get_rasterstep()
                 if not raster[0] is 0 and not raster[1] is 0:
                     field += "raster(%.2f,%.2f) " % (raster[0], raster[1])
-                gantry, couch = angles_to_trip(val.get_gantry(),
-                                               val.get_couch())
+                gantry, couch = angles_to_trip(val.get_gantry(), val.get_couch())
                 field += "couch(" + str(couch) + ") "
                 field += "gantry(" + str(gantry) + ") "
                 if len(val.get_target()) is not 0:
@@ -365,9 +329,8 @@ class TripExecuter(object):
     def create_exec_oar(self, oar_list):
         output = []
         for oar in oar_list:
-            output.append("voi " + oar.get_name().replace(" ", "_") +
-                          " / maxdosefraction(" +
-                          str(oar.get_max_dose_fraction()) + ") oarset")
+            output.append("voi " + oar.get_name().replace(" ", "_") + " / maxdosefraction(" + str(
+                oar.get_max_dose_fraction()) + ") oarset")
         return output
 
     def split_fields(self, proj):
@@ -385,11 +348,9 @@ class TripExecuter(object):
         p = self.projectiles[self.split_proj_key]
         p["target_dos"].cube = pytriplib.extend_cube(p["target_dos"].cube)
         if len(p["fields"]) == 2:
-            temp.cube = \
-                (temp.cube < self.projectiles[proj]["target_dos"].cube) \
-                * self.projectiles[proj]["target_dos"].cube \
-                + (temp.cube > self.projectiles[proj]["target_dos"].cube) \
-                * temp.cube
+            temp.cube = (temp.cube < self.projectiles[proj]["target_dos"].cube
+                         ) * self.projectiles[proj]["target_dos"].cube + (
+                             temp.cube > self.projectiles[proj]["target_dos"].cube) * temp.cube
             dose = self.target_dos - temp
             field1 = p["fields"][0]
             field2 = p["fields"][1]
@@ -401,26 +362,14 @@ class TripExecuter(object):
 
             temp.cube *= self.target_dos.cube > 0
 
-            basis = get_basis_from_angles(field1.get_gantry(),
-                                          field1.get_couch())[0]
-            basis = np.array([basis[0] / dose.pixel_size,
-                              basis[1] / dose.pixel_size,
-                              basis[2] / dose.slice_distance])
+            basis = get_basis_from_angles(field1.get_gantry(), field1.get_couch())[0]
+            basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis = basis / np.max(np.abs(basis)) * .5
-            d1.cube = pytriplib.create_field_shadow(dose.cube,
-                                                    temp.cube,
-                                                    np.array(basis,
-                                                             dtype=np.double))
-            basis = get_basis_from_angles(field2.get_gantry(),
-                                          field2.get_couch())[0]
-            basis = np.array([basis[0] / dose.pixel_size,
-                              basis[1] / dose.pixel_size,
-                              basis[2] / dose.slice_distance])
+            d1.cube = pytriplib.create_field_shadow(dose.cube, temp.cube, np.array(basis, dtype=np.double))
+            basis = get_basis_from_angles(field2.get_gantry(), field2.get_couch())[0]
+            basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis /= np.max(np.abs(basis))
-            d2.cube = pytriplib.create_field_shadow(
-                dose.cube,
-                temp.cube,
-                np.array(basis, dtype=np.double))
+            d2.cube = pytriplib.create_field_shadow(dose.cube, temp.cube, np.array(basis, dtype=np.double))
             a = d2.cube > d1.cube
             b = d2.cube < d1.cube
             d2.cube = p["target_dos"].cube * a
@@ -438,11 +387,14 @@ class TripExecuter(object):
                 "target_dos": d1,
                 "fields": [field1],
                 "name": field1.get_projectile() + str(1),
-                "projectile": field1.get_projectile()}
+                "projectile": field1.get_projectile()
+            }
             self.projectiles[field2.get_projectile() + str(2)] = {
-                "target_dos": d2, "fields": [field2],
+                "target_dos": d2,
+                "fields": [field2],
                 "name": field2.get_projectile() + str(2),
-                "projectile": field2.get_projectile()}
+                "projectile": field2.get_projectile()
+            }
             del self.projectiles[self.split_proj_key]
 
     def calculate_rest_dose(self, proj):
@@ -450,8 +402,7 @@ class TripExecuter(object):
         for k, projectile in self.projectiles.items():
             if k == proj:
                 continue
-            name = os.path.join(self.path, self.plan_name) \
-                + "_" + projectile["name"]
+            name = os.path.join(self.path, self.plan_name) + "_" + projectile["name"]
             path = os.path.join(name + ".phys.dos")
             if os.path.exists(path):
                 temp = DosCube()
@@ -466,12 +417,10 @@ class TripExecuter(object):
         dose_mean_let = None
         temp_dos = None
         for projectile in self.projectiles:
-            name = os.path.join(self.path, self.plan_name) + "_" \
-                + self.projectiles[projectile]["name"]
+            name = os.path.join(self.path, self.plan_name) + "_" + self.projectiles[projectile]["name"]
             factor = float(self.projectile_dose_level[projectile]) / 1000
             factor = 1
-            if os.path.exists(name + ".bio.dos") and \
-                    self.plan.get_out_bio_dose():
+            if os.path.exists(name + ".bio.dos") and self.plan.get_out_bio_dose():
                 path = os.path.join(name + ".bio.dos")
                 temp = DosCube()
                 temp.read(path)
@@ -483,8 +432,7 @@ class TripExecuter(object):
                 else:
                     bio_dose += temp
 
-            if os.path.exists(name + ".phys.dos") and \
-                    self.plan.get_out_phys_dose():
+            if os.path.exists(name + ".phys.dos") and self.plan.get_out_phys_dose():
                 path = os.path.join(name + ".phys.dos")
                 temp_dos = DosCube()
                 temp_dos.read(path)
@@ -495,8 +443,7 @@ class TripExecuter(object):
                     phys_dose = temp_dos
                 else:
                     phys_dose += temp_dos
-            if os.path.exists(name + ".dosemlet.dos") and \
-                    self.plan.get_out_dose_mean_let():
+            if os.path.exists(name + ".dosemlet.dos") and self.plan.get_out_dose_mean_let():
 
                 path = os.path.join(name + ".dosemlet.dos")
                 temp = LETCube()
@@ -558,10 +505,10 @@ class TripExecuter(object):
                         "target_dos": DosCube(self.images),
                         "fields": [field],
                         "name": field.get_projectile(),
-                        "projectile": field.get_projectile()}
+                        "projectile": field.get_projectile()
+                    }
                 else:
-                    self.projectiles[
-                        field.get_projectile()]["fields"].append(field)
+                    self.projectiles[field.get_projectile()]["fields"].append(field)
 
             self.target_dos = DosCube(self.images)
 
@@ -573,8 +520,7 @@ class TripExecuter(object):
                     dose_percent = self.plan.get_dose_percent(projectile)
                     if not voi.get_dose_percent(projectile) is None:
                         dose_percent = voi.get_dose_percent(projectile)
-                    proj_dose_lvl = int(voi.get_dose() /
-                                        self.target_dose * dose_percent * 10)
+                    proj_dose_lvl = int(voi.get_dose() / self.target_dose * dose_percent * 10)
                     if self.projectile_dose_level[projectile] < proj_dose_lvl:
                         self.projectile_dose_level[projectile] = proj_dose_lvl
                     if proj_dose_lvl == 0:
@@ -589,8 +535,7 @@ class TripExecuter(object):
                     self.target_dos.merge_zero(temp * voi_dose_level)
             for projectile, data in self.projectiles.items():
                 data["target_dos"].cube[data["target_dos"].cube == -1] = int(0)
-                self.plan.add_dose(data["target_dos"],
-                                   "target_%s" % projectile)
+                self.plan.add_dose(data["target_dos"], "target_%s" % projectile)
             self.rest_dose = copy.deepcopy(self.target_dos)
 
     def add_log_listener(self, listener):
@@ -623,12 +568,9 @@ class TripExecuter(object):
 
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.plan.get_server(), username=self.plan.get_username(),
-                    password=self.plan.get_password())
-        commands = ["tar -zxvf temp.tar.gz",
-                    "cd %s;bash run" % self.folder_name,
-                    "tar -zcvf temp.tar.gz %s" % self.folder_name,
-                    "rm -r %s" % self.folder_name]
+        ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
+        commands = ["tar -zxvf temp.tar.gz", "cd %s;bash run" % self.folder_name,
+                    "tar -zcvf temp.tar.gz %s" % self.folder_name, "rm -r %s" % self.folder_name]
         for cmd in commands:
             self.log(cmd)
             stdin, stdout, stderr = ssh.exec_command(cmd)
@@ -654,19 +596,14 @@ class TripExecuter(object):
     def finish(self):
         pass
 
-    def create_trip_exec_mult_proj(self,
-                                   projectile,
-                                   no_output=False,
-                                   last=True,
-                                   first=True):
+    def create_trip_exec_mult_proj(self, projectile, no_output=False, last=True, first=True):
 
         fields = self.projectiles[projectile]["fields"]
         oar_list = self.oar_list
 
         output = []
         output.extend(self.create_exec_header())
-        output.extend(self.create_exec_load_data_files(
-            self.projectiles[projectile]["projectile"]))
+        output.extend(self.create_exec_load_data_files(self.projectiles[projectile]["projectile"]))
         output.extend(self.create_exec_field(fields))
         output.extend(self.create_exec_oar(oar_list))
 
@@ -676,22 +613,18 @@ class TripExecuter(object):
             if hasattr(self, "rest_dose"):
                 dosecube.cube = np.array(
                     (self.rest_dose.cube >= dosecube.cube) * dosecube.cube +
-                    (self.rest_dose.cube < dosecube.cube) *
-                    self.rest_dose.cube, dtype=np.int16)
+                    (self.rest_dose.cube < dosecube.cube) * self.rest_dose.cube,
+                    dtype=np.int16)
                 dosecube.cube[dosecube.cube < 0] = 0
                 # ~ self.plan.add_dose(self.rest_dose,"rest")
                 if not first:
-                    a = (self.rest_dose.cube - dosecube.cube) \
-                        * (dosecube.cube > 0)
+                    a = (self.rest_dose.cube - dosecube.cube) * (dosecube.cube > 0)
                     dosecube.cube += a * dosecube.cube / 500
 
-            dosecube.write(os.path.join(
-                self.path,
-                "target_dose_%s.dos" % self.projectiles[projectile]["name"]))
+            dosecube.write(os.path.join(self.path, "target_dose_%s.dos" % self.projectiles[projectile]["name"]))
 
         self.projectile_dose_level[projectile] = np.max(dosecube.cube)
-        output.extend(self.create_exec_plan(
-            incube="target_dose_%s" % self.projectiles[projectile]["name"]))
+        output.extend(self.create_exec_plan(incube="target_dose_%s" % self.projectiles[projectile]["name"]))
         if self.plan.get_optimize() is True:
             output.extend(self.create_exec_opt())
 
@@ -729,16 +662,13 @@ class TripExecuter(object):
         structures.write_to_trip(out_path + ".vdx")
 
     def compress_files(self):
-        self.save_exec(os.path.join(self.working_path,
-                                    self.folder_name, "plan.exec"))
-        tar = tarfile.open(os.path.join(self.working_path,
-                                        self.folder_name + ".tar.gz"), "w:gz")
+        self.save_exec(os.path.join(self.working_path, self.folder_name, "plan.exec"))
+        tar = tarfile.open(os.path.join(self.working_path, self.folder_name + ".tar.gz"), "w:gz")
         tar.add(self.path, arcname=self.folder_name)
         tar.close()
 
     def create_remote_run_file(self):
-        with open(os.path.join(self.working_path,
-                               self.folder_name, "run"), "wb+") as fp:
+        with open(os.path.join(self.working_path, self.folder_name, "run"), "wb+") as fp:
             fp.write("source ~/.profile\n")
             fp.write("TRiP98 < plan.exec")
 
@@ -772,8 +702,7 @@ class TripExecuter(object):
 
     def get_transport(self):
         transport = paramiko.Transport((self.plan.get_server(), 22))
-        transport.connect(username=self.plan.get_username(),
-                          password=self.plan.get_password())
+        transport.connect(username=self.plan.get_username(), password=self.plan.get_password())
         return transport
 
     def copy_files_to_server(self):
@@ -786,9 +715,7 @@ class TripExecuter(object):
     def run_ssh_command(self, cmd):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.plan.get_server(),
-                    username=self.plan.get_username(),
-                    password=self.plan.get_password())
+        ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
         self.parent.write_to_log("Run Trip\n")
         stdin, stdout, stderr = ssh.exec_command(cmd)
         ssh.close()

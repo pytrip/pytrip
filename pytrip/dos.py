@@ -33,51 +33,27 @@ try:
 except:
     _dicom_loaded = False
 
-__author__ = "Niels Bassler and Jakob Toftegaard"
 __version__ = "1.0"
-__email__ = "bassler@phys.au.dk"
 
 
-def calculate_dose_cube(field,
-                        density_cube,
-                        isocenter,
-                        pre_dose,
-                        pathcube=None,
-                        factor=1.0):
-    cube_size = [
-        density_cube.pixel_size,
-        density_cube.pixel_size,
-        density_cube.slice_distance]
+def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None, factor=1.0):
+    cube_size = [density_cube.pixel_size, density_cube.pixel_size, density_cube.slice_distance]
     basis = field.get_cube_basis()
 
     if pathcube is None:
-        pathcube = plib.rhocube_to_water(
-            np.array(density_cube.cube),
-            np.array(basis[0]),
-            np.array(cube_size))
+        pathcube = plib.rhocube_to_water(np.array(density_cube.cube), np.array(basis[0]), np.array(cube_size))
         pathcube += field.bolus
 
-    dist = plib.calculate_dist(pathcube,
-                               np.array(cube_size),
-                               isocenter,
-                               np.array(basis))
+    dist = plib.calculate_dist(pathcube, np.array(cube_size), isocenter, np.array(basis))
     # field_size = field.field_size # TODO why not used ?
 
-    dist = np.reshape(dist,
-                      (density_cube.dimx *
-                       density_cube.dimy *
-                       density_cube.dimz, 3))
+    dist = np.reshape(dist, (density_cube.dimx * density_cube.dimy * density_cube.dimz, 3))
     raster_matrix = np.array(field.get_merged_raster_points())
 
     ddd = field.get_ddd_list()
-    dose = plib.calculate_dose(dist,
-                               np.array(raster_matrix),
-                               np.array(ddd))
+    dose = plib.calculate_dose(dist, np.array(raster_matrix), np.array(ddd))
 
-    dose = np.reshape(dose,
-                      (density_cube.dimz,
-                       density_cube.dimy,
-                       density_cube.dimx)) * 1.602189 * 10 ** -8
+    dose = np.reshape(dose, (density_cube.dimz, density_cube.dimy, density_cube.dimx)) * 1.602189 * 10**(-8)
     dos = DosCube(density_cube)
     dos.cube = np.array(dose / pre_dose * 1000 * factor, dtype=np.int16)
     gc.collect()
@@ -101,9 +77,7 @@ class DosCube(Cube):
 
     def calculate_dvh(self, voi):
         pos = 0
-        size = np.array([self.pixel_size,
-                        self.pixel_size,
-                        self.slice_distance])
+        size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         dv = np.zeros(1500)
         valid = False
         for i in range(self.dimz):
@@ -111,10 +85,7 @@ class DosCube(Cube):
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
                 valid = True
-                dv += plib.calculate_dvh_slice(
-                    self.cube[i],
-                    np.array(slice.contour[0].contour),
-                    size)
+                dv += plib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
         if valid:
             cubes = sum(dv)
             dvh = np.cumsum(dv[::-1])[::-1] / cubes
@@ -123,7 +94,7 @@ class DosCube(Cube):
             max_dose = np.where(dvh <= 0.02)[0][0]
             area = cubes * size[0] * size[1] * size[2] / 1000
             mean = np.dot(dv, range(0, 1500)) / cubes
-            return (dvh, min_dose, max_dose, mean, area)
+            return dvh, min_dose, max_dose, mean, area
         return None
 
     def create_dicom_plan(self):
@@ -143,8 +114,7 @@ class DosCube(Cube):
 
         ds.Modality = "RTPLAN"
         ds.SeriesDescription = 'RT Plan'
-        ds.SeriesInstanceUID = \
-            '2.16.840.1.113662.2.12.0.3057.1241703565.43'
+        ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
         ds.RTPlanDate = '19010101'
         ds.RTPlanGeometry = ''
         ds.RTPlanLabel = 'B1'
@@ -178,7 +148,7 @@ class DosCube(Cube):
         ds.SeriesDescription = 'RT Dose'
         ds.DoseUnits = 'GY'
         ds.DoseType = 'PHYSICAL'
-        ds.DoseGridScaling = self.target_dose / 10 ** 5
+        ds.DoseGridScaling = self.target_dose / 10**5
         ds.DoseSummationType = 'PLAN'
         ds.SliceThickness = ''
         ds.InstanceCreationDate = '19010101'
@@ -187,27 +157,23 @@ class DosCube(Cube):
         ds.PixelRepresentation = 0
         ds.StudyID = '1'
         ds.SeriesNumber = 14
-        ds.GridFrameOffsetVector = \
-            [x * self.slice_distance for x in range(self.dimz)]
+        ds.GridFrameOffsetVector = [x * self.slice_distance for x in range(self.dimz)]
         ds.InstanceNumber = ''
         ds.NumberofFrames = len(self.cube)
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
-        ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
-                                   "%.3f" % (self.yoffset * self.pixel_size),
+        ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size), "%.3f" % (self.yoffset * self.pixel_size),
                                    "%.3f" % (self.slice_pos[0])]
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
         ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'
-        ds.SeriesInstanceUID = \
-            '1.2.246.352.71.2.320687012.28240.20090603082420'
+        ds.SeriesInstanceUID = '1.2.246.352.71.2.320687012.28240.20090603082420'
 
         # Bind to rtplan
         rt_set = Dataset()
         rt_set.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
         rt_set.RefdSOPInstanceUID = '1.2.3'
         ds.ReferencedRTPlans = Sequence([rt_set])
-        pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns),
-                               dtype=self.pydata_type)
+        pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
         return ds
