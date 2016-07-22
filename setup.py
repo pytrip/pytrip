@@ -117,8 +117,7 @@ with open('README.rst') as readme_file:
 extensions = [setuptools.Extension(
     'pytriplib',
     sources=[os.path.join('pytrip', 'lib', 'filter_point.c')],
-    extra_compile_args=['-fopenmp', '-fpic'],
-    extra_link_args=['-lgomp'])]
+    extra_compile_args=['-fpic'])]
 
 setuptools.setup(
     name='pytrip98',
