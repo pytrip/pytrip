@@ -57,9 +57,7 @@ class RBEHandler:
                         while not stop:
                             line = fp.readline()
                             if line.find("!celltype") > -1:
-                                fp_out.write("%s\t%s\n" %
-                                             (line.split()[1],
-                                              os.path.join(path, item)))
+                                fp_out.write("%s\t%s\n" % (line.split()[1], os.path.join(path, item)))
                                 stop = True
                             if not line:
                                 stop = True

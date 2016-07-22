@@ -10,16 +10,12 @@ import os
 
 class TripPlan(pytripObj):
     def __init__(self, name="", comment=""):
-        self.save_fields = ["fields", "vois", "remote", "servername",
-                            "username", "password", "working_dir",
-                            "ddd_folder", "spc_folder", "sis_file",
-                            "res_tissue_type", "target_tissue_type", "name",
+        self.save_fields = ["fields", "vois", "remote", "servername", "username", "password", "working_dir",
+                            "ddd_folder", "spc_folder", "sis_file", "res_tissue_type", "target_tissue_type", "name",
                             "comment"]
-        self.save_fields.extend(
-            ["iterations", "opt_method", "opt_princip", "dose_alg",
-             "bio_alg", "opt_alg", "eps", "geps",
-             "out_phys_dose", "out_bio_dose", "out_dose_mean_let",
-             "out_field", "out_mean_let", "dose_percent"])
+        self.save_fields.extend(["iterations", "opt_method", "opt_princip", "dose_alg", "bio_alg", "opt_alg", "eps",
+                                 "geps", "out_phys_dose", "out_bio_dose", "out_dose_mean_let", "out_field",
+                                 "out_mean_let", "dose_percent"])
         self.fields = FieldCollection(self)
         self.vois = VoiCollection(self)
         self.remote = False

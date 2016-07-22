@@ -23,8 +23,7 @@ except:
 
 
 def compare_dicom_ct(dcm1, dcm2):
-    diff = float(dcm1.ImagePositionPatient[2]) - \
-        float(dcm2.ImagePositionPatient[2])
+    diff = float(dcm1.ImagePositionPatient[2]) - float(dcm2.ImagePositionPatient[2])
     if diff > 0:
         return 1
     return -1

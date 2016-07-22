@@ -27,19 +27,16 @@ class CTImages:
     def get_modified_images(self, plan):
         modify = False
         for voi in plan.get_vois():
-            if not voi.get_hu_offset() is None or \
-                    not voi.get_hu_value() is None:
+            if not voi.get_hu_offset() is None or not voi.get_hu_value() is None:
                 modify = True
                 break
         if modify:
             images = copy.deepcopy(self.voxelplan_images)
             for voi in plan.get_vois():
                 if not voi.get_hu_offset() is None:
-                    images.set_offset_cube_values(voi.get_voi().get_voi_data(),
-                                                  voi.get_hu_offset())
+                    images.set_offset_cube_values(voi.get_voi().get_voi_data(), voi.get_hu_offset())
                 if not voi.get_hu_value() is None:
-                    images.override_cube_values(voi.get_voi().get_voi_data(),
-                                                voi.get_hu_value())
+                    images.override_cube_values(voi.get_voi().get_voi_data(), voi.get_hu_value())
         else:
             images = self.voxelplan_images
         return images

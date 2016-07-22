@@ -32,11 +32,7 @@ class DDD:
 
     def get_ddd_by_energy(self, energy, points):
         ev_point = np.array([points, [energy] * len(points)])
-        return interpolate.griddata(
-            self.points,
-            self.ddd_list,
-            np.transpose(ev_point),
-            method='linear')
+        return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
 
     def get_ddd_grid(self, energy_list, n):
         # ddd_list = []
@@ -59,8 +55,7 @@ class DDD:
 
             offset = 1 / (ddd_e[idx + 1] - ddd_e[idx]) * (e - ddd_e[idx + 1])
             x_offset = (d_upper[0, upper_idx] - d_lower[0, lower_idx]) * offset
-            y_offset = 1 + (1 - d_upper[1, upper_idx] /
-                            d_lower[1, lower_idx]) * offset
+            y_offset = 1 + (1 - d_upper[1, upper_idx] / d_lower[1, lower_idx]) * offset
 
             depth = d_upper[0, :] + x_offset
             ddd = d_upper[1, :] * y_offset
@@ -120,8 +115,8 @@ class DDD:
 
         max_dist = np.array(sorted(max_dist, key=lambda x: x[0]))
         self.max_dist = interpolate.splrep(max_dist[:, 0], max_dist[:, 1], s=0)
-#        spl_points = 1000
-#        xi = np.linspace(0, max_dist[-1, 1], spl_points)
+        #        spl_points = 1000
+        #        xi = np.linspace(0, max_dist[-1, 1], spl_points)
         ddd_list = []
         for key, value in ddd.iteritems():
             points[0].extend(value[0])

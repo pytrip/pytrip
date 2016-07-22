@@ -43,19 +43,13 @@ class LETCube(Cube):
 
     def calculate_lvh(self, voi):
         pos = 0
-        size = np.array([
-            self.pixel_size,
-            self.pixel_size,
-            self.slice_distance])
+        size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)
         for i in range(self.dimz):
             pos += self.slice_distance
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
-                lv += plib.calculate_lvh_slice(
-                    self.cube[i],
-                    np.array(slice.contour[0].contour),
-                    size)
+                lv += plib.calculate_lvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
 
         cubes = sum(lv)
         lvh = np.cumsum(lv[::-1])[::-1] / cubes

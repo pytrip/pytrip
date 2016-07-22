@@ -25,15 +25,6 @@ import sys
 import os
 import string
 
-__author__ = "Armin Luehr"
-__copyright__ = "Copyright 2011, Aarhus Particle Therapy Group"
-__credits__ = ["Armin Luehr", "Niels Bassler"]
-__license__ = "GPL v3"  # ???
-__version__ = "0.1_svn"  # ???
-__maintainer__ = "Armin Luehr"
-__email__ = "luehr@phys.au.dk"
-__status__ = "Development"
-
 
 class ReadGd(object):
     """This class reads .gd files."""
@@ -287,8 +278,7 @@ class ReadGd(object):
                 str_out += '@    s' + str(counter)
                 str_out += ' comment "' + self.filename + ' "\n'
                 for i, ele in enumerate(self.indata):
-                    str_out += self.xdata[i] + ' ' + str(
-                        (float(ele[num]) * float(ele[num - 1]))) + '\n'
+                    str_out += self.xdata[i] + ' ' + str((float(ele[num]) * float(ele[num - 1]))) + '\n'
                 # sys.stdout.write(str_out)
                 out_file.write(str_out)
 

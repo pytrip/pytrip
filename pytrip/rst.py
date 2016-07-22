@@ -124,71 +124,49 @@ class SubMachine:
 
     def get_raster_grid(self):
         min_max = self.get_raster_min_max()
-        zero = [-int(min_max[0] / self.stepsize[0]),
-                -int(min_max[2] / self.stepsize[1])]
-        size = [(min_max[1] - min_max[0]) / self.stepsize[0] + 1,
-                (min_max[3] - min_max[2]) / self.stepsize[1] + 1]
+        zero = [-int(min_max[0] / self.stepsize[0]), -int(min_max[2] / self.stepsize[1])]
+        size = [(min_max[1] - min_max[0]) / self.stepsize[0] + 1, (min_max[3] - min_max[2]) / self.stepsize[1] + 1]
         grid = np.zeros(size)
         rasterpoints = np.array(self.raster_points)
-        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0],
-                      'uint8'),
-             np.array(rasterpoints[:, 1] / self.stepsize[1] + zero[1],
-                      'uint8')] = rasterpoints[:, 2]
+        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0], 'uint8'), np.array(
+            rasterpoints[:, 1] / self.stepsize[1] + zero[1], 'uint8')] = rasterpoints[:, 2]
         return grid
 
     def generate_random_error_machine(self, sigma):
         min_max = self.get_raster_min_max()
-        zero = [-int(min_max[0] / self.stepsize[0]),
-                -int(min_max[2] / self.stepsize[1])]
-        size = [(min_max[1] - min_max[0]) / self.stepsize[0] + 1,
-                (min_max[3] - min_max[2]) / self.stepsize[1] + 1]
+        zero = [-int(min_max[0] / self.stepsize[0]), -int(min_max[2] / self.stepsize[1])]
+        size = [(min_max[1] - min_max[0]) / self.stepsize[0] + 1, (min_max[3] - min_max[2]) / self.stepsize[1] + 1]
         grid = np.zeros((size))
         rasterpoints = np.array(self.raster_points)
-        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0],
-                      'uint8'),
-             np.array(rasterpoints[:, 1] / self.stepsize[1] + zero[1],
-                      'uint8')] = rasterpoints[:, 2]
-        size2 = [size[0] + 4 * int(sigma / self.stepsize[0]),
-                 size[1] + 4 * int(sigma / self.stepsize[1])]
-        zero2 = [zero[0] + 2 * int(sigma / self.stepsize[0]),
-                 zero[1] + 2 * int(sigma / self.stepsize[1])]
+        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0], 'uint8'), np.array(
+            rasterpoints[:, 1] / self.stepsize[1] + zero[1], 'uint8')] = rasterpoints[:, 2]
+        size2 = [size[0] + 4 * int(sigma / self.stepsize[0]), size[1] + 4 * int(sigma / self.stepsize[1])]
+        zero2 = [zero[0] + 2 * int(sigma / self.stepsize[0]), zero[1] + 2 * int(sigma / self.stepsize[1])]
         outgrid = np.zeros(size2)
         offset = np.array([[x, y]
-                           for x in range(-int(sigma / self.stepsize[0]),
-                                          int(sigma / self.stepsize[0]) + 1)
-                           for y in range(-int(sigma / self.stepsize[1]),
-                                          int(sigma / self.stepsize[1]) + 1)])
+                           for x in range(-int(sigma / self.stepsize[0]), int(sigma / self.stepsize[0]) + 1)
+                           for y in range(-int(sigma / self.stepsize[1]), int(sigma / self.stepsize[1]) + 1)])
         lengths = (offset[:, 0] * self.stepsize[0]) ** 2 + \
                   (offset[:, 1] * self.stepsize[1]) ** 2
-        gauss = np.exp(-0.5 * lengths / sigma ** 2)
+        gauss = np.exp(-0.5 * lengths / sigma**2)
         gauss = gauss / np.sum(gauss)
         offset[:, 0] = offset[:, 0] + 2 * int(sigma / self.stepsize[0])
         offset[:, 1] = offset[:, 1] + 2 * int(sigma / self.stepsize[1])
         for i in range(len(offset)):
             o = offset[i]
-            outgrid[o[0]:o[0] + size[0],
-                    o[1]:o[1] + size[1]] += gauss[i] * grid
+            outgrid[o[0]:o[0] + size[0], o[1]:o[1] + size[1]] += gauss[i] * grid
         l = []
         for i in range(len(outgrid)):
             for j in range(len(outgrid[0])):
                 if outgrid[i, j] > 2000:
-                    l.append([
-                        (i - zero2[0]) * self.stepsize[0],
-                        (j - zero2[1]) * self.stepsize[1],
-                        outgrid[i, j]])
+                    l.append([(i - zero2[0]) * self.stepsize[0], (j - zero2[1]) * self.stepsize[1], outgrid[i, j]])
         return l
 
     def save_random_error_machine(self, fp, sigma):
         rasterpoints = np.array(self.generate_random_error_machine(sigma))
-        fp.write("submachine# %d %.2f %d %.1f\n" % (
-            self.idx_energy,
-            self.energy,
-            self.idx_focus,
-            self.focus))
-        fp.write("#particles %.5E %.5E %.5E\n" % (
-            np.min(rasterpoints[:, 2]),
-            np.max(rasterpoints[:, 2]),
-            np.sum(rasterpoints[:, 2])))
+        fp.write("submachine# %d %.2f %d %.1f\n" % (self.idx_energy, self.energy, self.idx_focus, self.focus))
+        fp.write("#particles %.5E %.5E %.5E\n" % (np.min(rasterpoints[:, 2]), np.max(rasterpoints[:, 2]),
+                                                  np.sum(rasterpoints[:, 2])))
         fp.write("stepsize %.0f %.0f\n" % (self.stepsize[0], self.stepsize[1]))
         fp.write("#points %d\n" % (len(rasterpoints)))
         for point in rasterpoints:
@@ -217,8 +195,5 @@ class SubMachine:
         i += 1
         for i in range(i, i + self.points):
             items = data[i].split()
-            self.raster_points.append([
-                float(items[0]),
-                float(items[1]),
-                float(items[2])])
+            self.raster_points.append([float(items[0]), float(items[1]), float(items[2])])
         return i + 1

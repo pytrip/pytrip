@@ -27,8 +27,5 @@ from pytrip.get_dvh import GetDvh
 # import pytrip.guiutil
 # import pytrip.tripexecuter
 
-__all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube',
-           'LETCube', 'dicomhelper', 'res', 'guiutil', 'Rst']
-__author__ = "Jakob Toftegaard, Niels Bassler"
+__all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res', 'guiutil', 'Rst']
 __version__ = "1.0"
-__email__ = "bassler@phys.au.dk"

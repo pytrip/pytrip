@@ -93,12 +93,9 @@ class GetDvh(object):
         print(" in", self.bins, "bins.")
         print(" Min / Max Dose: %.2f / %.2f" % (self.min, self.max))
         print(" Mean / Stdev  : %.2f / %.2f" % (self.mean, self.std))
-        print(" Vol: 95 %% <= D <= 107 %% : %.1f %% in %i bins" %
-              (self.percent_95_107, self.bins_95_107))
-        print(" Vol: D > 107 %%          : %.1f %% in %i bins" %
-              (self.percent_gt107, self.bins_dgt107))
-        print(" Vol: D < 95 %%           : %.1f %% in %i bins" %
-              (self.percent_lt95, self.bins_dlt95))
+        print(" Vol: 95 %% <= D <= 107 %% : %.1f %% in %i bins" % (self.percent_95_107, self.bins_95_107))
+        print(" Vol: D > 107 %%          : %.1f %% in %i bins" % (self.percent_gt107, self.bins_dgt107))
+        print(" Vol: D < 95 %%           : %.1f %% in %i bins" % (self.percent_lt95, self.bins_dlt95))
         print("--------------------------------------------------------------")
 
     def plot(self):

@@ -110,21 +110,16 @@ class SubField:
         dim = np.ceil(np.absolute(max_dist / resolution))
         max_dist = dim * resolution
         self.resolution = resolution
-        a = np.meshgrid(np.linspace(0, max_dist, dim),
-                        np.linspace(0, max_dist, dim))
-        r = (a[0] ** 2 + a[1] ** 2) ** 0.5
-        sigma = self.sigma / ((8 * log(2)) ** 0.5)
-        lateral = 1 / ((2 * pi * sigma ** 2) ** 0.5) * \
-            np.exp(-(r ** 2) / (2 * sigma ** 2))
+        a = np.meshgrid(np.linspace(0, max_dist, dim), np.linspace(0, max_dist, dim))
+        r = (a[0]**2 + a[1]**2)**0.5
+        sigma = self.sigma / ((8 * log(2))**0.5)
+        lateral = 1 / ((2 * pi * sigma**2)**0.5) * np.exp(-(r**2) / (2 * sigma**2))
         tot_lat = np.zeros((2 * dim - 1, 2 * dim - 1))
 
         tot_lat[dim - 1:2 * dim - 1, dim - 1:2 * dim - 1] = lateral
-        tot_lat[dim - 1:2 * dim - 1, 0:dim - 1] = \
-            np.rot90(lateral, 3)[:, 0:dim - 1]
-        tot_lat[0:dim - 1, 0:dim - 1] = \
-            np.rot90(lateral, 2)[0:dim - 1, 0:dim - 1]
-        tot_lat[0:dim - 1, dim - 1:2 * dim - 1] = \
-            np.rot90(lateral)[0:dim - 1, :]
+        tot_lat[dim - 1:2 * dim - 1, 0:dim - 1] = np.rot90(lateral, 3)[:, 0:dim - 1]
+        tot_lat[0:dim - 1, 0:dim - 1] = np.rot90(lateral, 2)[0:dim - 1, 0:dim - 1]
+        tot_lat[0:dim - 1, dim - 1:2 * dim - 1] = np.rot90(lateral)[0:dim - 1, :]
 
         self.lateral = tot_lat
         return self.lateral
@@ -140,32 +135,28 @@ class SubField:
         lateral.extend([0, depth])
         return lateral
 
-    # ~ def size(self):
-
     def get_merge_raster_points(self, size):
         points = np.array(self.get_raster_matrixs(size))
         dim = [len(points[0]), len(points)]
 
         points = np.reshape(points, (dim[0] * dim[1], 3))
-        sigma = self.sigma / ((8 * log(2)) ** 0.5)
+        sigma = self.sigma / ((8 * log(2))**0.5)
         self.points = plib.merge_raster_grid(np.array(points), sigma)
         self.points = np.reshape(self.points, (dim[1], dim[0], 3))
         return self.points
 
     def get_raster_matrixs(self, size):
-        points = sorted(self.submachine.get_raster_points(),
-                        cmp=compare_raster_point)
+        points = sorted(self.submachine.get_raster_points(), cmp=compare_raster_point)
         step = self.submachine.stepsize
         margin = 5
-        mat = [[[x, y, 0]
-                for x in
-                np.linspace(size[0] - margin * step[0],
-                            size[1] + margin * step[0],
-                            (size[1] - size[0]) / step[0] + 1 + 2 * margin)]
-               for y in
-               np.linspace(size[2] - margin * step[1],
-                           size[3] + margin * step[1],
-                           (size[3] - size[2]) / step[1] + 1 + 2 * margin)]
+        mat = [
+            [[x, y, 0]
+             for x in np.linspace(size[0] - margin * step[0], size[1] + margin * step[0], (size[1] - size[0]
+                                                                                           ) / step[0] + 1 + 2 * margin)
+             ]
+            for y in np.linspace(size[2] - margin * step[1], size[3] + margin * step[1], (size[3] - size[2]
+                                                                                          ) / step[1] + 1 + 2 * margin)
+        ]
         for p in points:
             i = int(p[1] / step[1] - size[2] / step[1]) + margin
             j = int(p[0] / step[0] - size[0] / step[0]) + margin
@@ -177,14 +168,9 @@ class SubField:
         size = self.get_size()
         # ~ doesn't allow minimum values greater than zero
         dim = np.ceil(np.absolute(np.array(size) / resolution))
-        field = np.zeros((dim[5] + dim[4],
-                          dim[3] + dim[2] - 1,
-                          dim[1] + dim[0] - 1))
+        field = np.zeros((dim[5] + dim[4], dim[3] + dim[2] - 1, dim[1] + dim[0] - 1))
         lateral = self.get_lateral(resolution)
-        ddd = self.ddd.get_ddd_by_energy(self.energy,
-                                         np.linspace(0,
-                                                     (dim[5]) * resolution,
-                                                     dim[5] * 10))
+        ddd = self.ddd.get_ddd_by_energy(self.energy, np.linspace(0, (dim[5]) * resolution, dim[5] * 10))
         ddd = np.sum(np.reshape(ddd, (dim[5], -1)), axis=1) / 10
 
         raster_dim = [len(lateral[0]), len(lateral), len(ddd)]
@@ -194,12 +180,11 @@ class SubField:
         for point in raster:
             idx = np.array([point[0] / resolution, point[1] / resolution])
             raster_center = idx + zero
-            start = np.array([raster_center[0] - (raster_dim[0] + 1) / 2,
-                              raster_center[1] - (raster_dim[1] + 1) / 2,
-                              0], dtype=int)
-            end = np.array([raster_center[0] + (raster_dim[0] - 1) / 2,
-                            raster_center[1] + (raster_dim[1] - 1) / 2,
-                            raster_dim[2]], dtype=int)
+            start = np.array(
+                [raster_center[0] - (raster_dim[0] + 1) / 2, raster_center[1] - (raster_dim[1] + 1) / 2, 0], dtype=int)
+            end = np.array(
+                [raster_center[0] + (raster_dim[0] - 1) / 2, raster_center[1] + (raster_dim[1] - 1) / 2, raster_dim[2]],
+                dtype=int)
             field[start[2]:end[2], start[1]:end[1], start[0]:end[0]] += \
                 point[2] * raster_field
         return field, zero

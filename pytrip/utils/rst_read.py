@@ -5,15 +5,13 @@
 import os
 import re
 
-__author__ = "Niels Bassler"
 __version__ = "1.0"
-__email__ = "n.bassler@dkfz.de"
-
 
 # TODO add proper destructors
 
+
 class SubMachine(object):
-    'Define for each submachine.'
+    """Define for each submachine."""
 
     def __init__(self, e_step, energy, focus_nr, focus_fl, subm_size):
         # print 'init submachine'
@@ -35,7 +33,7 @@ class SubMachine(object):
 
 
 class RstfileRead(object):
-    'This class reads rst files.'
+    """This class reads rst files."""
 
     FileIsRead = False
 
@@ -93,32 +91,25 @@ class RstfileRead(object):
                     i_stored = i
                     submachine_size = 0
                     i += 1
-                    while (i < data_length) and \
-                            (re.match("submachine#", content[i]) is None):
+                    while (i < data_length) and (re.match("submachine#", content[i]) is None):
                         submachine_size += 1
                         i += 1
                     i = i_stored  # go back to the start of this submachine
 
                     data_counter = 0
-                    self.submachine.append(SubMachine(
-                        int(content[i].split()[1]),
-                        float(content[i].split()[2]),
-                        int(content[i].split()[3]),
-                        float(content[i].split()[4]),
-                        submachine_size))
+                    self.submachine.append(
+                        SubMachine(
+                            int(content[i].split()[1]), float(content[i].split()[2]), int(content[i].split()[3]), float(
+                                content[i].split()[4]), submachine_size))
 
                     i += 1
                     # now read the submachine
                     escape = False
-                    while (i < data_length) and \
-                            (re.match("submachine#", content[i]) is None) \
-                            and (escape is False):
+                    while (i < data_length) and (re.match("submachine#", content[i]) is None) and (escape is False):
                         # print "subloop", i,  content[i]
                         if re.match("stepsize", content[i]) is not None:
-                            self.submachine[subm_counter].stepsizex = \
-                                int(content[i].split()[1])
-                            self.submachine[subm_counter].stepsizey = \
-                                int(content[i].split()[2])
+                            self.submachine[subm_counter].stepsizex = int(content[i].split()[1])
+                            self.submachine[subm_counter].stepsizey = int(content[i].split()[2])
                         else:
                             temp = content[i].split()
                             if len(temp) == 3:
@@ -126,8 +117,7 @@ class RstfileRead(object):
                                     x = float(temp[0])
                                     y = float(temp[1])
                                     z = float(temp[2])
-                                    self.submachine[subm_counter].fillData(
-                                        x, y, z, data_counter)
+                                    self.submachine[subm_counter].fillData(x, y, z, data_counter)
                                     data_counter += 1
                                 except ValueError:
                                     # handles when some other comment is
@@ -142,19 +132,15 @@ class RstfileRead(object):
 
                     # resize elements properly
                     # print "dc:", data_counter
-                    # TODO shorten variable names
-                    self.submachine[subm_counter].xpos = \
-                        self.submachine[subm_counter].xpos[:data_counter]
+                    self.submachine[subm_counter].xpos = self.submachine[subm_counter].xpos[:data_counter]
 
-                    self.submachine[subm_counter].ypos = \
-                        self.submachine[subm_counter].ypos[:data_counter]
+                    self.submachine[subm_counter].ypos = self.submachine[subm_counter].ypos[:data_counter]
 
-                    self.submachine[subm_counter].particles = \
-                        self.submachine[subm_counter].particles[:data_counter]
+                    self.submachine[subm_counter].particles = self.submachine[subm_counter].particles[:data_counter]
                     subm_counter += 1
                 ################################
                 else:
-                    i = i + 1
+                    i += 1
             print("found", subm_counter, "submachines.")
             self.submachines = subm_counter
 
@@ -163,7 +149,7 @@ class RstfileRead(object):
 
 
 class SamfileRead(object):
-    'This class reads rst files.'
+    """This class reads rst files."""
 
     def __init__(self, filename):
         """ Read the rst file."""
