@@ -9,7 +9,9 @@ else:
 
 
 def get_files():
-    # get plans from https://neptun.phys.au.dk/~bassler/TRiP/
+    """
+    get plans from https://neptun.phys.au.dk/~bassler/TRiP/
+    """
     dirname = "tests"
     bname = "TST003"
     fname = bname + ".tar.gz"
@@ -21,3 +23,4 @@ def get_files():
     if not os.path.exists(os.path.join(dirname, bname)):
         tfile = tarfile.open(fname_path, 'r:gz')
         tfile.extractall(dirname)
+    return os.path.join(dirname, bname)

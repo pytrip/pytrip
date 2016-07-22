@@ -25,8 +25,8 @@ import tests.test_base
 
 class TestCtx(unittest.TestCase):
     def setUp(self):
-        tests.test_base.get_files()
-        self.cube000 = os.path.join("TST003", "tst003000.ctx")
+        testdir = tests.test_base.get_files()
+        self.cube000 = os.path.join(testdir, "tst003000.ctx")
 
     def test_read(self):
         c = CtxCube()
