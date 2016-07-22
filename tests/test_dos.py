@@ -14,33 +14,34 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-
 import os
 import unittest
+import numpy as np
 
-from pytrip.ctx import CtxCube
-from pytrip.vdx import VdxCube
-from pytrip.guiutil import PlotUtil
-
+from pytrip.dos import DosCube
+import pytriplib
 import tests.test_base
 
 
-class TestCtx(unittest.TestCase):
+class TestDos(unittest.TestCase):
     def setUp(self):
         testdir = tests.test_base.get_files()
-        self.cube000 = os.path.join(testdir, "tst003000.ctx")
-        self.vdx000 = os.path.join(testdir, "tst003000.vdx")
+        self.cube000 = os.path.join(testdir, "tst003001.dos")
 
     def test_read(self):
-        c = CtxCube()
+        c = DosCube()
         c.read(self.cube000)
-        v = VdxCube(c)
-        v.read_vdx(self.vdx000)
-        g = PlotUtil()
-        g.set_ct(c)
-#        g.add_voi(v.get_voi_by_name("ptv"))
-#        g.plot(81)
-#        g.plot(82)
+        self.assertEqual(c.cube.shape[0], 300)
+        self.assertEqual(c.cube.shape[1], 512)
+        self.assertEqual(c.cube.shape[2], 512)
+
+        # test method from C extension
+        dose_center = pytriplib.calculate_dose_center(np.array(c.cube))
+        self.assertEqual(dose_center.shape[0], 3)
+        self.assertGreater(dose_center[0], 0.0)
+        self.assertGreater(dose_center[1], 0.0)
+        self.assertGreater(dose_center[2], 0.0)
+
 
 if __name__ == '__main__':
     unittest.main()

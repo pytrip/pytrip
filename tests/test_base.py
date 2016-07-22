@@ -2,7 +2,7 @@ import sys
 import os
 import tarfile
 
-if sys.version_info >= (3,):
+if sys.version_info >= (3, ):
     import urllib.request as urllib2
 else:
     import urllib2
