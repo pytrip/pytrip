@@ -1836,8 +1836,51 @@ static PyMethodDef pytriplibMethods[] = {
 {"raytracing",(PyCFunction)raytracing,METH_VARARGS},
 {NULL,NULL}
 };
-PyMODINIT_FUNC initpytriplib(void){
-    (void) Py_InitModule("pytriplib", pytriplibMethods);
+
+#if PY_MAJOR_VERSION >= 3
+
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "pytriplib",
+        NULL,
+        NULL,
+        pytriplibMethods,
+        NULL,
+        NULL,
+        NULL,
+        NULL
+};
+
+
+
+#define INITERROR return NULL
+
+PyMODINIT_FUNC
+PyInit_pytriplib(void)
+
+#else
+#define INITERROR return
+
+void
+initpytriplib(void)
+#endif
+{
+#if PY_MAJOR_VERSION >= 3
+    PyObject *module = PyModule_Create(&moduledef);
+#else
+    PyObject *module = Py_InitModule("myextension", pytriplibMethods);
+#endif
     import_array();
+    if (module == NULL)
+        INITERROR;
+
+#if PY_MAJOR_VERSION >= 3
+    return module;
+#endif
 }
+
+//PyMODINIT_FUNC initpytriplib(void){
+//    (void) Py_InitModule("pytriplib", pytriplibMethods);
+//    import_array();
+//}
 
