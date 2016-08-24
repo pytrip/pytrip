@@ -185,8 +185,7 @@ class SubField:
             end = np.array(
                 [raster_center[0] + (raster_dim[0] - 1) / 2, raster_center[1] + (raster_dim[1] - 1) / 2, raster_dim[2]],
                 dtype=int)
-            field[start[2]:end[2], start[1]:end[1], start[0]:end[0]] += \
-                point[2] * raster_field
+            field[start[2]:end[2], start[1]:end[1], start[0]:end[0]] += point[2] * raster_field
         return field, zero
 
     def get_max_dist(self):

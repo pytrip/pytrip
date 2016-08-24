@@ -21,8 +21,6 @@ import numpy as np
 from pytrip.error import InputError
 from pytrip.cube import Cube
 
-__version__ = "1.0"
-
 
 class CtxCube(Cube):
     def __init__(self, cube=None):

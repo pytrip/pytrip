@@ -34,8 +34,6 @@ try:
 except:
     _dicom_loaded = False
 
-__version__ = "1.0"
-
 
 class VdxCube:
     """
@@ -543,8 +541,7 @@ class Voi:
 
     def read_dicom(self, info, data):
 
-        if "Contours" not in data.dir() and \
-                "ContourSequence" not in data.dir():
+        if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
             return
 
         self.type = self.get_roi_type_number(np.typename)
@@ -727,8 +724,7 @@ class Slice:
         for i in range(len(self.contour)):
             out += "contour %d\n" % i
             out += "internal false\n"
-            out += "number_of_points %d\n" % \
-                   (self.contour[i].number_of_points() + 1)
+            out += "number_of_points %d\n" % (self.contour[i].number_of_points() + 1)
             out += self.contour[i].to_voxel_string()
             out += "\n"
         return out
@@ -866,15 +862,13 @@ class Contour:
             d = -1
             child = 0
             for i in range(1, len(self.children)):
-                i1_temp, i2_temp, d_temp = \
-                    pytrip.res.point.short_distance_polygon_idx(
-                        self.children[0].contour, self.children[i].contour)
+                i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(
+                    self.children[0].contour, self.children[i].contour)
                 if d == -1 or d_temp < d:
                     d = d_temp
                     child = i
-            i1_temp, i2_temp, d_temp = \
-                pytrip.res.point.short_distance_polygon_idx(
-                    self.children[0].contour, self.contour)
+            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(
+                self.children[0].contour, self.contour)
             if d_temp < d:
                 self.merge(self.children[0])
                 self.children.pop(0)

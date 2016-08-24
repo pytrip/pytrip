@@ -5,8 +5,6 @@
 import os
 import re
 
-__version__ = "1.0"
-
 # TODO add proper destructors
 
 

@@ -15,6 +15,9 @@
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 
+# do not check this file for PEP8 compatibility
+# flake8: noqa
+
 from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube
@@ -22,10 +25,5 @@ from pytrip.paths import DensityCube
 from pytrip.rst import Rst
 from pytrip.let import LETCube
 from pytrip.get_dvh import GetDvh
-# import pytrip.dicomhelper
-# import pytrip.res
-# import pytrip.guiutil
-# import pytrip.tripexecuter
 
 __all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res', 'guiutil', 'Rst']
-__version__ = "1.0"

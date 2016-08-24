@@ -33,8 +33,6 @@ try:
 except:
     _dicom_loaded = False
 
-__version__ = "1.0"
-
 
 def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None, factor=1.0):
     cube_size = [density_cube.pixel_size, density_cube.pixel_size, density_cube.slice_distance]
