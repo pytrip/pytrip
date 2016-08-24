@@ -16,7 +16,6 @@
 """
 import os
 import re
-import string
 import sys
 
 import numpy as np
@@ -348,11 +347,11 @@ class Cube(object):
             if re.match("modality", content[i]) is not None:
                 self.modality = content[i].split()[1]
             if re.match("created_by", content[i]) is not None:
-                self.created_by = string.lstrip(content[i], "created_by ")
-                self.created_by = string.rstrip(self.created_by)
+                self.created_by = content[i].replace("created_by ", "", 1)
+                self.created_by = self.created_by.rstrip()
             if re.match("creation_info", content[i]) is not None:
-                self.creation_info = string.lstrip(content[i], "creation_info ")
-                self.creation_info = string.rstrip(self.creation_info)
+                self.creation_info = content[i].replace("creation_info ", "", 1)
+                self.creation_info = self.creation_info.rstrip()
             if re.match("primary_view", content[i]) is not None:
                 self.primary_view = content[i].split()[1]
             if re.match("data_type", content[i]) is not None:
