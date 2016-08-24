@@ -9,14 +9,14 @@ from pytrip import __file__
 
 
 class ReadGd(object):
-    'read file'
+    '''read file'''
 
     def __init__(self, filename, _dataset=0):
 
         if os.path.isfile(filename) is False:
             raise IOError("Could not find file " + filename)
 
-        if (_dataset > 2):
+        if _dataset > 2:
             print("DOS: Error- only 0,1,2 OER set available. Got:", _dataset)
         path = os.path.dirname(__file__)
         path_data = (os.path.join(path, "data/OER_barendsen.dat"), os.path.join(path, "data/OER_furusawa_HSG_C12.dat"),

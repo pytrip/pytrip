@@ -75,9 +75,7 @@ class GetDvh(object):
         self.DVH = self.build_DVH(self.array, _xnorm)
         self.name = vdx.voi[_cv].name
 
-        self.voxel_size = vdx.header.pixel_size * \
-            vdx.header.pixel_size * \
-            vdx.header.slice_distance
+        self.voxel_size = vdx.header.pixel_size * vdx.header.pixel_size * vdx.header.slice_distance
         self.volume = self.bins * self.voxel_size
         self.volume_cm3 = self.volume * 0.001
         self.min = self.array.min()

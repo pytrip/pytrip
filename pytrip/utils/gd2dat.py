@@ -158,22 +158,20 @@ class ReadGd(object):
                     self.xdata.append(ele[num])
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
-            elif self.head[num] == 'y' \
-                    or self.head[num] == 'm' \
-                    or self.head[num] == 'n':  # normal data
+            elif self.head[num] == 'y' or self.head[num] == 'm' or self.head[num] == 'n':  # normal data
                 for ele in self.indata:
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
             num += 1
 
-        if (self.export_Bool):
+        if self.export_Bool:
             self.export()
 
     def export(self):
 
         len_file_name = len(self.filename)
         out_file_name = self.filename[:len_file_name - 2]
-        if (self.agr):
+        if self.agr:
             out_file_name += "agr"
             print('# Writing data in a ".agr" file fragment: ' + out_file_name)
         else:

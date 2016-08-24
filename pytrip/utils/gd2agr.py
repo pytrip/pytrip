@@ -31,7 +31,7 @@ class ReadGd(object):
         line = gd_lines[0]
         line_len = len(line)
         string = '@    title  "' + line[:line_len - 1] + '"\n'
-        string = string + '@    legend char size 1.250000\n'
+        string += '@    legend char size 1.250000\n'
         sys.stdout.write(string)
 
         count = -1
@@ -66,8 +66,7 @@ class ReadGd(object):
                     or line[s] == 'n' \
                     or line[s] == 'N':
                 count += 1
-                string = '\n@    s' + str(count) + \
-                         ' comment "' + filename + ' "\n'
+                string = '\n@    s' + str(count) + ' comment "' + filename + ' "\n'
                 line_len = len(line)
                 p = s + 1
 

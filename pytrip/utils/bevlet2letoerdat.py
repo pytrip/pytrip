@@ -7,7 +7,7 @@ import os
 
 
 class ReadGd(object):
-    'read file'
+    '''read file'''
 
     def __init__(self, filename):
 

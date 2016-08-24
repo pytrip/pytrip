@@ -211,9 +211,7 @@ class PlotUtil:
         self.vois.remove(voi)
 
     def set_contrast(self, contrast):
-        if contrast[0] >= contrast[1] or \
-                contrast[1] > 2000 or \
-                contrast[0] < -1000:
+        if contrast[0] >= contrast[1] or contrast[1] > 2000 or contrast[0] < -1000:
             return
         self.contrast = contrast
         if hasattr(self, "fig_ct"):
@@ -475,8 +473,7 @@ class PlotUtil:
                     # TODO why bar is not used ?
                     # bar = self.figure.colorbar()
                 else:
-                    if not hasattr(self, "dose_bar") and \
-                            not hasattr(self, "let_bar"):
+                    if not hasattr(self, "dose_bar") and not hasattr(self, "let_bar"):
                         cax = self.figure.figure.add_axes([0.9, 0.1, 0.03, 0.8])
                         self.dose_bar = self.figure.figure.colorbar(self.fig_dose, cax=cax)
                 if scale == "abs":
