@@ -55,12 +55,10 @@ def setup_versioneer():
             import os
             # find absolute path where *versioneer package* was installed
             # and store it in main_path
-            main_path = [x[len("Location: "):] for x in output.splitlines()
-                         if x.startswith("Location")][0]
+            main_path = [x[len("Location: "):] for x in output.splitlines() if x.startswith("Location")][0]
             # find path relative to main_path where
             # *versioneer binary* was installed
-            bin_path = [x[len("  "):] for x in output.splitlines()
-                        if x.endswith(os.path.sep + "versioneer")][0]
+            bin_path = [x[len("  "):] for x in output.splitlines() if x.endswith(os.path.sep + "versioneer")][0]
 
             # exe_path is absolute path to *versioneer binary*
             exe_path = os.path.join(main_path, bin_path)
@@ -138,7 +136,14 @@ setuptools.setup(
 
         # Indicate who your project is intended for
         'Intended Audience :: Developers',
-        'Topic :: Software Development :: Build Tools',
+        'Intended Audience :: Science/Research',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Scientific/Engineering :: Medical Science Apps.',
+        'Topic :: Scientific/Engineering :: Physics',
+
+        # OS and env
+        'Environment :: Console',
+        'Operating System :: POSIX :: Linux',
 
         # Pick your license as you wish (should match "license" above)
         'License :: OSI Approved :: GPL License',
@@ -154,20 +159,14 @@ setuptools.setup(
     ],
     package_data={'pytrip': ['data/*.dat']},
     install_requires=[
-        'matplotlib',
-        'numpy',
-        'pydicom',
-        'scipy'
+        'matplotlib', 'numpy', 'pydicom', 'scipy'
     ],
     include_dirs=[np.get_include()],
     ext_modules=extensions,
     entry_points={
         'console_scripts': [
-            'trip2dicom=' + \
-            'pytrip.utils.trip2dicom:main',
-            'dicom2trip=' + \
-            'pytrip.utils.dicom2trip:main',
+            'trip2dicom=pytrip.utils.trip2dicom:main',
+            'dicom2trip=pytrip.utils.dicom2trip:main',
         ],
     },
-    cmdclass=get_cmdclass()
-)
+    cmdclass=get_cmdclass())
