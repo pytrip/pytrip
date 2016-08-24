@@ -177,16 +177,15 @@ class DensityProjections:
 
         dimension = window_size / self.cube.pixel_size
         dimension = np.int16(dimension)
-        start = center - self.cube.pixel_size * 0.5 * \
-            np.array(dimension[0] * b + dimension[1] * c)
+        start = center - self.cube.pixel_size * 0.5 * np.array(dimension[0] * b + dimension[1] * c)
         if calculate_from is 1:
             start = self.calculate_back_start_voi(voi, start, step_vec)
         if calculate_from is 2:
             start = self.calculate_front_start_voi(voi, start, step_vec)
 
-        data = pytriplib.calculate_wepl(self.cube.cube, np.array(start), np.array(basis) * step_length, dimension,
-                                        np.array([self.cube.pixel_size, self.cube.pixel_size,
-                                                  self.cube.slice_distance]))
+        data = pytriplib.calculate_wepl(  # NOQA F821 (disable PEP8 testing by flake)
+            self.cube.cube, np.array(start), np.array(basis) * step_length, dimension,
+            np.array([self.cube.pixel_size, self.cube.pixel_size, self.cube.slice_distance]))
         data *= step_length
         return data, start, [b, c]
 

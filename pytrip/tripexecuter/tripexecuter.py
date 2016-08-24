@@ -72,7 +72,10 @@ class TripExecuter(object):
                               basis[2] / cube1.slice_distance])
             basis /= np.max(np.abs(basis))
 
-            d.cube = pytriplib.create_field_shadow(cube1.cube, cube2.cube, np.array(basis, dtype=np.double))
+            d.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+                cube1.cube,
+                cube2.cube,
+                np.array(basis, dtype=np.double))
             target_cube -= d
             shadow_cubes.append(d)
 
@@ -194,8 +197,7 @@ class TripExecuter(object):
                               self.plan.get_bio_algorithm() + ') biological norbe write')
             if self.plan.get_out_dose_mean_let() is True:
                 output.append('dose "' + name + '." /calculate ' + window_str + ' field(*) dosemeanlet write')
-            if self.plan.get_out_field() is True and \
-                    self.plan.get_optimize() is True:
+            if self.plan.get_out_field() is True and self.plan.get_optimize() is True:
                 for i, field in enumerate(fields):
                     output.append('field %d /write file(%s.rst) reverseorder ' % (i + 1, field.get_name()))
                     field.set_rasterfile(self.working_path + '//' + self.folder_name + '//' + field.get_name())
@@ -336,8 +338,7 @@ class TripExecuter(object):
     def split_fields(self, proj):
         if self.split_proj_key not in self.projectiles.keys():
             return
-        name = os.path.join(self.path, self.plan_name) \
-            + "_" + self.projectiles[proj]["name"]
+        name = os.path.join(self.path, self.plan_name) + "_" + self.projectiles[proj]["name"]
         path = os.path.join(name + ".phys.dos")
         temp = DosCube()
         temp.read(path)
@@ -346,17 +347,17 @@ class TripExecuter(object):
         self.rest_dose = self.target_dos - temp
 
         p = self.projectiles[self.split_proj_key]
-        p["target_dos"].cube = pytriplib.extend_cube(p["target_dos"].cube)
+        p["target_dos"].cube = pytriplib.extend_cube(p["target_dos"].cube)  # NOQA F821 (disable PEP8 testing by flake)
         if len(p["fields"]) == 2:
-            temp.cube = (temp.cube < self.projectiles[proj]["target_dos"].cube
-                         ) * self.projectiles[proj]["target_dos"].cube + (
-                             temp.cube > self.projectiles[proj]["target_dos"].cube) * temp.cube
+            temp.cube = (temp.cube < self.projectiles[proj]["target_dos"].cube) * \
+                self.projectiles[proj]["target_dos"].cube + \
+                (temp.cube > self.projectiles[proj]["target_dos"].cube) * temp.cube
             dose = self.target_dos - temp
             field1 = p["fields"][0]
             field2 = p["fields"][1]
             d1 = DosCube(temp)
             d2 = DosCube(temp)
-            center = pytriplib.calculate_dose_center(p["target_dos"].cube)
+            center = pytriplib.calculate_dose_center(p["target_dos"].cube)  # NOQA F821 (disable PEP8 testing by flake)
 
             dose.cube[dose.cube < 0] = 0
 
@@ -365,11 +366,17 @@ class TripExecuter(object):
             basis = get_basis_from_angles(field1.get_gantry(), field1.get_couch())[0]
             basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis = basis / np.max(np.abs(basis)) * .5
-            d1.cube = pytriplib.create_field_shadow(dose.cube, temp.cube, np.array(basis, dtype=np.double))
+            d1.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+                dose.cube,
+                temp.cube,
+                np.array(basis, dtype=np.double))
             basis = get_basis_from_angles(field2.get_gantry(), field2.get_couch())[0]
             basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis /= np.max(np.abs(basis))
-            d2.cube = pytriplib.create_field_shadow(dose.cube, temp.cube, np.array(basis, dtype=np.double))
+            d2.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+                dose.cube,
+                temp.cube,
+                np.array(basis, dtype=np.double))
             a = d2.cube > d1.cube
             b = d2.cube < d1.cube
             d2.cube = p["target_dos"].cube * a
@@ -377,7 +384,7 @@ class TripExecuter(object):
 
             rest = p["target_dos"].cube * ((a + b) < 1)
 
-            b = pytriplib.split_by_plane(rest, center, basis)
+            b = pytriplib.split_by_plane(rest, center, basis)  # NOQA F821 (disable PEP8 testing by flake)
             d1.cube += b
             d2.cube += rest - b
             self.plan.add_dose(d1, "H1")
