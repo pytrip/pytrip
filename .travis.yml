@@ -100,6 +100,8 @@ script:
 #  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 1 ; fi
 #  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
   - ls
+  - ls xyz
+  - pwd
 
 after_success:
   # deploy to normal if tag is present
