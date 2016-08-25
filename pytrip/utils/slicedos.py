@@ -10,7 +10,8 @@ def check_compatible(a, b):
     """ Simple comparison of cubes. if X,Y,Z dims are the same, and 
     pixel sizes as well, then they are compatible. (Duck typed)
     """
-
+    eps = 1e-5
+    
     if a.dimx != b.dimx:
         logging.error("DIMX does not match: "+str(a.dimx)+" "+str(b.dimx))
         raise Exception("Cubes don't match, check dimx in header.")
@@ -23,7 +24,7 @@ def check_compatible(a, b):
         logging.error("DIMZ does not match: "+str(a.dimz)+" "+str(b.dimz))
         raise Exception("Cubes don't match, check dimz in header.")
 
-    if a.pixel_size != b.pixel_size:
+    if (a.pixel_size - b.pixel_size) > eps:
         logging.error("Pixel size does not match: "+str(a.pixel_size)+" "+str(b.pixel_size))
         raise Exception("Cubes don't match, check pixel_size in header.")
 
@@ -54,6 +55,9 @@ d.read(dosbasename+".dos")
 c = ctx.CtxCube()
 c.read(ctxbasename+".ctx")
 print(dir(c))
+print(c.cube.shape)
+print(d.cube.shape)
+print(c.dimx, c.dimy, c.dimz)
 
 # check cube data are compatible
 if d != None:
@@ -81,8 +85,8 @@ X,Y = meshgrid(x,y)
 
 ids = 150
 
-dos_slice = d.cube[:,:,ids]
-ctx_slice = c.cube[:,:,ids]
+dos_slice = d.cube[ids,:,:]
+ctx_slice = c.cube[ids,:,:]
 maxdose = d.cube.max()
 maxHU = c.cube.max()
 
@@ -99,6 +103,8 @@ plt.ylabel("ct [mm]")
 ax.set_aspect(1.0)
 plt.grid(True)
 
+print(ctx_slice.shape)
+
 CF = plt.contourf(X,Y,ctx_slice,ctx_levels,cmap=plt.cm.gray,
               antialiased=True,linewidths=None)
 cb = plt.colorbar(ticks=arange(-1000,3000,200),
@@ -110,5 +116,5 @@ majorFormatter = plt.FormatStrFormatter('%d')
 minorLocator   = plt.MultipleLocator(1.5)
 
 ax.xaxis.set_minor_locator(minorLocator)
-show()
+plt.show()
 
