@@ -102,7 +102,7 @@ script:
   - ls
   - ls
   - pwd
-  - if [[ $DEPLOY_DOCS == "true" && "$TRAVIS_TEST_RESULT" == "0" ]]; then ls zyx ; fi
+  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]]; then ls zyx ; fi
 
 after_success:
   # deploy to normal if tag is present
