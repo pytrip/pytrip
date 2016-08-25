@@ -102,11 +102,13 @@ script:
   - ls
   - ls xyz
   - pwd
+  - if [[ $DEPLOY_DOCS == "true" && "$TRAVIS_TEST_RESULT" == "0" ]]; then ls xyz ; fi
 
 after_success:
   # deploy to normal if tag is present
   # - if [[ $TRAVIS_TAG != "" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi ; fi
-  - ls xyz
+  - echo $TRAVIS_TEST_RESULT
+  - ls abc
 
 notifications:
   email:
