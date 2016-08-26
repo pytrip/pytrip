@@ -60,23 +60,25 @@ logging.info("Dos file: " + args.dos)
 
 dosbasename = args.dos.split(".")[-2]
 ctxbasename = args.ctx.split(".")[-2]
-print(dosbasename)
+
 d = dos.DosCube()
-d.read(dosbasename + ".dos")
+fndos = dosbasename + ".dos"
+logging.info("Reading "+fndos)
+d.read(fndos)
 fname_dos = os.path.splitext(args.dos)[0]
 
 c = ctx.CtxCube()
-c.read(ctxbasename + ".ctx")
-print(dir(c))
-print(c.cube.shape)
-print(d.cube.shape)
-print(c.dimx, c.dimy, c.dimz)
+fnctx = ctxbasename + ".ctx"
+logging.info("Reading "+fnctx)
+c.read(fnctx)
+logging.info("CTX Cube shape" + str(c.cube.shape))
+logging.info("DOS Cube shape" + str(d.cube.shape))
 
 # check cube data are compatible
 if d is not None:
     check_compatible(c, d)
 
-print(d.dimz)
+logging.info("Number of slices: " + str(d.dimz))
 
 xmin = d.xoffset + (0.5*d.pixel_size)  # convert bin to actual position to center of bin
 ymin = d.yoffset + (0.5*d.pixel_size)
@@ -92,7 +94,8 @@ dmin = d.cube.min()
 cmax = c.cube.max()
 cmin = c.cube.min()
 
-print(cmin, cmax, dmin, dmax)
+logging.info("CTX min, max values: {:d} {:d}".format(cmin,cmax))
+logging.info("DOS min, max values: {:d} {:d}".format(dmin,dmax))
 
 # ctx_levels = arange(-1010.0,cmax+10,50.0)
 ctx_levels = arange(cmin+10, cmax+10, 50.0)  # alternative ctx colour map
@@ -123,7 +126,10 @@ ax = plt.subplot(111, autoscale_on=False)
 for ids in range(sstart, sstop):  # starts at 0
 
     fnout = fname_dos+"_{:03d}".format(ids)+".png"
-    logging.info("Write slice number: "+str(ids) + "/"+str(d.dimz) + " to " + fnout)
+    if args.verbosity == 0:
+        print("Write slice number: "+str(ids) + "/"+str(d.dimz))
+    if args.verbosity > 0:
+        logging.info("Write slice number: "+str(ids) + "/"+str(d.dimz) + " to " + fnout)
 
     ax.cla()
     # ids = 150
