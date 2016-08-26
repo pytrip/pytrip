@@ -90,8 +90,6 @@ before_install:
   - PYTHON_VERSION="py3"
   - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
   - sudo bash ./install_deps.sh $PYTHON_VERSION
-  - if [[ $TOXENV == "packaging" ]]; then pip install numpy ; fi
-
 
 install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait bash ./.travis/install_linux.sh ; fi
