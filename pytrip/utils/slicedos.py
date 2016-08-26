@@ -44,6 +44,8 @@ parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
                     help="Output from slice number N", default=0)
 parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
                     help="Output up to slice number M")
+parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
+                    help="Add HU colour bar")
 parser.parse_args()
 
 
@@ -148,11 +150,11 @@ for ids in range(sstart, sstop):  # starts at 0
                        origin="lower",
                        extent=[Xmin, Xmax,
                                Ymin, Ymax])
-
-#    if ctx_cb == None:
-#        ctx_cb = plt.colorbar(ctx_im,ticks=arange(-1000,3000,200),
-#                              orientation='horizontal')
-#        ctx_cb.set_label('HU')
+    if args.HUbar is True:
+        if ctx_cb is None:
+            ctx_cb = plt.colorbar(ctx_im,ticks=arange(-1000, 3000, 200),
+                                  orientation='horizontal')
+            ctx_cb.set_label('HU')
 
     # ------- add dose wash --------
 
