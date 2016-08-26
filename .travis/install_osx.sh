@@ -66,6 +66,10 @@ case "${TOXENV}" in
             pyenv install -s 3.6-dev
             pyenv global 3.6-dev
             ;;
+        packaging*)
+            pyenv install -s 3.5.1
+            pyenv global 3.5.1
+            ;;
         *)
             exit 1
 esac
