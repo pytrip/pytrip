@@ -461,8 +461,8 @@ class Cube(object):
         if self.header_set is False:
             self.read_trip_header_file(path)
 
-        # check: should file not exist, whether a similar .gz file exists
-        is_zipped = False
+        # check: should .hed file not exist, whether a similar .hed..gz file exists
+        # is_zipped = False
         if os.path.isfile(path) is False:
             # try is a similar file with .gz suffix exists
             if os.path.isfile(path + ".gz") is True:
