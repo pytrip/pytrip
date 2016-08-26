@@ -2,7 +2,7 @@ from pytrip import dos
 from pytrip import ctx
 import argparse
 import logging
-from numpy import arange, dtype, meshgrid, ma
+from numpy import arange, meshgrid, ma
 import matplotlib.pyplot as plt
 from matplotlib import colors
 import os
@@ -198,8 +198,8 @@ def main():
         ax.set_ylim(Ymax, Ymin)
 
         majorLocator = plt.MultipleLocator(1)
-        majorFormatter = plt.FormatStrFormatter('%d')
-        minorLocator = plt.MultipleLocator(1.5)
+        # majorFormatter = plt.FormatStrFormatter('%d')
+        # minorLocator = plt.MultipleLocator(1.5)
 
         ax.xaxis.set_minor_locator(minorLocator)
         plt.savefig("foo"+str(ids)+".png")
