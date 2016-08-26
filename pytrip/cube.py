@@ -479,7 +479,7 @@ class Cube(object):
         logging.info("Opening file: " + path)
         if os.path.splitext(path)[1] == ".gz":
             import gzip
-            is_zipped = True
+            # is_zipped = True
             with gzip.open(path, "rb") as f:
                 s = f.read(data_dtype.itemsize * data_count)
                 cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
