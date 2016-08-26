@@ -11,8 +11,8 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
 apt_install() {
     PYTHON_VERSION=$1
     apt-get -q update
-    PYTHON2_CMD="apt-get install -y python-pip"
-    PYTHON3_CMD="apt-get install -y python3-pip"
+    PYTHON2_CMD="apt-get install --no-install-recommends -y python-pip"
+    PYTHON3_CMD="apt-get install --no-install-recommends -y python3-pip"
     choose_python_version "$PYTHON_VERSION" "$PYTHON2_CMD" "$PYTHON3_CMD"
 }
 
