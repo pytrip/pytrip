@@ -94,8 +94,8 @@ dmin = d.cube.min()
 cmax = c.cube.max()
 cmin = c.cube.min()
 
-logging.info("CTX min, max values: {:d} {:d}".format(cmin,cmax))
-logging.info("DOS min, max values: {:d} {:d}".format(dmin,dmax))
+logging.info("CTX min, max values: {:d} {:d}".format(cmin, cmax))
+logging.info("DOS min, max values: {:d} {:d}".format(dmin, dmax))
 
 # ctx_levels = arange(-1010.0,cmax+10,50.0)
 ctx_levels = arange(cmin+10, cmax+10, 50.0)  # alternative ctx colour map
@@ -158,7 +158,7 @@ for ids in range(sstart, sstop):  # starts at 0
                                Ymin, Ymax])
     if args.HUbar is True:
         if ctx_cb is None:
-            ctx_cb = plt.colorbar(ctx_im,ticks=arange(-1000, 3000, 200),
+            ctx_cb = plt.colorbar(ctx_im, ticks=arange(-1000, 3000, 200),
                                   orientation='horizontal')
             ctx_cb.set_label('HU')
 
