@@ -17,6 +17,7 @@
 import os
 import re
 import sys
+import logging
 
 import numpy as np
 
@@ -29,6 +30,8 @@ except:
     _dicom_loaded = False
 
 from pytrip.error import InputError, ModuleNotLoadedError
+
+logging.basicConfig(level=logging.WARNING)
 
 
 class Cube(object):
@@ -402,29 +405,106 @@ class Cube(object):
         self.read_trip_data_file(path)
 
     def read_trip_header_file(self, path):
+        """ Reads a header file, accepts also if suffix is missing, or if file"
+        is in gz compressed. User can thus specify:
+        tst001
+        tst001.hed
+        tst001.hed.gz
+
+        and in any case it will attempt to load
+        tst001.hed
+        or
+        tst001.hed.gz
+
+        Note, first the un-zipped files will be attempted to read.
+        Should these not exist, then the .gz are attempted.
+
+        Hoever, if the .hed.gz file was explicitly stated,
+        then this file will also
+        be loaded, even if a .hed is available.
+        """
+
+        is_zipped = False
         f_split = os.path.splitext(path)
+        if f_split[1] == ".gz":
+            is_zipped = True
+            f_split = os.path.splitext(f_split[0])  # get rid of .gz suffix
+        # now proper header file basename is set, but without .gz suffix.
         header_file = f_split[0] + ".hed"
+
+        # Does the .hed file exist? If not retry with .hed.gz suffix
+        # PyTRiP will also attempt to load .hed.gz files if user did
+        # not specify the .gz suffix explicitly
+        if os.path.isfile(header_file) is False:
+            if os.path.isfile(header_file + ".gz") is True:
+                is_zipped = True
+
+        if is_zipped:
+            header_file += ".gz"
+
         if os.path.isfile(header_file) is False:
             raise IOError("Could not find file " + header_file)
-        fp = open(header_file, "r")
+
+        logging.info("Opening file: " + header_file)
+        if is_zipped:
+            import gzip
+            fp = gzip.open(header_file, "rt")
+        else:
+            fp = open(header_file, "rt")
         content = fp.read()
         fp.close()
         self.read_trip_header(content)
+        self.set_format_str()
+        logging.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
         if self.header_set is False:
             self.read_trip_header_file(path)
+
+        # check: should file not exist, whether a similar .gz file exists
+        is_zipped = False
+        if os.path.isfile(path) is False:
+            # try is a similar file with .gz suffix exists
+            if os.path.isfile(path + ".gz") is True:
+                path += ".gz"
+
         if os.path.isfile(path) is False:
             raise IOError("Could not find file " + path)
         if self.header_set is False:
             raise InputError("Header file not loaded")
-        cube = np.fromfile(path, dtype=self.pydata_type)
+
+        data_dtype = np.dtype(self.format_str)
+        data_count = self.dimx * self.dimy * self.dimz
+
+        logging.info("Opening file: " + path)
+        if os.path.splitext(path)[1] == ".gz":
+            import gzip
+            is_zipped = True
+            with gzip.open(path, "rb") as f:
+                s = f.read(data_dtype.itemsize * data_count)
+                cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
+        else:
+            cube = np.fromfile(path, dtype=data_dtype)
+
         if self.byte_order == "aix":
-            cube = cube.byteswap()
+            logging.info("AIX big-endian data.")
+            # Next is not needed anymore, handled by "<" ">" in dtype
+            # cube = cube.byteswap()
+
+        logging.info("Cube data points : {:d}".format(len(cube)))
         if len(cube) != self.dimx * self.dimy * self.dimz:
-            raise IOError("Header size and dose cube size are not consistent.")
+            logging.error("Header size and cube size dont match.")
+            logging.error("Cube data points : {:d}".format(len(cube)))
+            logging.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
+                self.dimx*self.dimy*self.dimz,
+                self.dimx,
+                self.dimy,
+                self.dimz))
+            raise IOError("Header data and dose cube size are not consistent.")
+
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
+            logging.warning("Cube was rescaled to 50%. Multiplying with 2.")
             cube *= 2
         self.cube = cube
 
