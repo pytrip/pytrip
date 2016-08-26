@@ -25,18 +25,18 @@ matrix:
         - os: linux
           python: 3.5
           env: TOXENV=py35
-        - os: linux
-          python: nightly
-          env: TOXENV=py36
-        - os: linux
-          python: 3.4
-          env: TOXENV=docs
-        - os: linux
-          python: 2.7
-          env: TOXENV=pep8
-        - os: linux
-          python: 3.4
-          env: TOXENV=pep8
+#        - os: linux
+#          python: nightly
+#          env: TOXENV=py36
+#        - os: linux
+#          python: 3.4
+#          env: TOXENV=docs
+#        - os: linux
+#          python: 2.7
+#          env: TOXENV=pep8
+#        - os: linux
+#          python: 3.4
+#          env: TOXENV=pep8
         - os: linux
           python: 3.4
           env:
@@ -44,20 +44,20 @@ matrix:
             - PYPIUSER=grzanka
             #  pypi secured password (PYPIPASS variable), you need to update it to your own if you want to use it
             - secure: "WLg9eOFwGwH2riVdcl2mdUjzBIx4NaamMmB6XNOtAl91cPK/LtchLaMVMjVlPKMchQ/cCVpVgjiqRgEUPLz40sfv+DqmcnZH7UXE4kpUuUtFECTpIqc69Ohzn82JdrKQIaH0FWPTjRvxZgV+b6KWo8TK71VFANPpQTuhfaRJ+laKj1S5ikwg4c1zj6kqYefGHhvdvs5LtBXEZ9UQg+dkuWK8mrnl/gpZUuR7P8o+wofv2X510kHrV8WkUDfk9JmfpRyTmpvJcawl5CpGeov7c6wz5+nKNg+Fki5qft2TEb6DsHCMOBI6UviMvROSPgNs/C4tI5zNtabs+61uwU2vHsEiOuHGbmMcfGaOyjumQPcyBz3bvQ+e7ZA1ZyYipw4ihU9M7sPZtmwSlxE2ECXXy/MjPyVharTiy3rGAYwT4rH+F8fubsYeYtFax4IUFQfq3DXS9YUCJ82bCRnDlzLZ5MLy/4WL+sL7nMLR9ApkN97MWkv+aqmYjvKG0N519HSVJwuptWkoCok8E7e3zi5nOiG5eJ/0f4TVlEyOPrxeCtWCOPATXb54vSz7GPvMgTx4CKFmNbe5sLhx1A8cuOikA1Keyii8VKda8LVr7gXDh8BvgcL/CIAF/pALf2cDL224Gy8Mlz32PqBJMSKuopeIRKnj2eN3GBL1t9GuiXb8oRg="
-        - os: osx
-          language: generic
-          env: TOXENV=py35
-        - os: osx
-          language: generic
-          env: TOXENV=py34
-        - os: osx
-          language: generic
-          env: TOXENV=py33
-        - os: osx
-          language: generic
-          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
-        - os: osx
-          language: generic
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py35
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py34
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py33
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
+#        - os: osx
+#          language: generic
           env: TOXENV=py27
 #    uncomment and adjust if you want to allow some failures
     allow_failures:
