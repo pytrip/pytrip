@@ -19,15 +19,20 @@ def main(args=sys.argv[1:]):
     basename = args[0].split(".")[0]
     output_folder = args[1]
     if os.path.exists(basename + ".ctx"):
-        print("Convert CT images")
-        c = CtxCube()
-        c.read(basename + ".ctx")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        c.write_dicom(output_folder)
+        input_ctx_filename = basename + ".ctx"
+    elif os.path.exists(basename + ".ctx.gz"):
+        input_ctx_filename = basename + ".ctx.gz"
     else:
         print("There is no CTX file, script stop")
         exit()
+
+    print("Convert CT images")
+    c = CtxCube()
+    c.read(input_ctx_filename)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    c.write_dicom(output_folder)
+
     if os.path.exists(basename + ".vdx"):
         print("Convert structures")
         v = VdxCube(c)

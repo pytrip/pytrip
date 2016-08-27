@@ -419,7 +419,7 @@ class Cube(object):
         Note, first the un-zipped files will be attempted to read.
         Should these not exist, then the .gz are attempted.
 
-        Hoever, if the .hed.gz file was explicitly stated,
+        However, if the .hed.gz file was explicitly stated,
         then this file will also
         be loaded, even if a .hed is available.
         """
@@ -459,14 +459,21 @@ class Cube(object):
 
     def read_trip_data_file(self, path, multiply_by_2=False):
         if self.header_set is False:
+            header_path = path
+            if path.endswith(".gz"):
+                basepath_with_ext = os.path.splitext(path)[0]
+                basepath_without_ext = os.path.splitext(basepath_with_ext)[0]
+                header_path = basepath_without_ext
             logger.info("Reading header file")
-            self.read_trip_header_file(path)
+            self.read_trip_header_file(header_path)
 
         # check: should .XXX file not exist, whether a similar .XXX.gz file exists
         # is_zipped = False
         if os.path.isfile(path) is False:
+            logger.info("File " + path + " not found, trying if " + path + ".gz exists")
             # try is a similar file with .gz suffix exists
             if os.path.isfile(path + ".gz") is True:
+                logger.info("File " + path + ".gz exists")
                 path += ".gz"
 
         if os.path.isfile(path) is False:
