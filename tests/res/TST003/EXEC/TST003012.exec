@@ -1,0 +1,47 @@
+* C12 plan on a 5 cm diameter sphere in a 256x256 x300 mm water phantom.
+* In this case there are 100 slices of 3 mm thickness. 
+* X and Y are 256 x 256, each pixel is 1 x1 mm.
+*
+
+scancap / rifi(3 mm RIFI) bolus(0.0) offh2o(1.709) minparticles(5000) path(none)
+
+sis  * /delete
+hlut * /delete
+ddd  * /delete
+dedx * /delete
+
+* 12C
+sis "$TRIP98/DATA/SIS/12C.sis" / read
+ddd "$TRIP98/DATA/DDD/12C/RF3MM/12C*" / read
+spc "$TRIP98/DATA/SPC/12C/RF3MM/12C*" / read
+dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read
+hlut "$TRIP98/DATA/HLUT/19990218.hlut" /read
+
+ct "tst003000" / read
+voi "tst003000" / read select(target)
+
+*rbe "$TRIP98/DATA/RBE/chordom*.rbe" / read
+*rbe target / alias(chordom02)
+
+random 100
+field 1 / new fwhm(2.0) raster(2,2) couch(-90.0) gantry(0.0) zstep(3.0) proj(12C)
+
+* --- PHYSICAL optimization
+plan / dose(2.00)
+opt / field(*) 
+
+* --- BIOLOGICAL optimization
+*plan / dose(3.00) targettissue(chordom02) residualtissue(chordom02)
+*opt / field(*) bio CTbased dosealg(cl) optalg(cg) bioalg(cl) geps(1e-4) eps(1e-3) iter(500)
+
+field 1 / file(tst003012.bev.gd) bev(*) nolateral 
+field 1 / file(tst003012.rst) reverseorder write
+
+dose "tst003012.dos" / calculate field(*) write
+dose "tst003012.dos" / calculate field(*) dosemeanlet write
+
+*dose "tst003012." / bio calculate field(*) write
+
+quit
+
+

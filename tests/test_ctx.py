@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
+import gzip
 import hashlib
 import os
 import tempfile
@@ -36,13 +37,12 @@ class TestCtx(unittest.TestCase):
         # read original cube and calculate hashsum
         c = CtxCube()
         c.read(self.cube000)
-        original_md5 = hashlib.md5(open(self.cube000, 'rb').read()).hexdigest()
+        original_md5 = hashlib.md5(gzip.open(self.cube000 + ".gz", 'rb').read()).hexdigest()
 
         # save cube and calculate hashsum
         fd, outfile = tempfile.mkstemp()
         c.write(outfile)
-        generated_md5 = hashlib.md5(
-            open(outfile + ".ctx", 'rb').read()).hexdigest()
+        generated_md5 = hashlib.md5(open(outfile + ".ctx", 'rb').read()).hexdigest()
 
         # compare checksums
         self.assertEqual(original_md5, generated_md5)

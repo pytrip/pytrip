@@ -31,7 +31,7 @@ except:
 
 from pytrip.error import InputError, ModuleNotLoadedError
 
-logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
 
 
 class Cube(object):
@@ -445,7 +445,7 @@ class Cube(object):
         if os.path.isfile(header_file) is False:
             raise IOError("Could not find file " + header_file)
 
-        logging.info("Opening file: " + header_file)
+        logger.info("Opening file: " + header_file)
         if is_zipped:
             import gzip
             fp = gzip.open(header_file, "rt")
@@ -455,13 +455,14 @@ class Cube(object):
         fp.close()
         self.read_trip_header(content)
         self.set_format_str()
-        logging.debug("Format string:" + self.format_str)
+        logger.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
         if self.header_set is False:
+            logger.info("Reading header file")
             self.read_trip_header_file(path)
 
-        # check: should .hed file not exist, whether a similar .hed..gz file exists
+        # check: should .XXX file not exist, whether a similar .XXX.gz file exists
         # is_zipped = False
         if os.path.isfile(path) is False:
             # try is a similar file with .gz suffix exists
@@ -476,7 +477,7 @@ class Cube(object):
         data_dtype = np.dtype(self.format_str)
         data_count = self.dimx * self.dimy * self.dimz
 
-        logging.info("Opening file: " + path)
+        logger.info("Opening file: " + path)
         if os.path.splitext(path)[1] == ".gz":
             import gzip
             # is_zipped = True
@@ -487,16 +488,16 @@ class Cube(object):
             cube = np.fromfile(path, dtype=data_dtype)
 
         if self.byte_order == "aix":
-            logging.info("AIX big-endian data.")
+            logger.info("AIX big-endian data.")
             # Next is not needed anymore, handled by "<" ">" in dtype
             # cube = cube.byteswap()
 
-        logging.info("Cube data points : {:d}".format(len(cube)))
+        logger.info("Cube data points : {:d}".format(len(cube)))
         if len(cube) != self.dimx * self.dimy * self.dimz:
-            logging.error("Header size and cube size dont match.")
-            logging.error("Cube data points : {:d}".format(len(cube)))
-            logging.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
-                self.dimx*self.dimy*self.dimz,
+            logger.error("Header size and cube size dont match.")
+            logger.error("Cube data points : {:d}".format(len(cube)))
+            logger.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
+                self.dimx * self.dimy * self.dimz,
                 self.dimx,
                 self.dimy,
                 self.dimz))
@@ -504,7 +505,7 @@ class Cube(object):
 
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
-            logging.warning("Cube was rescaled to 50%. Multiplying with 2.")
+            logger.warning("Cube was rescaled to 50%. Multiplying with 2.")
             cube *= 2
         self.cube = cube
 
