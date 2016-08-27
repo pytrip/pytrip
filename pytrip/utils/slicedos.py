@@ -95,12 +95,14 @@ def main():
     cmax = c.cube.max()
     cmin = c.cube.min()
 
+    logging.info("Cube first bin pos: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin, ymin, zmin))
+    logging.info("Cube last bin pos : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax, ymax, zmax))
     logging.info("CTX min, max values: {:d} {:d}".format(cmin, cmax))
     logging.info("DOS min, max values: {:d} {:d}".format(dmin, dmax))
 
     # ctx_levels = arange(-1010.0,cmax+10,50.0)
-    ctx_levels = arange(cmin+10, cmax+10, 50.0)  # alternative ctx colour map
-    dos_levels = arange(0, dmax+50, 5.0)
+    # ctx_levels = arange(cmin+10, cmax+10, 50.0)  # alternative ctx colour map
+    # dos_levels = arange(0, dmax+50, 5.0)
 
     x = arange(xmin, xmax, d.pixel_size)
     y = arange(ymin, ymax, d.pixel_size)
@@ -139,10 +141,11 @@ def main():
         # dos_slice *= 0.1  # convert %% to %
         ctx_slice = c.cube[ids, :, :]
 
-        dsmax = dos_slice.max()
-        dsmin = dos_slice.max()
-        csmax = ctx_slice.max()
-        csmin = ctx_slice.max()
+        # min/max per slice:
+        # dsmax = dos_slice.max()
+        # dsmin = dos_slice.min()
+        # csmax = ctx_slice.max()
+        # csmin = ctx_slice.min()
 
         plt.xlabel("ct [mm]")
         plt.ylabel("ct [mm]")
@@ -197,9 +200,9 @@ def main():
         ax.set_xlim(Xmax, Xmin)
         ax.set_ylim(Ymax, Ymin)
 
-        majorLocator = plt.MultipleLocator(1)
+        # majorLocator = plt.MultipleLocator(1)
         # majorFormatter = plt.FormatStrFormatter('%d')
-        # minorLocator = plt.MultipleLocator(1.5)
+        minorLocator = plt.MultipleLocator(1.5)
 
         ax.xaxis.set_minor_locator(minorLocator)
         plt.savefig("foo"+str(ids)+".png")
