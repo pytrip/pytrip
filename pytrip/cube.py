@@ -339,6 +339,74 @@ class Cube(object):
     def merge_zero(self, cube):
         self.cube[self.cube == 0] = cube.cube[self.cube == 0]
 
+    @classmethod
+    def parse_path(cls, path_name):
+
+        logger.info("Parsing " + path_name)
+
+        #  path can end with .gz or not (be archive or not)
+        is_path_gzipped = path_name.endswith(".gz")
+
+        logger.debug("is file gzipped ? " + str(is_path_gzipped))
+
+        # strip .gz from path (if present)
+        uncompressed_path_name = path_name
+        if is_path_gzipped:
+            uncompressed_path_name = os.path.splitext(path_name)[0]
+
+        logger.debug("uncompressed filename: " + uncompressed_path_name)
+
+        # now we have few possibilities
+        #  1. file with known extension (i.e. TST001.hed or TST001.ctx)
+        #  2. file without extension (i.e. TST001) or with unknown extension (i.e. TST001.mp3)
+        # to distinguish these cases we will use has_path_known_extension flag
+
+        # checking if current class has extension attribute, to compare with file extension
+        if 'type' in cls().__dict__:
+            class_filename_extension = cls().type.lower()
+            logger.debug("class data filename extension: " + class_filename_extension)
+        else:  # class without extension (.type field), we assume in such case file is given without extension
+            logger.error("Class " + str(cls) + " doesn't have type field (extension)")
+            class_filename_extension = None
+
+        # Case 1. - known extension, header file
+        if uncompressed_path_name.endswith('.hed'):
+            has_path_known_extension = True
+            logger.debug("case 1, header file, has known extension ? " + str(has_path_known_extension))
+        # Case 2. - file without extension
+        elif not os.path.splitext(uncompressed_path_name)[1]:
+            has_path_known_extension = False
+            logger.debug("case 2, file without extension, has known extension ? " + str(has_path_known_extension))
+        # Case 3. - file with extension, checking if known
+        else:
+            # splitting filename into core + extension parts
+            core_name, core_ext = os.path.splitext(uncompressed_path_name)
+            logger.debug("case 3, file with extension, core: " + core_name + " extension: " + core_ext)
+            has_path_known_extension = (core_ext.lower() == "." + class_filename_extension)
+            logger.debug("case 3, extension known ? " + str(has_path_known_extension))
+
+        logger.debug("has file known extension ? " + str(has_path_known_extension))
+
+        if has_path_known_extension:
+            if uncompressed_path_name.endswith('.hed'):  # header file
+                logger.debug("header file ")
+                header_file = uncompressed_path_name
+                cube_filename = os.path.splitext(uncompressed_path_name)[0] + "." + class_filename_extension
+            else:  # cube file
+                logger.debug("cube file ")
+                header_file = os.path.splitext(uncompressed_path_name)[0] + ".hed"
+                cube_filename = uncompressed_path_name
+        else:
+            if not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
+                logger.debug("file without extension ")
+                header_file = uncompressed_path_name + ".hed"
+                cube_filename = uncompressed_path_name + "." + class_filename_extension
+            else:   # a problem
+                logger.debug("a problem ")
+                header_file, cube_filename = None, None
+
+        return header_file, cube_filename
+
     def read_trip_header(self, content):
         i = 0
         self.header_set = True

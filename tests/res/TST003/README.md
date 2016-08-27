@@ -1,4 +1,4 @@
-Test CT cube TST002000
+Test CT cube TST003000
 
 512x512x300 voxels
 

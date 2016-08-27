@@ -19,9 +19,13 @@ import hashlib
 import os
 import tempfile
 import unittest
+import logging
 
+from pytrip import DosCube
 from pytrip.ctx import CtxCube
 import tests.test_base
+
+logger = logging.getLogger(__name__)
 
 
 class TestCtx(unittest.TestCase):
@@ -55,6 +59,52 @@ class TestCtx(unittest.TestCase):
         c.read(self.cube000)
         d = c + 5
         self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
+
+    def test_filename_discovery(self):
+        bare_name = "frodo_baggins"
+        cube_ext = ".ctx"
+        header_ext = ".hed"
+        gzip_ext = ".gz"
+
+        # all possible reasonable names for input file
+        testing_names = (bare_name,
+                         bare_name + cube_ext, bare_name + cube_ext + gzip_ext,
+                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
+
+        # loop over all names
+        for name in testing_names:
+            logger.info("Parsing " + name)
+            header_filename, cube_filename = CtxCube.parse_path(name)
+
+            self.assertIsNotNone(header_filename)
+            self.assertIsNotNone(cube_filename)
+
+            logger.info("Parsing output: " + header_filename + " , " + cube_filename)
+
+            # test if got what was expected
+            self.assertEqual(header_filename, bare_name + header_ext)
+            self.assertEqual(cube_filename, bare_name + cube_ext)
+
+        dos_cube_ext = ".dos"
+
+        # all possible reasonable names for input file
+        testing_names = (bare_name,
+                         bare_name + dos_cube_ext, bare_name + dos_cube_ext + gzip_ext,
+                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
+
+        # loop over all names
+        for name in testing_names:
+            logger.info("Parsing " + name)
+            dos_header_filename, dos_cube_filename = DosCube.parse_path(name)
+
+            self.assertIsNotNone(dos_header_filename)
+            self.assertIsNotNone(dos_cube_filename)
+
+            logger.info("Parsing output: " + dos_header_filename + " , " + dos_cube_filename)
+
+            # test if got what was expected
+            self.assertEqual(dos_header_filename, bare_name + header_ext)
+            self.assertEqual(dos_cube_filename, bare_name + dos_cube_ext)
 
 
 if __name__ == '__main__':
