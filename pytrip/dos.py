@@ -59,6 +59,9 @@ def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None,
 
 
 class DosCube(Cube):
+
+    data_file_extension = "dos"
+
     def __init__(self, cube=None):
         super(DosCube, self).__init__(cube)
         self.type = "DOS"

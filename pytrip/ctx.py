@@ -23,6 +23,9 @@ from pytrip.cube import Cube
 
 
 class CtxCube(Cube):
+
+    data_file_extension = "ctx"
+
     def __init__(self, cube=None):
         super(CtxCube, self).__init__(cube)
         self.type = "CTX"

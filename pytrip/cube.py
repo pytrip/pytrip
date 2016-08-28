@@ -339,6 +339,17 @@ class Cube(object):
     def merge_zero(self, cube):
         self.cube[self.cube == 0] = cube.cube[self.cube == 0]
 
+    @staticmethod
+    def discover_file(file_name):
+        gzip_file_name = file_name + ".gz"
+        if os.path.exists(file_name):
+            return file_name
+        elif os.path.exists(gzip_file_name):
+            return gzip_file_name
+        else:
+            logger.error("Both " + file_name + " and " + gzip_file_name + " do not exists")
+            return None
+
     @classmethod
     def parse_path(cls, path_name):
 
@@ -362,11 +373,11 @@ class Cube(object):
         # to distinguish these cases we will use has_path_known_extension flag
 
         # checking if current class has extension attribute, to compare with file extension
-        if 'type' in cls().__dict__:
-            class_filename_extension = cls().type.lower()
+        if 'data_file_extension' in cls.__dict__:
+            class_filename_extension = cls.data_file_extension.lower()
             logger.debug("class data filename extension: " + class_filename_extension)
-        else:  # class without extension (.type field), we assume in such case file is given without extension
-            logger.error("Class " + str(cls) + " doesn't have type field (extension)")
+        else:  # class without extension, we assume in such case file is given without extension
+            logger.error("Class " + str(cls) + " doesn't have data_file_extension field")
             class_filename_extension = None
 
         # Case 1. - known extension, header file
@@ -492,33 +503,20 @@ class Cube(object):
         be loaded, even if a .hed is available.
         """
 
-        is_zipped = False
-        f_split = os.path.splitext(path)
-        if f_split[1] == ".gz":
-            is_zipped = True
-            f_split = os.path.splitext(f_split[0])  # get rid of .gz suffix
-        # now proper header file basename is set, but without .gz suffix.
-        header_file = f_split[0] + ".hed"
+        header_file_name, _ = self.parse_path(path)
 
-        # Does the .hed file exist? If not retry with .hed.gz suffix
-        # PyTRiP will also attempt to load .hed.gz files if user did
-        # not specify the .gz suffix explicitly
-        if os.path.isfile(header_file) is False:
-            if os.path.isfile(header_file + ".gz") is True:
-                is_zipped = True
+        header_file_path = self.discover_file(header_file_name)
 
-        if is_zipped:
-            header_file += ".gz"
-
-        if os.path.isfile(header_file) is False:
-            raise IOError("Could not find file " + header_file)
-
-        logger.info("Opening file: " + header_file)
-        if is_zipped:
-            import gzip
-            fp = gzip.open(header_file, "rt")
+        if header_file_path is not None:
+            logger.info("Reading header file" + header_file_path)
         else:
-            fp = open(header_file, "rt")
+            raise IOError("Could not find file " + path)
+
+        if header_file_path.endswith(".gz"):
+            import gzip
+            fp = gzip.open(header_file_path, "rt")
+        else:
+            fp = open(header_file_path, "rt")
         content = fp.read()
         fp.close()
         self.read_trip_header(content)
@@ -526,46 +524,38 @@ class Cube(object):
         logger.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
+
+        header_file_name, data_file_name = self.parse_path(path)
+
         if self.header_set is False:
-            header_path = path
-            if path.endswith(".gz"):
-                basepath_with_ext = os.path.splitext(path)[0]
-                basepath_without_ext = os.path.splitext(basepath_with_ext)[0]
-                header_path = basepath_without_ext
-            logger.info("Reading header file")
-            self.read_trip_header_file(header_path)
+            header_file_path = self.discover_file(header_file_name)
 
-        # check: should .XXX file not exist, whether a similar .XXX.gz file exists
-        # is_zipped = False
-        if os.path.isfile(path) is False:
-            logger.info("File " + path + " not found, trying if " + path + ".gz exists")
-            # try is a similar file with .gz suffix exists
-            if os.path.isfile(path + ".gz") is True:
-                logger.info("File " + path + ".gz exists")
-                path += ".gz"
+            if header_file_path is not None:
+                logger.info("Reading header file" + header_file_path)
+                self.read_trip_header_file(header_file_path)
+            else:
+                raise IOError("Could not find file " + path)
 
-        if os.path.isfile(path) is False:
-            raise IOError("Could not find file " + path)
         if self.header_set is False:
             raise InputError("Header file not loaded")
 
         data_dtype = np.dtype(self.format_str)
         data_count = self.dimx * self.dimy * self.dimz
 
+        data_file_path = self.discover_file(data_file_name)
+
         logger.info("Opening file: " + path)
-        if os.path.splitext(path)[1] == ".gz":
+        if data_file_path.endswith('.gz'):
             import gzip
-            # is_zipped = True
-            with gzip.open(path, "rb") as f:
+            with gzip.open(data_file_path, "rb") as f:
                 s = f.read(data_dtype.itemsize * data_count)
                 cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
         else:
-            cube = np.fromfile(path, dtype=data_dtype)
+            cube = np.fromfile(data_file_path, dtype=data_dtype)
 
         if self.byte_order == "aix":
             logger.info("AIX big-endian data.")
-            # Next is not needed anymore, handled by "<" ">" in dtype
-            # cube = cube.byteswap()
+            # byteswapping is not needed anymore, handled by "<" ">" in dtype
 
         logger.info("Cube data points : {:d}".format(len(cube)))
         if len(cube) != self.dimx * self.dimy * self.dimz:
