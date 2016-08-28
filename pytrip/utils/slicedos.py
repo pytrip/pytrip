@@ -37,21 +37,7 @@ def check_compatible(a, b):
     return True
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dos", help="doscube to be loaded")
-    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
-    parser.add_argument("-v", "--verbosity", action='count',
-                        help="increase output verbosity", default=0)
-    parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
-                        help="Output from slice number N", default=0)
-    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
-                        help="Output up to slice number M")
-    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
-                        help="Add HU colour bar")
-    parser.parse_args()
-    args = parser.parse_args()
-
+def main(args):
     if args.verbosity == 1:
         logging.basicConfig(level=logging.INFO)
     if args.verbosity > 1:
@@ -160,7 +146,7 @@ def main():
                            origin="lower",
                            extent=[Xmin, Xmax,
                                    Ymin, Ymax])
-        if args.HUbar is True:
+        if args.HUbar:
             if ctx_cb is None:
                 ctx_cb = plt.colorbar(ctx_im, ticks=arange(-1000, 3000, 200),
                                       orientation='horizontal')
@@ -208,4 +194,18 @@ def main():
         plt.savefig("foo"+str(ids)+".png")
 
 if __name__ == '__main__':
-    sys.exit(main())
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dos", help="doscube to be loaded")
+    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
+    parser.add_argument("-v", "--verbosity", action='count',
+                        help="increase output verbosity", default=0)
+    parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
+                        help="Output from slice number N", default=0)
+    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
+                        help="Output up to slice number M")
+    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
+                        help="Add HU colour bar")
+    parser.parse_args()
+    args = parser.parse_args()
+
+    sys.exit(main(args))
