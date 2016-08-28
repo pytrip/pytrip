@@ -24,6 +24,9 @@ import pytrip as plib
 
 
 class LETCube(Cube):
+
+    data_file_extension = "dos"
+
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
 

@@ -17,6 +17,7 @@
 import os
 import re
 import sys
+import logging
 
 import numpy as np
 
@@ -29,6 +30,8 @@ except:
     _dicom_loaded = False
 
 from pytrip.error import InputError, ModuleNotLoadedError
+
+logger = logging.getLogger(__name__)
 
 
 class Cube(object):
@@ -336,6 +339,122 @@ class Cube(object):
     def merge_zero(self, cube):
         self.cube[self.cube == 0] = cube.cube[self.cube == 0]
 
+    @staticmethod
+    def discover_file(file_name):
+        """
+        Checks if file_name exists in the filesystem. If yes, gives back its path.
+        If not, checks if gzipped file with same name exists.
+        If gzipped file exists, gives back it path, otherwise returns None.
+        :param file_name: File name or path
+        :return: file_name, file_name + ".gz" or None
+        """
+        gzip_file_name = file_name + ".gz"
+        if os.path.exists(file_name):
+            logger.debug("File " + file_name + " exists")
+            return file_name
+        elif os.path.exists(gzip_file_name):
+            logger.debug("File " + gzip_file_name + " exists")
+            return gzip_file_name
+        else:
+            logger.error("Both " + file_name + " and " + gzip_file_name + " do not exists")
+            return None
+
+    @classmethod
+    def parse_path(cls, path_name):
+        """
+        Parse path_name which can have form of: bare name (i.e. TST001), plain file (TST001.hed or TST001.ctx),
+        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates plain file names of
+        header and data file. Extension of data file is extracted from the class from which this method was called
+        (.ctx for CtxCube, .dos for DosCube and LetCube). In case of non-parseable data, None is returned.
+
+        >>> from pytrip import CtxCube
+        >>> CtxCube.parse_path("frodo.hed")
+        ('frodo.hed', 'frodo.ctx')
+        >>> CtxCube.parse_path("baggins.ctx")
+        ('baggins.hed', 'baggins.ctx')
+        >>> CtxCube.parse_path("mordor")
+        ('mordor.hed', 'mordor.ctx')
+        >>> CtxCube.parse_path("legolas.hed.gz")
+        ('legolas.hed', 'legolas.ctx')
+        >>> CtxCube.parse_path("gimli.son.of.gloin.ctx.gz")
+        ('gimli.son.of.gloin.hed', 'gimli.son.of.gloin.ctx')
+        >>> CtxCube.parse_path("bilbo.dos")
+        (None, None)
+        >>> from pytrip import DosCube
+        >>> DosCube.parse_path("bilbo.dos")
+        ('bilbo.hed', 'bilbo.dos')
+        >>> DosCube.parse_path("baggins.ctx")
+        (None, None)
+
+        :param path_name:
+        :return:
+        """
+
+        logger.info("Parsing " + path_name)
+
+        #  path can end with .gz or not (be archive or not)
+        is_path_gzipped = path_name.endswith(".gz")
+
+        logger.debug("is file gzipped ? " + str(is_path_gzipped))
+
+        # strip .gz from path (if present)
+        uncompressed_path_name = path_name
+        if is_path_gzipped:
+            uncompressed_path_name = os.path.splitext(path_name)[0]
+
+        logger.debug("uncompressed filename: " + uncompressed_path_name)
+
+        # now we have few possibilities
+        #  1. file with known extension (i.e. TST001.hed or TST001.ctx)
+        #  2. file without extension (i.e. TST001) or with unknown extension (i.e. TST001.mp3)
+        # to distinguish these cases we will use has_path_known_extension flag
+
+        # checking if current class has extension attribute, to compare with file extension
+        if 'data_file_extension' in cls.__dict__:
+            class_filename_extension = cls.data_file_extension.lower()
+            logger.debug("class data filename extension: " + class_filename_extension)
+        else:  # class without extension, we assume in such case file is given without extension
+            logger.error("Class " + str(cls) + " doesn't have data_file_extension field")
+            class_filename_extension = None
+
+        # Case 1. - known extension, header file
+        if uncompressed_path_name.endswith('.hed'):
+            has_path_known_extension = True
+            logger.debug("case 1, header file, has known extension ? " + str(has_path_known_extension))
+        # Case 2. - file without extension
+        elif not os.path.splitext(uncompressed_path_name)[1]:
+            has_path_known_extension = False
+            logger.debug("case 2, file without extension, has known extension ? " + str(has_path_known_extension))
+        # Case 3. - file with extension, checking if known
+        else:
+            # splitting filename into core + extension parts
+            core_name, core_ext = os.path.splitext(uncompressed_path_name)
+            logger.debug("case 3, file with extension, core: " + core_name + " extension: " + core_ext)
+            has_path_known_extension = (core_ext.lower() == "." + class_filename_extension)
+            logger.debug("case 3, extension known ? " + str(has_path_known_extension))
+
+        logger.debug("has file known extension ? " + str(has_path_known_extension))
+
+        if has_path_known_extension:
+            if uncompressed_path_name.endswith('.hed'):  # header file
+                logger.debug("header file ")
+                header_file = uncompressed_path_name
+                cube_filename = os.path.splitext(uncompressed_path_name)[0] + "." + class_filename_extension
+            else:  # cube file
+                logger.debug("cube file ")
+                header_file = os.path.splitext(uncompressed_path_name)[0] + ".hed"
+                cube_filename = uncompressed_path_name
+        else:
+            if not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
+                logger.debug("file without extension ")
+                header_file = uncompressed_path_name + ".hed"
+                cube_filename = uncompressed_path_name + "." + class_filename_extension
+            else:   # a problem
+                logger.debug("a problem ")
+                header_file, cube_filename = None, None
+
+        return header_file, cube_filename
+
     def read_trip_header(self, content):
         i = 0
         self.header_set = True
@@ -402,29 +521,114 @@ class Cube(object):
         self.read_trip_data_file(path)
 
     def read_trip_header_file(self, path):
-        f_split = os.path.splitext(path)
-        header_file = f_split[0] + ".hed"
-        if os.path.isfile(header_file) is False:
-            raise IOError("Could not find file " + header_file)
-        fp = open(header_file, "r")
+        """ Reads a header file, accepts also if suffix is missing, or if file"
+        is in gz compressed. User can thus specify:
+        tst001
+        tst001.hed
+        tst001.hed.gz
+
+        and in any case it will attempt to load
+        tst001.hed
+        or
+        tst001.hed.gz
+
+        Note, first the un-zipped files will be attempted to read.
+        Should these not exist, then the .gz are attempted.
+
+        However, if the .hed.gz file was explicitly stated,
+        then this file will also
+        be loaded, even if a .hed is available.
+        """
+
+        # extract header name (blabla.hed) from path
+        # we get blabla.hed even if path equals to blabla.hed.gz, see docs in Cube.parse_path function
+        header_file_name, _ = self.parse_path(path)
+
+        # figure out which file exists on disc: *.hed or *.hed.gz and get its path
+        header_file_path = self.discover_file(header_file_name)
+
+        # sanity check
+        if header_file_path is not None:
+            logger.info("Reading header file" + header_file_path)
+        else:
+            raise IOError("Could not find file " + path)
+
+        # load plain of gzipped file
+        if header_file_path.endswith(".gz"):
+            import gzip
+            fp = gzip.open(header_file_path, "rt")
+        else:
+            fp = open(header_file_path, "rt")
         content = fp.read()
         fp.close()
+
+        # fill self with data
         self.read_trip_header(content)
+        self.set_format_str()
+        logger.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
+        """
+        Accepts path in similar way as read_trip_header_file.
+        :param path:
+        :param multiply_by_2:
+        :return:
+        """
+
+        # extract header and data file name from path
+        header_file_name, data_file_name = self.parse_path(path)
+
+        # fill header data if self.header is empty
         if self.header_set is False:
-            self.read_trip_header_file(path)
-        if os.path.isfile(path) is False:
-            raise IOError("Could not find file " + path)
+            header_file_path = self.discover_file(header_file_name)
+
+            # sanity check
+            if header_file_path is not None:
+                logger.info("Reading header file" + header_file_path)
+                self.read_trip_header_file(header_file_path)
+            else:
+                raise IOError("Could not find file " + path)
+
+        # raise exception if reading header failed
         if self.header_set is False:
             raise InputError("Header file not loaded")
-        cube = np.fromfile(path, dtype=self.pydata_type)
+
+        # preparation
+        data_dtype = np.dtype(self.format_str)
+        data_count = self.dimx * self.dimy * self.dimz
+
+        # figure out path to data file on disk, might be gzipped or not
+        data_file_path = self.discover_file(data_file_name)
+
+        # load data from data file (gzipped or not)
+        logger.info("Opening file: " + path)
+        if data_file_path.endswith('.gz'):
+            import gzip
+            with gzip.open(data_file_path, "rb") as f:
+                s = f.read(data_dtype.itemsize * data_count)
+                cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
+        else:
+            cube = np.fromfile(data_file_path, dtype=data_dtype)
+
         if self.byte_order == "aix":
-            cube = cube.byteswap()
+            logger.info("AIX big-endian data.")
+            # byteswapping is not needed anymore, handled by "<" ">" in dtype
+
+        # sanity check
+        logger.info("Cube data points : {:d}".format(len(cube)))
         if len(cube) != self.dimx * self.dimy * self.dimz:
-            raise IOError("Header size and dose cube size are not consistent.")
+            logger.error("Header size and cube size dont match.")
+            logger.error("Cube data points : {:d}".format(len(cube)))
+            logger.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
+                self.dimx * self.dimy * self.dimz,
+                self.dimx,
+                self.dimy,
+                self.dimz))
+            raise IOError("Header data and dose cube size are not consistent.")
+
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
+            logger.warning("Cube was rescaled to 50%. Multiplying with 2.")
             cube *= 2
         self.cube = cube
 

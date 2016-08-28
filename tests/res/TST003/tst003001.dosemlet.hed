@@ -1,0 +1,17 @@
+version 1.2
+modality CT
+primary_view transversal
+data_type float
+num_bytes 4
+byte_order vms
+patient_name tst003
+slice_dimension 512
+pixel_size 0.5
+slice_distance 3
+slice_number 300
+xoffset 0
+dimx 512
+yoffset 0
+dimy 512
+zoffset 0
+dimz 300

@@ -16,22 +16,28 @@ def main(args=sys.argv[1:]):
         print("\ttrip2dicom.py tripfile.hed dicomfolder/")
         exit()
 
-    basename = args[0].split(".")[0]
+    header_file_input_name = args[0]
+    header_basename = os.path.splitext(header_file_input_name)[0]
     output_folder = args[1]
-    if os.path.exists(basename + ".ctx"):
-        print("Convert CT images")
-        c = CtxCube()
-        c.read(basename + ".ctx")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
-        c.write_dicom(output_folder)
-    else:
-        print("There is no CTX file, script stop")
+
+    _, data_file_name = CtxCube.parse_path(header_file_input_name)
+    data_file_path = CtxCube.discover_file(data_file_name)
+
+    if not os.path.exists(data_file_path):
+        print("CTX file missing")
         exit()
-    if os.path.exists(basename + ".vdx"):
+
+    print("Convert CT images")
+    c = CtxCube()
+    c.read(header_basename)
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    c.write_dicom(output_folder)
+
+    if os.path.exists(header_basename + ".vdx"):
         print("Convert structures")
         v = VdxCube(c)
-        v.read(basename + ".vdx")
+        v.read(header_basename + ".vdx")
         if not os.path.exists(output_folder):
             os.makedirs(output_folder)
         v.write_dicom(output_folder)

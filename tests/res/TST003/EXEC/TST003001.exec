@@ -1,0 +1,43 @@
+* 1H plan on a 5 cm diameter sphere in a 256x256 x300 mm water phantom.
+* In this case there are 100 slices of 3 mm thickness. 
+* X and Y are 256 x 256, each pixel is 1 x1 mm.
+*
+* /Niels Bassler <bassler@phys.au.dk> 22nd July 2013
+*
+*makegeometry ifjcell /  ctdim(256,256,300) ctsteps(1,1,3) ctnum(0) centre(128,128,150) shape(box(20,20,20))
+
+
+scancap / bolus(0.0) offh2o(1.709) minparticles(5000) path(none)
+
+sis  * /delete
+hlut * /delete
+ddd  * /delete
+dedx * /delete
+
+* 1H
+sis "$TRIP98/DATA/SIS/1H.sis" / read
+ddd "$TRIP98/DATA/DDD/1H/RF0MM/1H*" / read
+spc "$TRIP98/DATA/SPC/1H/RF0MM/1H*" / read
+dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read
+hlut "$TRIP98/DATA/HLUT/19990218.hlut" /read
+
+ct "tst003000" / read
+voi "tst003000" / read select(target)
+voi target / maxdosefraction(1.0)
+
+random 100
+field 1 / new fwhm(4.0) raster(3,3) couch(-90.0) gantry(0.0) zstep(3.0) proj(1H)
+
+plan / dose(2.00)
+opt / field(*) phys H2Obased dosealg(cl) optalg(cg) geps(1e-4) eps(1e-3) iter(500)
+
+field 1 / file(tst003001.bev.gd) bev(*) nolateral 
+field 1 / file(tst003001.bevlet.gd) bev(*) dosemeanlet
+field 1 / file(tst003001.rst) reverseorder write
+
+dose "tst003001.dos" / calculate field(*) write
+dose "tst003001.dos" / calculate field(*) dosemeanlet write
+
+quit
+
+

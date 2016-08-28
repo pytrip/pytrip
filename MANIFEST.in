@@ -9,8 +9,6 @@
   recursive-include pytrip98 *.py
   recursive-include tests *.py
   recursive-include tests *.tar.gz
-  include versioneer.py
-  include pytrip98/_version.py
 
   exclude .gitkeep
   exclude .gitconfig
@@ -26,4 +24,11 @@
   recursive-include pytrip *.py
   recursive-include scripts *.py
   recursive-include utils *.py
-
+  recursive-include tests *.dat
+  recursive-include tests *.exec
+  recursive-include tests *.gd
+  recursive-include tests *.gz
+  recursive-include tests *.hed
+  recursive-include tests *.md
+  recursive-include tests *.rst
+  recursive-include tests *.vdx

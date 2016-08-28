@@ -1,0 +1,2 @@
+makegeometry tst003 /  ctdim(512,512,300) ctsteps(0.5,0.5,3) ctnum(0) centre(128,128,150) shape(box(50,50,50))
+

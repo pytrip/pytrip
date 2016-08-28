@@ -1,0 +1,52 @@
+
+* 16O plan on a 5 cm diameter sphere in a 256x256 x300 mm water phantom.
+* In this case there are 100 slices of 3 mm thickness. 
+* X and Y are 256 x 256, each pixel is 1 x1 mm.
+*
+scancap / rifi(3 mm RIFI) bolus(0.0) offh2o(1.709) minparticles(5000) path(none)
+
+sis  * /delete
+hlut * /delete
+ddd  * /delete
+dedx * /delete
+
+* 16O
+*sis "$TRIP98/DATA/SIS/12C.sis" / read
+sis / dummy
+ddd "$TRIP98/DATA_APTG/DDD/16O/RF3MM/16O*" / read
+spc "$TRIP98/DATA_APTG/SPC/16O/RF3MM/16O*" / read
+dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read
+hlut "$TRIP98/DATA/HLUT/19990218.hlut" /read
+
+ct "tst003000" / read
+*voi "tst003000" / read select(target)
+
+voi "tst003000" / read 
+voi target / maxdosefraction(1.0)
+
+rbe "$TRIP98/DATA/RBE/chordom*.rbe" / read
+rbe target / alias(chordom02)
+
+random 100
+field 1 / new fwhm(4.0) raster(3,3) couch(-90.0) gantry(0.0) zstep(3.0) proj(16O)
+
+* --- PHYSICAL optimization
+plan / dose(2.00)
+opt / field(*) H2Obased phys dosealg(cl) optalg(cg) geps(1e-4) eps(1e-3) iter(500)
+
+* --- BIOLOGICAL optimization
+*plan / dose(2.00) targettissue(chordom02) residualtissue(chordom02)
+*opt / field(*) bio H2Obased dosealg(cl) optalg(cg) bioalg(cl) geps(1e-4) eps(1e-3) iter(500)
+
+field 1 / file(tst003016.bev.gd) bev(*) nolateral 
+field 1 / file(tst003016.bevlet.gd) bev(*) dosemeanlet
+field 1 / file(tst003016.rst) reverseorder write
+
+dose "tst003016.dos" / calculate field(*) write
+dose "tst003016.dos" / calculate field(*) dosemeanlet write
+
+*dose "tst003016" / bio calculate field(*) write
+
+quit
+
+
