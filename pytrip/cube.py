@@ -540,15 +540,20 @@ class Cube(object):
         be loaded, even if a .hed is available.
         """
 
+        # extract header name (blabla.hed) from path
+        # we get blabla.hed even if path equals to blabla.hed.gz, see docs in Cube.parse_path function
         header_file_name, _ = self.parse_path(path)
 
+        # figure out which file exists on disc: *.hed or *.hed.gz and get its path
         header_file_path = self.discover_file(header_file_name)
 
+        # sanity check
         if header_file_path is not None:
             logger.info("Reading header file" + header_file_path)
         else:
             raise IOError("Could not find file " + path)
 
+        # load plain of gzipped file
         if header_file_path.endswith(".gz"):
             import gzip
             fp = gzip.open(header_file_path, "rt")
@@ -556,31 +561,46 @@ class Cube(object):
             fp = open(header_file_path, "rt")
         content = fp.read()
         fp.close()
+
+        # fill self with data
         self.read_trip_header(content)
         self.set_format_str()
         logger.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
+        """
+        Accepts path in similar way as read_trip_header_file.
+        :param path:
+        :param multiply_by_2:
+        :return:
+        """
 
+        # extract header and data file name from path
         header_file_name, data_file_name = self.parse_path(path)
 
+        # fill header data if self.header is empty
         if self.header_set is False:
             header_file_path = self.discover_file(header_file_name)
 
+            # sanity check
             if header_file_path is not None:
                 logger.info("Reading header file" + header_file_path)
                 self.read_trip_header_file(header_file_path)
             else:
                 raise IOError("Could not find file " + path)
 
+        # raise exception if reading header failed
         if self.header_set is False:
             raise InputError("Header file not loaded")
 
+        # preparation
         data_dtype = np.dtype(self.format_str)
         data_count = self.dimx * self.dimy * self.dimz
 
+        # figure out path to data file on disk, might be gzipped or not
         data_file_path = self.discover_file(data_file_name)
 
+        # load data from data file (gzipped or not)
         logger.info("Opening file: " + path)
         if data_file_path.endswith('.gz'):
             import gzip
@@ -594,6 +614,7 @@ class Cube(object):
             logger.info("AIX big-endian data.")
             # byteswapping is not needed anymore, handled by "<" ">" in dtype
 
+        # sanity check
         logger.info("Cube data points : {:d}".format(len(cube)))
         if len(cube) != self.dimx * self.dimy * self.dimz:
             logger.error("Header size and cube size dont match.")
