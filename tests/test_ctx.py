@@ -31,27 +31,47 @@ logger = logging.getLogger(__name__)
 class TestCtx(unittest.TestCase):
     def setUp(self):
         testdir = tests.test_base.get_files()
-        self.cube000 = os.path.join(testdir, "tst003000.ctx")
+        self.cube000 = os.path.join(testdir, "tst003000")
 
     def test_read(self):
         c = CtxCube()
         c.read(self.cube000)
 
-    def test_write(self):
+    def read_and_write_cube(self, path):
+
+        logger.info("Testing cube from path " + path)
+
         # read original cube and calculate hashsum
         c = CtxCube()
-        c.read(self.cube000)
-        original_md5 = hashlib.md5(gzip.open(self.cube000 + ".gz", 'rb').read()).hexdigest()
+        c.read(path)
+
+        _, data_file = CtxCube.parse_path(self.cube000)
+        data_file_path = CtxCube.discover_file(data_file)
+
+        if data_file_path.endswith(".gz"):
+            f = gzip.open(data_file_path)
+        else:
+            f = open(data_file_path, 'rb')
+        original_md5 = hashlib.md5(f.read()).hexdigest()
+        f.close()
 
         # save cube and calculate hashsum
         fd, outfile = tempfile.mkstemp()
         c.write(outfile)
-        generated_md5 = hashlib.md5(open(outfile + ".ctx", 'rb').read()).hexdigest()
-
+        f = open(outfile + ".ctx", 'rb')
+        generated_md5 = hashlib.md5(f.read()).hexdigest()
+        f.close()
+        os.remove(outfile)
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
-        # TODO compare also header files
+    def test_write(self):
+        possible_names = [self.cube000,
+                          self.cube000 + ".ctx", self.cube000 + ".hed",
+                          self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"]
+
+        for name in possible_names:
+            self.read_and_write_cube(name)
 
     def test_addition(self):
         # read cube
@@ -60,7 +80,7 @@ class TestCtx(unittest.TestCase):
         d = c + 5
         self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
 
-    def test_filename_discovery(self):
+    def test_filename_parsing(self):
         bare_name = "frodo_baggins"
         cube_ext = ".ctx"
         header_ext = ".hed"

@@ -341,10 +341,19 @@ class Cube(object):
 
     @staticmethod
     def discover_file(file_name):
+        """
+        Checks if file_name exists in the filesystem. If yes, gives back its path.
+        If not, checks if gzipped file with same name exists.
+        If gzipped file exists, gives back it path, otherwise returns None.
+        :param file_name: File name or path
+        :return: file_name, file_name + ".gz" or None
+        """
         gzip_file_name = file_name + ".gz"
         if os.path.exists(file_name):
+            logger.debug("File " + file_name + " exists")
             return file_name
         elif os.path.exists(gzip_file_name):
+            logger.debug("File " + gzip_file_name + " exists")
             return gzip_file_name
         else:
             logger.error("Both " + file_name + " and " + gzip_file_name + " do not exists")
@@ -352,6 +361,34 @@ class Cube(object):
 
     @classmethod
     def parse_path(cls, path_name):
+        """
+        Parse path_name which can have form of: bare name (i.e. TST001), plain file (TST001.hed or TST001.ctx),
+        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates plain file names of
+        header and data file. Extension of data file is extracted from the class from which this method was called
+        (.ctx for CtxCube, .dos for DosCube and LetCube). In case of non-parseable data, None is returned.
+
+        >>> from pytrip import CtxCube
+        >>> CtxCube.parse_path("frodo.hed")
+        ('frodo.hed', 'frodo.ctx')
+        >>> CtxCube.parse_path("baggins.ctx")
+        ('baggins.hed', 'baggins.ctx')
+        >>> CtxCube.parse_path("mordor")
+        ('mordor.hed', 'mordor.ctx')
+        >>> CtxCube.parse_path("legolas.hed.gz")
+        ('legolas.hed', 'legolas.ctx')
+        >>> CtxCube.parse_path("gimli.son.of.gloin.ctx.gz")
+        ('gimli.son.of.gloin.hed', 'gimli.son.of.gloin.ctx')
+        >>> CtxCube.parse_path("bilbo.dos")
+        (None, None)
+        >>> from pytrip import DosCube
+        >>> DosCube.parse_path("bilbo.dos")
+        ('bilbo.hed', 'bilbo.dos')
+        >>> DosCube.parse_path("baggins.ctx")
+        (None, None)
+
+        :param path_name:
+        :return:
+        """
 
         logger.info("Parsing " + path_name)
 
