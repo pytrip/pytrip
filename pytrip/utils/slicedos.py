@@ -8,6 +8,8 @@ from matplotlib import colors
 import os
 import sys
 
+logger = logging.getLogger(__name__)
+
 
 def check_compatible(a, b):
     """ Simple comparison of cubes. if X,Y,Z dims are the same, and
@@ -16,56 +18,56 @@ def check_compatible(a, b):
     eps = 1e-5
 
     if a.dimx != b.dimx:
-        logging.error("DIMX does not match: "+str(a.dimx)+" "+str(b.dimx))
+        logger.error("DIMX does not match: "+str(a.dimx)+" "+str(b.dimx))
         raise Exception("Cubes don't match, check dimx in header.")
 
     if a.dimy != b.dimy:
-        logging.error("DIMY does not match: "+str(a.dimy)+" "+str(b.dimy))
+        logger.error("DIMY does not match: "+str(a.dimy)+" "+str(b.dimy))
         raise Exception("Cubes don't match, check dimy in header.")
 
     if a.dimz != b.dimz:
-        logging.error("DIMZ does not match: "+str(a.dimz)+" "+str(b.dimz))
+        logger.error("DIMZ does not match: "+str(a.dimz)+" "+str(b.dimz))
         raise Exception("Cubes don't match, check dimz in header.")
 
     if (a.pixel_size - b.pixel_size) > eps:
-        logging.error("Pixel size does not match: "+str(a.pixel_size)+" "+str(b.pixel_size))
+        logger.error("Pixel size does not match: "+str(a.pixel_size)+" "+str(b.pixel_size))
         raise Exception("Cubes don't match, check pixel_size in header.")
 
     if a.slice_dimension != b.slice_dimension:
-        logging.error("Slice dimension does not match: "+str(a.slice_dimension)+" "+str(b.slice_dimension))
+        logger.error("Slice dimension does not match: "+str(a.slice_dimension)+" "+str(b.slice_dimension))
         raise Exception("Cubes don't match, check slice_dimension in header.")
     return True
 
 
 def main(args):
     if args.verbosity == 1:
-        logging.basicConfig(level=logging.INFO)
+        logger.basicConfig(level=logging.INFO)
     if args.verbosity > 1:
-        logging.basicConfig(level=logging.DEBUG)
+        logger.basicConfig(level=logging.DEBUG)
 
-    logging.info("Dos file: " + args.dos)
+    logger.info("Dos file: " + args.dos)
 
     dosbasename = args.dos.split(".")[-2]
     ctxbasename = args.ctx.split(".")[-2]
 
     d = dos.DosCube()
     fndos = dosbasename + ".dos"
-    logging.info("Reading "+fndos)
+    logger.info("Reading "+fndos)
     d.read(fndos)
     fname_dos = os.path.splitext(args.dos)[0]
 
     c = ctx.CtxCube()
     fnctx = ctxbasename + ".ctx"
-    logging.info("Reading "+fnctx)
+    logger.info("Reading "+fnctx)
     c.read(fnctx)
-    logging.info("CTX Cube shape" + str(c.cube.shape))
-    logging.info("DOS Cube shape" + str(d.cube.shape))
+    logger.info("CTX Cube shape" + str(c.cube.shape))
+    logger.info("DOS Cube shape" + str(d.cube.shape))
 
     # check cube data are compatible
     if d is not None:
         check_compatible(c, d)
 
-    logging.info("Number of slices: " + str(d.dimz))
+    logger.info("Number of slices: " + str(d.dimz))
 
     xmin = d.xoffset + (0.5*d.pixel_size)  # convert bin to actual position to center of bin
     ymin = d.yoffset + (0.5*d.pixel_size)
@@ -81,10 +83,10 @@ def main(args):
     cmax = c.cube.max()
     cmin = c.cube.min()
 
-    logging.info("Cube first bin pos: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin, ymin, zmin))
-    logging.info("Cube last bin pos : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax, ymax, zmax))
-    logging.info("CTX min, max values: {:d} {:d}".format(cmin, cmax))
-    logging.info("DOS min, max values: {:d} {:d}".format(dmin, dmax))
+    logger.info("Cube first bin pos: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin, ymin, zmin))
+    logger.info("Cube last bin pos : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax, ymax, zmax))
+    logger.info("CTX min, max values: {:d} {:d}".format(cmin, cmax))
+    logger.info("DOS min, max values: {:d} {:d}".format(dmin, dmax))
 
     # ctx_levels = arange(-1010.0,cmax+10,50.0)
     # ctx_levels = arange(cmin+10, cmax+10, 50.0)  # alternative ctx colour map
@@ -118,7 +120,7 @@ def main(args):
         if args.verbosity == 0:
             print("Write slice number: "+str(ids) + "/"+str(d.dimz))
         if args.verbosity > 0:
-            logging.info("Write slice number: "+str(ids) + "/"+str(d.dimz) + " to " + fnout)
+            logger.info("Write slice number: "+str(ids) + "/"+str(d.dimz) + " to " + fnout)
 
         ax.cla()
         # ids = 150
