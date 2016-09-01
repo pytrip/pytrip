@@ -89,6 +89,10 @@ matrix:
         - os: osx
           language: generic
           env: TOXENV=py35
+        - python: 3.5
+          env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
+        - python: 3.5
+          env: TOXENV=packaging TARGET=cp33-cp33m
 
 # travis-ci runs by default on ancient Ubuntu 12.04 (precise)
 # following options will give us Ubuntu 14.04 (trusty)
