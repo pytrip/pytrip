@@ -39,7 +39,7 @@ do
     if [ $RET_CODE -ne 0 ]; then
         install_freetype
         # libpng is needed by matplotlib, blas and lapack by numpy
-        yum install -y libpng-devel lapack-devel blas-devel
+        yum install -y libpng-devel lapack-devel blas-devel atlas-devel
         ${PYBIN}/pip install -U -r /io/requirements.txt
     fi
 
