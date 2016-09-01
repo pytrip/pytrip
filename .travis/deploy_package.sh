@@ -61,7 +61,11 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
     # make and upload wheel package
     pyenv exec python setup.py bdist_wheel
-    pyenv exec twine upload -r $PYPIREPO dist/*
+
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        pyenv exec twine upload -r $PYPIREPO dist/*
+    fi
 else
 
 # Building of manylinux1 compatible packages, see https://www.python.org/dev/peps/pep-0513/ for details
@@ -83,6 +87,8 @@ else
     # install necessary tools
     pip install -U wheel twine
 
-    # upload the package
-    twine upload -r $PYPIREPO wheelhouse/*
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        twine upload -r $PYPIREPO wheelhouse/*
+    fi
 fi
