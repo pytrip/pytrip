@@ -66,13 +66,26 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
     if [[ $TRAVIS_TAG != "" ]]; then
         pyenv exec twine upload -r $PYPIREPO dist/*
     fi
+
+# make a source package
+elif [[ $TARGET == "source" ]]; then
+    # install necessary tools
+    pip install -U wheel twine
+
+    # makes source
+    python setup.py sdist
+
+    ls -al dist
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        twine upload -r $PYPIREPO dist/*tar.gz
+    fi
 else
 
 # Building of manylinux1 compatible packages, see https://www.python.org/dev/peps/pep-0513/ for details
 # pytrip98 has C extension, pip repo accepts only packages tagged as manylinux1
 # to get manylinux1 package, you are forced to use some ancient Linux version (here CentOS 5)
 # in such case C extension will be linked against old glibc thus granting maximum portability
-
     if [[ $PRE_CMD == "linux32" ]]; then
         DOCKER_IMAGE=$DOCKER_IMAGE_32
     else

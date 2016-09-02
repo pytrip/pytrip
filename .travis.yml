@@ -80,6 +80,8 @@ matrix:
           env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
         - python: 3.5
           env: TOXENV=packaging TARGET=cp33-cp33m
+        - python: 3.5
+          env: TOXENV=packaging TARGET=source
     # fired only when making release (on tags): MacOSX wheel packages
         - os: osx
           language: generic
@@ -87,7 +89,6 @@ matrix:
     # jobs allowed to fail
     allow_failures:
         - os: osx
-          language: generic
           env: TOXENV=py35
         - python: 3.5
           env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
