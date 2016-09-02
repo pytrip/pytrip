@@ -67,6 +67,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
         pyenv exec twine upload -r $PYPIREPO dist/*
     fi
 
+# make a source package
 elif [[ $TARGET == "source" ]]; then
     # install necessary tools
     pip install -U wheel twine
@@ -76,9 +77,9 @@ elif [[ $TARGET == "source" ]]; then
 
     ls -al dist
     # upload only if tag present
-#    if [[ $TRAVIS_TAG != "" ]]; then
-    twine upload -r $PYPIREPO dist/*tar.gz
-#    fi
+    if [[ $TRAVIS_TAG != "" ]]; then
+        twine upload -r $PYPIREPO dist/*tar.gz
+    fi
 else
 
 # Building of manylinux1 compatible packages, see https://www.python.org/dev/peps/pep-0513/ for details
