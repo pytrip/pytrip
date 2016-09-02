@@ -8,7 +8,18 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
+# name of pypi repo to be used
 PYPIREPO=$1
+
+# python target to be used (cp27-cp27m, cp27-cp27mu, cp33-cp33m, cp34-cp34m or cp35-cp35m)
+TARGET=$2
+
+# optional pre-command (i.e. linux32)
+PRE_CMD=$3
+
+# based on https://github.com/pypa/python-manylinux-demo/blob/master/.travis.yml
+DOCKER_IMAGE_32=quay.io/pypa/manylinux1_i686
+DOCKER_IMAGE_64=quay.io/pypa/manylinux1_x86_64
 
 write_pypirc() {
 PYPIRC=~/.pypirc
@@ -41,10 +52,43 @@ set +x
 write_pypirc
 set -x
 
-# make bdist universal package
-pip install wheel
-python setup.py bdist_wheel
+echo "User" $PYPIUSER
 
-# upload the package to pypi repository
-pip install twine
-twine upload -r $PYPIREPO dist/*
+# simple building for MacOSX
+if [[ $TRAVIS_OS_NAME == "osx" ]]; then
+
+    pyenv exec pip install -U wheel twine
+
+    # make and upload wheel package
+    pyenv exec python setup.py bdist_wheel
+
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        pyenv exec twine upload -r $PYPIREPO dist/*
+    fi
+else
+
+# Building of manylinux1 compatible packages, see https://www.python.org/dev/peps/pep-0513/ for details
+# pytrip98 has C extension, pip repo accepts only packages tagged as manylinux1
+# to get manylinux1 package, you are forced to use some ancient Linux version (here CentOS 5)
+# in such case C extension will be linked against old glibc thus granting maximum portability
+
+    if [[ $PRE_CMD == "linux32" ]]; then
+        DOCKER_IMAGE=$DOCKER_IMAGE_32
+    else
+        DOCKER_IMAGE=$DOCKER_IMAGE_64
+    fi
+    docker pull $DOCKER_IMAGE
+
+    # run building script
+    docker run --rm -v `pwd`:/io $DOCKER_IMAGE $PRE_CMD /io/.travis/build_wheels.sh "$TARGET"
+
+    ls -al wheelhouse/ # just for debugging
+    # install necessary tools
+    pip install -U wheel twine
+
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        twine upload -r $PYPIREPO wheelhouse/*
+    fi
+fi
