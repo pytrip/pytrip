@@ -15,18 +15,11 @@
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 import os
-
-try:
-    import dicom
-except:
-    pass
+import dicom
 
 
-def compare_dicom_ct(dcm1, dcm2):
-    diff = float(dcm1.ImagePositionPatient[2]) - float(dcm2.ImagePositionPatient[2])
-    if diff > 0:
-        return 1
-    return -1
+def compare_dicom_key(dcm):
+    return float(dcm.ImagePositionPatient[2])
 
 
 def read_dicom_folder(path):
@@ -53,5 +46,5 @@ def read_dicom_folder(path):
             elif dcm.Modality == "RTPLAN":
                 data["rtplan"] = dcm
     if "images" in data:
-        data["images"].sort(cmp=compare_dicom_ct)
+        data["images"].sort(key=compare_dicom_key)
     return data
