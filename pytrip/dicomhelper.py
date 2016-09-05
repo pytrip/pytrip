@@ -47,5 +47,4 @@ def read_dicom_folder(path):
                 data["rtplan"] = dcm
     if "images" in data:
         data["images"].sort(key=compare_dicom_key)
-        print([x.ImagePositionPatient[2] for x in data["images"]])
     return data
