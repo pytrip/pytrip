@@ -39,7 +39,21 @@ def check_compatible(a, b):
     return True
 
 
-def main(args):
+def main(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dos", help="doscube to be loaded")
+    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
+    parser.add_argument("-v", "--verbosity", action='count',
+                        help="increase output verbosity", default=0)
+    parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
+                        help="Output from slice number N", default=0)
+    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
+                        help="Output up to slice number M")
+    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
+                        help="Add HU colour bar")
+    parser.parse_args(args)
+    args = parser.parse_args()
+
     if args.verbosity == 1:
         logger.basicConfig(level=logging.INFO)
     if args.verbosity > 1:
@@ -196,18 +210,4 @@ def main(args):
         plt.savefig("foo"+str(ids)+".png")
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dos", help="doscube to be loaded")
-    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
-    parser.add_argument("-v", "--verbosity", action='count',
-                        help="increase output verbosity", default=0)
-    parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
-                        help="Output from slice number N", default=0)
-    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
-                        help="Output up to slice number M")
-    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
-                        help="Add HU colour bar")
-    parser.parse_args()
-    args = parser.parse_args()
-
-    sys.exit(main(args))
+    sys.exit(main(sys.argv[1:]))
