@@ -58,7 +58,7 @@ class TestDosSlicer(unittest.TestCase):
     def test_many_shield(self):
         ctx = os.path.join("tests", "res", "TST003", "tst003000.ctx.gz")
         dos = os.path.join("tests", "res", "TST003", "tst003001.dos.gz")
-        pytrip.utils.slicedos.main([dos, ctx])
+        pytrip.utils.slicedos.main(args=[dos, ctx])
 
 
 if __name__ == '__main__':
