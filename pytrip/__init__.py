@@ -26,4 +26,5 @@ from pytrip.rst import Rst
 from pytrip.let import LETCube
 from pytrip.get_dvh import GetDvh
 
-__all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res', 'guiutil', 'Rst']
+__all__ = ['CtxCube', 'VdxCube', 'GetDvh', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res', 'Rst']
+
