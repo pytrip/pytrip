@@ -1,11 +1,39 @@
 #! /usr/bin/env python
 
 import numpy as np
-from matplotlib.pyplot import xlabel, ylabel, title, figure, show
 
 
-class GetDvh(object):
+class GetDvh:
     """This class produces DVHs."""
+
+    def __init__(self, dos, _xnorm, vdx, _cv):
+
+        # generate mask, if not already done so
+        vdx._calc_voi(_cv)
+
+        # extract VOI array containing the data
+        _mask_indicies = np.nonzero(vdx.mask[_cv].flatten())
+        print("DVH: vdx mask:", np.shape(vdx.mask[_cv]))
+        print("DVH: mask ind:", np.shape(_mask_indicies))
+
+        print("DVH: dos shape:", np.shape(dos.cube.flatten()))
+        print("DVH: voi shape:", np.shape(vdx.mask[_cv].flatten()))
+
+        # TODO why this zero below ?
+        self.array = np.take(dos.cube.flatten(), _mask_indicies)[0]
+        print("DVH: array shape:", np.shape(self.array))
+        # print self.array
+
+        self.DVH = self.build_DVH(self.array, _xnorm)
+        self.name = vdx.voi[_cv].name
+
+        self.voxel_size = vdx.header.pixel_size * vdx.header.pixel_size * vdx.header.slice_distance
+        self.volume = self.bins * self.voxel_size
+        self.volume_cm3 = self.volume * 0.001
+        self.min = self.array.min()
+        self.max = self.array.max()
+        self.mean = self.array.mean()
+        self.std = self.array.std()
 
     def build_DVH(self, data, _xnorm):
         # data is a flat array
@@ -54,35 +82,6 @@ class GetDvh(object):
 
         return [_DVHx, _DVHy]
 
-    def __init__(self, dos, _xnorm, vdx, _cv):
-
-        # generate mask, if not already done so
-        vdx._calc_voi(_cv)
-
-        # extract VOI array containing the data
-        _mask_indicies = np.nonzero(vdx.mask[_cv].flatten())
-        print("DVH: vdx mask:", np.shape(vdx.mask[_cv]))
-        print("DVH: mask ind:", np.shape(_mask_indicies))
-
-        print("DVH: dos shape:", np.shape(dos.cube.flatten()))
-        print("DVH: voi shape:", np.shape(vdx.mask[_cv].flatten()))
-
-        # TODO why this zero below ?
-        self.array = np.take(dos.cube.flatten(), _mask_indicies)[0]
-        print("DVH: array shape:", np.shape(self.array))
-        # print self.array
-
-        self.DVH = self.build_DVH(self.array, _xnorm)
-        self.name = vdx.voi[_cv].name
-
-        self.voxel_size = vdx.header.pixel_size * vdx.header.pixel_size * vdx.header.slice_distance
-        self.volume = self.bins * self.voxel_size
-        self.volume_cm3 = self.volume * 0.001
-        self.min = self.array.min()
-        self.max = self.array.max()
-        self.mean = self.array.mean()
-        self.std = self.array.std()
-
     def analyze(self):
         print("--------------------------------------------------------------")
         print("                          VOI Analysis")
@@ -97,6 +96,12 @@ class GetDvh(object):
         print("--------------------------------------------------------------")
 
     def plot(self):
+        # there are some cases when this script is run on systems without DISPLAY variable being set
+        # in such case matplotlib backend has to be explicitly specified
+        # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+        import matplotlib
+        matplotlib.use('Agg')
+        from matplotlib.pyplot import xlabel, ylabel, title, figure, show
 
         fig = figure()
         a1 = fig.add_subplot(111, autoscale_on=False)

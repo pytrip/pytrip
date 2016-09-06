@@ -2,11 +2,18 @@
 
 import sys
 from optparse import OptionParser
-from pylab import plt, ylabel, grid, xlabel, array
+
 from pytrip.utils.rst_read import RstfileRead
 
 
 def main(args=sys.argv[1:]):
+    # there are some cases when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    import matplotlib
+    matplotlib.use('Agg')
+    from pylab import plt, ylabel, grid, xlabel, array
+
     parser = OptionParser()
     parser.add_option("-s", "--submachine", dest="subm", help="Select submachine to plot.", metavar="int")
     parser.add_option(

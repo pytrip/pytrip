@@ -1,12 +1,11 @@
-from pytrip import dos
-from pytrip import ctx
-import argparse
-import logging
-from numpy import arange, meshgrid, ma
-import matplotlib.pyplot as plt
-from matplotlib import colors
 import os
 import sys
+import argparse
+import logging
+
+from numpy import arange, meshgrid, ma
+
+from pytrip import dos, ctx
 
 logger = logging.getLogger(__name__)
 
@@ -18,28 +17,47 @@ def check_compatible(a, b):
     eps = 1e-5
 
     if a.dimx != b.dimx:
-        logger.error("DIMX does not match: "+str(a.dimx)+" "+str(b.dimx))
+        logger.error("DIMX does not match: " + str(a.dimx) + " " + str(b.dimx))
         raise Exception("Cubes don't match, check dimx in header.")
 
     if a.dimy != b.dimy:
-        logger.error("DIMY does not match: "+str(a.dimy)+" "+str(b.dimy))
+        logger.error("DIMY does not match: " + str(a.dimy) + " " + str(b.dimy))
         raise Exception("Cubes don't match, check dimy in header.")
 
     if a.dimz != b.dimz:
-        logger.error("DIMZ does not match: "+str(a.dimz)+" "+str(b.dimz))
+        logger.error("DIMZ does not match: " + str(a.dimz) + " " + str(b.dimz))
         raise Exception("Cubes don't match, check dimz in header.")
 
     if (a.pixel_size - b.pixel_size) > eps:
-        logger.error("Pixel size does not match: "+str(a.pixel_size)+" "+str(b.pixel_size))
+        logger.error("Pixel size does not match: " + str(a.pixel_size) + " " + str(b.pixel_size))
         raise Exception("Cubes don't match, check pixel_size in header.")
 
     if a.slice_dimension != b.slice_dimension:
-        logger.error("Slice dimension does not match: "+str(a.slice_dimension)+" "+str(b.slice_dimension))
+        logger.error("Slice dimension does not match: " + str(a.slice_dimension) + " " + str(b.slice_dimension))
         raise Exception("Cubes don't match, check slice_dimension in header.")
     return True
 
 
-def main(args):
+def main(args=sys.argv[1:]):
+
+    # there are some cases when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib import colors
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dos", help="doscube to be loaded")
+    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument(
+        "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=0)
+    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
+    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
+    args = parser.parse_args(args)
+
     if args.verbosity == 1:
         logger.basicConfig(level=logging.INFO)
     if args.verbosity > 1:
@@ -47,19 +65,24 @@ def main(args):
 
     logger.info("Dos file: " + args.dos)
 
-    dosbasename = args.dos.split(".")[-2]
-    ctxbasename = args.ctx.split(".")[-2]
+    dos_header, _ = dos.DosCube.parse_path(args.dos)
+    if dos_header is None:
+        logger.error("Path " + args.dos + " doesn't seem to point to proper DOS cube")
+        return 2
+    basename_dos = os.path.splitext(dos_header)[0]
 
     d = dos.DosCube()
-    fndos = dosbasename + ".dos"
-    logger.info("Reading "+fndos)
-    d.read(fndos)
-    fname_dos = os.path.splitext(args.dos)[0]
+    logger.info("Reading " + args.dos)
+    d.read(args.dos)
+
+    ctx_header, _ = ctx.CtxCube.parse_path(args.ctx)
+    if ctx_header is None:
+        logger.error("Path " + args.ctx + " doesn't seem to point to proper CT cube")
+        return 2
 
     c = ctx.CtxCube()
-    fnctx = ctxbasename + ".ctx"
-    logger.info("Reading "+fnctx)
-    c.read(fnctx)
+    logger.info("Reading " + args.ctx)
+    c.read(args.ctx)
     logger.info("CTX Cube shape" + str(c.cube.shape))
     logger.info("DOS Cube shape" + str(d.cube.shape))
 
@@ -69,13 +92,13 @@ def main(args):
 
     logger.info("Number of slices: " + str(d.dimz))
 
-    xmin = d.xoffset + (0.5*d.pixel_size)  # convert bin to actual position to center of bin
-    ymin = d.yoffset + (0.5*d.pixel_size)
-    zmin = d.zoffset + (0.5*d.slice_distance)
+    xmin = d.xoffset + (0.5 * d.pixel_size)  # convert bin to actual position to center of bin
+    ymin = d.yoffset + (0.5 * d.pixel_size)
+    zmin = d.zoffset + (0.5 * d.slice_distance)
 
-    xmax = xmin + d.dimx*d.pixel_size
-    ymax = ymin + d.dimy*d.pixel_size
-    zmax = zmin + d.dimz*d.slice_distance
+    xmax = xmin + d.dimx * d.pixel_size
+    ymax = ymin + d.dimy * d.pixel_size
+    zmax = zmin + d.dimz * d.slice_distance
 
     dmax = d.cube.max()
     dmin = d.cube.min()
@@ -94,11 +117,11 @@ def main(args):
 
     x = arange(xmin, xmax, d.pixel_size)
     y = arange(ymin, ymax, d.pixel_size)
-    X, Y = meshgrid(x, y)
-    Xmax = X.max()
-    Xmin = X.min()
-    Ymax = Y.max()
-    Ymin = Y.min()
+    x_grid, y_grid = meshgrid(x, y)
+    x_max = x_grid.max()
+    x_min = x_grid.min()
+    y_max = y_grid.max()
+    y_min = y_grid.min()
 
     ctx_cb = None
     dos_cb = None
@@ -116,14 +139,13 @@ def main(args):
     # loop over each slice
     for ids in range(sstart, sstop):  # starts at 0
 
-        fnout = fname_dos+"_{:03d}".format(ids)+".png"
+        fnout = basename_dos + "_{:03d}".format(ids) + ".png"
         if args.verbosity == 0:
-            print("Write slice number: "+str(ids) + "/"+str(d.dimz))
+            print("Write slice number: " + str(ids) + "/" + str(d.dimz))
         if args.verbosity > 0:
-            logger.info("Write slice number: "+str(ids) + "/"+str(d.dimz) + " to " + fnout)
+            logger.info("Write slice number: " + str(ids) + "/" + str(d.dimz) + " to " + fnout)
 
         ax.cla()
-        # ids = 150
 
         dos_slice = d.cube[ids, :, :]
         # dos_slice *= 0.1  # convert %% to %
@@ -142,16 +164,11 @@ def main(args):
 
         # extent tells what the x and y coordinates are,
         # so matplotlib can make propper assignment.
-        ctx_im = ax.imshow(ctx_slice,
-                           cmap=plt.cm.gray,
-                           interpolation='bilinear',
-                           origin="lower",
-                           extent=[Xmin, Xmax,
-                                   Ymin, Ymax])
+        ctx_im = ax.imshow(
+            ctx_slice, cmap=plt.cm.gray, interpolation='bilinear', origin="lower", extent=[x_min, x_max, y_min, y_max])
         if args.HUbar:
             if ctx_cb is None:
-                ctx_cb = plt.colorbar(ctx_im, ticks=arange(-1000, 3000, 200),
-                                      orientation='horizontal')
+                ctx_cb = plt.colorbar(ctx_im, ticks=arange(-1000, 3000, 200), orientation='horizontal')
                 ctx_cb.set_label('HU')
 
         # ------- add dose wash --------
@@ -168,46 +185,34 @@ def main(args):
         #                      cmap=cmap1,
         #                      antialiased=True,linewidths=None)
 
-        dos_im = ax.imshow(tmpdat,
-                           interpolation='bilinear',
-                           cmap=cmap1,
-                           norm=colors.Normalize(vmin=0, vmax=1200, clip=False),
-                           alpha=0.7,
-                           origin="lower",
-                           extent=[Xmin, Xmax,
-                                   Ymin, Ymax])
+        dos_im = ax.imshow(
+            tmpdat,
+            interpolation='bilinear',
+            cmap=cmap1,
+            norm=colors.Normalize(
+                vmin=0, vmax=1200, clip=False),
+            alpha=0.7,
+            origin="lower",
+            extent=[x_min, x_max, y_min, y_max])
 
         if dos_cb is None:
-            dos_cb = plt.colorbar(dos_im,
-                                  # extend='both',
-                                  orientation='vertical',
-                                  shrink=0.8)
+            dos_cb = plt.colorbar(
+                dos_im,
+                # extend='both',
+                orientation='vertical',
+                shrink=0.8)
             dos_cb.set_ticks(arange(0, 1300, 200))
             dos_cb.set_label('Relative dose %%')
 
-        ax.set_xlim(Xmax, Xmin)
-        ax.set_ylim(Ymax, Ymin)
+        ax.set_xlim(x_max, x_min)
+        ax.set_ylim(y_max, y_min)
 
-        # majorLocator = plt.MultipleLocator(1)
         # majorFormatter = plt.FormatStrFormatter('%d')
         minorLocator = plt.MultipleLocator(1.5)
 
         ax.xaxis.set_minor_locator(minorLocator)
-        plt.savefig("foo"+str(ids)+".png")
+        plt.savefig(fnout)
+
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument("dos", help="doscube to be loaded")
-    parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
-    parser.add_argument("-v", "--verbosity", action='count',
-                        help="increase output verbosity", default=0)
-    parser.add_argument("-f", "--from", type=int, dest='sstart', metavar='N',
-                        help="Output from slice number N", default=0)
-    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M',
-                        help="Output up to slice number M")
-    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true',
-                        help="Add HU colour bar")
-    parser.parse_args()
-    args = parser.parse_args()
-
-    sys.exit(main(args))
+    sys.exit(main(sys.argv[1:]))

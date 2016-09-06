@@ -20,7 +20,6 @@ import copy
 from math import pi, cos, sin
 import numpy as np
 import string
-import matplotlib._cntr as cntr
 
 from pytrip.error import InputError, ModuleNotLoadedError
 import pytrip as plib
@@ -241,6 +240,12 @@ def create_cube(cube, name, center, width, height, depth):
 
 def create_voi_from_cube(cube, name):
     v = Voi(name, cube)
+    # there are some cases when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib._cntr as cntr
     for i in range(cube.dimz):
         x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
