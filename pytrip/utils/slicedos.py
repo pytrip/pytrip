@@ -67,7 +67,7 @@ def main(args=sys.argv[1:]):
     logger.info("Reading " + args.dos)
     d.read(args.dos)
 
-    ctx_header, _ = dos.CtxCube.parse_path(args.ctx)
+    ctx_header, _ = ctx.CtxCube.parse_path(args.ctx)
     if ctx_header is None:
         logger.error("Path " + args.ctx + " doesn't seem to point to proper CT cube")
         return 2
