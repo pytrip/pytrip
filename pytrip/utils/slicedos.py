@@ -1,12 +1,11 @@
-from pytrip import dos
-from pytrip import ctx
-import argparse
-import logging
-from numpy import arange, meshgrid, ma
-import matplotlib.pyplot as plt
-from matplotlib import colors
 import os
 import sys
+import argparse
+import logging
+
+from numpy import arange, meshgrid, ma
+
+from pytrip import dos, ctx
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +39,15 @@ def check_compatible(a, b):
 
 
 def main(args=sys.argv[1:]):
+
+    # there are some cases when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    import matplotlib
+    matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
+    from matplotlib import colors
+
     parser = argparse.ArgumentParser()
     parser.add_argument("dos", help="doscube to be loaded")
     parser.add_argument("ctx", help="ctxcube to be loaded")  # todo: could be optional
