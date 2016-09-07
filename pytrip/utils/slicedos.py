@@ -3,6 +3,7 @@ import sys
 import argparse
 import logging
 
+from matplotlib.ticker import MultipleLocator
 from numpy import arange, meshgrid, ma
 
 from pytrip import dos, ctx
@@ -125,27 +126,42 @@ def main(args=sys.argv[1:]):
 
     ctx_cb = None
     dos_cb = None
+    ctx_im = None
+    dos_im = None
+    ctx_cb = None
 
     sstart = args.sstart
     sstop = args.sstop
 
-    if sstart is None:
-        sstart = 0
     if sstop is None:
         sstop = d.dimz
 
-    ax = plt.subplot(111, autoscale_on=False)
+    # Create the figure and subplot
+    fig = plt.figure()
+    ax = fig.add_subplot(111, autoscale_on=False)
+
+    ax.set_xlabel("ct [mm]")
+    ax.set_ylabel("ct [mm]")
+
+    ax.set_aspect(1.0)
+    for ax in fig.axes:
+        ax.grid(True)
+
+    ax.set_xlim(x_max, x_min)
+    ax.set_ylim(y_max, y_min)
+
+    minorLocator = MultipleLocator(1.5)
+
+    ax.xaxis.set_minor_locator(minorLocator)
 
     # loop over each slice
     for ids in range(sstart, sstop):  # starts at 0
 
-        fnout = basename_dos + "_{:03d}".format(ids) + ".png"
+        output_filename = basename_dos + "_{:03d}".format(ids) + ".png"
         if args.verbosity == 0:
             print("Write slice number: " + str(ids) + "/" + str(d.dimz))
         if args.verbosity > 0:
-            logger.info("Write slice number: " + str(ids) + "/" + str(d.dimz) + " to " + fnout)
-
-        ax.cla()
+            logger.info("Write slice number: " + str(ids) + "/" + str(d.dimz) + " to " + output_filename)
 
         dos_slice = d.cube[ids, :, :]
         # dos_slice *= 0.1  # convert %% to %
@@ -157,19 +173,20 @@ def main(args=sys.argv[1:]):
         # csmax = ctx_slice.max()
         # csmin = ctx_slice.min()
 
-        plt.xlabel("ct [mm]")
-        plt.ylabel("ct [mm]")
-        ax.set_aspect(1.0)
-        plt.grid(True)
 
         # extent tells what the x and y coordinates are,
         # so matplotlib can make propper assignment.
+        if ctx_im is not None:
+            ctx_im.remove()
         ctx_im = ax.imshow(
-            ctx_slice, cmap=plt.cm.gray, interpolation='bilinear', origin="lower", extent=[x_min, x_max, y_min, y_max])
-        if args.HUbar:
-            if ctx_cb is None:
-                ctx_cb = plt.colorbar(ctx_im, ticks=arange(-1000, 3000, 200), orientation='horizontal')
-                ctx_cb.set_label('HU')
+            ctx_slice,
+            cmap=plt.cm.gray,
+            interpolation='bilinear',
+            origin="lower",
+            extent=[x_min, x_max, y_min, y_max])
+        if args.HUbar and ctx_cb is None:
+            ctx_cb = fig.colorbar(ctx_im, ax=ax, ticks=arange(-1000, 3000, 200), orientation='horizontal')
+            ctx_cb.set_label('HU')
 
         # ------- add dose wash --------
 
@@ -185,18 +202,19 @@ def main(args=sys.argv[1:]):
         #                      cmap=cmap1,
         #                      antialiased=True,linewidths=None)
 
+        if dos_im is not None:
+            dos_im.remove()
         dos_im = ax.imshow(
             tmpdat,
             interpolation='bilinear',
             cmap=cmap1,
-            norm=colors.Normalize(
-                vmin=0, vmax=1200, clip=False),
+            norm=colors.Normalize(vmin=0, vmax=1200, clip=False),
             alpha=0.7,
             origin="lower",
             extent=[x_min, x_max, y_min, y_max])
 
         if dos_cb is None:
-            dos_cb = plt.colorbar(
+            dos_cb = fig.colorbar(
                 dos_im,
                 # extend='both',
                 orientation='vertical',
@@ -204,14 +222,11 @@ def main(args=sys.argv[1:]):
             dos_cb.set_ticks(arange(0, 1300, 200))
             dos_cb.set_label('Relative dose %%')
 
-        ax.set_xlim(x_max, x_min)
-        ax.set_ylim(y_max, y_min)
+        fig.savefig(output_filename)
 
-        # majorFormatter = plt.FormatStrFormatter('%d')
-        minorLocator = plt.MultipleLocator(1.5)
 
-        ax.xaxis.set_minor_locator(minorLocator)
-        plt.savefig(fnout)
+
+
 
 
 if __name__ == '__main__':
