@@ -45,6 +45,9 @@ class TestCubeSlicer(unittest.TestCase):
         self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
         logger.info("Loading dos file " + self.dos)
 
+        self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
+        logger.info("Loading dos file " + self.dos)
+
     def test_help(self):
         try:
             pytrip.utils.cubeslice.main(["--help"])
@@ -53,7 +56,7 @@ class TestCubeSlicer(unittest.TestCase):
 
     # def test_version(self):
     #     try:
-    #         pytrip.utils.slicedos.main(["--version"])
+    #         pytrip.utils.cubeslice.main(["--version"])
     #     except SystemExit as e:
     #         self.assertEqual(e.code, 0)
 
@@ -63,20 +66,23 @@ class TestCubeSlicer(unittest.TestCase):
         except SystemExit as e:
             self.assertEqual(e.code, 2)
 
-    # def test_convert_all(self):
-    #     pytrip.utils.slicedos.main(args=[self.dos, self.ctx])
-    #     output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
-    #
-    #     logger.info("Checking if number of output files is sufficient")
-    #     self.assertEqual(len(output_file_list), 300)
-    #
-    #     for output_file in output_file_list:
-    #         logger.info("Checking if " + output_file + " is PNG")
-    #         self.assertEqual(imghdr.what(output_file), 'png')
+    def test_convert_all(self):
+        pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx])
+        output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
 
-    # TODO should be activated once it is possible to save output files to some directory
+        logger.info("Checking if number of output files is sufficient")
+        self.assertEqual(len(output_file_list), 300)
+
+        for output_file in output_file_list:
+            logger.info("Checking if " + output_file + " is PNG")
+            self.assertEqual(imghdr.what(output_file), 'png')
+
+        for output_file in output_file_list:
+            logger.info("Removing " + output_file)
+            os.remove(output_file)
+
     def test_convert_one(self):
-        ret_code = pytrip.utils.cubeslice.main(args=[self.dos, self.ctx, "-f", '5', "-t", '6'])
+        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '6'])
         self.assertEqual(ret_code, 0)
 
         output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
@@ -88,6 +94,9 @@ class TestCubeSlicer(unittest.TestCase):
             logger.info("Checking if " + output_file + " is PNG")
             self.assertEqual(imghdr.what(output_file), 'png')
 
+        for output_file in output_file_list:
+            logger.info("Removing " + output_file)
+            os.remove(output_file)
 
 if __name__ == '__main__':
     unittest.main()
