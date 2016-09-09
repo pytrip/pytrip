@@ -34,7 +34,7 @@ from pytrip.error import InputError, ModuleNotLoadedError
 logger = logging.getLogger(__name__)
 
 
-class Cube:
+class Cube(object):
     def __init__(self, cube=None):
         if cube is not None:
             self.header_set = cube.header_set
