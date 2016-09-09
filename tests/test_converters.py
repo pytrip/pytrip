@@ -9,7 +9,7 @@ from tests.test_base import get_files
 
 import pytrip.utils.trip2dicom
 import pytrip.utils.dicom2trip
-import pytrip.utils.slicedos
+import pytrip.utils.cubeslice
 
 logger = logging.getLogger(__name__)
 
@@ -35,7 +35,7 @@ class TestDicom2Trip(unittest.TestCase):
         self.assertRaises(SystemExit, pytrip.utils.dicom2trip.main, [])
 
 
-class TestDosSlicer(unittest.TestCase):
+class TestCubeSlicer(unittest.TestCase):
     def setUp(self):
         self.dir_path = os.path.join("tests", "res", "TST003")
 
@@ -47,7 +47,7 @@ class TestDosSlicer(unittest.TestCase):
 
     def test_help(self):
         try:
-            pytrip.utils.slicedos.main(["--help"])
+            pytrip.utils.cubeslice.main(["--help"])
         except SystemExit as e:
             self.assertEqual(e.code, 0)
 
@@ -59,32 +59,34 @@ class TestDosSlicer(unittest.TestCase):
 
     def test_noarg(self):
         try:
-            pytrip.utils.slicedos.main([])
+            pytrip.utils.cubeslice.main([])
         except SystemExit as e:
             self.assertEqual(e.code, 2)
 
-    def test_convert_all(self):
-        pytrip.utils.slicedos.main(args=[self.dos, self.ctx])
-        output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
-
-        logger.info("Checking if number of output files is sufficient")
-        self.assertEqual(len(output_file_list), 300)
-
-        for output_file in output_file_list:
-            logger.info("Checking if " + output_file + " is PNG")
-            self.assertEqual(imghdr.what(output_file), 'png')
-
-    # TODO should be activated once it is possible to save output files to some directory
-    # def test_convert_one(self):
-    #     pytrip.utils.slicedos.main(args=[self.dos, self.ctx, "-f", '5' , "-t", '6'])
+    # def test_convert_all(self):
+    #     pytrip.utils.slicedos.main(args=[self.dos, self.ctx])
     #     output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
     #
     #     logger.info("Checking if number of output files is sufficient")
-    #     self.assertEqual(len(output_file_list), 1)
+    #     self.assertEqual(len(output_file_list), 300)
     #
     #     for output_file in output_file_list:
     #         logger.info("Checking if " + output_file + " is PNG")
     #         self.assertEqual(imghdr.what(output_file), 'png')
+
+    # TODO should be activated once it is possible to save output files to some directory
+    def test_convert_one(self):
+        ret_code = pytrip.utils.cubeslice.main(args=[self.dos, self.ctx, "-f", '5', "-t", '6'])
+        self.assertEqual(ret_code, 0)
+
+        output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
+
+        logger.info("Checking if number of output files is sufficient")
+        self.assertEqual(len(output_file_list), 1)
+
+        for output_file in output_file_list:
+            logger.info("Checking if " + output_file + " is PNG")
+            self.assertEqual(imghdr.what(output_file), 'png')
 
 
 if __name__ == '__main__':

@@ -171,7 +171,7 @@ setuptools.setup(
         'console_scripts': [
             'trip2dicom=pytrip.utils.trip2dicom:main',
             'dicom2trip=pytrip.utils.dicom2trip:main',
-            'slicedos=pytrip.utils.slicedos:main',
+            'cubeslice=pytrip.utils.cubeslice:main',
         ],
     },
     cmdclass=get_cmdclass())

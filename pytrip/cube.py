@@ -34,7 +34,7 @@ from pytrip.error import InputError, ModuleNotLoadedError
 logger = logging.getLogger(__name__)
 
 
-class Cube(object):
+class Cube:
     def __init__(self, cube=None):
         if cube is not None:
             self.header_set = cube.header_set
@@ -120,6 +120,30 @@ class Cube(object):
             c.cube = np.array(self.cube / float(other), dtype=t)
         c.cube[np.isnan(c.cube)] = 0  # fix division by zero NaNs
         return c
+
+    def is_compatible(self, other):
+        return self.check_compatibility(self, other)
+
+    @staticmethod
+    def check_compatibility(a, b):
+        """
+        Simple comparison of cubes. if X,Y,Z dims are the same, and
+        voxel sizes as well, then they are compatible. (Duck typed)
+        """
+        eps = 1e-5
+
+        if a.dimx != b.dimx:
+            return False
+        elif a.dimy != b.dimy:
+            return False
+        elif a.dimz != b.dimz:
+            return False
+        elif (a.pixel_size - b.pixel_size) > eps:
+            return False
+        elif a.slice_distance != b.slice_distance:
+            return False
+        else:
+            return True
 
     def indices_to_pos(self, indices):
         pos = []
@@ -227,7 +251,7 @@ class Cube(object):
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
             self.patient_name = "Anonyme"
-        output_str += "patient_name " + str(self.patient_name) + "\n"
+        output_str += "patient_name " + self.patient_name + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
