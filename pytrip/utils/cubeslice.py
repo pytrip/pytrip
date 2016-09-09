@@ -12,16 +12,15 @@ logger = logging.getLogger(__name__)
 
 
 def load_data_cube(filename):
-    logger.info("Data cube: " + filename)
+
+    if not filename:
+        logger.warn("Empty data cube filename")
+        return None, None
+
+    logger.info("Reading " + filename)
 
     d = None
     basename_cube = None
-
-    # try to load DOS cube
-    data_header, _ = dos.DosCube.parse_path(filename)
-    if data_header is not None:
-        basename_cube = os.path.splitext(data_header)[0]
-        d = dos.DosCube()
 
     # try to load LET cube
     data_header, _ = let.LETCube.parse_path(filename)
@@ -29,39 +28,51 @@ def load_data_cube(filename):
         basename_cube = os.path.splitext(data_header)[0]
         d = let.LETCube()
 
+    # try to load DOS cube
+    data_header, _ = dos.DosCube.parse_path(filename)
+    if d is None and data_header is not None:
+        basename_cube = os.path.splitext(data_header)[0]
+        d = dos.DosCube()
+
     if d is not None:
         d.read(filename)
         logger.info("Data cube shape" + str(d.cube.shape))
+        if isinstance(d, dos.DosCube):
+            d *= 0.1  # convert %% to %
 
         dmax = d.cube.max()
         dmin = d.cube.min()
-        logger.info("Data min, max values: {:d} {:d}".format(dmin, dmax))
+        logger.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
+
+
+    if d is None:
+        logger.warn("Filename " + filename + " is neither valid DOS neither LET cube")
 
     return d, basename_cube
 
 
 def load_ct_cube(filename):
     # load CT
-    c = None
-    basename_cube = None
 
-    if filename:
-        logger.info("Reading " + filename)
-        ctx_header, _ = ctx.CtxCube.parse_path(filename)
-        if ctx_header is not None:
-            basename_cube = os.path.splitext(ctx_header)[0]
-            c = ctx.CtxCube()
-            c.read(filename)
-            logger.info("CT cube shape" + str(c.cube.shape))
-
-            cmax = c.cube.max()
-            cmin = c.cube.min()
-            logger.info("CT min, max values: {:d} {:d}".format(cmin, cmax))
-        else:
-            logger.error("Path " + filename + " doesn't seem to point to proper CT cube")
-
-    else:
+    if not filename:
         logger.warn("Empty CT cube filename")
+        return None, None
+
+    logger.info("Reading " + filename)
+    ctx_header, _ = ctx.CtxCube.parse_path(filename)
+
+    if ctx_header is None:
+        logger.warn("Path " + filename + " doesn't seem to point to proper CT cube")
+        return None, None
+
+    basename_cube = os.path.splitext(ctx_header)[0]
+    c = ctx.CtxCube()
+    c.read(filename)
+    logger.info("CT cube shape" + str(c.cube.shape))
+
+    cmax = c.cube.max()
+    cmin = c.cube.min()
+    logger.info("CT min, max values: {:d} {:d}".format(cmin, cmax))
 
     return c, basename_cube
 
@@ -123,7 +134,7 @@ def main(args=sys.argv[1:]):
         cube = ct_cube
         cube_basename = ct_basename
     else:
-        logger.error("Both cubes are empty")
+        logger.error("Both (data and CT) cubes are empty")
         return 2
 
     # calculating common frame for printing cubes
@@ -141,8 +152,8 @@ def main(args=sys.argv[1:]):
     logger.info("First bin pos: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin, ymin, zmin))
     logger.info("Last bin pos : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax, ymax, zmax))
 
-    x = arange(xmin, xmax, data_cube.pixel_size)
-    y = arange(ymin, ymax, data_cube.pixel_size)
+    x = arange(xmin, xmax, cube.pixel_size)
+    y = arange(ymin, ymax, cube.pixel_size)
     x_grid, y_grid = meshgrid(x, y)
     x_max = x_grid.max()
     x_min = x_grid.min()
@@ -158,7 +169,7 @@ def main(args=sys.argv[1:]):
     slice_stop = args.sstop
 
     if slice_stop is None:
-        slice_stop = data_cube.dimz
+        slice_stop = cube.dimz
 
     # Prepare figure and subplot (axis)
     # They will stay the same during the loop
@@ -184,9 +195,9 @@ def main(args=sys.argv[1:]):
 
         output_filename = cube_basename + "_{:03d}".format(ids) + ".png"
         if args.verbosity == 0:
-            print("Write slice number: " + str(ids) + "/" + str(data_cube.dimz))
+            print("Write slice number: " + str(ids) + "/" + str(cube.dimz))
         if args.verbosity > 0:
-            logger.info("Write slice number: " + str(ids) + "/" + str(data_cube.dimz) + " to " + output_filename)
+            logger.info("Write slice number: " + str(ids) + "/" + str(cube.dimz) + " to " + output_filename)
 
         if ct_cube is not None:
             ct_slice = ct_cube.cube[ids, :, :]
@@ -210,7 +221,6 @@ def main(args=sys.argv[1:]):
         if data_cube is not None:
             # Extract the slice
             data_slice = data_cube.cube[ids, :, :]
-            # data_slice *= 0.1  # convert %% to %
 
             # remove data cube image from the current plot (if present) and replace later with new data
             if data_im is not None:
@@ -221,6 +231,7 @@ def main(args=sys.argv[1:]):
             cmap1.set_over("k", alpha=0.0)
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
+            dmax = data_cube.cube.max()
             tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrifical goat
 
             # plot new data cube
@@ -228,8 +239,7 @@ def main(args=sys.argv[1:]):
                 tmpdat,
                 interpolation='bilinear',
                 cmap=cmap1,
-                norm=colors.Normalize(
-                    vmin=0, vmax=1200, clip=False),
+                norm=colors.Normalize(vmin=0, vmax=dmax*1.1, clip=False),
                 alpha=0.7,
                 origin="lower",
                 extent=[x_min, x_max, y_min, y_max])
@@ -240,8 +250,10 @@ def main(args=sys.argv[1:]):
                     # extend='both',
                     orientation='vertical',
                     shrink=0.8)
-                data_cb.set_ticks(arange(0, 1300, 200))
-                data_cb.set_label('Relative dose %%')
+                if isinstance(data_cube, let.LETCube):
+                    data_cb.set_label("LET [keV/um]")
+                elif isinstance(data_cube, dos.DosCube):
+                    data_cb.set_label("Relative dose [%]")
 
         fig.savefig(output_filename)
 
