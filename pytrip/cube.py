@@ -251,7 +251,7 @@ class Cube(object):
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
             self.patient_name = "Anonyme"
-        output_str += "patient_name " + self.patient_name + "\n"
+        output_str += "patient_name " + str(self.patient_name) + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
