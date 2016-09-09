@@ -44,7 +44,6 @@ def load_data_cube(filename):
         dmin = d.cube.min()
         logger.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
 
-
     if d is None:
         logger.warn("Filename " + filename + " is neither valid DOS neither LET cube")
 
@@ -239,7 +238,8 @@ def main(args=sys.argv[1:]):
                 tmpdat,
                 interpolation='bilinear',
                 cmap=cmap1,
-                norm=colors.Normalize(vmin=0, vmax=dmax*1.1, clip=False),
+                norm=colors.Normalize(
+                    vmin=0, vmax=dmax * 1.1, clip=False),
                 alpha=0.7,
                 origin="lower",
                 extent=[x_min, x_max, y_min, y_max])
