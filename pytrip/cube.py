@@ -121,6 +121,30 @@ class Cube(object):
         c.cube[np.isnan(c.cube)] = 0  # fix division by zero NaNs
         return c
 
+    def is_compatible(self, other):
+        return self.check_compatibility(self, other)
+
+    @staticmethod
+    def check_compatibility(a, b):
+        """
+        Simple comparison of cubes. if X,Y,Z dims are the same, and
+        voxel sizes as well, then they are compatible. (Duck typed)
+        """
+        eps = 1e-5
+
+        if a.dimx != b.dimx:
+            return False
+        elif a.dimy != b.dimy:
+            return False
+        elif a.dimz != b.dimz:
+            return False
+        elif (a.pixel_size - b.pixel_size) > eps:
+            return False
+        elif a.slice_distance != b.slice_distance:
+            return False
+        else:
+            return True
+
     def indices_to_pos(self, indices):
         pos = []
         pos.append((indices[0] + 0.5) * self.pixel_size + self.xoffset)

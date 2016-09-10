@@ -13,6 +13,6 @@ then
     echo "TESTS DISABLED"
 else
     pyenv exec tox --notest -e $TOXENV
-    pyenv exec tox -- -n 8
+    pyenv exec tox -- -n 1
 fi
 
