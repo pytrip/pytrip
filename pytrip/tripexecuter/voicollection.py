@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-from pytrip.tripexecuter import pytripObj
+from pytrip.tripexecuter.pytripobj import pytripObj
 from pytrip.tripexecuter.tripvoi import TripVoi
 from pytrip.util import get_class_name
 
