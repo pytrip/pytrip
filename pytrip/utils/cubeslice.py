@@ -85,6 +85,7 @@ def main(args=sys.argv[1:]):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib import colors
+    import os
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -95,16 +96,24 @@ def main(args=sys.argv[1:]):
         "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=0)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
+    parser.add_argument("-o", "--outputdir", dest='outputdir',
+                        help="Write resulting files to this directory.", type=str, default=None)
     args = parser.parse_args(args)
 
     if args.verbosity == 1:
-        logger.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO)
     if args.verbosity > 1:
-        logger.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
 
     if args.data is None and args.ct is None:
         logger.error("Provide location of at least one cube")
         return 2
+
+    # Check if different output path was requested. If yes, then check if it exists.
+    if args.outputdir is not None:
+        if os.path.isdir(args.outputdir) is False:
+            logger.error("Output directory " + args.outputdir + "does not exist.")
+            return 1
 
     data_cube, data_basename = load_data_cube(args.data)
 
@@ -193,6 +202,9 @@ def main(args=sys.argv[1:]):
     for ids in range(slice_start, slice_stop):  # starts at 0
 
         output_filename = cube_basename + "_{:03d}".format(ids) + ".png"
+        if args.outputdir is not None:
+            # use os.path.join() in order to add slash if it is missing.
+            output_filename = os.path.join(args.outputdir, os.path.basename(output_filename))
         if args.verbosity == 0:
             print("Write slice number: " + str(ids) + "/" + str(cube.dimz))
         if args.verbosity > 0:
