@@ -5,6 +5,8 @@ import tempfile
 import glob
 import logging
 
+import shutil
+
 from tests.test_base import get_files
 
 import pytrip.utils.trip2dicom
@@ -67,8 +69,10 @@ class TestCubeSlicer(unittest.TestCase):
             self.assertEqual(e.code, 2)
 
     def test_convert_all(self):
-        pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx])
-        output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
+        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+        pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-o', working_dir])
+        output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
 
         logger.info("Checking if number of output files is sufficient")
         self.assertEqual(len(output_file_list), 300)
@@ -77,15 +81,20 @@ class TestCubeSlicer(unittest.TestCase):
             logger.info("Checking if " + output_file + " is PNG")
             self.assertEqual(imghdr.what(output_file), 'png')
 
-        for output_file in output_file_list:
-            logger.info("Removing " + output_file)
-            os.remove(output_file)
+        logger.info("Removing " + working_dir)
+        shutil.rmtree(working_dir)
 
     def test_convert_one(self):
-        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '6'])
+        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos,
+                                                     '--ct', self.ctx,
+                                                     '-f', '5',
+                                                     '-t', '6',
+                                                     '-o', working_dir])
         self.assertEqual(ret_code, 0)
 
-        output_file_list = glob.glob(os.path.join(self.dir_path, "*.png"))
+        output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
 
         logger.info("Checking if number of output files is sufficient")
         self.assertEqual(len(output_file_list), 1)
@@ -94,9 +103,8 @@ class TestCubeSlicer(unittest.TestCase):
             logger.info("Checking if " + output_file + " is PNG")
             self.assertEqual(imghdr.what(output_file), 'png')
 
-        for output_file in output_file_list:
-            logger.info("Removing " + output_file)
-            os.remove(output_file)
+        logger.info("Removing " + working_dir)
+        shutil.rmtree(working_dir)
 
 if __name__ == '__main__':
     unittest.main()

@@ -85,7 +85,6 @@ def main(args=sys.argv[1:]):
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib import colors
-    import os
 
     # parse arguments
     parser = argparse.ArgumentParser()
