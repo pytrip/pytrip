@@ -113,7 +113,7 @@ install:
 
 # finally run tox tests
 script:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 1 ; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 8 ; fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
 # in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
   - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
