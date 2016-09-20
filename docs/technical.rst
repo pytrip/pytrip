@@ -3,8 +3,8 @@
 Technical documentation
 =======================
 
-.. image:: https://img.shields.io/pypi/v/pytrip.svg
-        :target: https://pypi.python.org/pypi/pytrip
+.. image:: https://img.shields.io/pypi/v/pytrip98.svg
+        :target: https://pypi.python.org/pypi/pytrip98
 .. image:: https://img.shields.io/travis/pytrip/pytrip.svg
         :target: https://travis-ci.org/pytrip/pytrip
 
@@ -34,9 +34,9 @@ Technical documentation
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/pytrip/pytrip
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/grzanka/pytrip?branch=master&svg=true
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/pytrip/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
-    :target: https://ci.appveyor.com/project/pytrip/pytrip
+    :target: https://ci.appveyor.com/project/grzanka/pytrip
 
 .. |version| image:: https://img.shields.io/pypi/v/pytrip98.svg?style=flat
     :alt: PyPI Package latest release
