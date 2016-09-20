@@ -36,7 +36,7 @@ Technical documentation
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/grzanka/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
-    :target: https://ci.appveyor.com/project/grzanka/pytrip
+    :target: https://ci.appveyor.com/project/pytrip/pytrip
 
 .. |version| image:: https://img.shields.io/pypi/v/pytrip98.svg?style=flat
     :alt: PyPI Package latest release

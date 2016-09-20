@@ -3,24 +3,20 @@
 Installation guide
 ==================
 
-**pytrip** works under Linux operating system.
+**pytrip** works under Linux and Mac OSX operating systems.
 
 If you are familiar with python and pip tool, simply type following command to install the package::
 
-    $ pip install pytrip
+    $ pip install pytrip98
 
 If your are a less advanced user, read the rest of the page.
 
-Installation guide is divided in two phases: prerequisites (mainly Python installation) and main package installation.
+Installation guide is divided in two phases: prerequisites (mainly Python interpreter installation) and main package installation.
 
 There are two groups of users: administrators and regular ones.
 For regular users we assume that they can write files to their home directory, but not necessary elsewhere.
 We assume that administrators can log in as root user, execute commands via ``sudo`` or
-have some other way to create files system-wide.
-
-We expect that **pytrip** will mostly be used by regular users on computing clusters.
-This is the reason why installation instruction is lengthy and detailed,
-explaining how to deal with lack of administrator rights.
+have some other way to create files system-wide. This instruction is aimed at these two groups.
 
 Prerequisites - python interpreter
 ----------------------------------
@@ -39,7 +35,7 @@ Check if your interpreter version is supported.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
 
-We suggest to use the newest version available for your Linux distribution (from 3.x family).
+We suggest to use the newest version available (from 3.x family).
 
 User installation
 ~~~~~~~~~~~~~~~~~
@@ -97,26 +93,6 @@ The best way is to use your package manager.
 * ``yum install python3`` (python 3) or ``yum install python`` (python 2) for CentOS and SLC
 
 
-
-Single file distribution
-------------------------
-
-**pytrip** is shipped as a single file executable.
-It can be downloaded from https://github.com/pytrip/pytrip/releases webpage using the web browser or
-via command line (here an example with 0.1.4 version is found, newer versions should also be available)::
-
-    $ wget https://github.com/pytrip/pytrip/releases/download/v0.1.4/generatemc.pyz -O generatemc
-
-After downloading the file, make sure it has executable bits set::
-
-    $ chmod ugo+x generatemc
-
-When new version if released, replace downloaded file with newer one.
-
-As pytrip doesn't have any mechanism of automatic updates,
-we recommend to use installation using **pip** tool, described below.
-It makes easy upgrade and uninstallation procedure.
-
 Prerequisites - pip tool
 ------------------------
 
@@ -173,7 +149,6 @@ pip package installation
 ------------------------
 
 Now it is time to install **pytrip** package.
-It consists of executable file called `generatemc` and bunch of necessary code files.
 
 User installation
 ~~~~~~~~~~~~~~~~~
@@ -182,28 +157,27 @@ User installation will put the **pytrip** under hidden directory `$HOME/.local`.
 
 To install the package, type in the terminal::
 
-    $ pip install pytrip --user
+    $ pip install pytrip98 --user
 
 If `pip` command is missing on your system, replace `pip` with `pip3` in abovementioned instruction.
 
 To upgrade the **pytrip** to newer version, simply type::
 
-    $ pip install --upgrade pytrip --user
+    $ pip install --upgrade pytrip98 --user
 
 To completely remove **pytrip** from your system, use following command::
 
-    $ pip uninstall pytrip
+    $ pip uninstall pytrip98
 
-In most of modern systems all executables found in `$HOME/.local/bin` directory (`generatemc` executable will be saved
-there) can be called like normal Linux commands (i.e. `ls`, `cd`). It means that after installation you should be able
-to simply type in terminal: `generatemc` to use this package ::
+In most of modern systems all executables found in `$HOME/.local/bin` directory can be called
+like normal commands (i.e. `ls`, `cd`). It means that after installation you should be able
+to simply type in terminal::
 
-
-    $ generatemc --help
+    $ cubeslice --help
 
 If this is not the case, please prefix the command with `$HOME/.local/bin` and call it in the following way::
 
-    $ $HOME/.local/bin/generatemc --help
+    $ $HOME/.local/bin/cubeslice --help
 
 
 Administrator installation
@@ -212,17 +186,16 @@ Administrator installation
 Administrator installation is very simple, but requires to save some files in system-wide directories (i.e. `/usr`).
 On some systems commands mentioned below have to be prefixed with `sudo` command::
 
-    $ pip install pytrip
+    $ pip install pytrip98
 
 To upgrade the **pytrip** to newer version, simply type::
 
-    $ pip install --upgrade pytrip
+    $ pip install --upgrade pytrip98
 
 To completely remove **pytrip** from your system, use following command::
 
-    $ pip uninstall pytrip
+    $ pip uninstall pytrip98
 
-Now `generatemc` script should be installed for all users and can be invoked by typing::
+Now all **pytrip** commands should be installed for all users::
 
-
-    $ generatemc --help
+    $ cubeslice --help
