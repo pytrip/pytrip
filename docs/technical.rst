@@ -14,9 +14,6 @@ Technical documentation
         :target: https://readthedocs.org/projects/pytrip/?badge=latest
         :alt: Documentation Status
 
-========
-Overview
-========
 
 .. start-badges
 

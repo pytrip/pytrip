@@ -5,9 +5,26 @@ PyTRiP is a python package for working with TRiP and VIRTUOS/VOXELPLAN files.
 It is mainly supposed for batch processing, but an experimental GUI is also included
 (see https://github.com/pytrip/pytripgui repo).
 
+**mcpartools** provides a command line application called ``generatemc`` which works under Linux operating system
+(interpreter of Python programming language has to be also installed).
+No programming knowledge is required from user, but basic skills in working with terminal console are needed.
 
-HOW TO WORK WITH IT ?
-=====================
+
+Quick installation guide
+------------------------
+
+First be sure to have Python framework installed, then type::
+
+    pip install mcpartools
+
+This command will automatically download and install **mcpartools** for all users in your system.
+In case you don't have administrator rights, add ``--user`` flag to ``pip`` command.
+In this situation converter will be probably installed in ``~/.local/bin`` directory.
+
+For more detailed instruction, see `installation guide <INSTALL.rst>`__.
+
+Short documentation
+-------------------
 
 First, install pytrip98 package. The easiest way is to use pip package manager::
 
@@ -47,10 +64,10 @@ Following Python code demonstrates PyTRiP capabilities::
     l.write("out.dosemlet.dos")
 
 
-MORE DOCUMENTATION
-==================
+More documentation
+------------------
 
 Full documentation can be found here:
 https://pytrip.readthedocs.io/
 
-If you would like to download the code and modify it, read first `this <docs/technical.rst>`__.
+If you would like to download the code and modify it, read first `contribution guide <CONTRIBUTING.rst>`__.
