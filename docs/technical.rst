@@ -1,6 +1,5 @@
 .. _technical-label:
 
-=======================
 Technical documentation
 =======================
 
@@ -63,26 +62,6 @@ Technical documentation
 
 Overv.io issue board: https://overv.io/pytrip/pytrip/
 
-
-Installation
-============
-
-Stable version ::
-
-    pip install pytrip98
-
-Latest unstable version, directly GIT repository, using::
-
-    pip install setuptools versioneer
-    pip install git+https://github.com/pytrip/pytrip.git
-
-To upgrade, type::
-
-    pip install -U pytrip98
-
-To uninstall, simply use::
-
-    pip uninstall pytrip98
 
 Documentation
 =============

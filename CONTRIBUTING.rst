@@ -79,11 +79,7 @@ of PYTHONPATH variables are needed to run the code. Let us assume you are now in
 
 The standard way to execute Python scripts WILL NOT WORK::
 
-   $ python pytrip/generatemc.py --version
-   Traceback (most recent call last):
-     File "pytrip/generatemc.py", line 5, in <module>
-       from pytrip.generator import Generator
-   ImportError: No module named pytrip.generator
+   $ python pytrip/utils/cubeslice.py --help
 
 To have the code working, two things are needed:
 
@@ -97,12 +93,15 @@ First let us install ``versioneer`` package and generate necessary files::
 
 Now code can be run by typing::
 
-   $ PYTHONPATH=. python pytrip/generatemc.py --version
-   0.1.3.post.dev2
+   $ PYTHONPATH=. python pytrip/utils/cubeslice.py --help
+   usage: cubeslice.py [-h] [--data [DATA]] [--ct [CT]] [-v] [-f N] [-t M] [-H]
+                    [-o OUTPUTDIR]
+
+   (...)
 
 5. Make local changes to fix the bug or to implement a feature.
 
-6. When you're done making changes, check that your changes comply with PEP8 code quality standars (flake8 tests) and test against other Python versions with tox::
+6. When you're done making changes, check that your changes comply with PEP8 code quality standards (flake8 tests) and test against other Python versions with tox::
 
     $ flake8 pytrip tests
     $ tox
@@ -154,8 +153,11 @@ Get Started for non-GIT developers
 
 To run code locally, prefix usual calls with ``PYTHONPATH=.``::
 
-   $ PYTHONPATH=. python pytrip/generatemc.py --version
-   0.1.3.post.dev2
+   $ PYTHONPATH=. python pytrip/utils/cubeslice.py --help
+   usage: cubeslice.py [-h] [--data [DATA]] [--ct [CT]] [-v] [-f N] [-t M] [-H]
+                    [-o OUTPUTDIR]
+
+   (...)
 
 Make your changes and check that they comply with PEP8 code quality standards (flake8 tests) and test against other Python versions with tox::
 
