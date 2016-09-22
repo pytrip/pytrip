@@ -38,7 +38,7 @@ build:
 # ---------------------------------- 64 bit -----------------------------------------------
 
 build_manylinux_64:
-  box: quay.io/pypa/manylinux1_x86_64
+  box: grzanka/manylinux-test
 
   steps:
 
