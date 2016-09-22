@@ -94,7 +94,7 @@ test_debian_8_jessie_py2:
         code: |
           ls -al
           pwd
-          pip install /pipeline/source/pytrip98-*-cp27*-manylinux1_x86_64.whl
+          pip install /pipeline/source/pytrip98-0+unknown-cp27-cp27mu-manylinux1_x86_64.whl
 
     - script:
         name: test
