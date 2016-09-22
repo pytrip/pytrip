@@ -54,10 +54,13 @@ build_manylinux_64:
         code: |
           ls *.tar.gz
           tar -zxf *.tar.gz
-          mkdir wheelhouse
           cd pytrip98*
-          /opt/python/cp27-cp27m/bin/pip install -U -r requirements.txt
-          /opt/python/cp27-cp27m/bin/pip wheel . -w ../wheelhouse/
+          mkdir -p /io
+          mv * /io
+          cd /io
+          ls -al
+          /io/.travis/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp33-cp33m"
+
 
 #    - script:
 #        name: test
