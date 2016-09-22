@@ -35,8 +35,7 @@ build:
     - script:
         name: copy binary
         code: |
-          mkdir -p "$WERCKER_OUTPUT_DIR"/pytrip98
-          cp -r . "$WERCKER_OUTPUT_DIR"/pytrip98
+          tar -zcf "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz .
           cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
           cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
 
@@ -59,8 +58,9 @@ build_manylinux_64:
         code: |
           mkdir -p /io
           cp build_wheels.sh /io
-          cp -r pytrip98/* /io
+          cp -r pytrip98.tar.gz /io
           cd /io
+          tar -zxvf pytrip98.tar.gz
           ls -al
           /io/build_wheels.sh "cp27-cp27m cp27-cp27mu"
 
