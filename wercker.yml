@@ -94,6 +94,9 @@ test_debian_8_jessie_py2:
         code: |
           ls -al
           pwd
+          uname -a
+          python -c "import pip; print(pip.pep425tags.get_supported())"
+          python -c "import platform; print(platform.platform())"
           pip install /pipeline/source/pytrip98-0+unknown-cp27-cp27mu-manylinux1_x86_64.whl
 
     - script:
