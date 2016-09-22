@@ -32,8 +32,9 @@ build:
     # copy binary to a location that gets passed along to next pipelines
     - script:
         name: copy binary
-        code: cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
-        code: cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
+        code: |
+          cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
+          cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
 
 
 # ---------------------------------- 64 bit -----------------------------------------------
