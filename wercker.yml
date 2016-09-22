@@ -33,6 +33,7 @@ build:
     - script:
         name: copy binary
         code: cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
+        code: cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
 
 
 # ---------------------------------- 64 bit -----------------------------------------------
@@ -53,13 +54,15 @@ build_manylinux_64:
         name: package_install
         code: |
           ls *.tar.gz
+          ls -al
+          cp build_wheels.sh /io
           tar -zxf *.tar.gz
           cd pytrip98*
           mkdir -p /io
           mv * /io
           cd /io
           ls -al
-          /io/.travis/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp33-cp33m"
+          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp33-cp33m"
 
 
 #    - script:
@@ -71,27 +74,27 @@ build_manylinux_64:
 #          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
 #
 #
-## ---------------------------------- debian 8 jessie -----------------------------------------------
-#
-#test_debian_8_jessie_py2:
-#  box: debian:jessie
-#
-#  steps:
-#
-#    - script:
-#        name: prerequisites
-#        code: |
-#          sudo apt-get update
-#          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
-#          python -V
-#          pip -V
-#
-#    - script:
-#        name: package_install
-#        code: |
-#          ls
+# ---------------------------------- debian 8 jessie -----------------------------------------------
+
+test_debian_8_jessie_py2:
+  box: debian:jessie
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al
 #          pip install mcpartools*.whl
-#
+
 #    - script:
 #        name: test
 #        code: |
