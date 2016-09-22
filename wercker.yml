@@ -97,7 +97,7 @@ test_debian_8_jessie_py2:
           uname -a
           python -c "import pip; print(pip.pep425tags.get_supported())"
           python -c "import platform; print(platform.platform())"
-          sudo pip install -U pip
+          easy_install -U pip
           pip -V
           python -c "import pip; print(pip.pep425tags.get_supported())"
           python -c "import platform; print(platform.platform())"
