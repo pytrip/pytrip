@@ -1,0 +1,445 @@
+# build python 2.7 by default
+box: python:2.7
+
+build:
+  steps:
+
+    # A step that sets up the python virtual environment
+    - virtualenv:
+        name: setup virtual environment
+        install_wheel: false # Enable wheel to speed up builds (experimental)
+
+    # installing necessary requirements
+    - pip-install:
+        requirements_file: "requirements.txt"
+        extra_args: "-rtests/requirements-test.txt"
+        packages_list: "wheel"
+
+    # checking python version
+    - script:
+        name: echo python information
+        code: |
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+
+    # running tests
+    - script:
+        name: test
+        code: |
+          tox -e py27
+
+    # making package
+    - script:
+        name: package_wheel
+        code: |
+          python setup.py bdist_wheel
+          ls -al dist/*whl
+
+    # copy binary to a location that gets passed along to next pipelines
+    - script:
+        name: copy binary
+        code: cp dist/*whl "$WERCKER_OUTPUT_DIR"
+
+
+# ---------------------------------- debian 8 jessie -----------------------------------------------
+
+test_debian_8_jessie_py2:
+  box: debian:jessie
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+
+
+test_debian_8_jessie_py3:
+  box: debian:jessie
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python3-pip  wget
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip3 install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+
+## ---------------------------------- debian 7 wheezy -----------------------------------------------
+# TODO - to be investigated
+#test_debian_7_wheezy_py2:
+#  box: debian:wheezy
+#
+#  steps:
+#
+#    - script:
+#        name: prerequisites
+#        code: |
+#          sudo apt-get update
+#          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+#          python -V
+#          pip --version
+#
+#    - script:
+#        name: package_install
+#        code: |
+#          ls
+#          pip install mcpartools*.whl
+#
+#    - script:
+#        name: test
+#        code: |
+#          generatemc --version
+#          generatemc --help
+#          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+#          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+#
+#
+#test_debian_7_wheezy_py3:
+#  box: debian:wheezy
+#
+#  steps:
+#    - script:
+#        name: prerequisites
+#        code: |
+#          sudo apt-get update
+#          sudo apt-get install -qq -y --no-install-recommends python3 ca-certificates wget
+#          python3 -V
+#          wget https://bootstrap.pypa.io/get-pip.py
+#          python3 get-pip.py
+#          pip -V
+#
+#    - script:
+#        name: package_install
+#        code: |
+#          ls
+#          pip install mcpartools*.whl
+#
+#    - script:
+#        name: test
+#        code: |
+#          generatemc --version
+#          generatemc --help
+#          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+#          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+
+
+# ---------------------------------- debian testing -----------------------------------------------
+
+test_debian_testing_py3:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python3-pip python3-pkg-resources wget
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al *whl
+          pip3 install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+test_debian_testing_py2:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+# ---------------------------------- Ubuntu 16.04 -----------------------------------------------
+
+test_ubuntu_1604_py2:
+  box: ubuntu:16.04
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources  wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+test_ubuntu_1604_py3:
+  box: ubuntu:16.04
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python3-pip python3-pkg-resources wget
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al *whl
+          pip3 install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+# ---------------------------------- Ubuntu 14.04 -----------------------------------------------
+
+test_ubuntu_1404_py2:
+  box: ubuntu:14.04
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+test_ubuntu_1404_py3:
+  box: ubuntu:14.04
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo apt-get update
+          sudo apt-get install -qq -y --no-install-recommends python3-pip wget
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al *whl
+          pip3 install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+# ---------------------------------- Centos 7 -----------------------------------------------
+
+test_centos_7_py2:
+  box: centos:7
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo yum update -y -q
+          sudo yum install -q -y python wget
+          python -V
+          wget https://bootstrap.pypa.io/get-pip.py
+          python get-pip.py
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+test_centos_7_py3:
+  box: centos:7
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo yum update -y -q
+          sudo yum install -q -y python3 wget
+          python -V
+          wget https://bootstrap.pypa.io/get-pip.py
+          python get-pip.py
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al *whl
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+# ---------------------------------- Centos 7 -----------------------------------------------
+
+test_fedora_24_py2:
+  box: fedora:24
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          sudo dnf update -y -q
+          sudo dnf install -q -y python-pip wget
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          ls
+          pip install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
+
+test_fedora_24_py3:
+  box: fedora:24
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          sudo dnf update -y -q
+          sudo dnf install -q -y python3-pip wget
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          ls -al *whl
+          pip3 install mcpartools*.whl
+
+    - script:
+        name: test
+        code: |
+          generatemc --version
+          generatemc --help
+          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
+          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
+          ls -al fluka
