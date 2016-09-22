@@ -100,5 +100,5 @@ after_test:
   # This step builds your wheels.
   - python setup.py bdist_wheel
 
-test_script:
-  - py.test
+#test_script:
+#  - py.test
