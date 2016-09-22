@@ -65,16 +65,13 @@ build_manylinux_64:
           ls -al
           /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp33-cp33m"
 
+    # copy binary to a location that gets passed along to next pipelines
+    - script:
+        name: copy binary
+        code: |
+          cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
 
-#    - script:
-#        name: test
-#        code: |
-#          generatemc --version
-#          generatemc --help
-#          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
-#          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
-#
-#
+
 # ---------------------------------- debian 8 jessie -----------------------------------------------
 
 test_debian_8_jessie_py2:
