@@ -56,10 +56,10 @@ build_manylinux_64:
         code: |
           ls *.tar.gz
           ls -al
+          mkdir -p /io
           cp build_wheels.sh /io
           tar -zxf *.tar.gz
           cd pytrip98*
-          mkdir -p /io
           mv * /io
           cd /io
           ls -al
