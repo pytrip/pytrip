@@ -64,9 +64,9 @@ build_manylinux_64:
           mv * /io
           cd /io
           ls -al
-#          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
           /io/build_wheels.sh "cp27-cp27m cp27-cp27mu"
 
+    # /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
     # copy binary to a location that gets passed along to next pipelines
     - script:
         name: copy binary
