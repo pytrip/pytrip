@@ -13,13 +13,13 @@ No programming knowledge is required from user, but basic skills in working with
 Quick installation guide
 ------------------------
 
-We assume that you run a modern Linux distribution, like: Ubuntu 16.04 or newer, Debian testing
-or any updated rolling release (archLinux, openSUSE tumbleweed). First, be sure you have python
-and pip installed. To get it on Debian or Ubuntu, type being logged as normal user::
+We recommend that you run a modern Linux distribution, like: **Ubuntu 16.04** or newer, **Debian 9 Stretch** (currently known as testing)
+or any updated rolling release (archLinux, openSUSE tumbleweed). In this case, be sure you have **python**
+and **python-pip** installed. To get them on Debian or Ubuntu, type being logged in as normal user::
 
-    $ sudo apt-get install python3-pip
+    $ sudo apt-get install python-pip
 
-Then you can install pytrip core library and its dependencies using pip::
+To install the pytrip core library type::
 
     $ sudo pip install pytrip98
 
