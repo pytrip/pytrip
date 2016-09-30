@@ -3,6 +3,7 @@ box: python:2.7
 
 command-timeout: 60
 
+# make a source package in standard python box
 build:
   steps:
 
@@ -42,6 +43,7 @@ build:
 
 # ---------------------------------- 64 bit -----------------------------------------------
 
+# make a 64-bit manylinux1 package in grzanka/manylinux-test box (based on
 build_manylinux_64:
   box: grzanka/manylinux-test
   steps:
@@ -75,7 +77,7 @@ build_manylinux_64:
 # ---------------------------------- debian 8 jessie -----------------------------------------------
 
 test_debian_8_jessie_py2:
-  box: debian:jessie
+  box: debian:8
 
   steps:
 
@@ -99,7 +101,7 @@ test_debian_8_jessie_py2:
           pip -V
           python -c "import pip; print(pip.pep425tags.get_supported())"
           python -c "import platform; print(platform.platform())"
-          pip install /pipeline/source/pytrip98-0+unknown-cp27-cp27mu-manylinux1_x86_64.whl
+          python -m pip install /pipeline/source/pytrip98-*-manylinux1_x86_64.whl
 
     - script:
         name: test
