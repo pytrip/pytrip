@@ -48,6 +48,7 @@ build_manylinux_64:
   box: grzanka/manylinux-test
   steps:
 
+    # check python versions and install versioneer
     - script:
         name: prerequisites
         code: |
@@ -55,6 +56,7 @@ build_manylinux_64:
           /opt/python/cp27-cp27m/bin/pip -V
           /opt/python/cp27-cp27m/bin/pip install versioneer
 
+    # make a manylinux1 package
     - script:
         name: package_install
         code: |
@@ -66,7 +68,6 @@ build_manylinux_64:
           ls -al
           /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
 
-    # /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
     # copy binary to a location that gets passed along to next pipelines
     - script:
         name: copy binary
@@ -168,6 +169,7 @@ test_ubuntu_1604_testing_py3:
     - script:
         name: package_install
         code: |
+          pip3 install setuptools
           pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
@@ -224,7 +226,8 @@ test_debian_8_jessie_py3:
           pip3 -V
           easy_install3 -U pip
           pip3 -V
-          pip3 install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+          pip3 install setuptools
+          python3 -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
 
     - script:
         name: test
