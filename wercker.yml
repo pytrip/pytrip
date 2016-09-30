@@ -90,6 +90,7 @@ test_debian_testing_py2:
     - script:
         name: package_install
         code: |
+          pip install setuptools
           pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
 
     - script:
@@ -115,7 +116,7 @@ test_debian_testing_py3:
     - script:
         name: package_install
         code: |
-          pip install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
         name: test
@@ -141,6 +142,7 @@ test_ubuntu_1604_testing_py2:
     - script:
         name: package_install
         code: |
+          pip install setuptools
           pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
 
     - script:
@@ -166,7 +168,7 @@ test_ubuntu_1604_testing_py3:
     - script:
         name: package_install
         code: |
-          pip install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
         name: test
@@ -220,9 +222,9 @@ test_debian_8_jessie_py3:
           apt-get install -qq -y --no-install-recommends python3-pip
           python3 -V
           pip3 -V
-          easy_install -U pip
+          easy_install3 -U pip
           pip3 -V
-          python -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
 
     - script:
         name: test
