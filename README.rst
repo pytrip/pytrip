@@ -13,17 +13,23 @@ No programming knowledge is required from user, but basic skills in working with
 Quick installation guide
 ------------------------
 
-First be sure to have Python framework installed, then type::
+We assume that you run a modern Linux distribution, like: Ubuntu 16.04 or newer, Debian testing
+or any updated rolling release (archLinux, openSUSE tumbleweed). First, be sure you have python
+and pip installed. To get it on Debian or Ubuntu, type being logged as normal user::
 
-    pip install pytrip98
+    $ sudo apt-get install python3-pip
+
+Then you can install pytrip core library and its dependencies using pip::
+
+    $ sudo pip install pytrip98
 
 NOTE: the package is named **pytrip98**, while the name of library is **pytrip**.
 
 This command will automatically download and install **pytrip** for all users in your system.
-In case you don't have administrator rights, add ``--user`` flag to ``pip`` command.
-In this situation converter will be probably installed in ``~/.local/bin`` directory.
 
 For more detailed instruction, see `installation guide <INSTALL.rst>`__.
+
+To learn how to install pytrip GUI, proceed to following document page: https://github.com/pytrip/pytripgui
 
 Short documentation
 -------------------

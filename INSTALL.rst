@@ -7,7 +7,7 @@ Installation guide
 
 If you are familiar with python and pip tool, simply type following command to install the package::
 
-    $ pip install pytrip98
+    $ sudo pip install pytrip98
 
 If your are a less advanced user, read the rest of the page.
 
@@ -17,6 +17,10 @@ There are two groups of users: administrators and regular ones.
 For regular users we assume that they can write files to their home directory, but not necessary elsewhere.
 We assume that administrators can log in as root user, execute commands via ``sudo`` or
 have some other way to create files system-wide. This instruction is aimed at these two groups.
+
+
+.. contents:: Table of Contents
+   :depth: 2
 
 Prerequisites - python interpreter
 ----------------------------------
@@ -91,6 +95,8 @@ The best way is to use your package manager.
 * ``apt-get install python3`` (python 3) or ``apt-get install python`` (python 2) for Debian and Ubuntu
 * ``dnf install python3`` (python 3) or ``dnf install python`` (python 2) for Fedora
 * ``yum install python3`` (python 3) or ``yum install python`` (python 2) for CentOS and SLC
+* ``pacman -S python`` (python 3) or ``pacman -S python2`` (python 2) for archLinux
+* ``zypper install python3`` (python 3) or ``zypper install python`` (python 2) for openSUSE
 
 
 Prerequisites - pip tool
@@ -143,6 +149,8 @@ On some systems instructions mentioned below have to be prefixed with `sudo` com
 * ``apt-get install python3-pip`` (python 3) or ``apt-get install python-pip`` (python 2) for Debian and Ubuntu
 * ``dnf install python3-pip`` (python 3) or ``dnf install python-pip`` (python 2) for Fedora
 * ``yum install python3-pip`` (python 3) or ``yum install python-pip`` (python 2) for CentOS and SLC
+* ``pacman -S python-pip`` (python 3) or ``pacman -S install python2-pip`` (python 2) for archLinux
+* ``zypper install python3-pip`` (python 3) or ``zypper install python-pip`` (python 2) for openSUSE
 
 
 pip package installation
