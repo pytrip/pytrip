@@ -64,7 +64,7 @@ build_manylinux_64:
           cd /io
           tar -zxvf pytrip98.tar.gz
           ls -al
-          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu"
+          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
 
     # /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
     # copy binary to a location that gets passed along to next pipelines
@@ -84,8 +84,8 @@ test_debian_8_jessie_py2:
     - script:
         name: prerequisites
         code: |
-          sudo apt-get update
-          sudo apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources wget
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources
           python -V
           pip -V
 
@@ -101,7 +101,7 @@ test_debian_8_jessie_py2:
           pip -V
           python -c "import pip; print(pip.pep425tags.get_supported())"
           python -c "import platform; print(platform.platform())"
-          python -m pip install /pipeline/source/pytrip98-*-manylinux1_x86_64.whl
+          python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
 
     - script:
         name: test
@@ -110,34 +110,30 @@ test_debian_8_jessie_py2:
           dicom2trip
           cubeslice --help
 
-#
-#
-#test_debian_8_jessie_py3:
-#  box: debian:jessie
-#
-#  steps:
-#    - script:
-#        name: prerequisites
-#        code: |
-#          sudo apt-get update
-#          sudo apt-get install -qq -y --no-install-recommends python3-pip  wget
-#          python3 -V
-#          pip3 -V
-#
-#    - script:
-#        name: package_install
-#        code: |
-#          ls
-#          pip3 install mcpartools*.whl
-#
-#    - script:
-#        name: test
-#        code: |
-#          generatemc --version
-#          generatemc --help
-#          wget https://raw.githubusercontent.com/DataMedSci/mcpartools/master/tests/res/sample_fluka.inp
-#          generatemc -p 1000 -j 10 sample_fluka.inp -w fluka
-#
+
+
+test_debian_8_jessie_py3:
+  box: debian:8
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python3-pip
+          python3 -V
+          pip3 -V
+          easy_install -U pip
+          pip3 -V
+          python -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
 ### ---------------------------------- debian 7 wheezy -----------------------------------------------
 ## TODO - to be investigated
 ##test_debian_7_wheezy_py2:
