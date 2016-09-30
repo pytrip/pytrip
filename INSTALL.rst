@@ -41,6 +41,18 @@ If none of ``python`` and ``python3`` commands are present, then Python interpre
 
 We suggest to use the newest version available (from 3.x family).
 
+Administrator installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+The best way is to use your package manager.
+
+* ``sudo apt-get install python3`` (python 3) or ``sudo apt-get install python`` (python 2) for Debian and Ubuntu
+* ``sudo dnf install python3`` (python 3) or ``sudo dnf install python`` (python 2) for Fedora
+* ``sudo yum install python3`` (python 3) or ``sudo yum install python`` (python 2) for CentOS and SLC
+* ``sudo pacman -S python`` (python 3) or ``sudo pacman -S python2`` (python 2) for archLinux
+* ``sudo zypper install python3`` (python 3) or ``sudo zypper install python`` (python 2) for openSUSE
+
+
 User installation
 ~~~~~~~~~~~~~~~~~
 
@@ -87,18 +99,6 @@ In order to execute python interpreter, you need to provide full path to the exe
 In a similar way python3.x can be installed.
 
 
-Administrator installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-The best way is to use your package manager.
-
-* ``apt-get install python3`` (python 3) or ``apt-get install python`` (python 2) for Debian and Ubuntu
-* ``dnf install python3`` (python 3) or ``dnf install python`` (python 2) for Fedora
-* ``yum install python3`` (python 3) or ``yum install python`` (python 2) for CentOS and SLC
-* ``pacman -S python`` (python 3) or ``pacman -S python2`` (python 2) for archLinux
-* ``zypper install python3`` (python 3) or ``zypper install python`` (python 2) for openSUSE
-
-
 Prerequisites - pip tool
 ------------------------
 
@@ -114,6 +114,20 @@ Try the following commands (printing pip version)::
 In a similar way to python interpreter pip is a tool for Python 2 or 3,
 while pip3 works exclusively for Python 3.
 If none of these commands are present, then pip has to be installed.
+
+
+Administrator installation
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Follow the package installation for your system.
+On some systems instructions mentioned below have to be prefixed with `sudo` command.
+
+* ``sudo apt-get install python3-pip`` (python 3) or ``sudo apt-get install python-pip`` (python 2) for Debian and Ubuntu
+* ``sudo dnf install python3-pip`` (python 3) or ``sudo dnf install python-pip`` (python 2) for Fedora
+* ``sudo yum install python3-pip`` (python 3) or ``sudo yum install python-pip`` (python 2) for CentOS and SLC
+* ``sudo pacman -S python-pip`` (python 3) or ``sudo pacman -S install python2-pip`` (python 2) for archLinux
+* ``sudo zypper install python3-pip`` (python 3) or ``sudo zypper install python-pip`` (python 2) for openSUSE
+
 
 User installation
 ~~~~~~~~~~~~~~~~~
@@ -140,23 +154,31 @@ To install pip, simply type::
     $ python -m ensurepip
 
 
+pytrip pip package installation
+-------------------------------
+
+Now it is time to install **pytrip** package.
+
+
 Administrator installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Follow the package installation for your system.
-On some systems instructions mentioned below have to be prefixed with `sudo` command.
+Administrator installation is very simple, but requires to save some files in system-wide directories (i.e. `/usr`)::
 
-* ``apt-get install python3-pip`` (python 3) or ``apt-get install python-pip`` (python 2) for Debian and Ubuntu
-* ``dnf install python3-pip`` (python 3) or ``dnf install python-pip`` (python 2) for Fedora
-* ``yum install python3-pip`` (python 3) or ``yum install python-pip`` (python 2) for CentOS and SLC
-* ``pacman -S python-pip`` (python 3) or ``pacman -S install python2-pip`` (python 2) for archLinux
-* ``zypper install python3-pip`` (python 3) or ``zypper install python-pip`` (python 2) for openSUSE
+    $ sudo pip install pytrip98
 
+To upgrade the **pytrip** to newer version, simply type::
 
-pip package installation
-------------------------
+    $ sudo pip install --upgrade pytrip98
 
-Now it is time to install **pytrip** package.
+To completely remove **pytrip** from your system, use following command::
+
+    $ sudo pip uninstall pytrip98
+
+Now all **pytrip** commands should be installed for all users::
+
+    $ cubeslice --help
+
 
 User installation
 ~~~~~~~~~~~~~~~~~
@@ -187,23 +209,3 @@ If this is not the case, please prefix the command with `$HOME/.local/bin` and c
 
     $ $HOME/.local/bin/cubeslice --help
 
-
-Administrator installation
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-Administrator installation is very simple, but requires to save some files in system-wide directories (i.e. `/usr`).
-On some systems commands mentioned below have to be prefixed with `sudo` command::
-
-    $ pip install pytrip98
-
-To upgrade the **pytrip** to newer version, simply type::
-
-    $ pip install --upgrade pytrip98
-
-To completely remove **pytrip** from your system, use following command::
-
-    $ pip uninstall pytrip98
-
-Now all **pytrip** commands should be installed for all users::
-
-    $ cubeslice --help

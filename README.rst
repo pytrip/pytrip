@@ -19,7 +19,7 @@ and **python-pip** installed. To get them on Debian or Ubuntu, type being logged
 
     $ sudo apt-get install python-pip
 
-To install the pytrip core library type::
+To automatically download and install the pytrip library, type::
 
     $ sudo pip install pytrip98
 
