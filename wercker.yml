@@ -117,6 +117,7 @@ test_debian_testing_py3:
     - script:
         name: package_install
         code: |
+          pip3 install setuptools
           pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
