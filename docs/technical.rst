@@ -1,11 +1,10 @@
 .. _technical-label:
 
-=======================
 Technical documentation
 =======================
 
-.. image:: https://img.shields.io/pypi/v/pytrip.svg
-        :target: https://pypi.python.org/pypi/pytrip
+.. image:: https://img.shields.io/pypi/v/pytrip98.svg
+        :target: https://pypi.python.org/pypi/pytrip98
 .. image:: https://img.shields.io/travis/pytrip/pytrip.svg
         :target: https://travis-ci.org/pytrip/pytrip
 
@@ -14,9 +13,6 @@ Technical documentation
         :target: https://readthedocs.org/projects/pytrip/?badge=latest
         :alt: Documentation Status
 
-========
-Overview
-========
 
 .. start-badges
 
@@ -38,7 +34,7 @@ Overview
     :alt: Travis-CI Build Status
     :target: https://travis-ci.org/pytrip/pytrip
 
-.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/grzanka/pytrip?branch=master&svg=true
+.. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/pytrip/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/grzanka/pytrip
 
@@ -66,26 +62,6 @@ Overview
 
 Overv.io issue board: https://overv.io/pytrip/pytrip/
 
-
-Installation
-============
-
-Stable version ::
-
-    pip install pytrip98
-
-Latest unstable version, directly GIT repository, using::
-
-    pip install setuptools versioneer
-    pip install git+https://github.com/pytrip/pytrip.git
-
-To upgrade, type::
-
-    pip install -U pytrip98
-
-To uninstall, simply use::
-
-    pip uninstall pytrip98
 
 Documentation
 =============

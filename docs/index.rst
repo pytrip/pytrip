@@ -7,8 +7,9 @@ Contents:
    :maxdepth: 2
 
    readme
-   technical
+   install
    contributing
+   technical
    authors
 
 Indices and tables

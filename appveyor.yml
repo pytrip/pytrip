@@ -64,10 +64,10 @@ environment:
 #      TOX_ENV: "pep8"
 
 # until we fix code of example project, lets allow failure here
-#matrix:
-#  allow_failures:
-#      - TOX_ENV: "py27"
-#      - TOX_ENV: "py33"
+matrix:
+  allow_failures:
+      - PYTHON_VERSION: "2.7"
+      - PYTHON_VERSION: "3.4"
 
 
 init:
