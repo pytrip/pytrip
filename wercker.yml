@@ -1,0 +1,238 @@
+# build python 2.7 by default
+box: python:2.7
+
+command-timeout: 60
+
+# make a source package in standard python box
+build:
+  steps:
+
+    # A step that sets up the python virtual environment
+    - virtualenv:
+        name: setup virtual environment
+        install_wheel: false # Enable wheel to speed up builds (experimental)
+
+    # installing necessary requirements
+    - pip-install:
+        requirements_file: "requirements.txt"
+        extra_args: "-rtests/requirements-test.txt"
+        packages_list: "wheel"
+
+    # checking python version
+    - script:
+        name: echo python information
+        code: |
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
+
+    # making package
+    - script:
+        name: package_sdist
+        code: |
+          python setup.py sdist
+          ls -al dist/*tar.gz
+
+    # copy binary to a location that gets passed along to next pipelines
+    - script:
+        name: copy binary
+        code: |
+          tar -zcf "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz .
+          cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
+          cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
+
+
+# ---------------------------------- 64 bit -----------------------------------------------
+
+# make a 64-bit manylinux1 package in grzanka/manylinux-test box (based on
+build_manylinux_64:
+  box: grzanka/manylinux-test
+  steps:
+
+    # check python versions and install versioneer
+    - script:
+        name: prerequisites
+        code: |
+          /opt/python/cp27-cp27m/bin/python -V
+          /opt/python/cp27-cp27m/bin/pip -V
+          /opt/python/cp27-cp27m/bin/pip install versioneer
+
+    # make a manylinux1 package
+    - script:
+        name: package_install
+        code: |
+          mkdir -p /io
+          cp build_wheels.sh /io
+          cp -r pytrip98.tar.gz /io
+          cd /io
+          tar -zxvf pytrip98.tar.gz
+          ls -al
+          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
+
+    # copy binary to a location that gets passed along to next pipelines
+    - script:
+        name: copy binary
+        code: |
+          cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
+
+# ---------------------------------- debian 9 (testing) -----------------------------------------------
+
+test_debian_testing_py2:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python-pip
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          pip install setuptools
+          pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
+
+test_debian_testing_py3:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python3-pip
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          pip3 install setuptools
+          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
+# ---------------------------------- debian 9 (testing) -----------------------------------------------
+
+test_ubuntu_1604_testing_py2:
+  box: ubuntu:16.04
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python-pip
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          pip install setuptools
+          pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
+
+test_ubuntu_1604_testing_py3:
+  box: ubuntu:16.04
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python3-pip
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          pip3 install setuptools
+          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
+
+
+# ---------------------------------- debian 8 jessie -----------------------------------------------
+
+test_debian_8_jessie_py2:
+  box: debian:8
+
+  steps:
+
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources
+          python -V
+          pip -V
+
+    - script:
+        name: package_install
+        code: |
+          easy_install -U pip
+          python -c "import pip; print(pip.pep425tags.get_supported())"
+          python -c "import platform; print(platform.platform())"
+          python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
+
+
+
+test_debian_8_jessie_py3:
+  box: debian:8
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python3-pip
+          python3 -V
+          pip3 -V
+          easy_install3 -U pip
+          pip3 -V
+          pip3 install setuptools
+          python3 -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom
+          dicom2trip
+          cubeslice --help
