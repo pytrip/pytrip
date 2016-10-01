@@ -26,7 +26,7 @@ matrix:
           python: 2.7
           env: TOXENV=py27
         - os: linux
-          python: 2.7
+          python: 3.5
           env: TOXENV=coverage
 #        - os: linux
 #          python: 3.2
