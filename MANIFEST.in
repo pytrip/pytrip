@@ -4,6 +4,7 @@
   include LICENSE
   include requirements.txt
   include tests/requirements-test.txt
+  include *.yml
   recursive-include docs *.py
   recursive-include docs *.rst
   recursive-include pytrip98 *.py
