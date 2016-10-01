@@ -32,15 +32,6 @@ build:
           python setup.py sdist
           ls -al dist/*tar.gz
 
-    # making package
-    - script:
-        name: coverage
-        code: |
-          pip install dist/*tar.gz
-          py.test -n 2
-          pip install codecov
-          codecov
-
     # copy binary to a location that gets passed along to next pipelines
     - script:
         name: copy binary
