@@ -5,5 +5,5 @@ pytest ; python_version < '3.0' and python_version >= '3.3' and os_name != 'nt' 
 pytest-capturelog
 pytest-timeout
 pytest-xdist
-pytest-cov
+pytest-cov ; python_version != '3.2'
 tox

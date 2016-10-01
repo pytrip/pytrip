@@ -18,7 +18,8 @@ env:
     - PYPIUSER=grzanka
     #  pypi secured password (PYPIPASS variable), you need to update it to your own if you want to use it
     - secure: "WLg9eOFwGwH2riVdcl2mdUjzBIx4NaamMmB6XNOtAl91cPK/LtchLaMVMjVlPKMchQ/cCVpVgjiqRgEUPLz40sfv+DqmcnZH7UXE4kpUuUtFECTpIqc69Ohzn82JdrKQIaH0FWPTjRvxZgV+b6KWo8TK71VFANPpQTuhfaRJ+laKj1S5ikwg4c1zj6kqYefGHhvdvs5LtBXEZ9UQg+dkuWK8mrnl/gpZUuR7P8o+wofv2X510kHrV8WkUDfk9JmfpRyTmpvJcawl5CpGeov7c6wz5+nKNg+Fki5qft2TEb6DsHCMOBI6UviMvROSPgNs/C4tI5zNtabs+61uwU2vHsEiOuHGbmMcfGaOyjumQPcyBz3bvQ+e7ZA1ZyYipw4ihU9M7sPZtmwSlxE2ECXXy/MjPyVharTiy3rGAYwT4rH+F8fubsYeYtFax4IUFQfq3DXS9YUCJ82bCRnDlzLZ5MLy/4WL+sL7nMLR9ApkN97MWkv+aqmYjvKG0N519HSVJwuptWkoCok8E7e3zi5nOiG5eJ/0f4TVlEyOPrxeCtWCOPATXb54vSz7GPvMgTx4CKFmNbe5sLhx1A8cuOikA1Keyii8VKda8LVr7gXDh8BvgcL/CIAF/pALf2cDL224Gy8Mlz32PqBJMSKuopeIRKnj2eN3GBL1t9GuiXb8oRg="
-
+    # CODECOV_TOKEN
+    - secure: "iNlBYBi/aBjGVEx7raxxIhuy+gZhaPKXDLKKapcTCBi8ZY9kp1U8PjLT6WQH2f+jxbWakvao/HVyf6C1hSNIoKbizwzDyVkQYnWP/l3OXykPAIjpXevhxWXA9hpCd7nNmwv7WqJHE7V3IJUhnUYtWalRDikWl8SbpEs3ml2CcgZzKyfcWnllXGoHu96sOFS0hK+IofUlDqrN8NROL64YYI3VBtl7IaJE4AsnNV8NjPO0cWT8YrRcskmIYykyzZ1urEY+LEwGCJEU6XdLmRpfwmQNSTSFx0LyljMBhJJZ+Cb0wIn2sPgR1tbrkF48o6lbAj5Ae4ceReE1pFUDDIYeOZsoghDUvuag1RLI2Xhl+Iq8Aj8u2a3GbGIGCWRG5YyrLP5f/1nxrNnWNuEhN0U1BmjigF+ijGVlJOVgStiFpKBBUzkwoU4AHUhqTKbTaF8ZLaQSSQCsl7MW6gdWhqJm85T+O6QZl7Lqwn//Yy+zgEGvnACPfLgSy5uwbqFQDOsxwkAX9mkQi/2grDpQVWDFOkX1GoClikrpUf4EWemlaWDk6jXxt36rwtjBXhKvl21c9cNJULwOACWgEVleyfMQoMc52QmK84nj/oRc/ILd9yJT+sndjbXoCbsKHj6Z9RSHzSWs3ditQ/ZlYFyI8zVXECiAo71tYqwtKx58OHOLylI="
 matrix:
     include:
     # Linux tests for various python versions
@@ -28,9 +29,9 @@ matrix:
         - os: linux
           python: 3.5
           env: TOXENV=coverage
-#        - os: linux
-#          python: 3.2
-#          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
+        - os: linux
+          python: 3.2
+          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
 #        - os: linux
 #          python: 3.3
 #          env: TOXENV=py33
