@@ -8,6 +8,7 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
+
 write_pypirc() {
 PYPIRC=~/.pypirc
 
@@ -39,4 +40,11 @@ set +x
 write_pypirc
 set -x
 
+cat ~/.pypirc
+
 echo "User" $PYPIUSER
+echo "Pass" $PYPIPASS
+
+twine upload -r pypi dist/*whl
+
+echo "TAG" $APPVEYOR_REPO_TAG
