@@ -7,67 +7,54 @@
 # http://tjelvarolsson.com/blog/how-to-continuously-test-your-python-code-on-windows-using-appveyor/
 
 environment:
+  global:
+    # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
+    # /E:ON and /V:ON options are not enabled in the batch script intepreter
+    # See: http://stackoverflow.com/a/13751649/163740
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
+
   matrix:
-#    - platform: x86
-#      PYTHON: "C:\\Python27"
-#      PYTHON_VERSION: "2.7"
+#    # http://www.appveyor.com/docs/installed-software#python
+#    - PYTHON_ROOT: "C:\\Python26"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "2.6.x"
+#
+#    - PYTHON_ROOT: "C:\\Python26-x64"
+#      PYTHON_ARCH: "64"
+#      PYTHON_VERSION: "2.6.x"
+#
+#    - PYTHON_ROOT: "C:\\Python27"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "2.7.x"
+#
+#    - PYTHON_ROOT: "C:\\Python27-x64"
+#      PYTHON_ARCH: "64"
+#      PYTHON_VERSION: "2.7.x"
+#
+#    - PYTHON_ROOT: "C:\\Python33"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "3.3.x"
+#
+#    - PYTHON_ROOT: "C:\\Python33-x64"
+#      PYTHON_ARCH: "64"
+#      PYTHON_VERSION: "3.3.x"
+#
+#    - PYTHON_ROOT: "C:\\Python34"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "3.4.x"
+#
+#    - PYTHON_ROOT: "C:\\Python34-x64"
+#      PYTHON_ARCH: "64"
+#      PYTHON_VERSION: "3.4.x"
+#
+#    - PYTHON_ROOT: "C:\\Python35"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "3.5.x"
 
-    - platform: x64
-      PYTHON: "C:\\Python35"
-      PYTHON_VERSION: "3.5"
+    - PYTHON_ROOT: "C:\\Python35-x64"
+      PYTHON_ARCH: "64"
+      PYTHON_VERSION: "3.5.x"
 
-#    - platform: x64
-#      PYTHON: "C:\\Python27-x64"
-#      TOX_ENV: "py27"
-
-#    - platform: x64
-#      PYTHON: "C:\\Python27-x64"
-#      TOX_ENV: "py27"
-
-#  temporarily disabled as Appveyor seems to have broken config of Python 3.3
-#    - PYTHON: "C:\\Python33"
-#      TOX_ENV: "py33"
-#
-#    - PYTHON: "C:\\Python33-x64"
-#      TOX_ENV: "py33"
-
-#    - platform: x86
-#      PYTHON: "C:\\Python34"
-#      TOX_ENV: "py34"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python34-x64"
-#      TOX_ENV: "py34"
-#
-#    - platform: x86
-#      PYTHON: "C:\\Python35"
-#      TOX_ENV: "py35"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python35-x64"
-#      TOX_ENV: "py35"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python34-x64"
-#      TOX_ENV: "docs"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python34-x64"
-#      TOX_ENV: "packaging"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python27-x64"
-#      TOX_ENV: "py3pep8"
-#
-#    - platform: x64
-#      PYTHON: "C:\\Python34-x64"
-#      TOX_ENV: "pep8"
-
-# until we fix code of example project, lets allow failure here
-matrix:
-  allow_failures:
-      - PYTHON_VERSION: "2.7"
-      - PYTHON_VERSION: "3.4"
 
 
 init:
@@ -76,34 +63,33 @@ init:
   - python -V
   - "%PYTHON%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
 
+
 install:
-  - set MINICONDAPATH=C:\Miniconda
-  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda-x64"}
-  - set PATH=%MINICONDAPATH%\Scripts;%PATH%
-  - conda config --set always_yes yes --set changeps1 no
-  - conda update -q conda
-  - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
-  - activate python%PYTHON_VERSION%
-  - python -V
-  - conda install -q --name python%PYTHON_VERSION% setuptools wheel numpy scipy
-  - pip install -r tests/requirements-test.txt
-  - pip install -r requirements.txt
+  - "SET PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\\Scripts;%PATH%"
+  - "python --version"
+  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
+
+  # Upgrade pip to the latest version
+  - "python appveyor\\run_pip.py install --disable-pip-version-check --upgrade pip"
+
+  # Install requirements for running tests and building artifacts
+  - "%CMD_IN_ENV% pip install --upgrade -r tests/requirements-test.txt"
+  - "%CMD_IN_ENV% pip install --upgrade -r requirements.txt"
 
 before_test:
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
-  - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
+  - versioneer install
 
-build: false
-
-after_test:
-  # This step builds your wheels.
-  - python setup.py bdist_wheel
-  - dir dist/*
-
-artifacts:
-  - path: dist
-    name: whl
+build_script:
+  - "%CMD_IN_ENV% python setup.py build"
 
 #test_script:
-#  - py.test
+#  - "%CMD_IN_ENV% python setup.py test"
+
+after_test:
+  - "%CMD_IN_ENV% python setup.py bdist_wheel"
+#  - "%CMD_IN_ENV% python setup.py bdist_egg"
+
+artifacts:
+  - path: dist\*
