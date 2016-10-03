@@ -51,9 +51,9 @@ environment:
 #      PYTHON_ARCH: "32"
 #      PYTHON_VERSION: "3.5.x"
 
-    - PYTHON_ROOT: "C:\\Python35-x64"
-      PYTHON_ARCH: "64"
-      PYTHON_VERSION: "3.5.x"
+    - PYTHON_ROOT: "C:\\Python34"
+      PYTHON_ARCH: "32"
+      PYTHON_VERSION: "3.4"
 
 
 
