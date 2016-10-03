@@ -67,10 +67,9 @@ init:
 # add Miniconda to PATH variable
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
 # add Visual Studio compiler to PATH variable
-  - dir "C:\Program Files (x86)"
-  - dir "C:\Program Files"
   - dir "C:\Program Files (x86)\MSBuild"
   - dir "C:\Program Files\MSBuild"
+  - dir "C:\Program Files\MSBuild\Microsoft"
   - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
 # convenient name for Visual Studio Command Prompt tool
   - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
@@ -101,6 +100,10 @@ install:
   - python -V
 # activate Visual Studio stuff
   - call %VCVARSALL% amd64
+
+test_script:
+# run tests
+  - py.test
 # make wheel package
   - python setup.py bdist_wheel
 # deploy package
