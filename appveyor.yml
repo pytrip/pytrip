@@ -79,17 +79,15 @@ install:
   # Install requirements for running tests and building artifacts
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
-
-test_script:
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
   - python setup.py bdist_wheel
+
+test_script:
   - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
-#  - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
   - python setup.py bdist_wheel
-#  - "%CMD_IN_ENV% python setup.py bdist_egg"
 
 artifacts:
   - path: dist\*
