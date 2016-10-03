@@ -61,7 +61,7 @@ init:
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
   - python -V
-  - "%PYTHON%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
+  - "%PYTHON_ROOT%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
 
 install:
   - set MINICONDAPATH=C:\Miniconda
