@@ -77,19 +77,14 @@ install:
   - "python appveyor\\run_pip.py install --disable-pip-version-check --upgrade pip"
 
   # Install requirements for running tests and building artifacts
-  - "%CMD_IN_ENV% pip install --upgrade -r tests/requirements-test.txt"
-  - "%CMD_IN_ENV% pip install --upgrade -r requirements.txt"
-
-before_test:
-  - python -c "import numpy as np;print(np.version.version)"
-  - python -c "import scipy as sp;print(sp.version.version)"
-  - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
-
-#build_script:
-#  - "%CMD_IN_ENV% python setup.py build"
+  - pip install --upgrade -r tests/requirements-test.txt
+  - pip install --upgrade -r requirements.txt
 
 test_script:
+  - python -c "import numpy as np;print(np.version.version)"
+  - python -c "import scipy as sp;print(sp.version.version)"
   - python setup.py bdist_wheel
+  - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
 #  - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
