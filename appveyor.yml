@@ -8,13 +8,13 @@
 
 environment:
   matrix:
-    - platform: x86
-      PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7"
+#    - platform: x86
+#      PYTHON: "C:\\Python27"
+#      PYTHON_VERSION: "2.7"
 
     - platform: x64
-      PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4"
+      PYTHON: "C:\\Python35"
+      PYTHON_VERSION: "3.5"
 
 #    - platform: x64
 #      PYTHON: "C:\\Python27-x64"
@@ -99,6 +99,11 @@ build: false
 after_test:
   # This step builds your wheels.
   - python setup.py bdist_wheel
+  - dir dist/*
 
-test_script:
-  - py.test
+artifacts:
+  - path: dist
+    name: whl
+
+#test_script:
+#  - py.test
