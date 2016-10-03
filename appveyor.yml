@@ -58,17 +58,21 @@ environment:
 
 
 init:
-  - set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
+  - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
-#  - python -V
-#  - "%PYTHON%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
-
+  - python -V
+  - "%PYTHON%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
 
 install:
-  - "SET PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\\Scripts;%PATH%"
-  - "python --version"
-  - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
-
+  - set MINICONDAPATH=C:\Miniconda
+  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda-x64"}
+  - set PATH=%MINICONDAPATH%\Scripts;%PATH%
+  - conda config --set always_yes yes --set changeps1 no
+  - conda update -q conda
+  - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
+  - activate python%PYTHON_VERSION%
+  - python -V
+  - conda install -q --name python%PYTHON_VERSION% setuptools wheel numpy scipy
   # Upgrade pip to the latest version
   - "python appveyor\\run_pip.py install --disable-pip-version-check --upgrade pip"
 
@@ -79,7 +83,7 @@ install:
 before_test:
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
-  - versioneer install
+  - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
 
 build_script:
   - "%CMD_IN_ENV% python setup.py build"
