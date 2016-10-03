@@ -92,6 +92,9 @@ install:
   - python -c "import scipy as sp;print(sp.version.version)"
   - call %VCVARSALL% amd64
   - python setup.py bdist_wheel
+  - pip install --upgrade twine
+  - deactivate
+  - bash appveyor\deploy_package.sh
 
 artifacts:
   - path: dist\*
