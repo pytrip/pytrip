@@ -1,17 +1,11 @@
 #include <Python.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-//#define NPY_NO_DEPRECATED_API
-//#define NPY_1_7_API_VERSION
-
 #include "numpy/arrayobject.h"
 #include "structmember.h"
 #include <math.h>
 #include <string.h>
-
 double _pytriplib_dot(double * a,double *b);
-
 double _pytriplib_norm(double * vector);
 
 double max_list(double * list, int len)
