@@ -7,6 +7,12 @@
 # http://tjelvarolsson.com/blog/how-to-continuously-test-your-python-code-on-windows-using-appveyor/
 os: Visual Studio 2015
 
+# build Configuration, i.e. Debug, Release, etc.
+configuration: Release
+
+platform:
+  - x64
+
 environment:
   global:
     # SDK v7.0 MSVC Express 2008's SetEnv.cmd script will fail if the
@@ -84,11 +90,14 @@ install:
   - pip install --upgrade -r requirements.txt
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
-  - SET DISTUTILS_USE_SDK=1
-  - SET MSSdk=1
-  - SET WINDOWS_SDK_VERSION="v7.1"
-  - call "%WIN_SDK_ROOT%\%WINDOWS_SDK_VERSION%\Setup\WindowsSdkVer.exe" -q -version:%WINDOWS_SDK_VERSION%
-  - call "%WIN_SDK_ROOT%\\v7.1\\Bin\\SetEnv.cmd" /x64 /release
+#  - SET DISTUTILS_USE_SDK=1
+#  - SET MSSdk=1
+#  - SET WINDOWS_SDK_VERSION="v7.1"
+  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+  - call %VCVARSALL% amd64
+#  - call "%WIN_SDK_ROOT%\%WINDOWS_SDK_VERSION%\Setup\WindowsSdkVer.exe" -q -version:%WINDOWS_SDK_VERSION%
+#  - call "%WIN_SDK_ROOT%\\v7.1\\Bin\\SetEnv.cmd" /x64 /release
   - python setup.py bdist_wheel
 
 test_script:
