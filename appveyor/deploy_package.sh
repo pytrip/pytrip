@@ -40,11 +40,12 @@ set +x
 write_pypirc
 set -x
 
-cat ~/.pypirc
-
-echo "User" $PYPIUSER
-echo "Pass" $PYPIPASS
-
-twine upload -r pypi dist/*whl
-
 echo "TAG" $APPVEYOR_REPO_TAG
+
+ls -al dist
+# upload only if tag present
+if [[ $APPVEYOR_REPO_TAG != "" ]]; then
+    pip install twine
+    twine upload -r pypi dist/*whl
+fi
+

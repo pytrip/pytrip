@@ -1,11 +1,4 @@
-# based on https://github.com/audreyr/cookiecutter/blob/master/appveyor.yml
-
 # validation page for appveyor config: https://ci.appveyor.com/tools/validate-yaml
-
-# http://timcera.bitbucket.org/posts/appveyor_finally.html
-# https://github.com/ogrisel/python-winbuilder
-# http://tjelvarolsson.com/blog/how-to-continuously-test-your-python-code-on-windows-using-appveyor/
-
 
 # Python3.5 needs VS 14.0 (2015)
 os: Visual Studio 2015
@@ -15,9 +8,7 @@ configuration: Release
 
 build: off
 
-platform:
-  - x64
-
+# encrypting data done here: https://ci.appveyor.com/tools/encrypt
 environment:
   PYPIPASS:
     secure: Mp6VITbi9PVEVoXqU4DMPQ==
@@ -57,9 +48,9 @@ environment:
 #      PYTHON_ARCH: "64"
 #      PYTHON_VERSION: "3.4.x"
 #
-#    - PYTHON_ROOT: "C:\\Python35"
-#      PYTHON_ARCH: "32"
-#      PYTHON_VERSION: "3.5.x"
+    - PYTHON_ROOT: "C:\\Python35"
+      PYTHON_ARCH: "32"
+      PYTHON_VERSION: "3.5.x"
 
     - PYTHON_ROOT: "C:\\Python35-x64"
       PYTHON_ARCH: "64"
@@ -68,33 +59,49 @@ environment:
 
 
 init:
-  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+# add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
+# set Miniconda path, 32 or 64 bit
+  - set MINICONDAPATH=C:\Miniconda35
+  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda35-x64"}
+# add Miniconda to PATH variable
+  - set PATH=%MINICONDAPATH%\Scripts;%PATH%
+# add Visual Studio compiler to PATH variable
+  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+# convenient name for Visual Studio Command Prompt tool
+  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+# following this one: https://github.com/audreyr/cookiecutter/issues/599
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
+# check python version
   - python -V
+# check 32 or 64 bit
   - "%PYTHON_ROOT%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
 
 install:
-  - set MINICONDAPATH=C:\Miniconda35
-  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda35-x64"}
-  - set PATH=%MINICONDAPATH%\Scripts;%PATH%
+# tell miniconda to always follow default answers
   - conda config --set always_yes yes --set changeps1 no
+# update miniconda
   - conda update -q conda
+# create new conda workspace and activate it
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
   - activate python%PYTHON_VERSION%
-  - python -V
-  - conda install -q --name python%PYTHON_VERSION% setuptools wheel numpy scipy
-
-  # Install requirements for running tests and building artifacts
+# as scipy doesn't yet have wheels for windows, install it using conda
+  - conda install -q --name python%PYTHON_VERSION% setuptools wheel scipy
+# install usual requirements
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
-  - pip install twine
+# check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
+# check python version
+  - python -V
+# activate Visual Studio stuff
   - call %VCVARSALL% amd64
+# make wheel package
   - python setup.py bdist_wheel
+# deploy package
   - bash appveyor\deploy_package.sh
 
+# upload artifacts
 artifacts:
-  - path: dist\*
+  - path: dist\*whl
