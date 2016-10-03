@@ -67,8 +67,8 @@ init:
   - "%PYTHON_ROOT%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
 
 install:
-  - set MINICONDAPATH=C:\Miniconda3
-  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda3-x64"}
+  - set MINICONDAPATH=C:\Miniconda35
+  - ps: If ($env:Platform -Match "x64") {$env:MINICONDAPATH="C:\Miniconda35-x64"}
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
   - conda config --set always_yes yes --set changeps1 no
   - conda update -q conda
