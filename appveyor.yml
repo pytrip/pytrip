@@ -85,14 +85,14 @@ before_test:
   - python -c "import scipy as sp;print(sp.version.version)"
   - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
 
-build_script:
-  - "%CMD_IN_ENV% python setup.py build"
+#build_script:
+#  - "%CMD_IN_ENV% python setup.py build"
 
 #test_script:
 #  - "%CMD_IN_ENV% python setup.py test"
 
 after_test:
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
+  - python setup.py bdist_wheel"
 #  - "%CMD_IN_ENV% python setup.py bdist_egg"
 
 artifacts:
