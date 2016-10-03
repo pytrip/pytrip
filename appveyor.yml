@@ -90,21 +90,13 @@ install:
   - pip install --upgrade -r requirements.txt
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
-#  - SET DISTUTILS_USE_SDK=1
-#  - SET MSSdk=1
-#  - SET WINDOWS_SDK_VERSION="v7.1"
   - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
   - call %VCVARSALL% amd64
-#  - call "%WIN_SDK_ROOT%\%WINDOWS_SDK_VERSION%\Setup\WindowsSdkVer.exe" -q -version:%WINDOWS_SDK_VERSION%
-#  - call "%WIN_SDK_ROOT%\\v7.1\\Bin\\SetEnv.cmd" /x64 /release
+  - dir
   - python setup.py bdist_wheel
-
-test_script:
-  - python %MINICONDAPATH%\envs\python%PYTHON_VERSION%\scripts\versioneer install
-
-after_test:
-  - python setup.py bdist_wheel
+  - dir
+  - dir dist
 
 artifacts:
   - path: dist\*
