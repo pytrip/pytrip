@@ -60,7 +60,7 @@ environment:
 
 init:
   - SET WIN_SDK_ROOT=C:\Program Files\Microsoft SDKs\Windows
-  - dir %WIN_SDK_ROOT%
+  - dir "%WIN_SDK_ROOT%"
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
   - python -V
