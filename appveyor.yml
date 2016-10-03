@@ -88,11 +88,11 @@ install:
   # Install requirements for running tests and building artifacts
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
+  - pip install twine
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
   - call %VCVARSALL% amd64
   - python setup.py bdist_wheel
-  - pip install --upgrade twine
   - bash appveyor\deploy_package.sh
 
 artifacts:
