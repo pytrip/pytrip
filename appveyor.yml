@@ -1,49 +1,41 @@
 # validation page for appveyor config: https://ci.appveyor.com/tools/validate-yaml
 
-# Python3.5 needs VS 14.0 (2015)
-# os: Visual Studio 2015
-
 # build Configuration, i.e. Debug, Release, etc.
 configuration: Release
 
+# we are not building Visual Studio project, so default build step is off
 build: off
 
 # encrypting data done here: https://ci.appveyor.com/tools/encrypt
 environment:
   PYPIPASS:
-    secure: Mp6VITbi9PVEVoXqU4DMPQ==
+    secure: Bq/BLSOSlZhPmHsWR1ML1A==
   PYPIUSER: grzanka
 
   matrix:
 #    # http://www.appveyor.com/docs/installed-software#python
-#    - PYTHON_ROOT: "C:\\Python33"
-#      PYTHON_ARCH: "32"
-#      PYTHON_VERSION: "3.3.x"
+# TO BE fixed later
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python27"
+#      PYTHON_VERSION: "2.7"
+#      MINICONDAPATH: "C:\\Miniconda"
 #
-#    - PYTHON_ROOT: "C:\\Python33-x64"
-#      PYTHON_ARCH: "64"
-#      PYTHON_VERSION: "3.3.x"
+#    - platform: x64
+#      PYTHON_ROOT: "C:\\Python27-x64"
+#      PYTHON_VERSION: "2.7"
+#      MINICONDAPATH: "C:\\Miniconda"
 #
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python27"
-      PYTHON_VERSION: "2.7"
-      MINICONDAPATH: "C:\\Miniconda"
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python34"
+#      PYTHON_VERSION: "3.4"
+#      MINICONDAPATH: "C:\\Miniconda3"
+#
+#    - platform: x64
+#      PYTHON_ROOT: "C:\\Python34-x64"
+#      PYTHON_VERSION: "3.4"
+#      MINICONDAPATH: "C:\\Miniconda3"
 
-    - platform: x64
-      PYTHON_ROOT: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7"
-      MINICONDAPATH: "C:\\Miniconda"
-
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python34"
-      PYTHON_VERSION: "3.4"
-      MINICONDAPATH: "C:\\Miniconda3"
-
-    - platform: x64
-      PYTHON_ROOT: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4"
-      MINICONDAPATH: "C:\\Miniconda3"
-
+# Python3.5 needs VS 14.0 (2015)
     - platform: x86
       PYTHON_ROOT: "C:\\Python35"
       PYTHON_VERSION: "3.5"
@@ -61,13 +53,6 @@ init:
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
-# add Visual Studio compiler to PATH variable
-#  - dir "C:\Program Files (x86)\MSBuild"
-#  - dir "C:\Program Files\MSBuild"
-#  - dir "C:\Program Files\MSBuild\Microsoft"
-#  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-# convenient name for Visual Studio Command Prompt tool
-#  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
 # following this one: https://github.com/audreyr/cookiecutter/issues/599
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
 # check python version
@@ -95,8 +80,6 @@ install:
   - python -V
 # check 32 or 64 bit
   - python -c "import struct;print(8 * struct.calcsize('P'))"
-# activate Visual Studio stuff
-#  - call %VCVARSALL% amd64
 
 test_script:
 # make wheel package
