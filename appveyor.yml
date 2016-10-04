@@ -6,9 +6,6 @@ os: Visual Studio 2015
 # build Configuration, i.e. Debug, Release, etc.
 configuration: Release
 
-platform:
-  - x86
-
 build: off
 
 # encrypting data done here: https://ci.appveyor.com/tools/encrypt
@@ -50,10 +47,10 @@ environment:
 #    - PYTHON_ROOT: "C:\\Python34-x64"
 #      PYTHON_ARCH: "64"
 #      PYTHON_VERSION: "3.4.x"
-#
-#    - PYTHON_ROOT: "C:\\Python35"
-#      PYTHON_ARCH: "32"
-#      PYTHON_VERSION: "3.5"
+
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python35"
+      PYTHON_VERSION: "3.5"
 
     - platform: x64
       PYTHON_ROOT: "C:\\Python35-x64"
@@ -61,7 +58,6 @@ environment:
 
 
 init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # set Miniconda path, 32 or 64 bit
@@ -123,6 +119,3 @@ test_script:
 # upload artifacts
 artifacts:
   - path: dist\*whl
-
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
