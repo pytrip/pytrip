@@ -48,9 +48,9 @@ environment:
 #      PYTHON_ARCH: "64"
 #      PYTHON_VERSION: "3.4.x"
 #
-    - PYTHON_ROOT: "C:\\Python35"
-      PYTHON_ARCH: "32"
-      PYTHON_VERSION: "3.5"
+#    - PYTHON_ROOT: "C:\\Python35"
+#      PYTHON_ARCH: "32"
+#      PYTHON_VERSION: "3.5"
 
     - PYTHON_ROOT: "C:\\Python35-x64"
       PYTHON_ARCH: "64"
@@ -107,8 +107,7 @@ test_script:
 # run tests
   - dir dist
   - cd dist
-  - dir /B > tmp_req.txt
-  - pip install -r tmp_req.txt
+  - python -c "import os; import pip; pip.main(['install', os.listdir()[0])"
   - cd ..
   - py.test
 # deploy package
