@@ -14,16 +14,26 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
-# from pytrip.ctx import *
-# from pytrip.dos import *
-# from pytrip.vdx import *
-# import pytrip.dicomhelper as dh
-# from pytrip.res.point import *
+import os
+import unittest
+import numpy as np
 
-# dcm = dh.read_dicom_folder(
-# "../../../DicomData/Til Jacob T anonymiseret/Anonymiseret/")
-# c = CtxCube()
-# c.read_dicom(dcm)
-#
-# v = VdxCube("",c)
-# v.read_dicom(dcm)
+from pytrip.ctx import CtxCube
+from pytrip.vdx import VdxCube
+import tests.test_base
+
+
+class TestVdx(unittest.TestCase):
+    def setUp(self):
+        testdir = tests.test_base.get_files()
+        self.cube000 = os.path.join(testdir, "tst003000")
+        self.vdx = os.path.join(testdir, "tst003000.vdx")
+
+    def test_read(self):
+        c = CtxCube()
+        c.read(self.cube000)
+        v = VdxCube(c, "")
+        v.read(self.vdx)
+
+if __name__ == '__main__':
+    unittest.main()
