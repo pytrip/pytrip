@@ -14,9 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
+
 import os
 import unittest
-import numpy as np
 
 from pytrip.ctx import CtxCube
 from pytrip.vdx import VdxCube
@@ -29,11 +29,21 @@ class TestVdx(unittest.TestCase):
         self.cube000 = os.path.join(testdir, "tst003000")
         self.vdx = os.path.join(testdir, "tst003000.vdx")
 
-    def test_read(self):
+    def test_read_with_ct(self):
         c = CtxCube()
         c.read(self.cube000)
         v = VdxCube(c, "")
         v.read(self.vdx)
+
+    def test_read_solo(self):
+        v = VdxCube("")
+        v.read(self.vdx)
+
+    def test_read_other_version(self):
+        v = VdxCube("")
+        v.version = "2.0"
+        v.read(self.vdx)
+
 
 if __name__ == '__main__':
     unittest.main()
