@@ -107,7 +107,8 @@ test_script:
 # run tests
   - dir dist
   - cd dist
-  - pip install pytrip98-*.whl
+  - dir /B > tmp_req.txt
+  - pip install -r tmp_req.txt
   - cd ..
   - py.test
 # deploy package
