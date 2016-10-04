@@ -18,8 +18,9 @@ import os
 import re
 import copy
 from math import pi, cos, sin
+import logging
+
 import numpy as np
-import string
 
 from pytrip.error import InputError, ModuleNotLoadedError
 import pytrip as plib
@@ -33,13 +34,14 @@ try:
 except:
     _dicom_loaded = False
 
+logger = logging.getLogger(__name__)
 
 class VdxCube:
     """
     VdxCube is the master class for dealing with vois structures,
     a vdxcube object contains VoiCube objects which represent a VOI,
     it could be ex a lung or the tumor.
-    The VoiCube contains Slices which correnspons to the CT slices,
+    The VoiCube contains Slices which corrensponds to the CT slices,
     and the slices contains contour object, which contains the contour data,
     a slice can contain multiple, since TRiP only support one contour per slice
     for each voi, it is necessary to merge contour
@@ -495,7 +497,7 @@ class Voi:
 
     def read_vdx(self, content, i):
         line = content[i]
-        self.name = string.join(line.split()[1:], ' ')
+        self.name = ' '.join(line.split()[1:])
         number_of_slices = 10000
         i += 1
         while i < len(content):
@@ -509,6 +511,9 @@ class Voi:
             elif re.match("slice", line) is not None:
                 s = Slice()
                 i = s.read_vdx(content, i)
+                if s.get_position() is None:
+                    raise Exception("cannot calculate slice position: " + " ".join(s.contour) )
+                logger.info(s)
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
@@ -706,7 +711,7 @@ class Slice:
                 self.add_contour(c)
             elif re.match("slice", line) is not None:
                 break
-            elif self.contour >= number_of_contours:
+            elif len(self.contour) >= number_of_contours:
                 break
             i += 1
         return i - 1
