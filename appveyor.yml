@@ -102,10 +102,11 @@ install:
   - call %VCVARSALL% amd64
 
 test_script:
-# run tests
-  - py.test
 # make wheel package
   - python setup.py bdist_wheel
+# run tests
+  - pip install dist\*whl
+  - py.test
 # deploy package
   - bash appveyor\deploy_package.sh
 

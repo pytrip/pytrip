@@ -21,6 +21,7 @@
 
   include GPL_LICENSE
   include INSTALL
+  recursive-include appveyor *.sh
   recursive-include pytrip *.c
   recursive-include pytrip *.py
   recursive-include scripts *.py
