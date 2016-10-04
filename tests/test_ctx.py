@@ -55,13 +55,21 @@ class TestCtx(unittest.TestCase):
         original_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
 
-        # save cube and calculate hashsum
+        # calculate temporary filename
         fd, outfile = tempfile.mkstemp()
-        c.write(outfile)
+        fd.close()         # we need only random name, not a descriptor
+        os.remove(outfile)
+        logger.debug("Generated random file name " + outfile)
+
+        # save cube and calculate hashsum
+        c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
         f = open(outfile + ".ctx", 'rb')
         generated_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
-        os.remove(outfile)
+        logger.debug("Removing " + outfile + ".ctx")
+        os.remove(outfile + ".ctx")
+        logger.debug("Removing " + outfile + ".hed")
+        os.remove(outfile + ".hed")
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
