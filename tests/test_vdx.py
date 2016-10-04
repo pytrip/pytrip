@@ -17,11 +17,14 @@
 
 import os
 import unittest
+import logging
 
 from pytrip.ctx import CtxCube
 from pytrip.vdx import VdxCube
 import tests.test_base
 
+
+logger = logging.getLogger(__name__)
 
 class TestVdx(unittest.TestCase):
     def setUp(self):
@@ -30,10 +33,18 @@ class TestVdx(unittest.TestCase):
         self.vdx = os.path.join(testdir, "tst003000.vdx")
 
     def test_read_with_ct(self):
+        logger.info("Testing cube from path " + self.cube000)
         c = CtxCube()
         c.read(self.cube000)
         v = VdxCube(c, "")
+        logger.info("Testing vdx from path " + self.vdx)
         v.read(self.vdx)
+
+        logger.info("Checking len of get_voi_names ")
+        self.assertGreater(len(v.get_voi_names()), 1)
+
+        logger.info("Checking str method ")
+        self.assertGreater(len(str(v)), 1)
 
     def test_read_solo(self):
         v = VdxCube("")
