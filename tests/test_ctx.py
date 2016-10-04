@@ -57,8 +57,8 @@ class TestCtx(unittest.TestCase):
 
         # calculate temporary filename
         fd, outfile = tempfile.mkstemp()
-        fd.close()         # we need only random name, not a descriptor
-        os.remove(outfile)
+        os.close(fd)
+        os.remove(outfile)          # we need only random name, not a descriptor
         logger.debug("Generated random file name " + outfile)
 
         # save cube and calculate hashsum
