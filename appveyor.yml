@@ -81,7 +81,7 @@ init:
 # check python version
   - python -V
 # check 32 or 64 bit
-  - "%PYTHON_ROOT%/python -c \"import struct;print(8 * struct.calcsize(\'P\'))\""
+  - python -c "import struct;print(8 * struct.calcsize('P'))"
 
 install:
 # tell miniconda to always follow default answers
@@ -110,8 +110,9 @@ test_script:
 # clean build directory
   - rd /s /q build
 # install generated package
-  - dir dist
-  - python -c "import os; import pip; pip.main(['install', os.path.join('dist', os.listdir('dist')[0])]);"
+  - cd dist
+  - python -c "import os; import pip; pip.main(['install', os.listdir()[0]]);"
+  - cd ..
 # run tests
   - py.test
 # deploy package
