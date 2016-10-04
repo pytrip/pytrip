@@ -105,7 +105,10 @@ test_script:
 # make wheel package
   - python setup.py bdist_wheel
 # run tests
-  - pip install dist\*whl
+  - dir dist
+  - cd dist
+  - pip install pytrip98-*.whl
+  - cd ..
   - py.test
 # deploy package
   - bash appveyor\deploy_package.sh
