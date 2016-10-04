@@ -39,11 +39,5 @@ class TestVdx(unittest.TestCase):
         v = VdxCube("")
         v.read(self.vdx)
 
-    def test_read_other_version(self):
-        v = VdxCube("")
-        v.version = "2.0"
-        v.read(self.vdx)
-
-
 if __name__ == '__main__':
     unittest.main()

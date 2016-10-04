@@ -36,6 +36,7 @@ except:
 
 logger = logging.getLogger(__name__)
 
+
 class VdxCube:
     """
     VdxCube is the master class for dealing with vois structures,
@@ -512,8 +513,7 @@ class Voi:
                 s = Slice()
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
-                    raise Exception("cannot calculate slice position: " + " ".join(s.contour) )
-                logger.info(s)
+                    raise Exception("cannot calculate slice position")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
