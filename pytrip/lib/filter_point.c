@@ -7,7 +7,8 @@
 #include <string.h>
 double _pytriplib_dot(double * a,double *b);
 double _pytriplib_norm(double * vector);
-double max(double * list,int len)
+
+double max_list(double * list, int len)
 {
     int i = 0; 
     double max_value = 0;
@@ -616,7 +617,7 @@ static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
     cout = vec_to_cube_float(vec_out);
     double field2[] = {field[0]/cube_size[0],field[1]/cube_size[1],field[2]/cube_size[2]};
     double length = 0.5*sqrt(pow(field2[0]*cube_size[0],2)+pow(field2[1]*cube_size[1],2)+pow(field2[2]*cube_size[2],2));
-    double field_max = max(field2,3);
+    double field_max = max_list(field2,3);
     length /= field_max;
     for (i = 0; i < 3; i++)
     {
@@ -985,7 +986,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     double point[2];
     int resolution = 5;
     double tiny_area = 1.0/pow(resolution,2);
-    double point_a[0];
+    double point_a[2];
     int edge = 0;
     int inside = 0;
     
@@ -1119,7 +1120,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     double point[2];
     int resolution = 5;
     double tiny_area = 1.0/pow(resolution,2);
-    double point_a[0];
+    double point_a[2];
     int edge = 0;
     int inside = 0;
     
