@@ -55,8 +55,8 @@ environment:
 #      PYTHON_ARCH: "32"
 #      PYTHON_VERSION: "3.5"
 
-    - PYTHON_ROOT: "C:\\Python35-x64"
-      PYTHON_ARCH: "64"
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python35-x64"
       PYTHON_VERSION: "3.5"
 
 
@@ -70,12 +70,12 @@ init:
 # add Miniconda to PATH variable
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
 # add Visual Studio compiler to PATH variable
-  - dir "C:\Program Files (x86)\MSBuild"
-  - dir "C:\Program Files\MSBuild"
-  - dir "C:\Program Files\MSBuild\Microsoft"
-  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+#  - dir "C:\Program Files (x86)\MSBuild"
+#  - dir "C:\Program Files\MSBuild"
+#  - dir "C:\Program Files\MSBuild\Microsoft"
+#  - SET PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
 # convenient name for Visual Studio Command Prompt tool
-  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
+#  - set VCVARSALL="C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat"
 # following this one: https://github.com/audreyr/cookiecutter/issues/599
   - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
 # check python version
@@ -92,7 +92,7 @@ install:
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
   - activate python%PYTHON_VERSION%
 # as scipy doesn't yet have wheels for windows, install it using conda
-  - conda install -q --name python%PYTHON_VERSION% setuptools wheel scipy
+  - conda install -q --name python%PYTHON_VERSION% scipy
 # install usual requirements
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
@@ -101,8 +101,10 @@ install:
   - python -c "import scipy as sp;print(sp.version.version)"
 # check python version
   - python -V
+# check 32 or 64 bit
+  - python -c "import struct;print(8 * struct.calcsize('P'))"
 # activate Visual Studio stuff
-  - call %VCVARSALL% amd64
+#  - call %VCVARSALL% amd64
 
 test_script:
 # make wheel package
