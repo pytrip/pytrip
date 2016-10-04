@@ -104,11 +104,12 @@ install:
 test_script:
 # make wheel package
   - python setup.py bdist_wheel
-# run tests
+# clean build directory
+  - rd /s /q build
+# install generated package
   - dir dist
-  - cd dist
-  - python -c "import os; import pip; pip.main(['install', os.listdir()[0]]);"
-  - cd ..
+  - python -c "import os; import pip; pip.main(['install', os.path.join('dist', os.listdir('dist')[0])]);"
+# run tests
   - py.test
 # deploy package
   - bash appveyor\deploy_package.sh
