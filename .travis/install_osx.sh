@@ -35,7 +35,7 @@ if [[ $TOXENV == py32* ]] ; then exit 0; fi
 # For Python 3, first install pyenv (and deps)
 brew update || brew update
 brew install freetype
-brew unlink pyenv && brew install pyenv && brew link pyenv
+brew install pyenv && brew link pyenv
 
 # setup pyenv
 PYENV_ROOT="$HOME/.pyenv"

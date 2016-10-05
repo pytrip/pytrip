@@ -23,7 +23,6 @@
 
 import sys
 import os
-import string
 
 
 class ReadGd(object):
@@ -146,7 +145,7 @@ class ReadGd(object):
                 line_len = len(line)
                 #                print len(line)     debug line
                 #                print line[:line_len-1]    debug line
-                linelist = string.split(line[:line_len - 1], ' ')
+                linelist = (line[:line_len - 1]).split(' ')
                 # print linelist     debug line
                 self.indata.append(linelist)
 

@@ -17,13 +17,15 @@
 import os
 import re
 import copy
-from math import pi, cos, sin
+from math import pi
+import logging
+from functools import cmp_to_key
+
 import numpy as np
-import string
 
 from pytrip.error import InputError, ModuleNotLoadedError
-import pytrip as plib
 import pytrip.dos
+import pytriplib
 
 try:
     from dicom.dataset import Dataset, FileDataset
@@ -33,19 +35,29 @@ try:
 except:
     _dicom_loaded = False
 
+logger = logging.getLogger(__name__)
+
 
 class VdxCube:
     """
     VdxCube is the master class for dealing with vois structures,
     a vdxcube object contains VoiCube objects which represent a VOI,
     it could be ex a lung or the tumor.
-    The VoiCube contains Slices which correnspons to the CT slices,
+    The VoiCube contains Slices which corresponds to the CT slices,
     and the slices contains contour object, which contains the contour data,
     a slice can contain multiple, since TRiP only support one contour per slice
     for each voi, it is necessary to merge contour
 
     VdxCube can import both dicom data and TRiP data,
     and export in the those formats.
+
+    We strongly recommend to load first CT or DOS cube, see example below
+
+    c = CtxCube()
+    c.read("TST000000")
+
+    v = VdxCube("", c)
+    v.read("TST000000.vdx")
     """
 
     def __init__(self, content, cube=None):
@@ -71,13 +83,15 @@ class VdxCube:
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
-        names = []
-        for voi in self.vois:
-            names.append(voi.name)
+        names = [voi.name for voi in self.vois]
         return names
 
     def __str__(self):
-        return self.get_voi_names
+        """
+        VOI names separated by & sign
+        :return:
+        """
+        return '&'.join(self.get_voi_names())
 
     def add_voi(self, voi):
         self.vois.append(voi)
@@ -131,13 +145,13 @@ class VdxCube:
         return len(self.vois)
 
     def write_to_voxel(self, path):
-        fp = open(path, "wb+")
+        fp = open(path, "w")
         fp.write("vdx_file_version %s\n" % self.version)
         fp.write("all_indices_zero_based\n")
         fp.write("number_of_vois %d\n" % self.number_of_vois())
         self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
-        for i in range(len(self.vois)):
-            fp.write(self.vois[i].to_voxel_string().encode('ascii', 'ignore'))
+        for voi in self.vois:
+            fp.write(voi.to_voxel_string())
         fp.close()
 
     def write_to_trip(self, path):
@@ -266,32 +280,34 @@ def create_voi_from_cube(cube, name):
 
 def create_cylinder(cube, name, center, radius, depth):
     v = Voi(name, cube)
-    t = np.linspace(0, 2 * pi, 100)
-    p = zip(center[0] + radius * cos(t), center[1] + radius * sin(t))
+    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             points = [[x[0], x[1], z] for x in p]
-            c = Contour(points, cube)
-            s.add_contour(c)
-            v.add_slice(s)
+            if points:
+                c = Contour(points, cube)
+                s.add_contour(c)
+                v.add_slice(s)
     return v
 
 
 def create_sphere(cube, name, center, radius):
     v = Voi(name, cube)
-    t = np.linspace(0, 2 * pi, 100)
-    p = zip(cos(t), sin(t))
+    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    p = list(zip(np.cos(t), np.sin(t)))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
-            c = Contour(points, cube)
-            s.add_contour(c)
-            v.add_slice(s)
+            if len(points) > 0:
+                c = Contour(points, cube)
+                s.add_contour(c)
+                v.add_slice(s)
     return v
 
 
@@ -389,10 +405,10 @@ class Voi:
         data = self.get_3d_polygon()
         product = np.dot(data, np.transpose(bas))
 
-        compare = (self.cube.pixel_size)
-        filtered = plib.filter_points(product, compare / 2)
-        filtered = np.array(sorted(filtered, cmp=voi_point_cmp))
-        filtered = plib.points_to_contour(filtered)
+        compare = self.cube.pixel_size
+        filtered = pytriplib.filter_points(product, compare / 2.0)
+        filtered = np.array(sorted(filtered, key=cmp_to_key(voi_point_cmp)))
+        filtered = pytriplib.points_to_contour(filtered)
         product = filtered
 
         if offset is not None:
@@ -408,10 +424,10 @@ class Voi:
             slice = self.slices[key]
             if plane is self.sagital:
                 point = sorted(
-                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -495,7 +511,7 @@ class Voi:
 
     def read_vdx(self, content, i):
         line = content[i]
-        self.name = string.join(line.split()[1:], ' ')
+        self.name = ' '.join(line.split()[1:])
         number_of_slices = 10000
         i += 1
         while i < len(content):
@@ -509,6 +525,8 @@ class Voi:
             elif re.match("slice", line) is not None:
                 s = Slice()
                 i = s.read_vdx(content, i)
+                if s.get_position() is None:
+                    raise Exception("cannot calculate slice position")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
@@ -706,7 +724,7 @@ class Slice:
                 self.add_contour(c)
             elif re.match("slice", line) is not None:
                 break
-            elif self.contour >= number_of_contours:
+            elif len(self.contour) >= number_of_contours:
                 break
             i += 1
         return i - 1

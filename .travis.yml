@@ -90,8 +90,6 @@ matrix:
           env: TOXENV=packaging
     # jobs allowed to fail
     allow_failures:
-        - os: osx
-          env: TOXENV=py35
         - python: 3.5
           env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
         - python: 3.5
