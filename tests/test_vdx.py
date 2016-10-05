@@ -139,6 +139,7 @@ class TestVdx(unittest.TestCase):
 
         self.assertEqual(contour.number_of_points(), 101)
 
+        self.assertFalse(contour.has_childs())  # TODO why doesn't have children ?
         contour.print_child(level=0)
 
         s_min, s_max = v.get_min_max()
@@ -150,6 +151,18 @@ class TestVdx(unittest.TestCase):
 
         s2 = v.get_2d_slice(plane=Voi.sagital, depth=10.0)
         self.assertIsNotNone(s2)
+
+        s3 = v.get_2d_slice(plane=Voi.coronal, depth=10.0)
+        self.assertIsNotNone(s3)
+
+        v.get_2d_projection_on_basis(basis=((1, 0, 0), (0, 2, 0)))
+
+        v.create_point_tree()
+
+        v.get_row_intersections(pos=(10, 10, 9))
+
+        vc = v.get_voi_cube()
+        self.assertIsNotNone(vc)
 
         # TODO check why not working
         # center_pos = v.calculate_center()
