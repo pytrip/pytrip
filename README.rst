@@ -67,6 +67,11 @@ Following Python code demonstrates PyTRiP capabilities::
     l = ((d1 * l1) + (d2 * l2)) / (d1 + d2)
     l.write("out.dosemlet.dos")
 
+    # load a vdx
+    v = VdxCube("", d0)
+    v.read("contours.vdx")
+
+
 
 More documentation
 ------------------

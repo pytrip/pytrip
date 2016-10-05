@@ -17,7 +17,7 @@
 import os
 import re
 import copy
-from math import pi, cos, sin
+from math import pi
 import logging
 
 import numpy as np
@@ -42,13 +42,21 @@ class VdxCube:
     VdxCube is the master class for dealing with vois structures,
     a vdxcube object contains VoiCube objects which represent a VOI,
     it could be ex a lung or the tumor.
-    The VoiCube contains Slices which corrensponds to the CT slices,
+    The VoiCube contains Slices which corresponds to the CT slices,
     and the slices contains contour object, which contains the contour data,
     a slice can contain multiple, since TRiP only support one contour per slice
     for each voi, it is necessary to merge contour
 
     VdxCube can import both dicom data and TRiP data,
     and export in the those formats.
+
+    We strongly recommend to load first CT or DOS cube, see example below
+
+    c = CtxCube()
+    c.read("TST000000")
+
+    v = VdxCube("", c)
+    v.read("TST000000.vdx")
     """
 
     def __init__(self, content, cube=None):
@@ -272,31 +280,33 @@ def create_voi_from_cube(cube, name):
 def create_cylinder(cube, name, center, radius, depth):
     v = Voi(name, cube)
     t = np.linspace(0, 2 * pi, 100)
-    p = zip(center[0] + radius * cos(t), center[1] + radius * sin(t))
+    p = zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             points = [[x[0], x[1], z] for x in p]
-            c = Contour(points, cube)
-            s.add_contour(c)
-            v.add_slice(s)
+            if points:
+                c = Contour(points, cube)
+                s.add_contour(c)
+                v.add_slice(s)
     return v
 
 
 def create_sphere(cube, name, center, radius):
     v = Voi(name, cube)
     t = np.linspace(0, 2 * pi, 100)
-    p = zip(cos(t), sin(t))
+    p = zip(np.cos(t), np.sin(t))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
-            c = Contour(points, cube)
-            s.add_contour(c)
-            v.add_slice(s)
+            if points:
+                c = Contour(points, cube)
+                s.add_contour(c)
+                v.add_slice(s)
     return v
 
 

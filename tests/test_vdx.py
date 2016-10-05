@@ -21,7 +21,8 @@ import tempfile
 import logging
 
 from pytrip.ctx import CtxCube
-from pytrip.vdx import VdxCube
+from pytrip.error import InputError
+from pytrip.vdx import VdxCube, create_cube, create_voi_from_cube, create_cylinder, create_sphere
 import tests.test_base
 
 
@@ -59,14 +60,18 @@ class TestVdx(unittest.TestCase):
         v.write_to_voxel(outfile)
         self.assertTrue(os.path.exists(outfile))
         self.assertGreater(os.path.getsize(outfile), 1)
+        os.close(fd)  # Windows needs it
         os.remove(outfile)
 
         # save file
         fd, outfile = tempfile.mkstemp()
-        v.write_to_trip(outfile)
+        v.write(outfile)
         self.assertTrue(os.path.exists(outfile))
         self.assertGreater(os.path.getsize(outfile), 1)
+        os.close(fd)  # Windows needs it
         os.remove(outfile)
+
+        self.assertRaises(InputError, v.get_voi_by_name, '')
 
         target_voi = v.get_voi_by_name('target')
         self.assertEqual(target_voi.get_name(), 'target')
@@ -82,6 +87,35 @@ class TestVdx(unittest.TestCase):
     def test_read_solo(self):
         v = VdxCube("")
         v.read(self.vdx)
+
+    def test_create_voi_cube(self):
+        logger.info("Testing cube from path " + self.cube000)
+        c = CtxCube()
+        c.read(self.cube000)
+        v = create_cube(c, name="cube1", center=[10, 10, 10], width=4, height=4, depth=8)
+        self.assertEqual(v.number_of_slices(), 3)
+
+    def test_create_voi_cyl(self):
+        logger.info("Testing cube from path " + self.cube000)
+        c = CtxCube()
+        c.read(self.cube000)
+        v = create_cylinder(c, name="cube2", center=[10, 10, 10], radius=4, depth=8)
+        self.assertEqual(v.number_of_slices(), 1)
+
+    def test_create_voi_sphere(self):
+        logger.info("Testing cube from path " + self.cube000)
+        c = CtxCube()
+        c.read(self.cube000)
+        v = create_sphere(c, name="cube3", center=[10, 10, 10], radius=8)
+        self.assertEqual(v.number_of_slices(), 1)
+
+    def test_create_voi_2(self):
+        logger.info("Testing cube from path " + self.cube000)
+        c = CtxCube()
+        c.read(self.cube000)
+        v = create_voi_from_cube(c, name="cube4")
+        # TODO check if v was created correctly
+        self.assertEqual(v.number_of_slices(), 0)
 
 if __name__ == '__main__':
     unittest.main()
