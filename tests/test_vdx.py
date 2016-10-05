@@ -152,7 +152,7 @@ class TestVdx(unittest.TestCase):
         s2 = v.get_2d_slice(plane=Voi.sagital, depth=10.0)
         self.assertIsNotNone(s2)
 
-        s3 = v.get_2d_slice(plane=Voi.coronal, depth=10.0)
+        s3 = v.get_2d_slice(plane=Voi.coronal, depth=5.0)
         self.assertIsNotNone(s3)
 
         v.get_2d_projection_on_basis(basis=((1, 0, 0), (0, 2, 0)))

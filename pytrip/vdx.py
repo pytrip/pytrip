@@ -19,6 +19,7 @@ import re
 import copy
 from math import pi
 import logging
+from functools import cmp_to_key
 
 import numpy as np
 
@@ -404,9 +405,9 @@ class Voi:
         data = self.get_3d_polygon()
         product = np.dot(data, np.transpose(bas))
 
-        compare = (self.cube.pixel_size)
-        filtered = pytriplib.filter_points(product, compare / 2)
-        filtered = np.array(sorted(filtered, cmp=voi_point_cmp))
+        compare = self.cube.pixel_size
+        filtered = pytriplib.filter_points(product, compare / 2.0)
+        filtered = np.array(sorted(filtered, key=cmp_to_key(voi_point_cmp)))
         filtered = pytriplib.points_to_contour(filtered)
         product = filtered
 
