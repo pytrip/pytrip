@@ -74,13 +74,15 @@ class VdxCube:
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
-        names = []
-        for voi in self.vois:
-            names.append(voi.name)
+        names = [voi.name for voi in self.vois]
         return names
 
     def __str__(self):
-        return self.get_voi_names
+        """
+        VOI names separated by & sign
+        :return:
+        """
+        return '&'.join(self.get_voi_names())
 
     def add_voi(self, voi):
         self.vois.append(voi)
@@ -134,13 +136,13 @@ class VdxCube:
         return len(self.vois)
 
     def write_to_voxel(self, path):
-        fp = open(path, "wb+")
+        fp = open(path, "w")
         fp.write("vdx_file_version %s\n" % self.version)
         fp.write("all_indices_zero_based\n")
         fp.write("number_of_vois %d\n" % self.number_of_vois())
         self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
-        for i in range(len(self.vois)):
-            fp.write(self.vois[i].to_voxel_string().encode('ascii', 'ignore'))
+        for voi in self.vois:
+            fp.write(voi.to_voxel_string())
         fp.close()
 
     def write_to_trip(self, path):
