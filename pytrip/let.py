@@ -19,8 +19,7 @@ import os
 
 import numpy as np
 from pytrip.cube import Cube
-
-import pytrip as plib
+import pytriplib
 
 
 class LETCube(Cube):
@@ -48,7 +47,7 @@ class LETCube(Cube):
             pos += self.slice_distance
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
-                lv += plib.calculate_lvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
+                lv += pytriplib.calculate_lvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
 
         cubes = sum(lv)
         lvh = np.cumsum(lv[::-1])[::-1] / cubes

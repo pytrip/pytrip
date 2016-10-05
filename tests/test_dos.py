@@ -16,17 +16,22 @@
 """
 import os
 import unittest
+import logging
 import numpy as np
 
 from pytrip.dos import DosCube
+from pytrip.vdx import create_sphere
 import pytriplib
 import tests.test_base
+
+logger = logging.getLogger(__name__)
 
 
 class TestDos(unittest.TestCase):
     def setUp(self):
         testdir = tests.test_base.get_files()
         self.cube000 = os.path.join(testdir, "tst003001.dos")
+        logger.info("Testing cube from path " + self.cube000)
 
     def test_read(self):
         c = DosCube()
@@ -42,6 +47,11 @@ class TestDos(unittest.TestCase):
         self.assertGreater(dose_center[1], 0.0)
         self.assertGreater(dose_center[2], 0.0)
 
+    def test_dvh(self):
+        c = DosCube()
+        c.read(self.cube000)
+        v = create_sphere(c, name="sph", center=[10, 10, 10], radius=8)
+        self.assertIsNotNone(v)
 
 if __name__ == '__main__':
     unittest.main()

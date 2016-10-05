@@ -15,12 +15,13 @@
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 from math import log, sqrt, pi
+from functools import cmp_to_key
 
 import numpy as np
 
 from pytrip.res.point import angles_from_trip, max_list, min_list
 from pytrip.res.point import get_basis_from_angles
-import pytrip as plib
+import pytriplib
 
 
 def compare_raster_point(a, b):
@@ -41,8 +42,7 @@ class Field:
         self.bolus = rst.bolus
         self.couch_angle = float(rst.couchangle)
         self.gantry_angle = float(rst.gantryangle)
-        self.gantry_angle, self.couch_angle = \
-            angles_from_trip(self.gantry_angle, self.couch_angle)
+        self.gantry_angle, self.couch_angle = angles_from_trip(self.gantry_angle, self.couch_angle)
         self.subfields = []
         field_size = None
         for submachine in self.rst.get_submachines():
@@ -141,12 +141,12 @@ class SubField:
 
         points = np.reshape(points, (dim[0] * dim[1], 3))
         sigma = self.sigma / ((8 * log(2))**0.5)
-        self.points = plib.merge_raster_grid(np.array(points), sigma)
+        self.points = pytriplib.merge_raster_grid(np.array(points), sigma)
         self.points = np.reshape(self.points, (dim[1], dim[0], 3))
         return self.points
 
     def get_raster_matrixs(self, size):
-        points = sorted(self.submachine.get_raster_points(), cmp=compare_raster_point)
+        points = sorted(self.submachine.get_raster_points(), key=cmp_to_key(compare_raster_point))
         step = self.submachine.stepsize
         margin = 5
         mat = [

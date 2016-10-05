@@ -17,6 +17,7 @@ from pytrip.let import LETCube
 from pytrip.vdx import VdxCube
 from pytrip.error import InputError
 from pytrip.res.point import get_basis_from_angles, angles_to_trip
+import pytriplib
 
 
 class TripExecuter(object):
@@ -72,7 +73,7 @@ class TripExecuter(object):
                               basis[2] / cube1.slice_distance])
             basis /= np.max(np.abs(basis))
 
-            d.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+            d.cube = pytriplib.create_field_shadow(
                 cube1.cube,
                 cube2.cube,
                 np.array(basis, dtype=np.double))
@@ -347,7 +348,7 @@ class TripExecuter(object):
         self.rest_dose = self.target_dos - temp
 
         p = self.projectiles[self.split_proj_key]
-        p["target_dos"].cube = pytriplib.extend_cube(p["target_dos"].cube)  # NOQA F821 (disable PEP8 testing by flake)
+        p["target_dos"].cube = pytriplib.extend_cube(p["target_dos"].cube)
         if len(p["fields"]) == 2:
             temp.cube = (temp.cube < self.projectiles[proj]["target_dos"].cube) * \
                 self.projectiles[proj]["target_dos"].cube + \
@@ -357,7 +358,7 @@ class TripExecuter(object):
             field2 = p["fields"][1]
             d1 = DosCube(temp)
             d2 = DosCube(temp)
-            center = pytriplib.calculate_dose_center(p["target_dos"].cube)  # NOQA F821 (disable PEP8 testing by flake)
+            center = pytriplib.calculate_dose_center(p["target_dos"].cube)
 
             dose.cube[dose.cube < 0] = 0
 
@@ -366,14 +367,14 @@ class TripExecuter(object):
             basis = get_basis_from_angles(field1.get_gantry(), field1.get_couch())[0]
             basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis = basis / np.max(np.abs(basis)) * .5
-            d1.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+            d1.cube = pytriplib.create_field_shadow(
                 dose.cube,
                 temp.cube,
                 np.array(basis, dtype=np.double))
             basis = get_basis_from_angles(field2.get_gantry(), field2.get_couch())[0]
             basis = np.array([basis[0] / dose.pixel_size, basis[1] / dose.pixel_size, basis[2] / dose.slice_distance])
             basis /= np.max(np.abs(basis))
-            d2.cube = pytriplib.create_field_shadow(  # NOQA F821 (disable PEP8 testing by flake)
+            d2.cube = pytriplib.create_field_shadow(
                 dose.cube,
                 temp.cube,
                 np.array(basis, dtype=np.double))
@@ -384,7 +385,7 @@ class TripExecuter(object):
 
             rest = p["target_dos"].cube * ((a + b) < 1)
 
-            b = pytriplib.split_by_plane(rest, center, basis)  # NOQA F821 (disable PEP8 testing by flake)
+            b = pytriplib.split_by_plane(rest, center, basis)
             d1.cube += b
             d2.cube += rest - b
             self.plan.add_dose(d1, "H1")
