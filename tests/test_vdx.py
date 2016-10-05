@@ -100,14 +100,14 @@ class TestVdx(unittest.TestCase):
         c = CtxCube()
         c.read(self.cube000)
         v = create_cylinder(c, name="cube2", center=[10, 10, 10], radius=4, depth=8)
-        self.assertEqual(v.number_of_slices(), 1)
+        self.assertEqual(v.number_of_slices(), 3)
 
     def test_create_voi_sphere(self):
         logger.info("Testing cube from path " + self.cube000)
         c = CtxCube()
         c.read(self.cube000)
         v = create_sphere(c, name="cube3", center=[10, 10, 10], radius=8)
-        self.assertEqual(v.number_of_slices(), 1)
+        self.assertEqual(v.number_of_slices(), 6)
 
     def test_create_voi_2(self):
         logger.info("Testing cube from path " + self.cube000)

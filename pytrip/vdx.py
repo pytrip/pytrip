@@ -279,8 +279,8 @@ def create_voi_from_cube(cube, name):
 
 def create_cylinder(cube, name, center, radius, depth):
     v = Voi(name, cube)
-    t = np.linspace(0, 2 * pi, 100)
-    p = zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t))
+    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
@@ -295,15 +295,15 @@ def create_cylinder(cube, name, center, radius, depth):
 
 def create_sphere(cube, name, center, radius):
     v = Voi(name, cube)
-    t = np.linspace(0, 2 * pi, 100)
-    p = zip(np.cos(t), np.sin(t))
+    t = np.linspace(start=0, stop= 2.0 * pi, num=100)
+    p = list(zip(np.cos(t), np.sin(t)))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
-            if points:
+            if len(points) > 0:
                 c = Contour(points, cube)
                 s.add_contour(c)
                 v.add_slice(s)
