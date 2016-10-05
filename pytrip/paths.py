@@ -19,12 +19,14 @@ import gc
 import os
 from math import sin, cos
 from multiprocessing import Process, Queue
+from functools import cmp_to_key
 
 import numpy as np
 from scipy import interpolate
 
 from pytrip.cube import Cube
 from pytrip.res.point import get_basis_from_angles
+import pytriplib
 
 
 def cmp_sort(a, b):
@@ -39,7 +41,7 @@ class DensityProjections:
 
     def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
         l = self.calculate_quality_list(voi, gantry, couch, calculate_from, stepsize, avoid=avoid, gradient=gradient)
-        l = sorted(l, cmp=cmp_sort)
+        l = sorted(l, key=cmp_to_key(cmp_sort))
         grid_data = []
         for x in l:
             grid_data.append(x["data"][0])
@@ -183,7 +185,7 @@ class DensityProjections:
         if calculate_from is 2:
             start = self.calculate_front_start_voi(voi, start, step_vec)
 
-        data = pytriplib.calculate_wepl(  # NOQA F821 (disable PEP8 testing by flake)
+        data = pytriplib.calculate_wepl(
             self.cube.cube, np.array(start), np.array(basis) * step_length, dimension,
             np.array([self.cube.pixel_size, self.cube.pixel_size, self.cube.slice_distance]))
         data *= step_length

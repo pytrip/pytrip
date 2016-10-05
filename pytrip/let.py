@@ -19,8 +19,7 @@ import os
 
 import numpy as np
 from pytrip.cube import Cube
-
-import pytrip as plib
+import pytriplib
 
 
 class LETCube(Cube):
@@ -48,7 +47,7 @@ class LETCube(Cube):
             pos += self.slice_distance
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
-                lv += plib.calculate_lvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
+                lv += pytriplib.calculate_lvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
 
         cubes = sum(lv)
         lvh = np.cumsum(lv[::-1])[::-1] / cubes
@@ -59,8 +58,12 @@ class LETCube(Cube):
         return lvh, min_let, max_let, mean, area
 
     def write_lvh_to_file(self, voi, path):
-        lvh = self.calculate_lvh(voi)
+        lvh, _, _, _, _ = self.calculate_lvh(voi)
+        print(lvh.shape)
         output = ""
+        # TODO fix following line
+        # lvh has shape (3000,0) and contains only let, not vol
+        # see calculate_lvh() method
         for vol, let in zip(lvh[0], lvh[1]):
             output += "%.4e\t%.4e\n" % (vol, let)
         f = open(path + ".dvh", "w+")

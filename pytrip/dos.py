@@ -16,14 +16,12 @@
 """
 
 import os
+import gc
 
 import numpy as np
 from pytrip.error import InputError, ModuleNotLoadedError
-
 from pytrip.cube import Cube
-
-import pytrip as plib
-import gc
+import pytriplib
 
 try:
     from dicom.dataset import Dataset, FileDataset
@@ -39,17 +37,17 @@ def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None,
     basis = field.get_cube_basis()
 
     if pathcube is None:
-        pathcube = plib.rhocube_to_water(np.array(density_cube.cube), np.array(basis[0]), np.array(cube_size))
+        pathcube = pytriplib.rhocube_to_water(np.array(density_cube.cube), np.array(basis[0]), np.array(cube_size))
         pathcube += field.bolus
 
-    dist = plib.calculate_dist(pathcube, np.array(cube_size), isocenter, np.array(basis))
+    dist = pytriplib.calculate_dist(pathcube, np.array(cube_size), isocenter, np.array(basis))
     # field_size = field.field_size # TODO why not used ?
 
     dist = np.reshape(dist, (density_cube.dimx * density_cube.dimy * density_cube.dimz, 3))
     raster_matrix = np.array(field.get_merged_raster_points())
 
     ddd = field.get_ddd_list()
-    dose = plib.calculate_dose(dist, np.array(raster_matrix), np.array(ddd))
+    dose = pytriplib.calculate_dose(dist, np.array(raster_matrix), np.array(ddd))
 
     dose = np.reshape(dose, (density_cube.dimz, density_cube.dimy, density_cube.dimx)) * 1.602189 * 10**(-8)
     dos = DosCube(density_cube)
@@ -86,7 +84,7 @@ class DosCube(Cube):
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
                 valid = True
-                dv += plib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
+                dv += pytriplib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
         if valid:
             cubes = sum(dv)
             dvh = np.cumsum(dv[::-1])[::-1] / cubes
