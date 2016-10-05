@@ -17,6 +17,8 @@
 import os
 import unittest
 import logging
+import tempfile
+import shutil
 import numpy as np
 
 from pytrip.dos import DosCube
@@ -52,6 +54,57 @@ class TestDos(unittest.TestCase):
         c.read(self.cube000)
         v = create_sphere(c, name="sph", center=[10, 10, 10], radius=8)
         self.assertIsNotNone(v)
+
+        logger.info("Calculating DVH")
+        result = c.calculate_dvh(v)
+        self.assertIsNotNone(result)
+        dvh, min_dose, max_dose, mean, area = result
+        self.assertGreater(area, 2.0)
+        self.assertEqual(len(dvh.shape), 1)
+        self.assertEqual(dvh.shape[0], 1500)
+        self.assertEqual(min_dose, 0.0)
+        self.assertEqual(max_dose, 1.0)
+
+    def test_dicom_plan(self):
+        c = DosCube()
+        c.read(self.cube000)
+
+        dp = c.create_dicom_plan()
+        self.assertIsNotNone(dp)
+
+        d = c.create_dicom()
+        self.assertIsNotNone(d)
+
+    def test_write_dicom(self):
+        c = DosCube()
+        c.read(self.cube000)
+
+        outdir = tempfile.mkdtemp()
+        c.write_dicom(outdir)
+        self.assertTrue(os.path.exists(os.path.join(outdir, "rtdose.dcm")))
+        self.assertTrue(os.path.exists(os.path.join(outdir, "rtplan.dcm")))
+        self.assertGreater(os.path.getsize(os.path.join(outdir, "rtdose.dcm")), 0)
+        self.assertGreater(os.path.getsize(os.path.join(outdir, "rtplan.dcm")), 0)
+        shutil.rmtree(outdir)
+
+    def test_write(self):
+        c = DosCube()
+        c.read(self.cube000)
+
+        fd, outfile = tempfile.mkstemp()
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+        c.write(outfile)
+        hed_file = outfile + ".hed"
+        dos_file = outfile + ".dos"
+        self.assertTrue(os.path.exists(hed_file))
+        self.assertTrue(os.path.exists(dos_file))
+        logger.info("Checking if output file " + hed_file + " is not empty")
+        self.assertGreater(os.path.getsize(hed_file), 1)
+        logger.info("Checking if output file " + dos_file + " is not empty")
+        self.assertGreater(os.path.getsize(dos_file), 1)
+        os.remove(hed_file)
+        os.remove(dos_file)
 
 if __name__ == '__main__':
     unittest.main()

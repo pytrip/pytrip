@@ -16,13 +16,16 @@
 """
 
 import os
+import logging
+import tempfile
 import unittest
 
-from pytrip.vdx import VdxCube
-
+from pytrip.vdx import create_sphere
 from pytrip.let import LETCube
 
 import tests.test_base
+
+logger = logging.getLogger(__name__)
 
 
 class TestLet(unittest.TestCase):
@@ -34,14 +37,47 @@ class TestLet(unittest.TestCase):
     def test_read(self):
         l = LETCube()
         l.read_trip_data_file(self.let001)
-        v = VdxCube("")
-        v.import_vdx(self.vdx000)
-        # TODO fix loading VOI data
-        # tumor = v.get_voi_by_name("Tumor Bed")
-        # lvh = l.calculate_lvh(tumor)
-        # plt.plot(lvh[0], lvh[1])
-        # plt.show()
 
+        v = create_sphere(l, name="sph", center=[10, 10, 10], radius=8)
+        self.assertIsNotNone(v)
+
+        logger.info("Calculating DVH")
+        result = l.calculate_lvh(v)
+        self.assertIsNotNone(result)
+        lvh, min_l, max_l, mean, area = result
+        self.assertGreater(area, 2.0)
+        self.assertEqual(len(lvh.shape), 1)
+        self.assertEqual(lvh.shape[0], 3000)
+        self.assertEqual(min_l, 0.0)
+        self.assertEqual(max_l, 1.0)
+
+        self.assertGreater(l.get_max(), 30.0)
+
+        fd, outfile = tempfile.mkstemp()
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+        l.write(outfile)
+        hed_file = outfile + ".dosemlet.hed"
+        dos_file = outfile + ".dosemlet.dos"
+        self.assertTrue(os.path.exists(hed_file))
+        self.assertTrue(os.path.exists(dos_file))
+        logger.info("Checking if output file " + hed_file + " is not empty")
+        self.assertGreater(os.path.getsize(hed_file), 1)
+        logger.info("Checking if output file " + dos_file + " is not empty")
+        self.assertGreater(os.path.getsize(dos_file), 1)
+        os.remove(hed_file)
+        os.remove(dos_file)
+
+        # TODO fix it !
+        # fd, outfile = tempfile.mkstemp()
+        # os.close(fd)  # Windows needs it
+        # os.remove(outfile)  # we need only temp filename, not the file
+        # l.write_lvh_to_file(v, outfile)
+        # lvh_file = outfile + ".dvh"
+        # self.assertTrue(os.path.exists(lvh_file))
+        # logger.info("Checking if output file " + lvh_file + " is not empty")
+        # self.assertGreater(os.path.getsize(lvh_file), 1)
+        # os.remove(lvh_file)
 
 if __name__ == '__main__':
     unittest.main()
