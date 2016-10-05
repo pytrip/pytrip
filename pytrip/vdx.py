@@ -23,8 +23,8 @@ import logging
 import numpy as np
 
 from pytrip.error import InputError, ModuleNotLoadedError
-import pytrip as plib
 import pytrip.dos
+import pytriplib
 
 try:
     from dicom.dataset import Dataset, FileDataset
@@ -295,7 +295,7 @@ def create_cylinder(cube, name, center, radius, depth):
 
 def create_sphere(cube, name, center, radius):
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop= 2.0 * pi, num=100)
+    t = np.linspace(start=0, stop=2.0 * pi, num=100)
     p = list(zip(np.cos(t), np.sin(t)))
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
@@ -405,9 +405,9 @@ class Voi:
         product = np.dot(data, np.transpose(bas))
 
         compare = (self.cube.pixel_size)
-        filtered = plib.filter_points(product, compare / 2)
+        filtered = pytriplib.filter_points(product, compare / 2)
         filtered = np.array(sorted(filtered, cmp=voi_point_cmp))
-        filtered = plib.points_to_contour(filtered)
+        filtered = pytriplib.points_to_contour(filtered)
         product = filtered
 
         if offset is not None:
@@ -423,10 +423,10 @@ class Voi:
             slice = self.slices[key]
             if plane is self.sagital:
                 point = sorted(
-                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    plib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
