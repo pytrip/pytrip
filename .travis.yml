@@ -46,18 +46,19 @@ matrix:
         - os: osx
           language: generic
           env: TOXENV=py35
-        - os: osx
-          language: generic
-          env: TOXENV=py34
-        - os: osx
-          language: generic
-          env: TOXENV=py33
-        - os: osx
-          language: generic
-          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
-        - os: osx
-          language: generic
-          env: TOXENV=py27
+# TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/109
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py34
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py33
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py27
     # documentation checks
         - os: linux
           python: 3.4
@@ -77,11 +78,12 @@ matrix:
         - python: 3.5
           env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
         - python: 3.5
-          env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
-        - python: 3.5
           env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
-        - python: 3.5
-          env: TOXENV=packaging TARGET=cp33-cp33m
+# TODO fix an issue https://github.com/pytrip/pytrip/issues/70 before enabling
+#        - python: 3.5
+#          env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
+#        - python: 3.5
+#          env: TOXENV=packaging TARGET=cp33-cp33m
         - python: 3.5
           env: TOXENV=packaging TARGET=source
     # fired only when making release (on tags): MacOSX wheel packages
@@ -89,11 +91,9 @@ matrix:
           language: generic
           env: TOXENV=packaging
     # jobs allowed to fail
-    allow_failures:
-        - python: 3.5
-          env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
-        - python: 3.5
-          env: TOXENV=packaging TARGET=cp33-cp33m
+#    allow_failures:
+#        - python: 3.5
+#          env: TOXENV=packaging TARGET=cp33-cp33m
 
 # travis-ci runs by default on ancient Ubuntu 12.04 (precise)
 # following options will give us Ubuntu 14.04 (trusty)
