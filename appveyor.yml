@@ -48,7 +48,6 @@ environment:
       os: Visual Studio 2015
 
 init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
@@ -90,7 +89,7 @@ test_script:
   - rd /s /q build
 # install generated package
   - cd dist
-  - python -c "import os; import pip; pip.main(['install', os.listdir()[0]]);"
+  - python -c "import os; import pip; pip.main(['install', os.listdir('.')[0]]);"
   - cd ..
 # run tests
   - py.test
@@ -100,6 +99,3 @@ test_script:
 # upload artifacts
 artifacts:
   - path: dist\*whl
-
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
