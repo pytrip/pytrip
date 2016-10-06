@@ -14,15 +14,15 @@ environment:
 
   matrix:
 #    # http://www.appveyor.com/docs/installed-software#python
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python27"
-#      PYTHON_VERSION: "2.7"
-#      MINICONDAPATH: "C:\\Miniconda"
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python27"
+      PYTHON_VERSION: "2.7"
+      MINICONDAPATH: "C:\\Miniconda"
 
     - platform: x64
       PYTHON_ROOT: "C:\\Python27-x64"
       PYTHON_VERSION: "2.7"
-      MINICONDAPATH: "C:\\Miniconda"
+      MINICONDAPATH: "C:\\Miniconda-x64"
 
 #   TODO to be fixed, seems like some matplotlib problem
 #    - platform: x86
@@ -35,31 +35,31 @@ environment:
 #      PYTHON_VERSION: "3.3"
 #      MINICONDAPATH: "C:\\Miniconda3"
 
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python34"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3"
-#
-#    - platform: x64
-#      PYTHON_ROOT: "C:\\Python34-x64"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3"
-#
-## Python3.5 needs VS 14.0 (2015)
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python35"
-#      PYTHON_VERSION: "3.5"
-#      MINICONDAPATH: "C:\\Miniconda35"
-#      os: Visual Studio 2015
-#
-#    - platform: x64
-#      PYTHON_ROOT: "C:\\Python35-x64"
-#      PYTHON_VERSION: "3.5"
-#      MINICONDAPATH: "C:\\Miniconda35-x64"
-#      os: Visual Studio 2015
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python34"
+      PYTHON_VERSION: "3.4"
+      MINICONDAPATH: "C:\\Miniconda3"
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python34-x64"
+      PYTHON_VERSION: "3.4"
+      MINICONDAPATH: "C:\\Miniconda3-x64"
+
+# Python3.5 needs VS 14.0 (2015)
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python35"
+      PYTHON_VERSION: "3.5"
+      MINICONDAPATH: "C:\\Miniconda35"
+      os: Visual Studio 2015
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python35-x64"
+      PYTHON_VERSION: "3.5"
+      MINICONDAPATH: "C:\\Miniconda35-x64"
+      os: Visual Studio 2015
 
 init:
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
@@ -112,5 +112,5 @@ test_script:
 artifacts:
   - path: dist\*whl
 
-on_finish:
-  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+#on_finish:
+#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
