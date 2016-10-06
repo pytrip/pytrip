@@ -25,6 +25,16 @@ environment:
       MINICONDAPATH: "C:\\Miniconda"
 
     - platform: x86
+      PYTHON_ROOT: "C:\\Python33"
+      PYTHON_VERSION: "3.3"
+      MINICONDAPATH: "C:\\Miniconda3"
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python33-x64"
+      PYTHON_VERSION: "3.3"
+      MINICONDAPATH: "C:\\Miniconda3"
+
+    - platform: x86
       PYTHON_ROOT: "C:\\Python34"
       PYTHON_VERSION: "3.4"
       MINICONDAPATH: "C:\\Miniconda3"
