@@ -14,26 +14,25 @@ environment:
 
   matrix:
 #    # http://www.appveyor.com/docs/installed-software#python
-# TO BE fixed later
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python27"
-#      PYTHON_VERSION: "2.7"
-#      MINICONDAPATH: "C:\\Miniconda"
-#
-#    - platform: x64
-#      PYTHON_ROOT: "C:\\Python27-x64"
-#      PYTHON_VERSION: "2.7"
-#      MINICONDAPATH: "C:\\Miniconda"
-#
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python34"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3"
-#
-#    - platform: x64
-#      PYTHON_ROOT: "C:\\Python34-x64"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3"
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python27"
+      PYTHON_VERSION: "2.7"
+      MINICONDAPATH: "C:\\Miniconda"
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python27-x64"
+      PYTHON_VERSION: "2.7"
+      MINICONDAPATH: "C:\\Miniconda"
+
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python34"
+      PYTHON_VERSION: "3.4"
+      MINICONDAPATH: "C:\\Miniconda3"
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python34-x64"
+      PYTHON_VERSION: "3.4"
+      MINICONDAPATH: "C:\\Miniconda3"
 
 # Python3.5 needs VS 14.0 (2015)
     - platform: x86
