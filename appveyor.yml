@@ -33,7 +33,7 @@ environment:
 #    - platform: x64
 #      PYTHON_ROOT: "C:\\Python33-x64"
 #      PYTHON_VERSION: "3.3"
-#      MINICONDAPATH: "C:\\Miniconda3"
+#      MINICONDAPATH: "C:\\Miniconda3-x64"
 
     - platform: x86
       PYTHON_ROOT: "C:\\Python34"
@@ -59,7 +59,6 @@ environment:
       os: Visual Studio 2015
 
 init:
-#  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 # add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
@@ -96,7 +95,7 @@ test_script:
 # generate versioneer stuff
   - python %MINICONDAPATH%/envs/python%PYTHON_VERSION%/Scripts/versioneer install
 # make wheel package
-  - "%CMD_IN_ENV% python setup.py bdist_wheel"
+  - python setup.py bdist_wheel
 # clean build directory
   - rd /s /q build
 # install generated package
@@ -111,6 +110,3 @@ test_script:
 # upload artifacts
 artifacts:
   - path: dist\*whl
-
-#on_finish:
-#  - ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
