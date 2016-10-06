@@ -82,6 +82,8 @@ install:
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 
 test_script:
+# generate versioneer stuff
+  - python %MINICONDAPATH%/envs/python%PYTHON_VERSION%/Scripts/versioneer install
 # make wheel package
   - python setup.py bdist_wheel
 # clean build directory
