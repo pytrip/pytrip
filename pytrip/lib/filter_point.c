@@ -8,6 +8,9 @@
 double _pytriplib_dot(double * a,double *b);
 double _pytriplib_norm(double * vector);
 
+// Visual Studio 2010 doesn't support C99, so all the code below should follow C89 standard
+// it means first we declare ALL variables, then we assign them values and use them
+
 double max_list(double * list, int len)
 {
     int i = 0; 
@@ -21,11 +24,13 @@ double max_list(double * list, int len)
 }
 
 double ** pyvector_to_array(PyArrayObject *arrayin)  {
-    int i;
-    double * array = (double *) arrayin->data;  /* pointer to arrayin data as double */
-    
-    int rows = arrayin->dimensions[0];
-    double ** out = (double **)malloc(sizeof(double *)*rows);
+    int i, rows;
+    double * array;
+    double **out;
+
+    array = (double *) arrayin->data;  /* pointer to arrayin data as double */
+    rows = arrayin->dimensions[0];
+    out = (double **)malloc(sizeof(double *)*rows);
     for(i = 0; i < rows; i++)
     {
         out[i] = (double *)malloc(sizeof(double)*2);
@@ -34,49 +39,64 @@ double ** pyvector_to_array(PyArrayObject *arrayin)  {
     }
     return out;
 }
+
 struct list_el{
     double * point;
     struct list_el * next;
 };
+
 typedef struct list_el item;
+
 double _pytriplib_norm(double * vector)
 {
     return sqrt(_pytriplib_dot(vector,vector));
 }
+
 double _pytriplib_dot(double * a,double *b)
 {
     return a[0]*b[0]+a[1]*b[1];
 }
+
 static PyObject * points_to_contour(PyObject *self, PyObject *args)
 {
     int n_items;
     int i,j;
+    int rows;
     double ** points;
     PyArrayObject *vecin;
+    item *head, *element, *prev, *prev2, *element2;
+    double * point,*prev_point;
+    double a[2],b[2],c[2];
+    int n = 0;
+    double dot;
+    int valid;
+    int rm_points;
+    PyArrayObject *vecout;
+    double *cout;
+    int dims[2];
+
     if (!PyArg_ParseTuple(args, "O", &vecin))
         return NULL;
     
     points = pyvector_to_array(vecin);
-    int rows = vecin->dimensions[0];
+
+    rows = vecin->dimensions[0];
     if (rows < 3)
     {
         return NULL;
     }
     
-    item * head = (item *)malloc(sizeof(item));
+    head = (item *)malloc(sizeof(item));
     head->point = points[0];
-    item * element = (item *)malloc(sizeof(item));
+    element = (item *)malloc(sizeof(item));
     element->point = points[1];
     head->next = element;
     n_items = 2;
     
-    item * prev = NULL;
-    item * prev2 = NULL;
-    item * element2;
-    double * point,*prev_point;
-    double a[2],b[2],c[2];
+    prev = NULL;
+    prev2 = NULL;
+    element2;
     point = points[0];
-    int n = 0;
     for(i = 1; i < rows; i++)
     {
         prev_point = point;
@@ -107,8 +127,7 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
     element->next = head;
     prev = NULL;
     element->next = head;
-    int rm_points = 0;
-    double dot;
+    rm_points = 0;
     element = head;
     for (i = 0; i < (n_items-rm_points)*2; i++)
     {
@@ -142,7 +161,6 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
             element2 = element;
     }
     element = element2;
-    int valid;
     //~ printf("%f,%f\n",element->point[0],element->point[1]);
     for(j = 0; j < 3; j++)
     {
@@ -180,10 +198,10 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
         element = element->next;
     }
 }
-    PyArrayObject *vecout;
-    int dims[] = {n_items-rm_points,2};
+    dims[0] = n_items-rm_points;
+    dims[1] = 2;
     vecout = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    double *cout = (double *)vecout->data;    
+    cout = (double *)vecout->data;
     //~ element = head;
     for (i = 0; i < n_items-rm_points; i++)
     {
@@ -196,135 +214,6 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
     
 }
 
-/*static PyObject * points_to_contour2(PyObject *self, PyObject *args)
-{
-    int n_items;
-    int i,j;
-    double ** points;
-    PyArrayObject *vecin;
-    if (!PyArg_ParseTuple(args, "O", &vecin))
-        return NULL;
-    
-    points = pyvector_to_array(vecin);
-    int rows = vecin->dimensions[0];
-    if (rows < 3)
-    {
-        return NULL;
-    }
-    
-    item * head = (item *)malloc(sizeof(item));
-    head->point = points[0];
-    item * element = (item *)malloc(sizeof(item));
-    element->point = points[1];
-    head->next = element;
-    element->next = head;
-    n_items = 2;
-    
-    item * prev;
-    item * nearest;
-    item * prev_nearest;
-    item * temp_el;
-    double dist;
-    double * point;
-    double temp_dist;
-    double a[2],b[2],p[2];
-         
-    for(i = 2; i < rows; i++)
-    {
-    
-        dist = 1000000000.0;
-        prev = NULL;
-        nearest = NULL;
-        prev_nearest = NULL;
-        point = points[i];
-        element = head;
-        for(j = 0; j < n_items; j++)
-        {
-            temp_dist = pow(point[0]-element->point[0],2)+pow(point[1]-element->point[1],2);
-            
-            if(temp_dist < dist)
-            {
-                dist = temp_dist;
-                nearest = element;
-                prev_nearest = prev;
-                
-            }
-            prev = element;
-            element = element->next;
-        }
-        
-        if (prev_nearest == NULL)
-        {
-            prev_nearest = prev;
-        }
-        p[0] = point[0]-nearest->point[0];
-        p[1] = point[1]-nearest->point[1];
-        
-        a[0] = prev->point[0]-nearest->point[0];
-        a[1] = prev->point[1]-nearest->point[1];
-    
-        b[0] = nearest->next->point[0]-nearest->point[0];
-        b[1] = nearest->next->point[1]-nearest->point[1];
-        
-        element = (item *)malloc(sizeof(item));
-        element->point = point;
-        if (_pytriplib_dot(p,a)/_pytriplib_norm(a) > _pytriplib_dot(p,b)/_pytriplib_norm(b))
-        {
-            temp_el = prev_nearest->next;
-            prev_nearest->next = element;
-            element->next = temp_el;
-        }
-        else
-        {
-            
-            temp_el = nearest->next;
-            nearest->next = element;
-            element->next = temp_el;
-        }
-        n_items++;
-        
-    }
-    int rm_points = 0;
-    double dot;
-    element = head;
-    for (i = 0; i < n_items; i++)
-    {
-        if(prev != NULL)
-        {
-            a[0] = element->point[0]-prev->point[0];
-            a[1] = element->point[1]-prev->point[1];
-        
-            b[0] = element->next->point[0]-element->point[0];
-            b[1] = element->next->point[1]-element->point[1];
-            
-            dot = _pytriplib_dot(a,b)/_pytriplib_norm(a)/_pytriplib_norm(b);
-            if (dot > 0.99 || dot < -0.86)
-            {
-                prev->next = element->next;
-                element = element->next;
-                rm_points++;
-                continue;
-            }
-        }
-        
-        prev = element;
-        element = element->next;
-    }
-    PyArrayObject *vecout;
-    int dims[] = {n_items-rm_points,2};
-    vecout = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    double *cout = (double *)vecout->data;    
-    element = head;
-    for (i = 0; i < n_items-rm_points; i++)
-    {
-        cout[2*i] = element->point[0];
-        cout[2*i+1] = element->point[1]; 
-        element = element->next;
-    }
-    return PyArray_Return(vecout);
-
-    
-}*/
 static PyObject * filter_points(PyObject *self, PyObject *args)
 {
     PyArrayObject *vecin,*vecout;
@@ -332,21 +221,23 @@ static PyObject * filter_points(PyObject *self, PyObject *args)
     double ** points,*cout,**out;
     double dist;
     int dims[2];
-    int k;
+    int j, k, rows;
+    double * tmp_point;
+    double d, dist_2;
+    int to_close;
+
     if (!PyArg_ParseTuple(args, "Od", &vecin,&dist))
         return NULL;
     
     points = pyvector_to_array(vecin);
-    int rows = vecin->dimensions[0];
+    rows = vecin->dimensions[0];
 
     dims[0] = rows;
     dims[1] = 2;
     
-    int j = 1;
+    j = 1;
     
-    double * tmp_point;
-    double d;
-    double dist_2 = pow(dist,2);
+    dist_2 = pow(dist,2);
     
     out = (double **)malloc(sizeof(double *)*rows);
     
@@ -356,7 +247,6 @@ static PyObject * filter_points(PyObject *self, PyObject *args)
     }
     
     out[0] = points[0];
-    int to_close;
     for(i = 0; i < rows; i++)
     {
         to_close = 0;
@@ -487,22 +377,28 @@ float get_element(float *** cube,int * dims,int * element)
 }
 float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,int * point,int * step,double * field,double * weight)
 {
-    float element = get_element(cube,dimensions,point);
-    
+    float element;
+    int point_tmp[3] = {point[0],point[1],point[2]};
+    double path = 0.0;
+
+    double element_d;
+    int point2[3];
+    double point3[3];
+    int b = 0;
+
+    element = get_element(cube,dimensions,point);
+
     if(element == -1.0)
         return 0.0;
-    int point_tmp[3] = {point[0],point[1],point[2]};
-    //~ printf("%f\n",element);
+
     if(element == 0.0)
     {
-        
-        double path = 0.0;
-        double element;
-        int point2[3];
-        
-        double point3[3] = {point[0],point[1],point[2]};
-        int b = 0;
-        
+
+        element_d = element;
+        point3[0]=point[0];
+        point3[1]=point[1];
+        point3[2]=point[2];
+
         while(1)
         {
             path += rho_cube[point[0]][point[1]][point[2]];
@@ -510,32 +406,30 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
             point2[0] = point[0]+step[2];
             point2[1] = point[1];
             point2[2] = point[2];
-            element = get_element(rho_cube,dimensions,point2);
-            if(element > 0)
-                path += (element)*weight[2];
+            element_d = get_element(rho_cube,dimensions,point2);
+            if(element_d > 0)
+                path += element_d*weight[2];
             
             point2[0] = point[0];
             point2[1] = point[1]+step[1];
             point2[2] = point[2];
-            element = get_element(rho_cube,dimensions,point2);
-            if(element > 0)
-                path += (element)*weight[1];
+            element_d = get_element(rho_cube,dimensions,point2);
+            if(element_d > 0)
+                path += (element_d)*weight[1];
             point2[0] = point[0];
             point2[1] = point[1];
             point2[2] = point[2]+step[0];
-            element = get_element(rho_cube,dimensions,point2);
-            if(element > 0)
-                path += (element)*weight[0];
-        
-            
-            
-            point3[0] -= field[2]; 
+            element_d = get_element(rho_cube,dimensions,point2);
+            if(element_d > 0)
+                path += (element_d)*weight[0];
+
+            point3[0] -= field[2];
             point3[1] -= field[1]; 
             point3[2] -= field[0];
             
-            point[0] = round(point3[0]);
-            point[1] = round(point3[1]);
-            point[2] = round(point3[2]);
+            point[0] = (int)(point3[0]);
+            point[1] = (int)(point3[1]);
+            point[2] = (int)(point3[2]);
             //~ printf("%d,%d,%d\n",point[0],point[1],point[2]);
             //~ printf("%d,%d,%d\n",dimensions[0],dimensions[1],dimensions[2]);
             if (point[0] < 0 || point[1] < 0 || point[2] < 0 || point[0] >= dimensions[0] || point[1] >= dimensions[1] || point[2] >= dimensions[2])
@@ -552,46 +446,10 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
                 break;
             }
         }
-        
-        /*int point2[3];
-        double element;
-        
-        point2[0] = point[0]-base[2];
-        point2[1] = point[1]-base[1];
-        point2[2] = point[2]-base[0];
-        path += calculate_path_length(cube,rho_cube,dimensions,point2,step,base,weight);
-        
-        //~ printf("point %d,%d,%d\n",point[0],point[1],point[2]);
-        //~ printf("element %f\n",path);
-        
-        
-        point2[0] = point[0]-step[2];
-        point2[1] = point[1];
-        point2[2] = point[2];
-        
-        element = get_element(rho_cube,dimensions,point2);
-        if(element > 0)
-            path += (element)*weight[2];
-    
-        point2[0] = point[0];
-        point2[1] = point[1]-step[1];
-        point2[2] = point[2];
-        
-        element = get_element(rho_cube,dimensions,point2);
-        if(element > 0)
-            path += (element)*weight[1];
-        
-        point2[0] = point[0];
-        point2[1] = point[1];
-        point2[2] = point[2]-step[0];
-        element = get_element(rho_cube,dimensions,point2);
-        if(element > 0)
-            path += (element)*weight[0];
-            */
-            
-        cube[point_tmp[0]][point_tmp[1]][point_tmp[2]] = path;
+
+        cube[point_tmp[0]][point_tmp[1]][point_tmp[2]] = (float)path;
         //~ printf("%d,%f\n\n",point[1],path);
-        return path;
+        return (float)path;
     }
     return element;
 }
@@ -602,22 +460,33 @@ static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
     PyArrayObject *vec_rho,*vec_field,*vec_cube_size,*vec_out;
     float *** rho_cube,***cout;
     double *field,*cube_size;
+    int dims[3];
+    double field2[3];
+    double length, field_max;
+    int step[3];
+    int point[3];
+    double weight[3];
+    double w_sum = 0;
+    int l = 0;
+    float * out;
+
     if (!PyArg_ParseTuple(args, "OOO",&vec_rho,&vec_field,&vec_cube_size))
         return NULL;
     field = (double *)vec_field->data;
     cube_size = (double *)vec_cube_size->data;
     
     rho_cube = vec_to_cube_float(vec_rho);
-    int dims[3];
     dims[0] = vec_rho->dimensions[0];
     dims[1] = vec_rho->dimensions[1];
     dims[2] = vec_rho->dimensions[2];
     
     vec_out = (PyArrayObject *) PyArray_FromDims(3,dims,NPY_FLOAT);
     cout = vec_to_cube_float(vec_out);
-    double field2[] = {field[0]/cube_size[0],field[1]/cube_size[1],field[2]/cube_size[2]};
-    double length = 0.5*sqrt(pow(field2[0]*cube_size[0],2)+pow(field2[1]*cube_size[1],2)+pow(field2[2]*cube_size[2],2));
-    double field_max = max_list(field2,3);
+    field2[0] = field[0]/cube_size[0];
+    field2[1] = field[1]/cube_size[1];
+    field2[2] = field[2]/cube_size[2];
+    length = 0.5*sqrt(pow(field2[0]*cube_size[0],2)+pow(field2[1]*cube_size[1],2)+pow(field2[2]*cube_size[2],2));
+    field_max = max_list(field2,3);
     length /= field_max;
     for (i = 0; i < 3; i++)
     {
@@ -630,18 +499,14 @@ static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
         {
             for(k = 0; k < dims[2]; k++)
             {
-                rho_cube[i][j][k] *= length;
+                rho_cube[i][j][k] *= (float)length;
             }
         }
     }
     
-    int step[3];
-    int point[3];
     step[0] = (field[0] >= 0)?1:-1;
     step[1] = (field[1] >= 0)?1:-1;
     step[2] = (field[2] >= 0)?1:-1;
-    double weight[3];
-    double w_sum = 0;
     for(i = 0; i < 3; i++)
     {
         weight[i] = pow(field[i],2)/cube_size[i];
@@ -666,13 +531,9 @@ static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
                 cout[i][j][k] = calculate_path_length(cout,rho_cube,dims,point,step,field2,weight);
                 //~ printf("%d,%d,%d\n",point[0],point[1],point[2]);
             }
-            //~ if(j == 2)
-                //~ return;
-            
         }
     }
-    float * out = (float *)vec_out->data;
-    int l = 0;
+    out = (float *)vec_out->data;
     for(i = 0; i < dims[0]; i++)
     {
         for(j= 0; j < dims[1]; j++)
@@ -700,22 +561,24 @@ static PyObject * calculate_dist(PyObject *self, PyObject *args)
     float * water_cube;
     double *center,*cube_size;
     double ** basis;
+    double point[3];
+    double dist[3];
+    int dims[4];
+    float * out;
+
     if (!PyArg_ParseTuple(args, "OOOO",&vec_dist,&vec_cube_size,&vec_center,&vec_basis))
         return NULL;
     water_cube = (float *)vec_dist->data;
     center = (double *)vec_center->data;
     cube_size = (double *)vec_cube_size->data;
     basis = vec_to_matrix(vec_basis);
-    int dims[4];
     dims[0] = vec_dist->dimensions[0];
     dims[1] = vec_dist->dimensions[1];
     dims[2] = vec_dist->dimensions[2];
     dims[3] = 3;
-    double point[3];
-    double dist[3];
-    
+
     vec_out = (PyArrayObject *) PyArray_FromDims(4,dims,NPY_FLOAT);
-    float * out = (float *)vec_out->data;
+    out = (float *)vec_out->data;
     l = 0;
     m = 0;
     for(i = 0; i < dims[0]; i++)
@@ -732,8 +595,8 @@ static PyObject * calculate_dist(PyObject *self, PyObject *args)
                 dist[1] = point[1]-center[1];
                 dist[2] = point[2]-center[2];
             
-                out[l++] = dot(dist,basis[1],3);
-                out[l++] = dot(dist,basis[2],3);
+                out[l++] = (float)dot(dist,basis[1],3);
+                out[l++] = (float)dot(dist,basis[2],3);
                 out[l++] = water_cube[m++];
             }
         }
@@ -745,12 +608,17 @@ double **** rastervector_to_array(PyArrayObject * vector)
 {
     int i,j,k,l;
     int dims[3];
+
+    double * data;
+    double **** out;
+
     dims[0] = vector->dimensions[0];
     dims[1] = vector->dimensions[1];
     dims[2] = vector->dimensions[2];
-    
-    double * data = (double *)vector->data;
-    double **** out = (double ****)malloc(sizeof(double ***)*dims[0]);
+
+    data = (double *)vector->data;
+    out = (double ****)malloc(sizeof(double ***)*dims[0]);
+
     l = 0;
     for (i = 0; i < dims[0]; i++)
     {
@@ -773,11 +641,15 @@ double *** ddd_vector_to_cube(PyArrayObject * vector)
 {
     int i,j,k;
     int dims[2];
+    double * data;
+    double *** out;
+
     dims[0] = vector->dimensions[0];
     dims[1] = vector->dimensions[1];
-    
-    double * data = (double *)vector->data;
-    double *** out = (double ***)malloc(sizeof(double **)*dims[0]);
+
+    data = (double *)vector->data;
+    out = (double ***)malloc(sizeof(double **)*dims[0]);
+
     k = 0;
     for (i = 0; i < dims[0]; i++)
     {
@@ -887,10 +759,10 @@ static PyObject * calculate_dose(PyObject *self, PyObject *args)
                 }
                 tmp_ddd += ((ddd[j][ddd_idx][2]-ddd[j][ddd_idx+1][2])/(ddd[j][ddd_idx][0]-ddd[j][ddd_idx+1][0])*(point[2]-ddd[j][ddd_idx][0])+ddd[j][ddd_idx][2]);
                 
-                dose[i] += si1*raster_cube[j][raster_idx[1]][raster_idx[0]][2]*tmp_ddd;
-                dose[i] += si2*raster_cube[j][raster_idx[1]][raster_idx[0]+1][2]*tmp_ddd;
-                dose[i] += si3*raster_cube[j][raster_idx[1]+1][raster_idx[0]][2]*tmp_ddd;
-                dose[i] += si4*raster_cube[j][raster_idx[1]+1][raster_idx[0]+1][2]*tmp_ddd;
+                dose[i] += (float)(si1*raster_cube[j][raster_idx[1]][raster_idx[0]][2]*tmp_ddd);
+                dose[i] += (float)(si2*raster_cube[j][raster_idx[1]][raster_idx[0]+1][2]*tmp_ddd);
+                dose[i] += (float)(si3*raster_cube[j][raster_idx[1]+1][raster_idx[0]][2]*tmp_ddd);
+                dose[i] += (float)(si4*raster_cube[j][raster_idx[1]+1][raster_idx[0]+1][2]*tmp_ddd);
             }
         }
     }
@@ -930,10 +802,13 @@ static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
     double a;
     float sigma;
     int dims[2];
+    int n;
+
     if (!PyArg_ParseTuple(args, "Of",&vec_raster,&sigma))
         return NULL;
+
+    n = vec_raster->dimensions[0];
     raster = (double *)vec_raster->data;
-    int n = vec_raster->dimensions[0];
     dims[0] = n;
     dims[1] = 3;
     vec_out = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
@@ -1007,9 +882,11 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     short * dose;
     PyArrayObject *vec_dose,*vec_contour,*vec_size;
     PyArrayObject *vec_out;
+
     if (!PyArg_ParseTuple(args, "OOO",&vec_dose,&vec_contour,&vec_size))
         return NULL;
-    
+
+    l = 0;
     dims[0] = vec_dose->dimensions[0];
     dims[1] = vec_dose->dimensions[1];
     
@@ -1143,7 +1020,8 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     PyArrayObject *vec_out;
     if (!PyArg_ParseTuple(args, "OOO",&vec_let,&vec_contour,&vec_size))
         return NULL;
-    
+
+    l = 0;
     dims[0] = vec_let->dimensions[0];
     dims[1] = vec_let->dimensions[1];
     
@@ -1250,7 +1128,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
 
 static PyObject * calculate_wepl(PyObject *self, PyObject *args)
 {
-    int i,j,k;
+    int i,j;
     PyArrayObject *vec_wepl,*vec_start,*vec_basis,*vec_dimensions,*vec_cubesize;
     PyArrayObject *vec_out;
     float *wepl;
@@ -1259,7 +1137,7 @@ static PyObject * calculate_wepl(PyObject *self, PyObject *args)
     double point[3];
     double * basis;
     int point_id[3];
-    short * dimensions;
+    int * dimensions;
     int cubedim[3];
     int id;
     int out_dim[2];
@@ -1292,14 +1170,11 @@ static PyObject * calculate_wepl(PyObject *self, PyObject *args)
             point[1] = start[1]+a[1]*i+b[1]*j;
             point[2] = start[2]+a[2]*i+b[2]*j;
             
-            
-            
-            
             while(1)
             {
-                point_id[0] = (int)point[0]/cubesize[0]; 
-                point_id[1] = (int)point[1]/cubesize[1]; 
-                point_id[2] = (int)point[2]/cubesize[2];
+                point_id[0] = (int)(point[0]/cubesize[0]);
+                point_id[1] = (int)(point[1]/cubesize[1]);
+                point_id[2] = (int)(point[2]/cubesize[2]);
                 if(point_id[0] < 0 || point_id[0] >= cubedim[2] || point_id[1] < 0 || point_id[1] >= cubedim[1] || point_id[2] < 0 || point_id[2] >= cubedim[0])
                     break;
                 out[id] += wepl[point_id[2]*cubedim[2]*cubedim[1]+point_id[1]*cubedim[2]+point_id[0]];
@@ -1311,10 +1186,11 @@ static PyObject * calculate_wepl(PyObject *self, PyObject *args)
     }
     return PyArray_Return(vec_out);    
 }
-static PyObject * raytracing(PyObject *self, PyObject *args)
-{
-	
-}
+
+//static PyObject * raytracing(PyObject *self, PyObject *args) // TODO to implement
+//{
+//
+//}
 
 /*Plane: 1 is coronal and 2 is sagital*/
 static PyObject * slice_on_plane(PyObject *self, PyObject *args)
@@ -1384,6 +1260,8 @@ static PyObject * create_field_shadow(PyObject *self, PyObject *args)
     int a,a_temp,b_temp;
     double point[3];
     int point_idx[3];
+    int temp_dose;
+
     if (!PyArg_ParseTuple(args, "OOO",&vec_in1,&vec_in2,&vec_field))
         return NULL;
     
@@ -1398,9 +1276,7 @@ static PyObject * create_field_shadow(PyObject *self, PyObject *args)
     vec_out = (PyArrayObject *) PyArray_FromDims(3,cubedim,NPY_INT16);
     out = (short *)vec_out->data;
     a = cubedim[2]*cubedim[1];
-    
-    int temp_dose;
-    
+
     for (i = 0; i < a*cubedim[0]; i++)
     {
         out[i] = -1;
@@ -1469,7 +1345,7 @@ static PyObject * create_field_shadow(PyObject *self, PyObject *args)
 static PyObject * create_field_ramp(PyObject *self, PyObject *args)
 {
     int i,j,k,l,m;
-    float extension = 1.4;
+    float extension;
     PyArrayObject *vec_in1,*vec_in2,*vec_out,*vec_field;
     short * in1,*in2;
     short * out;
@@ -1479,12 +1355,14 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     int a,a_temp,b_temp;
     double point[3];
     int point_idx[3];
-    if (!PyArg_ParseTuple(args, "OOO",&vec_in1,&vec_in2,&vec_field))
-        return NULL;
     int length;
     int length_a,length_b;
     int tmp_length;
-    
+
+    if (!PyArg_ParseTuple(args, "OOO",&vec_in1,&vec_in2,&vec_field))
+        return NULL;
+
+    extension = 1.4f;
     field = (double *)vec_field->data;
     cubedim[0] = vec_in1->dimensions[0];
     cubedim[1] = vec_in1->dimensions[1];
@@ -1497,8 +1375,7 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     out = (short *)vec_out->data;
     a = cubedim[2]*cubedim[1];
     
-    int temp_dose;
-    
+
     for (i = 0; i < a*cubedim[0]; i++)
     {
         out[i] = -1;
@@ -1506,7 +1383,6 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     
     for (i = 0; i < cubedim[0]; i++)
     {
-        
         a_temp = i*a;
         for (j = 0; j < cubedim[1]; j++)
         {
@@ -1582,7 +1458,7 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
                     
                     length = length_a+length_b;
                     
-                    length = length*extension;
+                    length = (int)(length*extension);
                     
                     point[0] = k-field[0]*(length_b+length*(extension-1.4)/2);
                     point[1] = j-field[1]*(length_b+length*(extension-1.4)/2);
@@ -1645,13 +1521,13 @@ static PyObject * calculate_dose_center(PyObject *self, PyObject *args)
     long tot_dose;
     int cubedim[3];
     int a,a_temp,b_temp;
-    
+    int dim[] = {3};
+
     if (!PyArg_ParseTuple(args, "O",&vec_in))
         return NULL;   
     cubedim[0] = vec_in->dimensions[0];
     cubedim[1] = vec_in->dimensions[1];
     cubedim[2] = vec_in->dimensions[2];
-    int dim[] = {3};
     in = (short *)vec_in->data;
     vec_out = (PyArrayObject *) PyArray_FromDims(1,dim,NPY_DOUBLE);
     out = (double *)vec_out->data;
@@ -1733,7 +1609,7 @@ static PyObject * split_by_plane(PyObject *self, PyObject *args)
                         factor = 1.0;
                     if (factor > 0)
                     {
-                        out[l] = factor*in[l];
+                        out[l] = (short)(factor*in[l]);
                     }
                     else
                         out[l] = 0;
@@ -1758,7 +1634,7 @@ static PyObject * extend_cube(PyObject *self, PyObject *args)
     double dist = 1;
     double * cubesize;
     double dist_2;
-    double t1,t2,t3;
+    double t1,t2;
     short * out;
     int cubedim[3];
     
@@ -1791,16 +1667,16 @@ static PyObject * extend_cube(PyObject *self, PyObject *args)
                 
                 if (in[l] > 0)
                 {
-                    for (x = -dist; x <= dist; x++)
+                    for (x = -(int)dist; x <= dist; x++)
                     {                        
                         t1 = pow(cubesize[0]*x,2);
-                        for (y = -dist; y <= dist; y++)
+                        for (y = -(int)dist; y <= dist; y++)
                         {
                             
                             t2 = t1 + pow(cubesize[1]*y,2);
                             if(t2 > dist_2)
                                 continue;
-                            for (z = -dist; z <= dist; z++)
+                            for (z = -(int)dist; z <= dist; z++)
                             {
                                 l2 = (i+z)*a+(j+y)*cubedim[1]+(k+x);
                                 if ((t2+pow(cubesize[2]*z,2)) <= dist_2 && out[l2] < in[l] && l2 > 0)
@@ -1834,7 +1710,7 @@ static PyMethodDef pytriplibMethods[] = {
 {"calculate_dose_center",(PyCFunction)calculate_dose_center,METH_VARARGS},
 {"split_by_plane",(PyCFunction)split_by_plane,METH_VARARGS},
 {"extend_cube",(PyCFunction)extend_cube,METH_VARARGS},
-{"raytracing",(PyCFunction)raytracing,METH_VARARGS},
+//{"raytracing",(PyCFunction)raytracing,METH_VARARGS},  // TODO to implement
 {NULL,NULL}
 };
 
