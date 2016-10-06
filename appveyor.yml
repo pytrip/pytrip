@@ -96,7 +96,7 @@ test_script:
 # generate versioneer stuff
   - python %MINICONDAPATH%/envs/python%PYTHON_VERSION%/Scripts/versioneer install
 # make wheel package
-  - python setup.py bdist_wheel
+  - "%CMD_IN_ENV% python setup.py bdist_wheel"
 # clean build directory
   - rd /s /q build
 # install generated package
