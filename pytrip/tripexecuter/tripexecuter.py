@@ -238,8 +238,8 @@ class TripExecuter(object):
         output.append("hlut * /delete")
         output.append("ddd  * /delete")
         output.append("dedx * /delete")
-        output.append('dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read')
-        output.append('hlut "$TRIP98/DATA/19990211.hlut" / read')
+        output.append('dedx "'+self.plan.dedx_file+'" / read')
+        output.append('hlut "'+self.plan.hlut_file+'" / read')
         output.append("scancap / offh2o(1.709) rifi(3) bolus(0.000) " "minparticles(5000) path(none)")
         output.append("random 1000")
         return output
