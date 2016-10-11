@@ -15,37 +15,33 @@ from pytrip.tripexecuter.tripvoi import TripVoi
 from pytrip.tripexecuter.voi import Voi
 from pytrip.tripexecuter.voicollection import VoiCollection
 
-plans = TripPlanCollection()
-rbe = RBEHandler()
-patient_name = ""
 
 clean_path = "/home/grzanka/Desktop/DHV test/TST000/TST000000"
 
+# load CT cube
 c = CtxCube()
 c.read(clean_path + ".ctx")
 ct_images = CTImages(c)
 
+# load VOIs
 structures = VoiCollection(None)
 if os.path.exists(clean_path + ".vdx"):
      structures = VdxCube("", c)
      structures.read(clean_path + ".vdx")
-
 print(structures.get_voi_names())
-v = structures.get_voi_by_name('GTV')
 
-target_voi = Voi("GTV_VOI", v)
-print("type", type(target_voi), target_voi.get_voi_data())
-
+# empty plan
 plan = TripPlan()
 
-target_voi.target = True
+# add target VOI
+v = structures.get_voi_by_name('GTV')
+target_voi = Voi("GTV_VOI", v)
 plan.add_voi(target_voi)
-
 plan.get_vois()[0].target = True
 
-vv = plan.get_vois()[0]
-
+# add default field
 plan.add_field(Field("Field 1"))
 
-executer = TripExecuter(ct_images.get_modified_images(plan), rbe)
+# start trip
+executer = TripExecuter(ct_images.get_modified_images(plan), RBEHandler())
 executer.execute(plan)
