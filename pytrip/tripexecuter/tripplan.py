@@ -26,6 +26,8 @@ class TripPlan(pytripObj):
         self.ddd_folder = ""
         self.spc_folder = ""
         self.sis_file = ""
+        self.hlut_file = "$TRIP98/DATA/19990211.hlut"
+        self.dedx_file = "$TRIP98/DATA/DEDX/20040607.dedx"
         self.res_tissue_type = ""
         self.target_tissue_type = ""
         self.active = False
@@ -166,27 +168,35 @@ class TripPlan(pytripObj):
         return self.servername
 
     def set_server(self, server):
+        """ Set server name where TRiP98 is installed, if not installed locally."""
         self.servername = server
 
     def get_username(self):
+        """ Get username for login on remote TRiP98 server."""
         return self.username
 
     def set_username(self, username):
+        """ Set username for login on remote TRiP98 server."""
         self.username = username
 
     def get_password(self):
+        """ Get password for login on remote TRiP98 server. Note, this stored unencrypted in cleartext."""
         return self.password
 
     def set_password(self, password):
+        """ Set password for login on remote TRiP98 server. Note, this stored unencrypted in cleartext."""
         self.password = password
 
     def get_working_dir(self):
+        """ Get working directory of TRiP98."""
         return self.working_dir
 
     def set_working_dir(self, working_dir):
+        """ Set working directory of TRiP98."""
         self.working_dir = working_dir
 
     def get_iterations(self):
+        """ Get number of iterations for optimization in TRiP98."""
         return self.iterations
 
     def get_eps(self):
@@ -356,9 +366,11 @@ class TripPlan(pytripObj):
         return self.vois.add_voi(voi)
 
     def add_field(self, field):
+        """ Add a new field to the plan object."""
         return self.fields.add_field(field)
 
     def remove_field(self, field):
+        """ Remove field from the plan object."""
         self.fields.remove(field)
 
     def get_field_datasource(self):
@@ -371,20 +383,42 @@ class TripPlan(pytripObj):
         self.vois.destroy()
         self.fields.destroy()
 
-    def set_ddd_folder(self, path):
+    def set_ddd_folder(self, path):  # TODO: propose to rename "folder" -> "dir"
+        """ Set directory containing the depth dose kernels in .ddd format """
         self.ddd_folder = path
 
     def get_ddd_folder(self):
+        """ Get directory containing the depth dose kernels in .ddd format """
         return self.ddd_folder
 
+    def set_dedx_file(self, filename):  # TODO: propose to rename "file" -> "path"
+        """ Set path to stopping power tables in .dedx format """
+        self.dedx_file = filename
+
+    def get_dedx_file(self, filename):
+        """ Get path to stopping power tables in .dedx format """
+        return self.dedx_file
+
+    def set_hlut_file(self, filename):
+        """ Set path to Hounsfield lookup tables in .hlut format """
+        self.hlut_file = filename
+
+    def get_hlut_file(self, filename):
+        """ Get path to Hounsfield lookup tables in .hlut format """
+        return self.hlut_file
+
     def get_sis_file(self):
+        """ Get path to SIS tables."""
         return self.sis_file
 
     def set_sis_file(self, path):
+        """ Set path to SIS tables."""
         self.sis_file = path
 
     def set_spc_folder(self, path):
+        """ Set directory containing the beam kernel spectrum files in .spc format """
         self.spc_folder = path
 
     def get_spc_folder(self):
+        """ Get directory containing the beam kernel spectrum files in .spc format """
         return self.spc_folder
