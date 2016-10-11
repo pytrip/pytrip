@@ -75,25 +75,55 @@ class DosCube(Cube):
             self.cube[i][:][:] = dcm["rtdose"].pixel_array[i]
 
     def calculate_dvh(self, voi):
-        pos = 0
-        size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
-        dv = np.zeros(1500)
-        valid = False
-        for i in range(self.dimz):
-            pos += self.slice_distance
-            slice = voi.get_slice_at_pos(pos)
-            if slice is not None:
-                valid = True
-                dv += pytriplib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), size)
-        if valid:
-            cubes = sum(dv)
-            dvh = np.cumsum(dv[::-1])[::-1] / cubes
+        """
+        Calculate DHV for given VOI. Dose is given in relative units (target dose = 1.0).
+        In case VOI lies outside the cube, then None is returned.
+        :param voi: VOI for which DHV should be calculated
+        :return: (dvh, min_dose, max_dose, mean, area) tuple. dvh - 2D array holding DHV histogram,
+        min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
+        """
 
-            min_dose = np.where(dvh >= 0.98)[0][-1]
-            max_dose = np.where(dvh <= 0.02)[0][0]
-            area = cubes * size[0] * size[1] * size[2] / 1000
-            mean = np.dot(dv, range(0, 1500)) / cubes
-            return dvh, min_dose, max_dose, mean, area
+        z_pos = 0  # z position
+        voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
+        # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)
+        maximum_dose = 1500  # do not change, same value is hardcoded in filter_point.c (calculate_dvh_slice method)
+        dose_bins = np.zeros(maximum_dose)  # placeholder for DVH, filled with zeros
+        voi_and_cube_intersect = False
+        for i in range(self.dimz):
+            z_pos += self.slice_distance
+            slice = voi.get_slice_at_pos(z_pos)
+            if slice is not None:   # VOI intersects with this slice
+                voi_and_cube_intersect = True
+                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), voxel_size)
+
+        if voi_and_cube_intersect:
+            sum_of_doses = sum(dose_bins)
+            # np.cumsum - cumulative sum of array along the axis
+            # we calculate is backwards and revert to get a plot which is monotonically decreasing
+            # normalization is needed to get maximum values on Y axis to be <= 1
+            dvh_x = np.arange(start=0.0, stop=1500.0)
+            dvh_y = np.cumsum(dose_bins[::-1])[::-1] / sum_of_doses
+
+            min_dose = np.where(dvh_y >= 0.98)[0][-1]
+            max_dose = np.where(dvh_y <= 0.02)[0][0]
+
+            # mean = \sum_i=1^1500 f_i * d_i , where:
+            #   f_i = dose_bin(i) / \sum_i dose_bin(i)  - frequency of dose at index i
+            #   d_i = dvx_i(i) = i                      - dose at index i (equal to i)
+            #             dose goes from 0 to 1500 and is integer
+            mean_dose = np.dot(dose_bins, dvh_x) / sum_of_doses
+
+            # if full voi is irradiated with target dose, then it should be equal to VOI volume
+            mean_volume = sum_of_doses * voxel_size[0] * voxel_size[1] * voxel_size[2]
+
+            # TRiP98 target dose is 1000, we renormalize to 1.0
+            min_dose /= 1000.0
+            max_dose /= 1000.0
+            mean_dose /= 1000.0
+            mean_volume /= 1000.0
+            dvh_x /= 1000.0
+
+            return np.column_stack((dvh_x, dvh_y)), min_dose, max_dose, mean_dose, mean_volume
         return None
 
     def create_dicom_plan(self):
