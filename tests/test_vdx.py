@@ -20,9 +20,10 @@ import unittest
 import tempfile
 import logging
 
-from pytrip.ctx import CtxCube
+import pytrip as pt
+
 from pytrip.error import InputError
-from pytrip.vdx import VdxCube, Voi, create_cube, create_voi_from_cube, create_cylinder, create_sphere
+from pytrip.vdx import create_cube, create_voi_from_cube, create_cylinder, create_sphere
 import tests.test_base
 
 logger = logging.getLogger(__name__)
@@ -38,9 +39,9 @@ class TestVdx(unittest.TestCase):
 
     def test_read_with_ct(self):
         logger.info("Creating CT cube from path " + self.cube000)
-        c = CtxCube()
+        c = pt.CtxCube()
         c.read(self.cube000)
-        v = VdxCube(c, "")
+        v = pt.VdxCube(c, "")
         logger.info("Adding VDX from path " + self.vdx)
         v.read(self.vdx)
 
@@ -97,12 +98,12 @@ class TestVdx(unittest.TestCase):
 
     def test_read_solo(self):
         logger.info("Checking reading VdxCube without CT cube loaded")
-        v = VdxCube("")
+        v = pt.VdxCube("")
         v.read(self.vdx)
 
     def test_create_voi_cube(self):
         logger.info("Creating CT cube from path " + self.cube000)
-        c = CtxCube()
+        c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating and adding cube VOI")
         v = create_cube(c, name="cube1", center=[10, 10, 10], width=4, height=4, depth=8)
@@ -110,7 +111,7 @@ class TestVdx(unittest.TestCase):
 
     def test_create_voi_cyl(self):
         logger.info("Creating CT cube from path " + self.cube000)
-        c = CtxCube()
+        c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating and adding cylinder VOI")
         v = create_cylinder(c, name="cube2", center=[10, 10, 10], radius=4, depth=8)
@@ -118,7 +119,7 @@ class TestVdx(unittest.TestCase):
 
     def test_create_voi_sphere(self):
         logger.info("Creating CT cube from path " + self.cube000)
-        c = CtxCube()
+        c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating and adding sphere VOI")
         v = create_sphere(c, name="cube3", center=[10, 10, 10], radius=8)
@@ -180,11 +181,11 @@ class TestVdx(unittest.TestCase):
         self.assertEqual(s_min[2], 3.0)
 
         logger.info("Test of Voi get_2d_slice method (sagital)")
-        s2 = v.get_2d_slice(plane=Voi.sagital, depth=10.0)
+        s2 = v.get_2d_slice(plane=pt.Voi.sagital, depth=10.0)
         self.assertIsNotNone(s2)
 
         logger.info("Test of Voi get_2d_slice method (coronal)")
-        s3 = v.get_2d_slice(plane=Voi.coronal, depth=5.0)
+        s3 = v.get_2d_slice(plane=pt.Voi.coronal, depth=5.0)
         self.assertIsNotNone(s3)
 
         logger.info("Test of Voi get_2d_projection_on_basis method")
@@ -210,7 +211,7 @@ class TestVdx(unittest.TestCase):
 
     def test_create_voi_2(self):
         logger.info("Testing cube from path " + self.cube000)
-        c = CtxCube()
+        c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating VOI from cube")
         v = create_voi_from_cube(c, name="cube4")
