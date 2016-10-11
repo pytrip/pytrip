@@ -35,6 +35,7 @@ except:
 
 logger = logging.getLogger(__name__)
 
+
 def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None, factor=1.0):
     cube_size = [density_cube.pixel_size, density_cube.pixel_size, density_cube.slice_distance]
     basis = field.get_cube_basis()
