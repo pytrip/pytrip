@@ -40,8 +40,11 @@ matrix:
           python: 3.5
           env: TOXENV=py35
         - os: linux
-          python: nightly
+          python: 3.6
           env: TOXENV=py36
+        - os: linux
+          python: nightly
+          env: TOXENV=py37
     # MacOSX tests for various python versions
         - os: osx
           language: generic
