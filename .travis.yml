@@ -94,9 +94,12 @@ matrix:
           language: generic
           env: TOXENV=packaging
     # jobs allowed to fail
-#    allow_failures:
-#        - python: 3.5
-#          env: TOXENV=packaging TARGET=cp33-cp33m
+    allow_failures:
+    # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/119
+        - python: 3.6
+          env: TOXENV=py36
+        - python: nightly
+          env: TOXENV=py37
 
 # travis-ci runs by default on ancient Ubuntu 12.04 (precise)
 # following options will give us Ubuntu 14.04 (trusty)
