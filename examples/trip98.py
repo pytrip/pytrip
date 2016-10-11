@@ -40,7 +40,9 @@ plan.add_voi(target_voi)
 plan.get_vois()[0].target = True
 
 # add default field
-plan.add_field(Field("Field 1"))
+field = Field("Field 1")
+field.set_projectile("C")
+plan.add_field(field)
 
 # start trip
 executer = TripExecuter(ct_images.get_modified_images(plan), RBEHandler())
