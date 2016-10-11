@@ -17,8 +17,10 @@
 
 import os
 import gc
+import logging
 
 import numpy as np
+
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.cube import Cube
 import pytriplib
@@ -31,6 +33,7 @@ try:
 except:
     _dicom_loaded = False
 
+logger = logging.getLogger(__name__)
 
 def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None, factor=1.0):
     cube_size = [density_cube.pixel_size, density_cube.pixel_size, density_cube.slice_distance]
@@ -123,8 +126,21 @@ class DosCube(Cube):
             mean_volume /= 1000.0
             dvh_x /= 1000.0
 
-            return np.column_stack((dvh_x, dvh_y)), min_dose, max_dose, mean_dose, mean_volume
+            dvh = np.column_stack((dvh_x, dvh_y))
+
+            return dvh, min_dose, max_dose, mean_dose, mean_volume
         return None
+
+    def write_dvh(self, voi, filename):
+        """
+        Save DHV for given VOI to the file.
+        """
+        dvh_tuple = self.calculate_dvh(voi)
+        if dvh_tuple is None:
+            logger.warning("Voi {:s} outside the cube".format(voi.get_name()))
+        else:
+            dvh, min_dose, max_dose, mean_dose, mean_volume = dvh_tuple
+            np.savetxt(dvh, filename)
 
     def create_dicom_plan(self):
         meta = Dataset()
