@@ -6,7 +6,8 @@ It is mainly supposed for batch processing, but an experimental GUI is also incl
 (see https://github.com/pytrip/pytripgui).
 
 **pytrip** provides several command line applications including ``trip2dicom``, ``dicom2trip`` and ``cubeslice``.
-They works under Linux and Mac OSX operating systems (interpreter of Python programming language has to be also installed).
+They works under Linux, Windows and Mac OSX operating systems
+(interpreter of Python programming language has to be also installed).
 No programming knowledge is required from user, but basic skills in working with terminal console are needed to use them.
 
 
