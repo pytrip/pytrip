@@ -14,7 +14,7 @@ Quick installation guide
 ------------------------
 
 We recommend that you run a modern Linux distribution, like: **Ubuntu 16.04** or newer, **Debian 9 Stretch** (currently known as testing)
-or any updated rolling release (archLinux, openSUSE tumbleweed). In this case, be sure you have **python**
+or any updated rolling release (archLinux, openSUSE tumbleweed). In that case, be sure you have **python**
 and **python-pip** installed. To get them on Debian or Ubuntu, type being logged in as normal user::
 
     $ sudo apt-get install python-pip
