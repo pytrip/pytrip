@@ -15,6 +15,10 @@
     along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
 """
 
+# do not check this file for PEP8 compatibility
+# flake8 complains about "E402 module level import not at top of file"
+# flake8: noqa
+
 from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube, Voi
