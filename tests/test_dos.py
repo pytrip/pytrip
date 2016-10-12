@@ -60,10 +60,11 @@ class TestDos(unittest.TestCase):
         self.assertIsNotNone(result)
         dvh, min_dose, max_dose, mean, area = result
         self.assertGreater(area, 2.0)
-        self.assertEqual(len(dvh.shape), 1)
+        self.assertEqual(len(dvh.shape), 2)
+        self.assertEqual(dvh.shape[1], 2)
         self.assertEqual(dvh.shape[0], 1500)
         self.assertEqual(min_dose, 0.0)
-        self.assertEqual(max_dose, 1.0)
+        self.assertEqual(max_dose, 0.001)
 
     def test_dicom_plan(self):
         c = DosCube()
