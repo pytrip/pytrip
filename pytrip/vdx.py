@@ -23,8 +23,9 @@ from functools import cmp_to_key
 
 import numpy as np
 
+import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
-import pytrip.dos
+from pytrip.dos import DosCube
 import pytriplib
 
 try:
@@ -316,6 +317,9 @@ class Voi:
     coronal = 1
 
     def __init__(self, name, cube=None):
+        """
+        This is a volume of interest (VOI) object, which e.g. can be found inside the VdxCube object.
+        """
         self.cube = cube
         self.name = name
         self.is_concated = False
@@ -326,15 +330,31 @@ class Voi:
         self.define_colors()
 
     def create_copy(self, margin=0):
+        """
+        Returns an independent copy of the Voi object
+
+        :param margin: (unused)
+        :return: a deep copy of the Voi object
+        """
         voi = copy.deepcopy(self)
         if not margin == 0:
             pass
         return voi
 
     def get_voi_cube(self):
-        if hasattr(self, "voi_cube"):
+        """
+        This method returns a DosCube object with value 1000 in each voxel within the Voi and zeros elsewhere.
+        It can be used as a mask, for selecting certain voxels.
+        The function may take some time to execute the first invocation, but is faster for subsequent calls,
+        due to caching.
+
+        :return: a DosCube object which holds the value 1000 in those voxels which are inside the Voi.
+        """
+        if hasattr(self, "voi_cube"):  # caching: checks if class has voi_cube attribute
+            # TODO: add parameter as argument to this function. Note, this needs to be compatible with
+            # caching the cube. E.g. the method might be called twice with different arguments.
             return self.voi_cube
-        self.voi_cube = pytrip.DosCube(self.cube)
+        self.voi_cube = DosCube(self.cube)
         self.voi_cube.load_from_structure(self, 1000)
         return self.voi_cube
 
