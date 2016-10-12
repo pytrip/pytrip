@@ -24,6 +24,7 @@
   recursive-include appveyor *.sh
   recursive-include pytrip *.c
   recursive-include pytrip *.py
+  recursive-include examples *.py
   recursive-include scripts *.py
   recursive-include utils *.py
   recursive-include tests *.dat
