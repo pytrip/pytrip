@@ -21,7 +21,8 @@ import pytriplib
 import logging
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level="DEBUG")
+# logging.basicConfig(level="DEBUG")
+# logging.basicConfig(level="INFO")
 
 
 class TripExecuter(object):
@@ -35,6 +36,7 @@ class TripExecuter(object):
         self.logfile_stderr = "trip98.stderr"
         self.rsakey_local_path = "~/.ssh/id_rsa"
         self._runtrip = True  # set this to False for a dry run without TRiP98 (for testing purposes)
+        self.remote_dir = "."  # remote directory where all will be run
 
     def delete_workspace(self):
         shutil.rmtree(self.path)
@@ -159,7 +161,7 @@ class TripExecuter(object):
         """
         Generates the .exec script and stores it into self.trip_exec.
         """
-        logger.debug("Generate the trip_exec script")
+        logger.info("Generating the trip_exec script...")
         oar_list = self.oar_list
         targets = self.targets
         fields = self.plan.get_fields()
@@ -627,10 +629,15 @@ class TripExecuter(object):
             norun = "echo "
         else:
             norun = ""
-        commands = ["tar -zxvf temp.tar.gz",
-                    "cd " + self.folder_name + ";" + norun + "bash -lc '" + self.trip_bin_path + " < plan.exec '",
-                    "tar -zcvf temp.tar.gz %s" % self.folder_name,
-                    "rm -r %s" % self.folder_name]
+
+        path_tgz = os.path.join(self.remote_dir, "temp.tar.gz")  # remote place where temp.tar.gz is stored
+        rrun_dir = os.path.join(self.remote_dir, self.folder_name)  # remote run dir
+
+        commands = ["cd " + self.remote_dir + ";" + "tar -zxvf " + path_tgz,
+                    "cd " + rrun_dir + ";" + norun + "bash -lc '" + self.trip_bin_path + " < plan.exec '",
+                    "cd " + self.remote_dir + ";" + "tar -zcvf " + path_tgz + " " + rrun_dir,
+                    "cd " + self.remote_dir + ";" + "rm -r " + rrun_dir]
+
         logger.debug("Write stdout and stderr to " + os.path.join(self.working_path, self.folder_name))
         fp_stdout = open(os.path.join(self.working_path, self.folder_name, self.logfile_stdout), "w")
         fp_stderr = open(os.path.join(self.working_path, self.folder_name, self.logfile_stderr), "w")
@@ -825,10 +832,12 @@ class TripExecuter(object):
         """
         Copies the generated tar.gz file to the remote server.
         """
-        logger.debug("Copy tar.gz to server:" + self.path + ".tar.gz -> temp.tar.gz")
+        logger.debug("Copy tar.gz to server:" + self.path + ".tar.gz -> " +
+                     os.path.join(self.remote_dir, "temp.tar.gz"))
         transport = self.get_transport()
         sftp = paramiko.SFTPClient.from_transport(transport)
-        sftp.put(localpath=self.path + ".tar.gz", remotepath='temp.tar.gz')  # TODO: consider /tmp or similar
+        sftp.put(localpath=self.path + ".tar.gz",
+                 remotepath=os.path.join(self.remote_dir, 'temp.tar.gz'))
         sftp.close()
         transport.close()
 
@@ -843,7 +852,7 @@ class TripExecuter(object):
     def copy_back_from_server(self):
         transport = self.get_transport()
         sftp = paramiko.SFTPClient.from_transport(transport)
-        sftp.get('temp.tar.gz', self.path + ".tar.gz")
+        sftp.get(os.path.join(self.remote_dir, 'temp.tar.gz'), self.path + ".tar.gz")
         sftp.close()
         transport.close()
 
