@@ -30,6 +30,7 @@ class TripExecuter(object):
         self.images = images
         self.rbe = rbe
         self.listeners = []
+        self.trip_bin_path = "TRiP98"  # where TRiP98 is installed, if not accessible in /usr/local/bin or similar
 
     def delete_workspace(self):
         shutil.rmtree(self.path)
@@ -586,7 +587,7 @@ class TripExecuter(object):
 
     def run_trip_remote(self):
         logger.debug("Run TRiP98 in REMOTE mode.")
-        self.create_remote_run_file()
+        # self.create_remote_run_file()
         self.compress_files()
 
         self.copy_files_to_server()
@@ -617,13 +618,22 @@ class TripExecuter(object):
         else:
             # login with provided username + password
             ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
-        commands = ["tar -zxvf temp.tar.gz", "cd %s;bash run" % self.folder_name,
-                    "tar -zcvf temp.tar.gz %s" % self.folder_name, "rm -r %s" % self.folder_name]
+        commands = ["",
+                    "tar -zxvf temp.tar.gz",
+                    "cd " + self.folder_name + ";bash -lc '" + self.trip_bin_path + " < plan.exec '",
+                    "tar -zcvf temp.tar.gz %s" % self.folder_name,
+                    "rm -r %s" % self.folder_name]
         for cmd in commands:
+            logger.debug("Execute on remote: " + cmd)        
             self.log(cmd)
             stdin, stdout, stderr = ssh.exec_command(cmd)
-            self.log(stdout.read())
+            answer_stdout = stdout.read()
+            answer_stderr = stderr.read()
+            logger.debug("Remote answer stdout:" + answer_stdout)
+            logger.debug("Remote answer stderr:" + answer_stderr)
+            self.log(answer_stdout)
         ssh.close()
+        exit()
         self.copy_back_from_server()
         self.decompress_data()
 
@@ -719,15 +729,17 @@ class TripExecuter(object):
         tar.add(self.path, arcname=self.folder_name)
         tar.close()
 
-    def create_remote_run_file(self):
-        """
-        Generates script called 'run' which sources ~/.profile and runs 'TRiP98 < plan.exec'
-        """
-        logger.debug("Generate 'run' script in " + self.working_path)
-        with open(os.path.join(self.working_path, self.folder_name, "run"), "wb+") as fp:
-            fp.write("source ~/.profile\n")
-            fp.write("TRiP98 < plan.exec")
-            fp.close()
+        # def create_remote_run_file(self):
+        # """
+        # Generates script called 'run.sh' which sources ~/.profile and runs 'TRiP98 < plan.exec'
+        # """
+        # logger.debug("Generate 'run.sh' script in " + self.working_path)
+        # with open(os.path.join(self.working_path, self.folder_name, "run.sh"), "wb+") as fp:
+        #     fp.write("#!/bin/bash -lc")
+        #     # fp.write("source ~/.profile\n")
+        #    # fp.write("cat ~/.bashrc > foo.log\n")
+        #    fp.write("TRiP98 < plan.exec > plan.log 2> planerr.log\n")
+        #    fp.close()
 
     def set_plan(self, plan):
         self.plan = plan
@@ -772,9 +784,13 @@ class TripExecuter(object):
         return transport
 
     def copy_files_to_server(self):
+        """
+        Copies the generated tar.gz file to the remote server.
+        """
+        logger.debug("Copy tar.gz to server:" + self.path + ".tar.gz -> temp.tar.gz")
         transport = self.get_transport()
         sftp = paramiko.SFTPClient.from_transport(transport)
-        sftp.put(self.path + ".tar.gz", 'temp.tar.gz')
+        sftp.put(localpath=self.path + ".tar.gz", remotepath='temp.tar.gz')  # TODO: consider /tmp or similar
         sftp.close()
         transport.close()
 
