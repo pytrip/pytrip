@@ -18,10 +18,15 @@ from pytrip.vdx import VdxCube
 from pytrip.error import InputError
 from pytrip.res.point import get_basis_from_angles, angles_to_trip
 import pytriplib
+import logging
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level="DEBUG")
 
 
 class TripExecuter(object):
     def __init__(self, images, rbe=None):
+        logger.debug("Initializing TripExecuter()")
         self.images = images
         self.rbe = rbe
         self.listeners = []
@@ -93,6 +98,9 @@ class TripExecuter(object):
             self.projectile_dose_level[a + str(2)] = b
 
     def execute(self, plan, callback=None):
+        """
+        Executes the plan object using TRiP98.
+        """
         self.plan = plan
         self.callback = callback
         self.ini_execute()
@@ -119,6 +127,10 @@ class TripExecuter(object):
         self.convert_files_to_voxelplan()
 
     def execute_simple(self):
+        """
+        Simple execution of TRiP, called by self.execute() when self.mult_proj is not set.
+        """
+        logger.debug("In execute_simple mode")
         self.create_trip_exec_simple()
         self.run_trip()
 
@@ -139,6 +151,10 @@ class TripExecuter(object):
         self.post_process()
 
     def create_trip_exec_simple(self, no_output=False):
+        """
+        Generates the .exec script and stores it into self.trip_exec.
+        """
+        logger.debug("Generate the trip_exec script")
         oar_list = self.oar_list
         targets = self.targets
         fields = self.plan.get_fields()
@@ -569,6 +585,7 @@ class TripExecuter(object):
             self.run_trip_local()
 
     def run_trip_remote(self):
+        logger.debug("Run TRiP98 in REMOTE mode.")
         self.create_remote_run_file()
         self.compress_files()
 
@@ -576,7 +593,30 @@ class TripExecuter(object):
 
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-        ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
+
+        # If no password is supplied, try to look for a private key
+        if self.plan.get_password() is "":
+            rsa_keypath = os.path.expanduser('~/.ssh/id_rsa')
+            if not os.path.isfile(rsa_keypath):
+                # login with provided username + empty password
+                try:
+                    ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password="")
+                except:
+                    logger.error("Cannot connect to " + self.plan.get_server())
+                    logger.error("Check username, password or ~/.ssh/id_rsa key.")
+                    raise
+            else:
+                # login with provided username + private key
+                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
+                try:
+                    ssh.connect(self.plan.get_server(), username=self.plan.get_username(), pkey=rsa_key)
+                except:
+                    logger.error("Cannot connect to " + self.plan.get_server())
+                    logger.error("Check username and ~/.ssh/id_rsa key.")
+                    raise
+        else:
+            # login with provided username + password
+            ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
         commands = ["tar -zxvf temp.tar.gz", "cd %s;bash run" % self.folder_name,
                     "tar -zcvf temp.tar.gz %s" % self.folder_name, "rm -r %s" % self.folder_name]
         for cmd in commands:
@@ -670,6 +710,7 @@ class TripExecuter(object):
         structures.write_to_trip(out_path + ".vdx")
 
     def compress_files(self):
+        logger.debug("Compressing files")
         self.save_exec(os.path.join(self.working_path, self.folder_name, "plan.exec"))
         tar = tarfile.open(os.path.join(self.working_path, self.folder_name + ".tar.gz"), "w:gz")
         tar.add(self.path, arcname=self.folder_name)
