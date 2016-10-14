@@ -710,29 +710,46 @@ class TripExecuter(object):
         structures.write_to_trip(out_path + ".vdx")
 
     def compress_files(self):
-        logger.debug("Compressing files")
+        """
+        Builds the tar.gz from what is found in self.path.
+        """        
+        logger.debug("Compressing files in " + self.path)
         self.save_exec(os.path.join(self.working_path, self.folder_name, "plan.exec"))
         tar = tarfile.open(os.path.join(self.working_path, self.folder_name + ".tar.gz"), "w:gz")
         tar.add(self.path, arcname=self.folder_name)
         tar.close()
 
     def create_remote_run_file(self):
+        """
+        Generates script called 'run' which sources ~/.profile and runs 'TRiP98 < plan.exec'
+        """
+        logger.debug("Generate 'run' script in " + self.working_path)
         with open(os.path.join(self.working_path, self.folder_name, "run"), "wb+") as fp:
             fp.write("source ~/.profile\n")
             fp.write("TRiP98 < plan.exec")
+            fp.close()
 
     def set_plan(self, plan):
         self.plan = plan
         self.plan_name = self.plan.get_name().replace(" ", "_")
 
     def save_exec(self, path):
+        """
+        Writes the .exec script to disk.
+        """
         self.split_plan()
-        path1 = path.replace(".exec", "")
-        for projectile in self.projectiles:
-            self.create_trip_exec(projectile, True)
-            with open(path1 + "_" + projectile + ".exec", "wb+") as fp:
+        if self.mult_proj:
+            path1 = path.replace(".exec", "")
+            for projectile in self.projectiles:
+                self.create_trip_exec(projectile, True)
+                with open(path1 + "_" + projectile + ".exec", "wb+") as fp:
+                    fp.write(self.trip_exec)
+                    fp.close()
+        else:
+            with open(path, "wb+") as fp:
                 fp.write(self.trip_exec)
-
+                fp.close()
+                
     def save_data(self, path):
         out_path = path
         ctx = self.images
