@@ -23,6 +23,12 @@ import pytriplib
 
 
 class LETCube(Cube):
+    """ This class handles LETCubes.
+
+    It is similar to DosCubes and CtxCubes, but is intended to hold LET data.
+    The object has build-in methods to read and write the LET data cubes,
+    calculate the LET-volume historgrams, and write these to disk.
+    """
 
     data_file_extension = "dos"
 
@@ -30,6 +36,13 @@ class LETCube(Cube):
         super(LETCube, self).__init__(cube)
 
     def write(self, path):
+        """Write the LETCube and its header to a file with the filename 'path'.
+
+        Any suffix will be stripped from 'path' and replaced with '.dosemlet.hed' and '.dosemlet.dos'.
+
+        :param str path: Full path of files to be written. File extension will be replaced.
+
+        """
         f_split = os.path.splitext(path)
         header_file = f_split[0] + ".dosemlet.hed"
         dos_file = f_split[0] + ".dosemlet.dos"
@@ -37,9 +50,22 @@ class LETCube(Cube):
         self.write_trip_data(dos_file)
 
     def get_max(self):
+        """ Returns the largest value in the LETCube.
+
+        :returns: the largets value found in the in the LETCube.
+        """
         return np.amax(self.cube)
 
     def calculate_lvh(self, voi):
+        """ Calculate a LET-volume historgram.
+
+        :param Voi voi: The volume of interest, in the form of a Voi object.
+        :returns: A tuple containing
+                  - lvh: the LET-volume histogram
+                  - min_lvh: array of LET values below 2%
+                  - max_lvh: array of LET values above 98%
+                  - area: TODO - what is this?
+        """
         pos = 0
         size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)
@@ -58,6 +84,11 @@ class LETCube(Cube):
         return lvh, min_let, max_let, mean, area
 
     def write_lvh_to_file(self, voi, path):
+        """ Write the LET-volume historgram to a file.
+
+        :param Voi voi: The volume of interest, n the form of a Voi object.
+        :param str path: Full path of file to be written.
+        """
         lvh, _, _, _, _ = self.calculate_lvh(voi)
         print(lvh.shape)
         output = ""
