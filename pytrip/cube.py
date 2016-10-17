@@ -169,8 +169,8 @@ class Cube(object):
         :params indices: tuple or list of integer indices (i,j,k) or [i,j,k]
         :returns: list of positions,including offsets, as a list of floats [x,y,z]
         """
-        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset),
-               (indices[1] + 0.5) * self.pixel_size + self.yoffset),
+        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
+               (indices[1] + 0.5) * self.pixel_size + self.yoffset,
                indices[2] * self.slice_distance + self.zoffset]
         return pos
 
@@ -266,7 +266,6 @@ class Cube(object):
         :param int dimz: number of voxels along z
         :param float pixel_size: size of each pixel (x == y) in [mm]
         :param float slice_distance: the distance between two slices (z) in [mm]
-
         """
         self.dimx = dimx
         self.dimy = dimy
@@ -649,7 +648,6 @@ class Cube(object):
         """ Reads both TRiP98 data and its associated header into the Cube object.
 
         :param str path: Path to filename to be read, file extention may be given but is not neccesary.
-
         """
         self.read_trip_data_file(path)
 
@@ -794,7 +792,6 @@ class Cube(object):
         """ Creates the header metadata for this Cube class, based on a given Dicom object.
 
         :param Dicom dcm: Dicom object which will be used for generating the header data.
-        
         """
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
@@ -831,7 +828,7 @@ class Cube(object):
             self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
-        """ Writes the binary data cube in TRiP98 format to a file. 
+        """ Writes the binary data cube in TRiP98 format to a file.
 
         Type is specified by self.pydata_type and self.byte_order attributes.
 
