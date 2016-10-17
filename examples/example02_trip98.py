@@ -35,9 +35,6 @@ target_voi_temp = my_vdx.get_voi_by_name(my_target_voi)  # Select the requested 
 # we are working on a cleaner Voi class implementation to avoid it
 target_voi = pte.Voi("GTV_VOI", target_voi_temp)
 
-# dos cube representing VOI, it is filled with zeros outside the volume and with 1000 inside
-voi_cube = target_voi_temp.get_voi_cube()
-
 # Next, setup a plan. We may initialize it with a new name.
 # The name must be identical to the base name of the file, else we will have crash
 my_plan = pte.TripPlan(name=patient_name)
