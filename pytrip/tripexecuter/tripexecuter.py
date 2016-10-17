@@ -21,8 +21,6 @@ import pytriplib
 import logging
 
 logger = logging.getLogger(__name__)
-# logging.basicConfig(level="DEBUG")
-# logging.basicConfig(level="INFO")
 
 
 class TripExecuter(object):
@@ -688,7 +686,7 @@ class TripExecuter(object):
             fp_stdout.write(answer_stdout)
             fp_stderr.write(answer_stderr)
             self.log(answer_stdout)
-            if (retcode is not None):  # runs until process stops
+            if retcode is not None:  # runs until process stops
                 break  # TODO: check return code
         os.chdir("..")
 
@@ -770,21 +768,8 @@ class TripExecuter(object):
 
         logger.debug("Compressing files in " + self.path)
         self.save_exec(os.path.join(self.working_path, self.folder_name, "plan.exec"))
-        tar = tarfile.open(os.path.join(self.working_path, self.folder_name + ".tar.gz"), "w:gz")
-        tar.add(self.path, arcname=self.folder_name)
-        tar.close()
-
-        # def create_remote_run_file(self):
-        # """
-        # Generates script called 'run.sh' which sources ~/.profile and runs 'TRiP98 < plan.exec'
-        # """
-        # logger.debug("Generate 'run.sh' script in " + self.working_path)
-        # with open(os.path.join(self.working_path, self.folder_name, "run.sh"), "wb+") as fp:
-        #     fp.write("#!/bin/bash -lc")
-        #     # fp.write("source ~/.profile\n")
-        #    # fp.write("cat ~/.bashrc > foo.log\n")
-        #    fp.write("TRiP98 < plan.exec > plan.log 2> planerr.log\n")
-        #    fp.close()
+        with tarfile.open(os.path.join(self.working_path, self.folder_name + ".tar.gz"), "w:gz") as tar:
+            tar.add(self.path, arcname=self.folder_name)
 
     def set_plan(self, plan):
         self.plan = plan
@@ -801,11 +786,9 @@ class TripExecuter(object):
                 self.create_trip_exec(projectile, True)
                 with open(path1 + "_" + projectile + ".exec", "wb+") as fp:
                     fp.write(self.trip_exec)
-                    fp.close()
         else:
             with open(path, "wb+") as fp:
                 fp.write(self.trip_exec)
-                fp.close()
 
     def save_data(self, path):
         out_path = path
@@ -860,8 +843,8 @@ class TripExecuter(object):
         output_folder = self.path
         if os.path.exists(output_folder):
             shutil.rmtree(output_folder)
-        tar = tarfile.open(self.path + ".tar.gz", "r:gz")
-        tar.extractall(self.working_path)
+        with tarfile.open(self.path + ".tar.gz", "r:gz") as tar:
+            tar.extractall(self.working_path)
 
     def clean_up(self):
         f = "%s" % (self.path + ".tar.gz")
