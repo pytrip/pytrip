@@ -62,7 +62,7 @@ class Cube(object):
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
             self._set_format_str()
-            self.set_number_of_bytes()
+            self._set_number_of_bytes()
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
         else:
             self.header_set = False
@@ -399,9 +399,11 @@ class Cube(object):
             self.format_str = "<"
         elif (self.byte_order == "aix"):
             self.format_str = ">"
-        self.set_number_of_bytes()
+        self._set_number_of_bytes()
 
-    def set_number_of_bytes(self):
+    def _set_number_of_bytes(self):
+        """Set format_str and pydata_type according to num_bytes and data_type
+        """
         if self.data_type == "integer":
             if self.num_bytes == 1:
                 self.format_str += "b"
@@ -641,14 +643,19 @@ class Cube(object):
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
         self._set_format_str()
-        self.set_number_of_bytes()
+        self._set_number_of_bytes()
 
     def read(self, path):
+        """ Reads both TRiP98 data and its associated header into the Cube object.
+
+        :param str path: Path to filename to be read, file extention may be given but is not neccesary.
+
+        """
         self.read_trip_data_file(path)
 
-    def read_trip_header_file(self, path):
-        """ Reads a header file, accepts also if suffix is missing, or if file"
-        is in gz compressed. User can thus specify:
+    def read_trip_header_file(self, path):  # TODO: could be made private? #126
+        """ Reads a header file, accepts also if suffix is missing, or if file
+        is .gz compressed. User can thus specify:
         tst001
         tst001.hed
         tst001.hed.gz
@@ -693,14 +700,18 @@ class Cube(object):
         self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def read_trip_data_file(self, path, multiply_by_2=False):
-        """
-        Accepts path in similar way as read_trip_header_file.
-        :param path:
-        :param multiply_by_2:
-        :return:
-        """
+    def read_trip_data_file(self, path, multiply_by_2=False):  # TODO: could be made private? #126
+        """Read TRiP98 formatted data.
 
+        Accepts path in similar way as read_trip_header_file().
+        If header file was not previously loaded, it will be attepted first.
+
+        Due to an issue in VIRTUOS, sometimes DosCube data have been reduced with a factor of 2.
+        Setting multiply_by_2 to True, will restore the true values, in this case.
+
+        :param path: Path to TRiP formatted data.
+        :param multiply_by_2: The data read will automatically be multiplied with a factor of 2.
+        """
         # extract header and data file name from path
         header_file_name, data_file_name = self.parse_path(path)
 
@@ -754,11 +765,15 @@ class Cube(object):
 
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
-            logger.warning("Cube was rescaled to 50%. Multiplying with 2.")
+            logger.warning("Cube was previously rescaled to 50%. Now multiplying with 2.")
             cube *= 2
         self.cube = cube
 
     def set_data_type(self, type):
+        """ Sets the data type for the TRiP98 header files.
+
+        :param numpy.type type: numpy type, e.g. np.uint16
+        """
         if type is np.int8 or type is np.uint8:
             self.data_type = "integer"
             self.num_bytes = 1
@@ -776,12 +791,17 @@ class Cube(object):
             self.num_bytes = 8
 
     def read_dicom_header(self, dcm):
+        """ Creates the header metadata for this Cube class, based on a given Dicom object.
+
+        :param Dicom dcm: Dicom object which will be used for generating the header data.
+        
+        """
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
         ds = dcm["images"][0]
         self.version = "1.4"
         self.created_by = "pytrip"
-        self.creation_info = "created by pytrip;"
+        self.creation_info = "Created by PyTRiP98;"
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientsName
@@ -803,11 +823,20 @@ class Cube(object):
         self.header_set = True
 
     def set_z_table(self, dcm):
+        """ Creates the slice lookup table based on a given Dicom object.
+        :param Dicom dcm: dicom object provided by pydicom.
+        """
         self.slice_pos = []
         for i in range(len(dcm["images"])):
             self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
+        """ Writes the binary data cube in TRiP98 format to a file. 
+
+        Type is specified by self.pydata_type and self.byte_order attributes.
+
+        :param str path: Full path including file extention.
+        """
         cube = np.array(self.cube, dtype=self.pydata_type)
         if self.byte_order == "aix":
             cube = cube.byteswap()
