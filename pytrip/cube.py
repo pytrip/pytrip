@@ -61,7 +61,7 @@ class Cube(object):
             self.dimz = cube.dimz
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
-            self.set_format_str()
+            self._set_format_str()
             self.set_number_of_bytes()
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
         else:
@@ -392,7 +392,9 @@ class Cube(object):
         else:
             raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
-    def set_format_str(self):
+    def _set_format_str(self):
+        """Set format string accoring to byte_order.
+        """
         if (self.byte_order == "vms"):
             self.format_str = "<"
         elif (self.byte_order == "aix"):
@@ -638,7 +640,7 @@ class Cube(object):
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
-        self.set_format_str()
+        self._set_format_str()
         self.set_number_of_bytes()
 
     def read(self, path):
@@ -688,7 +690,7 @@ class Cube(object):
 
         # fill self with data
         self.read_trip_header(content)
-        self.set_format_str()
+        self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
     def read_trip_data_file(self, path, multiply_by_2=False):
@@ -797,7 +799,7 @@ class Cube(object):
         self.z_table = True
         self.set_z_table(dcm)
         self.set_byteorder()
-        self.set_format_str()
+        self._set_format_str()
         self.header_set = True
 
     def set_z_table(self, dcm):
