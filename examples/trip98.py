@@ -30,7 +30,13 @@ print(my_vdx.get_voi_names())  # show us all VOIs found in the .vdx file
 
 # next pick a the proper VOI which we want to plan on
 target_voi_temp = my_vdx.get_voi_by_name(my_target_voi)  # Select the requested VOI from the VdxCube object
-target_voi = pte.Voi("GTV_VOI", target_voi_temp)  # for technical reasons the voi must be cast into a new Voi object
+
+# for technical reasons the voi must be cast into a new Voi object
+# we are working on a cleaner Voi class implementation to avoid it
+target_voi = pte.Voi("GTV_VOI", target_voi_temp)
+
+# dos cube representing VOI, it is filled with zeros outside the volume and with 1000 inside
+voi_cube = target_voi_temp.get_voi_cube()
 
 # Next, setup a plan. We may initialize it with a new name.
 # The name must be identical to the base name of the file, else we will have crash
@@ -69,4 +75,7 @@ ct_images = pt.CTImages(my_ctx)
 
 # run TRiP98 optimisation
 my_trip = pte.TripExecuter(ct_images.get_modified_images(my_plan))
+# trip98 will then run the plan and generate the requested dose plan.
+# The dose plan is stored in the working directory, and must then be loaded by the user for further processing.
+# for local execution, we assume TRiP98 binary is present in PATH env. variable
 my_trip.execute(my_plan)
