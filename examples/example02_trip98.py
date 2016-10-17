@@ -1,3 +1,9 @@
+"""
+This example demonstrates how to load a CT cube in Voxelplan format, and the associated contours.
+Then a plan is prepared and optimized using TRiP98.
+The resulting dose plan is then stored in <some_dir>.
+"""
+
 import pytrip as pt
 import pytrip.tripexecuter as pte
 
@@ -17,7 +23,7 @@ dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
 my_couch_angle = 90.0
 my_gantry_angle = 10.0
 my_target_voi = "GTV"  # the name must exist in the .vdx file
-my_projectile = "C"
+my_projectile = "C" # carbon ion
 
 # load CT cube
 my_ctx = pt.CtxCube()
@@ -28,8 +34,8 @@ my_vdx = pt.VdxCube("", my_ctx)  # my_vdx is the object which will hold all volu
 my_vdx.read(vdx_path)  # load the .vdx file
 print(my_vdx.get_voi_names())  # show us all VOIs found in the .vdx file
 
-# next pick a the proper VOI which we want to plan on
-target_voi_temp = my_vdx.get_voi_by_name(my_target_voi)  # Select the requested VOI from the VdxCube object
+# next pick a the proper VOI (from the VdxCube object) which we want to plan on
+target_voi_temp = my_vdx.get_voi_by_name(my_target_voi)
 
 # for technical reasons the voi must be cast into a new Voi object
 # we are working on a cleaner Voi class implementation to avoid it
