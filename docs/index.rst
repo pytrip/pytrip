@@ -12,6 +12,14 @@ Contents:
    technical
    authors
 
+.. automodule:: pytrip
+
+.. autoclass:: pytrip.DosCube
+    :members:
+
+.. autoclass:: DosCube
+    :members:
+
 Indices and tables
 ==================
 
