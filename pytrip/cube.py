@@ -369,6 +369,7 @@ class Cube(object):
         Checks if file_name exists in the filesystem. If yes, gives back its path.
         If not, checks if gzipped file with same name exists.
         If gzipped file exists, gives back it path, otherwise returns None.
+
         :param file_name: File name or path
         :return: file_name, file_name + ".gz" or None
         """

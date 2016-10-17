@@ -1,7 +1,7 @@
-pytrip98
-========
+pytrip
+======
 
 .. toctree::
    :maxdepth: 4
 
-   pytrip98
+   pytrip
