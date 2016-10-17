@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class Cube(object):
+    """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
+    """
     def __init__(self, cube=None):
         if cube is not None:
             self.header_set = cube.header_set
@@ -122,6 +124,14 @@ class Cube(object):
         return c
 
     def is_compatible(self, other):
+        """ Check if this Cube object is compatible in size and dimensions with 'other' cube.
+
+        A cube object can be a CtxCube, DosCube, LETCube or similar object.
+        Unlike check_compatibility(), this function compares itself to the other cube.
+
+        :param Cube other: The other Cube object which will be checked compability with.
+        :returns: True if compatibe.
+        """
         return self.check_compatibility(self, other)
 
     @staticmethod
@@ -129,6 +139,12 @@ class Cube(object):
         """
         Simple comparison of cubes. if X,Y,Z dims are the same, and
         voxel sizes as well, then they are compatible. (Duck typed)
+
+        See also the function is_compatible().
+
+        :params Cube a: the first cube to be compared with the second (b).
+        :params Cube b: the second cube to be compared with the first (a).
+
         """
         eps = 1e-5
 
@@ -146,28 +162,63 @@ class Cube(object):
             return True
 
     def indices_to_pos(self, indices):
-        pos = []
-        pos.append((indices[0] + 0.5) * self.pixel_size + self.xoffset)
-        pos.append((indices[1] + 0.5) * self.pixel_size + self.yoffset)
-        pos.append(indices[2] * self.slice_distance + self.zoffset)
+        """ Translate index number of a voxel to real position in [mm], including any offsets.
+
+        The z position is always following the slice positions.
+
+        :params indices: tuple or list of integer indices (i,j,k) or [i,j,k]
+        :returns: list of positions,including offsets, as a list of floats [x,y,z]
+        """
+        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset),
+               (indices[1] + 0.5) * self.pixel_size + self.yoffset),
+               indices[2] * self.slice_distance + self.zoffset]
         return pos
 
     def slice_to_z(self, idx):
+        """ Return z-position in [mm] of slice with index idx.
+
+        :params int idx: index number of slice
+        :returns: position of slice in [mm]
+        """
+        # TODO: out of bounds, return nearest neighbour. Update docstring.
         return idx * self.slice_distance + self.zoffset
 
     def pos_to_indices(self, pos):
+        """ Translate a real x,y,z position in [mm] to voxel indices, including any offets.
+
+        The z position is always following the slice positions.
+
+        :params indices: tuple or list of float positions (x,y,z) or [x,y,z]
+        :returns: list of positions,including offsets, as a list of floats [x,y,z]
+        """
         indices = [int(pos[0] / self.pixel_size - self.xoffset / self.pixel_size),
                    int(pos[1] / self.pixel_size - self.yoffset / self.pixel_size),
                    int(pos[2] / self.slice_distance - self.zoffset / self.slice_distance)]
-        return indices
+        return indices  # TODO: out of bounds, return nearest neighbour. Update docstring.
 
-    def get_value_at_indice(self, indices):
-        return self.cube[indices[2]][indices[1]][indices[0]]
+    def get_value_at_indice(self, idx):  # TODO: indice -> index (indece is wrong grammar)
+        """ Retrieves the value of a voxel at index [i,j,k].
+
+        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
+        :returns: The voxel value at index[i,j,k]
+        """
+        # TODO: out of bounds, throw error.
+        return self.cube[idx[2]][idx[1]][idx[0]]
 
     def get_value_at_pos(self, pos):
+        """ Retrieves the value of a voxel at postion [x,y,z] in [mm], including any offsets.
+
+        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
+        :returns: The voxel value at index[i,j,k]
+        """
         return self.get_value_at_indice(self.pos_to_indices(pos))
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
+        """ Create Cube from a given equation.
+
+        This function is currently out of order.
+
+        """
         # TODO why eq not being used ?
         # eq = util.evaluator(equation)
         # TODO why data not being used ?
@@ -177,13 +228,14 @@ class Cube(object):
         xv, yv = np.meshgrid(x, y)
 
     def load_from_structure(self, voi, preset=0, data_type=np.int16):
-        """
-        Loop over each voxel in cube object, whether voxel is inside Voi or not.
-        Algorthim counts amount of intersection from voxel to outside the Voi, if
-        an odd number of intersections, then the voxel will be assigned with a [preset] value.
+        """ Attaches/overwrites Cube.data based on a given Voi.
 
-        :param voi: Voi Object, the volume of interest to be mapped on the cube object.
-        :param preset: the voxel value to be assigned, if voxel is inside cube.
+        Voxels within the structure are filled it with 'preset' value.
+        Voxels outside the contour will be filled with Zeros.
+
+        :param Voi voi: the volume of interest
+        :param int preset: value to be assigned to the voxels within the contour.
+        :param data_type: numpy data type, default is np.int16
         """
         data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
         if preset != 0:
@@ -199,11 +251,23 @@ class Cube(object):
                                 k += 1
                                 if k >= len(intersection):
                                     break
-                            if k % 2 == 1:  # if odd, then voxel is inside of voi
+                            if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
     def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance):
+        """ Creates an empty Cube object.
+
+        Values are stored as 2-byte integers.
+
+        :param int16 value: integer value which will be assigned to all voxels.
+        :param int dimx: number of voxels along x
+        :param int dimy: number of voxels along y
+        :param int dimz: number of voxels along z
+        :param float pixel_size: size of each pixel (x == y) in [mm]
+        :param float slice_distance: the distance between two slices (z) in [mm]
+
+        """
         self.dimx = dimx
         self.dimy = dimy
         self.dimz = dimz
@@ -217,6 +281,14 @@ class Cube(object):
         self.pydata_type = np.int16
 
     def override_cube_values(self, voi, value):
+        """ Overwrites the Cube voxels within the given Voi with 'value'.
+
+        Voxels within the structure are filled it with 'value'.
+        Voxels outside the contour are not touched.
+
+        :param Voi voi: the volume of interest
+        :param value=0: value to be assigned to the voxels within the contour.
+        """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
                 intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
@@ -229,10 +301,18 @@ class Cube(object):
                             k += 1
                             if k >= (len(intersection)):
                                 break
-                        if k % 2 == 1:
+                        if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] = value
 
-    def set_offset_cube_values(self, voi, value):
+    def set_offset_cube_values(self, voi, value=0):
+        """ Add 'value' to all voxels within the given Voi
+
+        'value' is added to each voxel value within the given volume of interest.
+        Voxels outside the volume of interest are not touched.
+
+        :param Voi voi: the volume of interest
+        :param value=0: value to be added to the voxel values within the contour.
+        """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
                 intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
@@ -245,10 +325,14 @@ class Cube(object):
                             k += 1
                             if k >= (len(intersection)):
                                 break
-                        if k % 2 == 1:
+                        if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] += value
 
     def write_trip_header(self, path):
+        """ Write a TRiP98 formatted header file, based on the available meta data.
+
+        :param path: fully qualified path, including file extention (.hed)
+        """
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         output_str += "created_by " + self.created_by + "\n"
@@ -258,7 +342,7 @@ class Cube(object):
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
-            self.patient_name = "Anonyme"
+            self.patient_name = "Anonymeous"
         output_str += "patient_name " + str(self.patient_name) + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
@@ -290,6 +374,15 @@ class Cube(object):
             f.write(output_str)
 
     def set_byteorder(self, endian=None):
+        """Set/change the byte order of the data to be written to disk.
+
+        Available options are:
+        - 'little' vms, Intel style little-endian byte order.
+        - 'big' aix, Motorola style big-endian byte order.
+        - if unspecified, the native system dependent endianess is used.
+
+        :param str endian: optional string containing the endianess.
+        """
         if endian is None:
             endian = sys.byteorder
         if endian == 'little':
@@ -297,8 +390,7 @@ class Cube(object):
         elif endian == 'big':
             self.byte_order = "aix"
         else:
-            print("HED error: unknown endian:", endian)
-            sys.exit(-1)
+            raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
     def set_format_str(self):
         if (self.byte_order == "vms"):
