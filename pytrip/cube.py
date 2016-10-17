@@ -177,6 +177,14 @@ class Cube(object):
         xv, yv = np.meshgrid(x, y)
 
     def load_from_structure(self, voi, preset=0, data_type=np.int16):
+        """
+        Loop over each voxel in cube object, whether voxel is inside Voi or not.
+        Algorthim counts amount of intersection from voxel to outside the Voi, if
+        an odd number of intersections, then the voxel will be assigned with a [preset] value.
+
+        :param voi: Voi Object, the volume of interest to be mapped on the cube object.
+        :param preset: the voxel value to be assigned, if voxel is inside cube.
+        """
         data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
         if preset != 0:
             for i_z in range(self.dimz):
@@ -189,9 +197,9 @@ class Cube(object):
                         for i_x in range(self.dimx):
                             if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
                                 k += 1
-                                if k >= (len(intersection)):
+                                if k >= len(intersection):
                                     break
-                            if k % 2 == 1:
+                            if k % 2 == 1:  # if odd, then voxel is inside of voi
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
