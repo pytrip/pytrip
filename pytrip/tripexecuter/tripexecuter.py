@@ -608,7 +608,7 @@ class TripExecuter(object):
                     ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password="")
                 except:
                     logger.error("Cannot connect to " + self.plan.get_server())
-                    logger.error("Check username, password or " + self.rsakey_local_path + "key.")
+                    logger.error("Check username, password or key in " + self.rsakey_local_path)
                     raise
             else:
                 # login with provided username + private key
@@ -617,7 +617,7 @@ class TripExecuter(object):
                     ssh.connect(self.plan.get_server(), username=self.plan.get_username(), pkey=rsa_key)
                 except:
                     logger.error("Cannot connect to " + self.plan.get_server())
-                    logger.error("Check username and ~/.ssh/id_rsa key.")
+                    logger.error("Check username and your key in " + self.rsakey_local_path)
                     raise
         else:
             # login with provided username + password
