@@ -1,12 +1,12 @@
 import pytrip as pt
 import pytrip.tripexecuter as pte
 
-# first define some paths and other important paramters
+# first define some paths and other important parameters
 patient_name = "TST000000"
-ctx_path = "/home/bassler/Projects/shieldhit/res/TST000/TST000000.ctx"
-vdx_path = "/home/bassler/Projects/shieldhit/res/TST000/TST000000.vdx"
+ctx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.ctx"
+vdx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.vdx"
 voi_name = "GTV"
-working_directory = "/home/bassler/Projects/shieldhit/res/TST000/"
+working_directory = "/home/bassler/Projects/CTdata/TST000/"
 
 ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM"
 spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM"
@@ -47,8 +47,7 @@ my_plan.set_dedx_file(dedx_path)
 my_plan.set_hlut_file(hlut_path)
 my_plan.set_sis_file(sis_path)
 
-# Remote access currently broken, see issue #94
-# https://github.com/pytrip/pytrip/issues/94
+# To enable remote access to trip, uncomment following:
 # my_plan.set_remote_state(True)
 # my_plan.set_server("titan.phys.au.dk")
 # my_plan.set_username("xxxxxxxxx")
@@ -72,7 +71,7 @@ ct_images = pt.CTImages(my_ctx)
 
 # run TRiP98 optimisation
 my_trip = pte.TripExecuter(ct_images.get_modified_images(my_plan))
-# trip98 will then run the plan and generate the requested dose plan.
+# TRiP98 will then run the plan and generate the requested dose plan.
 # The dose plan is stored in the working directory, and must then be loaded by the user for further processing.
 # for local execution, we assume TRiP98 binary is present in PATH env. variable
 my_trip.execute(my_plan)
