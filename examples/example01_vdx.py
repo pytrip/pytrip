@@ -3,8 +3,8 @@ from pytrip.utils import cubeslice
 
 # first define some paths and other important parameters
 patient_name = "TST000000"
-ctx_path = "absolute_path_to_some_directory/TST000000.ctx"
-vdx_path = "absolute_path_to_some_directory/TST000000.vdx"
+ctx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.ctx"
+vdx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.vdx"
 my_target_voi = "GTV"
 
 # load CT cube
