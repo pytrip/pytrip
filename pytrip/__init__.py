@@ -24,7 +24,7 @@ from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube, Voi
 from pytrip.paths import DensityCube
-from pytrip.rst import Rst
+from pytrip.raster import Rst
 from pytrip.let import LETCube
 from pytrip.get_dvh import GetDvh
 from pytrip.ctimage import CTImages

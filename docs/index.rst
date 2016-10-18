@@ -11,6 +11,7 @@ Contents:
    contributing
    technical
    authors
+   Source Code <apidoc/pytrip>
 
 Indices and tables
 ==================
