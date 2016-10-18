@@ -12,6 +12,12 @@ build:
         name: setup virtual environment
         install_wheel: false # Enable wheel to speed up builds (experimental)
 
+    # copy source to a location that gets passed along to next pipelines
+    - script:
+        name: copy source
+        code: |
+          tar -zcf "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz .
+
     # installing necessary requirements
     - pip-install:
         requirements_file: "requirements.txt"
@@ -36,7 +42,6 @@ build:
     - script:
         name: copy binary
         code: |
-          tar -zcf "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz .
           cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
           cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
 
@@ -56,23 +61,29 @@ build_manylinux_64:
           /opt/python/cp27-cp27m/bin/pip -V
           /opt/python/cp27-cp27m/bin/pip install versioneer
 
-    # make a manylinux1 package
+    # copy source to a location that gets passed along to next pipelines
     - script:
-        name: package_install
+        name: copy source
         code: |
-          mkdir -p /io
-          cp build_wheels.sh /io
-          cp -r pytrip98.tar.gz /io
-          cd /io
-          tar -zxvf pytrip98.tar.gz
-          ls -al
-          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
+          cp pytrip98.tar.gz "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz
 
-    # copy binary to a location that gets passed along to next pipelines
-    - script:
-        name: copy binary
-        code: |
-          cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
+#    # make a manylinux1 package
+#    - script:
+#        name: package_install
+#        code: |
+#          mkdir -p /io
+#          cp build_wheels.sh /io
+#          cp -r pytrip98.tar.gz /io
+#          cd /io
+#          tar -zxvf pytrip98.tar.gz
+#          ls -al
+#          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
+#
+#    # copy binary to a location that gets passed along to next pipelines
+#    - script:
+#        name: copy binary
+#        code: |
+#          cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
 
 ## ---------------------------------- debian 9 (testing) -----------------------------------------------
 #
@@ -188,54 +199,65 @@ test_debian_8_jessie_py2:
   box: debian:8
 
   steps:
-
+    # copy source to a location that gets passed along to next pipelines
     - script:
-        name: prerequisites
+        name: copy source
         code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources
-          python -V
-          pip -V
+          cp pytrip98.tar.gz "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz
 
-    - script:
-        name: package_install
-        code: |
-          easy_install -U pip
-          python -c "import pip; print(pip.pep425tags.get_supported())"
-          python -c "import platform; print(platform.platform())"
-          python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
-
-    - script:
-        name: test
-        code: |
-          trip2dicom
-          dicom2trip
-          cubeslice --help
-
+#    - script:
+#        name: prerequisites
+#        code: |
+#          apt-get update
+#          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources
+#          python -V
+#          pip -V
+#
+#    - script:
+#        name: package_install
+#        code: |
+#          easy_install -U pip
+#          python -c "import pip; print(pip.pep425tags.get_supported())"
+#          python -c "import platform; print(platform.platform())"
+#          python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
+#
+#    - script:
+#        name: test
+#        code: |
+#          trip2dicom
+#          dicom2trip
+#          cubeslice --help
+#
 
 
 test_debian_8_jessie_py3:
   box: debian:8
 
   steps:
+    # copy source to a location that gets passed along to next pipelines
     - script:
-        name: prerequisites
+        name: copy source
         code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python3-pip
-          python3 -V
-          pip3 -V
-          easy_install3 -U pip
-          pip3 -V
-          pip3 install setuptools
-          python3 -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+          cp pytrip98.tar.gz "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz
 
-    - script:
-        name: test
-        code: |
-          trip2dicom
-          dicom2trip
-          cubeslice --help
+#    - script:
+#        name: prerequisites
+#        code: |
+#          apt-get update
+#          apt-get install -qq -y --no-install-recommends python3-pip
+#          python3 -V
+#          pip3 -V
+#          easy_install3 -U pip
+#          pip3 -V
+#          pip3 install setuptools
+#          python3 -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+#
+#    - script:
+#        name: test
+#        code: |
+#          trip2dicom
+#          dicom2trip
+#          cubeslice --help
 
 
 # ---------------------------------- debian 8 jessie -----------------------------------------------
@@ -249,10 +271,8 @@ deb_debian_8_jessie_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python-all-dev
+          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python-all-dev python-pip
           gem install package_cloud
-          ls -al $WERCKER_OUTPUT_DIR
-          ls -al $WERCKER_SOURCE_DIR
           pwd
           ls -al
           ls -al $WERCKER_OUTPUT_DIR
@@ -261,6 +281,8 @@ deb_debian_8_jessie_py2:
           pip install versioneer
           versioneer install
           pip install stdeb
+          tar -zxvf pytrip98.tar.gz
+          cd pytrip98
           python setup.py --command-packages=stdeb.command bdist_deb
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
@@ -274,10 +296,8 @@ deb_debian_8_jessie_py3:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3-all-dev
+          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3-all-dev python3-pip
           gem install package_cloud
-          ls -al $WERCKER_OUTPUT_DIR
-          ls -al $WERCKER_SOURCE_DIR
           pwd
           ls -al
           ls -al $WERCKER_OUTPUT_DIR
@@ -286,5 +306,7 @@ deb_debian_8_jessie_py3:
           pip3 install versioneer
           versioneer install
           pip3 install stdeb
+          tar -zxvf pytrip98.tar.gz
+          cd pytrip98
           python3 setup.py --command-packages=stdeb.command bdist_deb
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
