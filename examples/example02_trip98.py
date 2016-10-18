@@ -23,7 +23,7 @@ dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
 my_couch_angle = 90.0
 my_gantry_angle = 10.0
 my_target_voi = "GTV"  # the name must exist in the .vdx file
-my_projectile = "C" # carbon ion
+my_projectile = "C"  # carbon ion
 
 # load CT cube
 my_ctx = pt.CtxCube()
