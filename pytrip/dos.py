@@ -36,32 +36,10 @@ except:
 logger = logging.getLogger(__name__)
 
 
-def calculate_dose_cube(field, density_cube, isocenter, pre_dose, pathcube=None, factor=1.0):
-    cube_size = [density_cube.pixel_size, density_cube.pixel_size, density_cube.slice_distance]
-    basis = field.get_cube_basis()
-
-    if pathcube is None:
-        pathcube = pytriplib.rhocube_to_water(np.array(density_cube.cube), np.array(basis[0]), np.array(cube_size))
-        pathcube += field.bolus
-
-    dist = pytriplib.calculate_dist(pathcube, np.array(cube_size), isocenter, np.array(basis))
-    # field_size = field.field_size # TODO why not used ?
-
-    dist = np.reshape(dist, (density_cube.dimx * density_cube.dimy * density_cube.dimz, 3))
-    raster_matrix = np.array(field.get_merged_raster_points())
-
-    ddd = field.get_ddd_list()
-    dose = pytriplib.calculate_dose(dist, np.array(raster_matrix), np.array(ddd))
-
-    dose = np.reshape(dose, (density_cube.dimz, density_cube.dimy, density_cube.dimx)) * 1.602189 * 10**(-8)
-    dos = DosCube(density_cube)
-    dos.cube = np.array(dose / pre_dose * 1000 * factor, dtype=np.int16)
-    gc.collect()
-    return dos, pathcube
-
-
 class DosCube(Cube):
-
+    """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos suffix.
+    This class can also handle Dicom files.
+    """
     data_file_extension = "dos"
 
     def __init__(self, cube=None):
@@ -70,6 +48,10 @@ class DosCube(Cube):
         self.target_dose = 0.0
 
     def read_dicom(self, dcm):
+        """ Imports the dose distribution from Dicom object.
+        
+        :param Dicom dcm: a Dicom object
+        """
         if "rtdose" not in dcm:
             raise InputError("Data doesn't contain dose infomation")
         if self.header_set is False:
@@ -82,6 +64,7 @@ class DosCube(Cube):
         """
         Calculate DHV for given VOI. Dose is given in relative units (target dose = 1.0).
         In case VOI lies outside the cube, then None is returned.
+
         :param voi: VOI for which DHV should be calculated
         :return: (dvh, min_dose, max_dose, mean, area) tuple. dvh - 2D array holding DHV histogram,
         min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
@@ -144,6 +127,11 @@ class DosCube(Cube):
             np.savetxt(dvh, filename)
 
     def create_dicom_plan(self):
+        """ Create a dummy Dicom RT-plan object.
+
+        The only data which is forwarded to this object, is self.patient_name.
+        :returns: a Dicom RT-plan object.
+        """
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
         meta.MediaStorageSOPInstanceUID = "1.2.3"
@@ -180,6 +168,13 @@ class DosCube(Cube):
         return ds
 
     def create_dicom(self):
+        """ Creates a Dicom RT-Dose object from self.
+        
+        This function can be used to convert a TRiP98 Dose file to Dicom format.
+
+        :returns: a Dicom RT-Dose object.
+        """
+
         if not _dicom_loaded:
             raise ModuleNotLoadedError("Dicom")
         if not self.header_set:
@@ -225,14 +220,28 @@ class DosCube(Cube):
         return ds
 
     def write(self, path):
+        """
+        Write Dose data to disk, in TRiP98/Voxelplan format.
+
+        This method will build and write both the .hed and .dos file.
+
+        :param str path: Path, any file extentions will be ignored.
+        """
         f_split = os.path.splitext(path)
         header_file = f_split[0] + ".hed"
         dos_file = f_split[0] + ".dos"
         self.write_trip_header(header_file)
         self.write_trip_data(dos_file)
 
-    def write_dicom(self, path):
+    def write_dicom(self, directory):
+        """ Write Dose-data to disk, in Dicom format.
+        
+        This file will save the dose cube and a plan associated with that dose.
+        Function call create_dicom() and create_dicom_plan() and then save these.
+
+        :param str directory: Directory where 'rtdose.dcm' and 'trplan.dcm' will be stored.
+        """
         dcm = self.create_dicom()
         plan = self.create_dicom_plan()
-        dcm.save_as(os.path.join(path, "rtdose.dcm"))
-        plan.save_as(os.path.join(path, "rtplan.dcm"))
+        dcm.save_as(os.path.join(directory, "rtdose.dcm"))
+        plan.save_as(os.path.join(directory, "rtplan.dcm"))
