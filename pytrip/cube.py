@@ -35,6 +35,8 @@ logger = logging.getLogger(__name__)
 
 
 class Cube(object):
+    """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
+    """
     def __init__(self, cube=None):
         if cube is not None:
             self.header_set = cube.header_set
@@ -59,8 +61,8 @@ class Cube(object):
             self.dimz = cube.dimz
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
-            self.set_format_str()
-            self.set_number_of_bytes()
+            self._set_format_str()
+            self._set_number_of_bytes()
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
         else:
             self.header_set = False
@@ -122,6 +124,14 @@ class Cube(object):
         return c
 
     def is_compatible(self, other):
+        """ Check if this Cube object is compatible in size and dimensions with 'other' cube.
+
+        A cube object can be a CtxCube, DosCube, LETCube or similar object.
+        Unlike check_compatibility(), this function compares itself to the other cube.
+
+        :param Cube other: The other Cube object which will be checked compability with.
+        :returns: True if compatibe.
+        """
         return self.check_compatibility(self, other)
 
     @staticmethod
@@ -129,6 +139,12 @@ class Cube(object):
         """
         Simple comparison of cubes. if X,Y,Z dims are the same, and
         voxel sizes as well, then they are compatible. (Duck typed)
+
+        See also the function is_compatible().
+
+        :params Cube a: the first cube to be compared with the second (b).
+        :params Cube b: the second cube to be compared with the first (a).
+
         """
         eps = 1e-5
 
@@ -146,28 +162,63 @@ class Cube(object):
             return True
 
     def indices_to_pos(self, indices):
-        pos = []
-        pos.append((indices[0] + 0.5) * self.pixel_size + self.xoffset)
-        pos.append((indices[1] + 0.5) * self.pixel_size + self.yoffset)
-        pos.append(indices[2] * self.slice_distance + self.zoffset)
+        """ Translate index number of a voxel to real position in [mm], including any offsets.
+
+        The z position is always following the slice positions.
+
+        :params indices: tuple or list of integer indices (i,j,k) or [i,j,k]
+        :returns: list of positions,including offsets, as a list of floats [x,y,z]
+        """
+        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
+               (indices[1] + 0.5) * self.pixel_size + self.yoffset,
+               indices[2] * self.slice_distance + self.zoffset]
         return pos
 
     def slice_to_z(self, idx):
+        """ Return z-position in [mm] of slice with index idx.
+
+        :params int idx: index number of slice
+        :returns: position of slice in [mm]
+        """
+        # TODO: out of bounds, return nearest neighbour. Update docstring.
         return idx * self.slice_distance + self.zoffset
 
     def pos_to_indices(self, pos):
+        """ Translate a real x,y,z position in [mm] to voxel indices, including any offets.
+
+        The z position is always following the slice positions.
+
+        :params indices: tuple or list of float positions (x,y,z) or [x,y,z]
+        :returns: list of positions,including offsets, as a list of floats [x,y,z]
+        """
         indices = [int(pos[0] / self.pixel_size - self.xoffset / self.pixel_size),
                    int(pos[1] / self.pixel_size - self.yoffset / self.pixel_size),
                    int(pos[2] / self.slice_distance - self.zoffset / self.slice_distance)]
-        return indices
+        return indices  # TODO: out of bounds, return nearest neighbour. Update docstring.
 
-    def get_value_at_indice(self, indices):
-        return self.cube[indices[2]][indices[1]][indices[0]]
+    def get_value_at_indice(self, idx):  # TODO: indice -> index (indece is wrong grammar)
+        """ Retrieves the value of a voxel at index [i,j,k].
+
+        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
+        :returns: The voxel value at index[i,j,k]
+        """
+        # TODO: out of bounds, throw error.
+        return self.cube[idx[2]][idx[1]][idx[0]]
 
     def get_value_at_pos(self, pos):
+        """ Retrieves the value of a voxel at postion [x,y,z] in [mm], including any offsets.
+
+        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
+        :returns: The voxel value at index[i,j,k]
+        """
         return self.get_value_at_indice(self.pos_to_indices(pos))
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
+        """ Create Cube from a given equation.
+
+        This function is currently out of order.
+
+        """
         # TODO why eq not being used ?
         # eq = util.evaluator(equation)
         # TODO why data not being used ?
@@ -177,13 +228,14 @@ class Cube(object):
         xv, yv = np.meshgrid(x, y)
 
     def load_from_structure(self, voi, preset=0, data_type=np.int16):
-        """
-        Loop over each voxel in cube object, whether voxel is inside Voi or not.
-        Algorthim counts amount of intersection from voxel to outside the Voi, if
-        an odd number of intersections, then the voxel will be assigned with a [preset] value.
+        """ Attaches/overwrites Cube.data based on a given Voi.
 
-        :param voi: Voi Object, the volume of interest to be mapped on the cube object.
-        :param preset: the voxel value to be assigned, if voxel is inside cube.
+        Voxels within the structure are filled it with 'preset' value.
+        Voxels outside the contour will be filled with Zeros.
+
+        :param Voi voi: the volume of interest
+        :param int preset: value to be assigned to the voxels within the contour.
+        :param data_type: numpy data type, default is np.int16
         """
         data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
         if preset != 0:
@@ -199,11 +251,22 @@ class Cube(object):
                                 k += 1
                                 if k >= len(intersection):
                                     break
-                            if k % 2 == 1:  # if odd, then voxel is inside of voi
+                            if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
     def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance):
+        """ Creates an empty Cube object.
+
+        Values are stored as 2-byte integers.
+
+        :param int16 value: integer value which will be assigned to all voxels.
+        :param int dimx: number of voxels along x
+        :param int dimy: number of voxels along y
+        :param int dimz: number of voxels along z
+        :param float pixel_size: size of each pixel (x == y) in [mm]
+        :param float slice_distance: the distance between two slices (z) in [mm]
+        """
         self.dimx = dimx
         self.dimy = dimy
         self.dimz = dimz
@@ -217,6 +280,14 @@ class Cube(object):
         self.pydata_type = np.int16
 
     def override_cube_values(self, voi, value):
+        """ Overwrites the Cube voxels within the given Voi with 'value'.
+
+        Voxels within the structure are filled it with 'value'.
+        Voxels outside the contour are not touched.
+
+        :param Voi voi: the volume of interest
+        :param value=0: value to be assigned to the voxels within the contour.
+        """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
                 intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
@@ -229,10 +300,18 @@ class Cube(object):
                             k += 1
                             if k >= (len(intersection)):
                                 break
-                        if k % 2 == 1:
+                        if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] = value
 
-    def set_offset_cube_values(self, voi, value):
+    def set_offset_cube_values(self, voi, value=0):
+        """ Add 'value' to all voxels within the given Voi
+
+        'value' is added to each voxel value within the given volume of interest.
+        Voxels outside the volume of interest are not touched.
+
+        :param Voi voi: the volume of interest
+        :param value=0: value to be added to the voxel values within the contour.
+        """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
                 intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
@@ -245,10 +324,14 @@ class Cube(object):
                             k += 1
                             if k >= (len(intersection)):
                                 break
-                        if k % 2 == 1:
+                        if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] += value
 
     def write_trip_header(self, path):
+        """ Write a TRiP98 formatted header file, based on the available meta data.
+
+        :param path: fully qualified path, including file extention (.hed)
+        """
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         output_str += "created_by " + self.created_by + "\n"
@@ -258,7 +341,7 @@ class Cube(object):
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
-            self.patient_name = "Anonyme"
+            self.patient_name = "Anonymeous"
         output_str += "patient_name " + str(self.patient_name) + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
@@ -290,6 +373,15 @@ class Cube(object):
             f.write(output_str)
 
     def set_byteorder(self, endian=None):
+        """Set/change the byte order of the data to be written to disk.
+
+        Available options are:
+        - 'little' vms, Intel style little-endian byte order.
+        - 'big' aix, Motorola style big-endian byte order.
+        - if unspecified, the native system dependent endianess is used.
+
+        :param str endian: optional string containing the endianess.
+        """
         if endian is None:
             endian = sys.byteorder
         if endian == 'little':
@@ -297,17 +389,20 @@ class Cube(object):
         elif endian == 'big':
             self.byte_order = "aix"
         else:
-            print("HED error: unknown endian:", endian)
-            sys.exit(-1)
+            raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
-    def set_format_str(self):
+    def _set_format_str(self):
+        """Set format string accoring to byte_order.
+        """
         if (self.byte_order == "vms"):
             self.format_str = "<"
         elif (self.byte_order == "aix"):
             self.format_str = ">"
-        self.set_number_of_bytes()
+        self._set_number_of_bytes()
 
-    def set_number_of_bytes(self):
+    def _set_number_of_bytes(self):
+        """Set format_str and pydata_type according to num_bytes and data_type
+        """
         if self.data_type == "integer":
             if self.num_bytes == 1:
                 self.format_str += "b"
@@ -546,15 +641,19 @@ class Cube(object):
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
-        self.set_format_str()
-        self.set_number_of_bytes()
+        self._set_format_str()
+        self._set_number_of_bytes()
 
     def read(self, path):
+        """ Reads both TRiP98 data and its associated header into the Cube object.
+
+        :param str path: Path to filename to be read, file extention may be given but is not neccesary.
+        """
         self.read_trip_data_file(path)
 
-    def read_trip_header_file(self, path):
-        """ Reads a header file, accepts also if suffix is missing, or if file"
-        is in gz compressed. User can thus specify:
+    def read_trip_header_file(self, path):  # TODO: could be made private? #126
+        """ Reads a header file, accepts also if suffix is missing, or if file
+        is .gz compressed. User can thus specify:
         tst001
         tst001.hed
         tst001.hed.gz
@@ -596,17 +695,21 @@ class Cube(object):
 
         # fill self with data
         self.read_trip_header(content)
-        self.set_format_str()
+        self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def read_trip_data_file(self, path, multiply_by_2=False):
-        """
-        Accepts path in similar way as read_trip_header_file.
-        :param path:
-        :param multiply_by_2:
-        :return:
-        """
+    def read_trip_data_file(self, path, multiply_by_2=False):  # TODO: could be made private? #126
+        """Read TRiP98 formatted data.
 
+        Accepts path in similar way as read_trip_header_file().
+        If header file was not previously loaded, it will be attepted first.
+
+        Due to an issue in VIRTUOS, sometimes DosCube data have been reduced with a factor of 2.
+        Setting multiply_by_2 to True, will restore the true values, in this case.
+
+        :param path: Path to TRiP formatted data.
+        :param multiply_by_2: The data read will automatically be multiplied with a factor of 2.
+        """
         # extract header and data file name from path
         header_file_name, data_file_name = self.parse_path(path)
 
@@ -660,11 +763,15 @@ class Cube(object):
 
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
-            logger.warning("Cube was rescaled to 50%. Multiplying with 2.")
+            logger.warning("Cube was previously rescaled to 50%. Now multiplying with 2.")
             cube *= 2
         self.cube = cube
 
     def set_data_type(self, type):
+        """ Sets the data type for the TRiP98 header files.
+
+        :param numpy.type type: numpy type, e.g. np.uint16
+        """
         if type is np.int8 or type is np.uint8:
             self.data_type = "integer"
             self.num_bytes = 1
@@ -682,12 +789,16 @@ class Cube(object):
             self.num_bytes = 8
 
     def read_dicom_header(self, dcm):
+        """ Creates the header metadata for this Cube class, based on a given Dicom object.
+
+        :param Dicom dcm: Dicom object which will be used for generating the header data.
+        """
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
         ds = dcm["images"][0]
         self.version = "1.4"
         self.created_by = "pytrip"
-        self.creation_info = "created by pytrip;"
+        self.creation_info = "Created by PyTRiP98;"
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientsName
@@ -705,15 +816,24 @@ class Cube(object):
         self.z_table = True
         self.set_z_table(dcm)
         self.set_byteorder()
-        self.set_format_str()
+        self._set_format_str()
         self.header_set = True
 
     def set_z_table(self, dcm):
+        """ Creates the slice lookup table based on a given Dicom object.
+        :param Dicom dcm: dicom object provided by pydicom.
+        """
         self.slice_pos = []
         for i in range(len(dcm["images"])):
             self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
+        """ Writes the binary data cube in TRiP98 format to a file.
+
+        Type is specified by self.pydata_type and self.byte_order attributes.
+
+        :param str path: Full path including file extention.
+        """
         cube = np.array(self.cube, dtype=self.pydata_type)
         if self.byte_order == "aix":
             cube = cube.byteswap()
