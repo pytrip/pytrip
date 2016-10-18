@@ -86,11 +86,17 @@ build_manylinux_64:
 #          cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
 
 ## ---------------------------------- debian 9 (testing) -----------------------------------------------
-#
-#test_debian_testing_py2:
-#  box: debian:testing
-#
-#  steps:
+
+test_debian_testing_py2:
+  box: debian:testing
+
+  steps:
+    # copy source to a location that gets passed along to next pipelines
+    - script:
+        name: copy source
+        code: |
+          cp pytrip98.tar.gz "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz
+
 #    - script:
 #        name: prerequisites
 #        code: |
@@ -111,12 +117,18 @@ build_manylinux_64:
 #          trip2dicom
 #          dicom2trip
 #          cubeslice --help
-#
-#
-#test_debian_testing_py3:
-#  box: debian:testing
-#
-#  steps:
+
+
+test_debian_testing_py3:
+  box: debian:testing
+
+  steps:
+    # copy source to a location that gets passed along to next pipelines
+    - script:
+        name: copy source
+        code: |
+          cp pytrip98.tar.gz "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz
+
 #    - script:
 #        name: prerequisites
 #        code: |
@@ -266,27 +278,19 @@ deb_debian_8_jessie_py2:
   box: debian:8
 
   steps:
-
     - script:
         name: prerequisites
         code: |
           apt-get update
           apt-get install -qq -y --no-install-recommends ruby debhelper python python-all python-all-dev python-pip python-numpy gcc build-essential fakeroot locales
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
-          locale -a
-          gem install package_cloud
-          pwd
-          ls -al
-          ls -al $WERCKER_OUTPUT_DIR
-          ls -al $WERCKER_SOURCE_DIR
           cd $WERCKER_SOURCE_DIR
-          pip install versioneer
-          pip install stdeb
           tar -zxvf pytrip98.tar.gz
+          pip install versioneer stdeb
           versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
+          gem install package_cloud
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
-
 
 
 deb_debian_8_jessie_py3:
@@ -299,16 +303,49 @@ deb_debian_8_jessie_py3:
           apt-get update
           apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3 python3-pip python3-all-dev python3-numpy gcc build-essential fakeroot locales
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
-          locale -a
-          gem install package_cloud
-          pwd
-          ls -al
-          ls -al $WERCKER_OUTPUT_DIR
-          ls -al $WERCKER_SOURCE_DIR
           cd $WERCKER_SOURCE_DIR
-          pip3 install versioneer
-          pip3 install stdeb
           tar -zxvf pytrip98.tar.gz
+          pip3 install versioneer stdeb
           versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
+          gem install package_cloud
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
+
+# ---------------------------------- debian 9 stretch -----------------------------------------------
+
+deb_debian_9_testing_py2:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends ruby debhelper python python-all python-all-dev python-pip python-numpy gcc build-essential fakeroot locales
+          export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+          cd $WERCKER_SOURCE_DIR
+          tar -zxvf pytrip98.tar.gz
+          pip install versioneer stdeb
+          versioneer install
+          python setup.py --command-packages=stdeb.command bdist_deb
+          gem install package_cloud
+          package_cloud push grzanka/test/debian/stretch deb_dist/python-pytrip98_*
+
+
+deb_debian_9_testing_py3:
+  box: debian:testing
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3 python3-pip python3-all-dev python3-numpy gcc build-essential fakeroot locales
+          export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+          cd $WERCKER_SOURCE_DIR
+          tar -zxvf pytrip98.tar.gz
+          pip3 install versioneer stdeb
+          versioneer install
+          python3 setup.py --command-packages=stdeb.command bdist_deb
+          gem install package_cloud
+          package_cloud push grzanka/test/debian/stretch deb_dist/python3-pytrip98_*
