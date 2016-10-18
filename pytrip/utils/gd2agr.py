@@ -9,6 +9,7 @@
 
 import sys
 import os
+import logging
 
 
 class ReadGd(object):
@@ -92,4 +93,5 @@ class ReadGd(object):
 
 
 if __name__ == '__main__':
+    logging.basicConfig()
     ReadGd(sys.argv[1])
