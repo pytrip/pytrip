@@ -18,32 +18,32 @@ build:
         code: |
           tar -zcf "$WERCKER_OUTPUT_DIR"/pytrip98.tar.gz .
 
-    # installing necessary requirements
-    - pip-install:
-        requirements_file: "requirements.txt"
-        extra_args: "-rtests/requirements-test.txt"
-        packages_list: "wheel"
-
-    # checking python version
-    - script:
-        name: echo python information
-        code: |
-          echo "python version $(python --version) running"
-          echo "pip version $(pip --version) running"
-
-    # making package
-    - script:
-        name: package_sdist
-        code: |
-          python setup.py sdist
-          ls -al dist/*tar.gz
-
-    # copy binary to a location that gets passed along to next pipelines
-    - script:
-        name: copy binary
-        code: |
-          cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
-          cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
+#    # installing necessary requirements
+#    - pip-install:
+#        requirements_file: "requirements.txt"
+#        extra_args: "-rtests/requirements-test.txt"
+#        packages_list: "wheel"
+#
+#    # checking python version
+#    - script:
+#        name: echo python information
+#        code: |
+#          echo "python version $(python --version) running"
+#          echo "pip version $(pip --version) running"
+#
+#    # making package
+#    - script:
+#        name: package_sdist
+#        code: |
+#          python setup.py sdist
+#          ls -al dist/*tar.gz
+#
+#    # copy binary to a location that gets passed along to next pipelines
+#    - script:
+#        name: copy binary
+#        code: |
+#          cp dist/*tar.gz "$WERCKER_OUTPUT_DIR"
+#          cp .travis/build_wheels.sh "$WERCKER_OUTPUT_DIR"
 
 
 # ---------------------------------- 64 bit -----------------------------------------------
@@ -288,6 +288,10 @@ deb_debian_8_jessie_py2:
           export LANGUAGE=en_US:en
           export LC_ALL=en_US.UTF-8
           echo $LANG
+          sudo echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
+          locale
+          dpkg-reconfigure --frontend=noninteractive locales
+          update-locale LANG=en_US.UTF-8
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
@@ -317,4 +321,8 @@ deb_debian_8_jessie_py3:
           export LANGUAGE=en_US:en
           export LC_ALL=en_US.UTF-8
           echo $LANG
+          sudo echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
+          dpkg-reconfigure --frontend=noninteractive locales
+          update-locale LANG=en_US.UTF-8
+          locale
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
