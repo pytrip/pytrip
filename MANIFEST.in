@@ -20,6 +20,7 @@
   prune install_deps.sh
 
   include GPL_LICENSE
+  include LICENSE
   include INSTALL
   recursive-include appveyor *.sh
   recursive-include pytrip *.c
