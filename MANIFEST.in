@@ -1,7 +1,6 @@
   include *.rst
   include *.txt
   include *.py
-  include LICENSE
   include requirements.txt
   include tests/requirements-test.txt
   include *.yml
@@ -10,6 +9,7 @@
   recursive-include pytrip98 *.py
   recursive-include tests *.py
   recursive-include tests *.tar.gz
+  recursive-include examples *.py
 
   exclude .gitkeep
   exclude .gitconfig
@@ -20,12 +20,11 @@
   prune install_deps.sh
 
   include GPL_LICENSE
+  include LICENSE
   include INSTALL
   recursive-include appveyor *.sh
   recursive-include pytrip *.c
   recursive-include pytrip *.py
-  recursive-include scripts *.py
-  recursive-include utils *.py
   recursive-include tests *.dat
   recursive-include tests *.exec
   recursive-include tests *.gd
