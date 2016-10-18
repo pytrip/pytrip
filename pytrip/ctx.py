@@ -34,7 +34,7 @@ class CtxCube(Cube):
 
     def read_dicom(self, dcm):
         """ Imports CT-images from Dicom object.
-                
+
         :param Dicom dcm: a Dicom object
         """
         if "images" not in dcm:
@@ -99,9 +99,9 @@ class CtxCube(Cube):
 
     def write(self, path):
         """ Write CT-data to disk, in TRiP98/Voxelplan format.
-        
+
         This method will build and write both the .hed and .ctx file.
-        
+
         :param str path: Path, any file extentions will be ignored.
         """
         f_split = os.path.splitext(path)
