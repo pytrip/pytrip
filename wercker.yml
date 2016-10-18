@@ -279,10 +279,10 @@ deb_debian_8_jessie_py2:
           ls -al $WERCKER_SOURCE_DIR
           cd $WERCKER_SOURCE_DIR
           pip install versioneer
-          versioneer install
           pip install stdeb
           tar -zxvf pytrip98.tar.gz
           cd pytrip98
+          versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
@@ -304,9 +304,9 @@ deb_debian_8_jessie_py3:
           ls -al $WERCKER_SOURCE_DIR
           cd $WERCKER_SOURCE_DIR
           pip3 install versioneer
-          versioneer install
           pip3 install stdeb
           tar -zxvf pytrip98.tar.gz
           cd pytrip98
+          versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
