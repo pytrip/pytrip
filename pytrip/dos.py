@@ -56,8 +56,8 @@ class DosCube(Cube):
         if self.header_set is False:
             self.read_dicom_header(dcm)
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx))
-        for i in range(len(dcm["rtdose"].pixel_array)):
-            self.cube[i][:][:] = dcm["rtdose"].pixel_array[i]
+        for i, item in enumerate(dcm["rtdose"].pixel_array):
+            self.cube[i][:][:] = item
 
     def calculate_dvh(self, voi):
         """
