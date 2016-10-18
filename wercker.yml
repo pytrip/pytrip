@@ -285,10 +285,9 @@ deb_debian_8_jessie_py2:
           versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
           export LANG=en_US.UTF-8
-          export LANGUAGE=en_US:en
           export LC_ALL=en_US.UTF-8
           echo $LANG
-          sudo echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
+          sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
           locale
           dpkg-reconfigure --frontend=noninteractive locales
           update-locale LANG=en_US.UTF-8
@@ -318,10 +317,9 @@ deb_debian_8_jessie_py3:
           versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
           export LANG=en_US.UTF-8
-          export LANGUAGE=en_US:en
           export LC_ALL=en_US.UTF-8
           echo $LANG
-          sudo echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' > /etc/default/locale
+          sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
           dpkg-reconfigure --frontend=noninteractive locales
           update-locale LANG=en_US.UTF-8
           locale
