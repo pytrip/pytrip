@@ -281,9 +281,10 @@ deb_debian_8_jessie_py2:
           pip install versioneer
           pip install stdeb
           tar -zxvf pytrip98.tar.gz
-          cd pytrip98
           versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
+          echo $PACKAGECLOUD_TOKEN > 1.txt
+          cat 1.txt
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
@@ -306,7 +307,8 @@ deb_debian_8_jessie_py3:
           pip3 install versioneer
           pip3 install stdeb
           tar -zxvf pytrip98.tar.gz
-          cd pytrip98
           versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
+          echo $PACKAGECLOUD_TOKEN > 1.txt
+          cat 1.txt
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
