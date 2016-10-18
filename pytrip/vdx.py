@@ -124,12 +124,23 @@ class VdxCube:
         raise InputError("Voi doesn't exist")
 
     def import_vdx(self, path):
+        """ Reads a structure file in Voxelplan format.
+        This method is identical to self.read() and self.read_vdx()
+        :param str path: Full path including file extension.
+        """
         self.read_vdx(path)
 
     def read(self, path):
+        """ Reads a structure file in Voxelplan format.
+        This method is identical to self.import_vdx() and self.read_vdx()
+        :param str path: Full path including file extension.
+        """
         self.read_vdx(path)
 
     def read_vdx(self, path):
+        """ Reads a structure file in Voxelplan format.
+        :param str path: Full path including file extension.
+        """
         fp = open(path, "r")
         content = fp.read().split('\n')
         fp.close()
@@ -159,13 +170,24 @@ class VdxCube:
             i += 1
 
     def concat_contour(self):
+        """ Loop through all available VOIs and check whether any have mutiple contours in a slice. 
+        If so, merge them to a single contour.
+
+        This is needed since TRiP98 cannot handle multiple contours in the same slice.
+        """
         for i in range(len(self.vois)):
             self.vois[i].concat_contour()
 
     def number_of_vois(self):
+        """
+        :returns: the number of VOIs in this object.
+        """
         return len(self.vois)
 
     def write_to_voxel(self, path):
+        """ Writes all VOIs in voxelplan format.
+        :param str path: Full path, including file extension (.vdx).
+        """
         fp = open(path, "w")
         fp.write("vdx_file_version %s\n" % self.version)
         fp.write("all_indices_zero_based\n")
@@ -176,13 +198,24 @@ class VdxCube:
         fp.close()
 
     def write_to_trip(self, path):
+        """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
+        Identical to write().
+        :param str path: Full path, including file extension (.vdx).
+        """
         self.concat_contour()
         self.write_to_voxel(path)
 
     def write(self, path):
+        """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
+        Identical to write_to_trip().
+        :param str path: Full path, including file extension (.vdx).
+        """
         self.write_to_trip(path)
 
     def create_dicom(self):
+        """ Generates and returns Dicom RTSTRUCT object, which holds all VOIs.
+        :returns: a Dicom RTSTRUCT object holding any VOIs.
+        """
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
         meta = Dataset()
@@ -240,12 +273,16 @@ class VdxCube:
         ds.StructureSetROIs = Sequence(roi_structure_roi_list)
         return ds
 
-    def write_dicom(self, path):
+    def write_dicom(self, directory):
+        """ Generates a Dicom RTSTRUCT object from self, and writes it to disk.
+        :param str directory: Diretory where the rtss.dcm file will be saved.
+        """
         dcm = self.create_dicom()
-        dcm.save_as(os.path.join(path, "rtss.dcm"))
+        dcm.save_as(os.path.join(directory, "rtss.dcm"))
 
 
-def voi_point_cmp(a, b):
+def _voi_point_cmp(a, b):
+    """ TODO: needs documentation """
     if abs(a[1] - b[1]) < 0.2:
         c = a[0] - b[0]
     else:
@@ -257,6 +294,17 @@ def voi_point_cmp(a, b):
 
 
 def create_cube(cube, name, center, width, height, depth):
+    """
+    Creates a new VOI which holds the contours rendering a square box
+    
+    :param Cube cube: A CTX or DOS cube to work on.
+    :param str name: Name of the VOI
+    :param [float*3] center: Center position [x,y,z] in [mm]
+    :param float width: Width of box, along x in [mm]
+    :param float height: Height of box, along y in [mm]
+    :param float depth: Depth of box, along z in [mm]
+    :returns: A new Voi object.
+    """
     v = Voi(name, cube)
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
@@ -273,7 +321,15 @@ def create_cube(cube, name, center, width, height, depth):
     return v
 
 
-def create_voi_from_cube(cube, name):
+def create_voi_from_cube(cube, name, value=100):
+    """
+    Creates a new VOI which holds the contours following an isodose lines.
+    
+    :param Cube cube: A CTX or DOS cube to work on.
+    :param str name: Name of the VOI
+    :param int value: The isodose value from which the countour will be generated from.
+    :returns: A new Voi object.
+    """
     v = Voi(name, cube)
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
@@ -284,7 +340,7 @@ def create_voi_from_cube(cube, name):
     for i in range(cube.dimz):
         x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
-        contour = isodose_obj.trace(100)
+        contour = isodose_obj.trace(value)
         s = Slice(cube)
         if not len(contour):
             continue
@@ -300,6 +356,16 @@ def create_voi_from_cube(cube, name):
 
 
 def create_cylinder(cube, name, center, radius, depth):
+    """
+    Creates a new VOI which holds the contours rendering a cylinder along z
+    
+    :param Cube cube: A CTX or DOS cube to work on.
+    :param str name: Name of the VOI
+    :param [float*3] center: Center position of cylinder [x,y,z] in [mm]
+    :param float radius: Radius of cylinder in [mm]
+    :param float depth: Depth of cylinder, along z in [mm]
+    :returns: A new Voi object.
+    """
     v = Voi(name, cube)
     t = np.linspace(start=0, stop=2.0 * pi, num=100)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
@@ -316,6 +382,15 @@ def create_cylinder(cube, name, center, radius, depth):
 
 
 def create_sphere(cube, name, center, radius):
+    """
+    Creates a new VOI which holds the contours rendering a sphere along z
+    
+    :param Cube cube: A CTX or DOS cube to work on.
+    :param str name: Name of the VOI
+    :param [float*3] center: Center position of sphere [x,y,z] in [mm]
+    :param float radius: Radius of sphere in [mm]
+    :returns: A new Voi object.
+    """
     v = Voi(name, cube)
     t = np.linspace(start=0, stop=2.0 * pi, num=100)
     p = list(zip(np.cos(t), np.sin(t)))
@@ -333,13 +408,16 @@ def create_sphere(cube, name, center, radius):
 
 
 class Voi:
-    sagital = 2
+    """
+    This is a class for handling volume of interests (VOIs). This class can e.g. be found inside the VdxCube object.
+    VOIs may for instance be organs (lung, eye...) or targets (PTV, GTV...), or any other volume of interest.
+    """
+
+    sagital = 2  # backwards compability to pytripgui
+    sagittal = 2
     coronal = 1
 
     def __init__(self, name, cube=None):
-        """
-        This is a volume of interest (VOI) object, which e.g. can be found inside the VdxCube object.
-        """
         self.cube = cube
         self.name = name
         self.is_concated = False
@@ -354,7 +432,7 @@ class Voi:
         Returns an independent copy of the Voi object
 
         :param margin: (unused)
-        :return: a deep copy of the Voi object
+        :returns: a deep copy of the Voi object
         """
         voi = copy.deepcopy(self)
         if not margin == 0:
@@ -368,7 +446,7 @@ class Voi:
         The function may take some time to execute the first invocation, but is faster for subsequent calls,
         due to caching.
 
-        :return: a DosCube object which holds the value 1000 in those voxels which are inside the Voi.
+        :returns: a DosCube object which holds the value 1000 in those voxels which are inside the Voi.
         """
         if hasattr(self, "voi_cube"):  # caching: checks if class has voi_cube attribute
             # TODO: add parameter as argument to this function. Note, this needs to be compatible with
@@ -379,17 +457,28 @@ class Voi:
         return self.voi_cube
 
     def add_slice(self, slice):
+        """ Add another slice to this VOI, and update self.slice_z table.
+        :param Slice slice: the Slice object to be appended.
+        """
         key = int(slice.get_position() * 100)
         self.slice_z.append(key)
         self.slices[key] = slice
 
     def get_name(self):
+        """
+        :returns: The name of this VOI.
+        """
         return self.name
 
     def calculate_bad_angles(self, voi):
+        """
+        (Not implemented.)        
+        """
         pass
 
     def concat_to_3d_polygon(self):
+        """ Concats all contours into a single contour, and writes all data points to sefl.polygon3d.
+        """
         self.concat_contour()
         data = []
         for slice in self.slices:
@@ -397,11 +486,18 @@ class Voi:
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
+        """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
+        sefl.polygon3d. If this attibute does not exist, create it.
+        """
         if not hasattr(self, "polygon3d"):
             self.concat_to_3d_polygon()
         return self.polygon3d
 
     def create_point_tree(self):
+        """ 
+        Concats all conours, 
+        Writes a list of points into self.points describing this VOI. 
+        """
         points = {}
         self.concat_contour()
         slice_keys = sorted(self.slices.keys())
@@ -438,6 +534,8 @@ class Voi:
         self.points = points
 
     def get_2d_projection_on_basis(self, basis, offset=None):
+        """ (TODO: Documentation)
+        """
         a = np.array(basis[0])
         b = np.array(basis[1])
         self.concat_contour()
@@ -447,7 +545,7 @@ class Voi:
 
         compare = self.cube.pixel_size
         filtered = pytriplib.filter_points(product, compare / 2.0)
-        filtered = np.array(sorted(filtered, key=cmp_to_key(voi_point_cmp)))
+        filtered = np.array(sorted(filtered, key=cmp_to_key(_voi_point_cmp)))
         filtered = pytriplib.points_to_contour(filtered)
         product = filtered
 
@@ -457,12 +555,16 @@ class Voi:
         return product
 
     def get_2d_slice(self, plane, depth):
+        """ Gets a 2d Slice object from the contour in either sagittal or coronal plane.
+        :param int plane: either self.sagittal or self.coronal
+        :param float depth: position of plane
+        """
         self.concat_contour()
         points1 = []
         points2 = []
         for key in sorted(self.slice_z):
             slice = self.slices[key]
-            if plane is self.sagital:
+            if plane is self.sagittal:
                 point = sorted(
                     pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
@@ -919,6 +1021,8 @@ class Contour:
         return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
+        """ In case of multiple contours in the same slice, this method will concat them to a single conour.
+        """ 
         for i in range(len(self.children)):
             self.children[i].concat()
         while len(self.children) > 1:
