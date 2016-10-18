@@ -286,8 +286,9 @@ deb_debian_8_jessie_py2:
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
           cd $WERCKER_SOURCE_DIR
           tar -zxvf pytrip98.tar.gz
-          pip install versioneer stdeb
+          pip install versioneer
           versioneer install
+          pip install stdeb
           python setup.py --command-packages=stdeb.command bdist_deb
           gem install package_cloud
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
@@ -305,8 +306,9 @@ deb_debian_8_jessie_py3:
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
           cd $WERCKER_SOURCE_DIR
           tar -zxvf pytrip98.tar.gz
-          pip3 install versioneer stdeb
+          pip3 install versioneer
           versioneer install
+          pip3 install stdeb
           python3 setup.py --command-packages=stdeb.command bdist_deb
           gem install package_cloud
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
@@ -325,8 +327,9 @@ deb_debian_9_testing_py2:
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
           cd $WERCKER_SOURCE_DIR
           tar -zxvf pytrip98.tar.gz
-          pip install versioneer stdeb
+          pip install versioneer
           versioneer install
+          pip install stdeb
           python setup.py --command-packages=stdeb.command bdist_deb
           gem install package_cloud
           package_cloud push grzanka/test/debian/stretch deb_dist/python-pytrip98_*
@@ -344,8 +347,9 @@ deb_debian_9_testing_py3:
           export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
           cd $WERCKER_SOURCE_DIR
           tar -zxvf pytrip98.tar.gz
-          pip3 install versioneer stdeb
+          pip3 install versioneer
           versioneer install
+          pip3 install stdeb
           python3 setup.py --command-packages=stdeb.command bdist_deb
           gem install package_cloud
           package_cloud push grzanka/test/debian/stretch deb_dist/python3-pytrip98_*
