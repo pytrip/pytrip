@@ -284,7 +284,11 @@ deb_debian_8_jessie_py2:
           tar -zxvf pytrip98.tar.gz
           versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
-          LANG=en_US.UTF-8 LANGUAGE=en_US:en package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
+          export LANG=en_US.UTF-8
+          export LANGUAGE=en_US:en
+          export LC_ALL=en_US.UTF-8
+          echo $LANG
+          package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
 
@@ -309,4 +313,8 @@ deb_debian_8_jessie_py3:
           tar -zxvf pytrip98.tar.gz
           versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
-          LANG=en_US.UTF-8 LANGUAGE=en_US:en package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
+          export LANG=en_US.UTF-8
+          export LANGUAGE=en_US:en
+          export LC_ALL=en_US.UTF-8
+          echo $LANG
+          package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
