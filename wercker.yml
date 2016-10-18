@@ -272,7 +272,8 @@ deb_debian_8_jessie_py2:
         code: |
           apt-get update
           apt-get install -qq -y --no-install-recommends ruby debhelper python python-all python-all-dev python-pip python-numpy gcc build-essential fakeroot locales
-          locale-gen --purge en_US.UTF-8
+          export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+          locale -a
           gem install package_cloud
           pwd
           ls -al
@@ -284,13 +285,6 @@ deb_debian_8_jessie_py2:
           tar -zxvf pytrip98.tar.gz
           versioneer install
           python setup.py --command-packages=stdeb.command bdist_deb
-          export LANG=en_US.UTF-8
-          export LC_ALL=en_US.UTF-8
-          echo $LANG
-          sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
-          locale
-          dpkg-reconfigure --frontend=noninteractive locales
-          update-locale
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
@@ -304,7 +298,8 @@ deb_debian_8_jessie_py3:
         code: |
           apt-get update
           apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3 python3-pip python3-all-dev python3-numpy gcc build-essential fakeroot locales
-          locale-gen --purge en_US.UTF-8
+          export LANGUAGE=C.UTF-8; export LANG=C.UTF-8; export LC_ALL=C.UTF-8; locale-gen C.UTF-8; DEBIAN_FRONTEND=noninteractive dpkg-reconfigure locales
+          locale -a
           gem install package_cloud
           pwd
           ls -al
@@ -316,11 +311,4 @@ deb_debian_8_jessie_py3:
           tar -zxvf pytrip98.tar.gz
           versioneer install
           python3 setup.py --command-packages=stdeb.command bdist_deb
-          export LANG=en_US.UTF-8
-          export LC_ALL=en_US.UTF-8
-          echo $LANG
-          sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
-          dpkg-reconfigure --frontend=noninteractive locales
-          update-locale
-          locale
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
