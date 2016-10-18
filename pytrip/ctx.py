@@ -23,7 +23,9 @@ from pytrip.cube import Cube
 
 
 class CtxCube(Cube):
-
+    """ Class for handling CT-data. In TRiP98 these are stored in VOXELPLAN format with the .ctx suffix.
+    This class can also handle Dicom files.
+    """
     data_file_extension = "ctx"
 
     def __init__(self, cube=None):
@@ -31,6 +33,10 @@ class CtxCube(Cube):
         self.type = "CTX"
 
     def read_dicom(self, dcm):
+        """ Imports CT-images from Dicom object.
+                
+        :param Dicom dcm: a Dicom object
+        """
         if "images" not in dcm:
             raise InputError("Data doesn't contain ct data")
         if not self.header_set:
@@ -49,6 +55,12 @@ class CtxCube(Cube):
             self.cube = self.cube[::-1]
 
     def create_dicom(self):
+        """ Creates a Dicom object from self.
+
+        This function can be used to convert a TRiP98 CTX file to Dicom format.
+
+        :returns: A Dicom object.
+        """
         data = []
 
         for i in range(len(self.cube)):
@@ -86,6 +98,12 @@ class CtxCube(Cube):
         return data
 
     def write(self, path):
+        """ Write CT-data to disk, in TRiP98/Voxelplan format.
+        
+        This method will build and write both the .hed and .ctx file.
+        
+        :param str path: Path, any file extentions will be ignored.
+        """
         f_split = os.path.splitext(path)
         header_file = f_split[0] + ".hed"
         ctx_file = f_split[0] + ".ctx"
@@ -93,6 +111,10 @@ class CtxCube(Cube):
         self.write_trip_data(ctx_file)
 
     def write_dicom(self, path):
+        """ Write CT-data to disk, in Dicom format.
+
+        :param str path: Full path,  including file extention.
+        """
         dcm_list = self.create_dicom()
         for i in range(len(dcm_list)):
             dcm_list[i].save_as(os.path.join(path, "ct.%d.dcm" % (dcm_list[i].InstanceNumber - 1)))
