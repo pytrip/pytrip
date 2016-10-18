@@ -11,8 +11,7 @@ Contents:
    contributing
    technical
    authors
-
-.. automodule:: pytrip
+   Source Code <apidoc/pytrip>
 
 Indices and tables
 ==================
