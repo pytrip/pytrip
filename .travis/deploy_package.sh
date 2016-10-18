@@ -80,6 +80,16 @@ elif [[ $TARGET == "source" ]]; then
     if [[ $TRAVIS_TAG != "" ]]; then
         twine upload -r $PYPIREPO dist/*tar.gz
     fi
+# make a deb package
+elif [[ $TARGET == "deb" ]]; then
+    # install necessary tools
+    bash .travis/make_deb.sh
+
+    ls -al dev_dist/
+    # upload only if tag present
+    if [[ $TRAVIS_TAG != "" ]]; then
+        echo "here we go"
+    fi
 else
 
 # Building of manylinux1 compatible packages, see https://www.python.org/dev/peps/pep-0513/ for details
