@@ -290,7 +290,7 @@ deb_debian_8_jessie_py2:
           sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
           locale
           dpkg-reconfigure --frontend=noninteractive locales
-          update-locale LANG=en_US.UTF-8
+          update-locale
           package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
@@ -321,6 +321,6 @@ deb_debian_8_jessie_py3:
           echo $LANG
           sudo echo -e 'LANG="en_US.UTF-8"\n' > /etc/default/locale
           dpkg-reconfigure --frontend=noninteractive locales
-          update-locale LANG=en_US.UTF-8
+          update-locale
           locale
           package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
