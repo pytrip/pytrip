@@ -249,9 +249,20 @@ deb_debian_8_jessie_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends ruby
+          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python-all-dev
           gem install package_cloud
           ls -al $WERCKER_OUTPUT_DIR
+          ls -al $WERCKER_SOURCE_DIR
+          pwd
+          ls -al
+          ls -al $WERCKER_OUTPUT_DIR
+          ls -al $WERCKER_SOURCE_DIR
+          cd $WERCKER_SOURCE_DIR
+          pip install versioneer
+          versioneer install
+          pip install stdeb
+          python setup.py --command-packages=stdeb.command bdist_deb
+          package_cloud push grzanka/test/debian/jessie deb_dist/python-pytrip98_*
 
 
 
@@ -263,6 +274,17 @@ deb_debian_8_jessie_py3:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends ruby
+          apt-get install -qq -y --no-install-recommends ruby debhelper python-all python3-all-dev
           gem install package_cloud
           ls -al $WERCKER_OUTPUT_DIR
+          ls -al $WERCKER_SOURCE_DIR
+          pwd
+          ls -al
+          ls -al $WERCKER_OUTPUT_DIR
+          ls -al $WERCKER_SOURCE_DIR
+          cd $WERCKER_SOURCE_DIR
+          pip3 install versioneer
+          versioneer install
+          pip3 install stdeb
+          python3 setup.py --command-packages=stdeb.command bdist_deb
+          package_cloud push grzanka/test/debian/jessie deb_dist/python3-pytrip98_*
