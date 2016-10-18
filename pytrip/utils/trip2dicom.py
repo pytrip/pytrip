@@ -2,6 +2,7 @@
 
 import os
 import sys
+import logging
 
 from pytrip import CtxCube, VdxCube
 
@@ -45,4 +46,5 @@ def main(args=sys.argv[1:]):
 
 
 if __name__ == '__main__':
+    logging.basicConfig()
     sys.exit(main(sys.argv[1:]))

@@ -4,6 +4,7 @@
 
 import sys
 import os
+import logging
 from scipy import interpolate
 from pytrip import __file__
 
@@ -54,4 +55,5 @@ class ReadGd(object):
 
 
 if __name__ == '__main__':
+    logging.basicConfig()
     ReadGd(sys.argv[1], 2)

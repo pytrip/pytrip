@@ -23,6 +23,7 @@
 
 import sys
 import os
+import logging
 
 
 class ReadGd(object):
@@ -284,4 +285,5 @@ class ReadGd(object):
 # end special handling for 'm'
 
 if __name__ == '__main__':
+    logging.basicConfig()
     ReadGd(sys.argv[1], LET=True, exp=True)

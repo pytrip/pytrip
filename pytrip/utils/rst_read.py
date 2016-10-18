@@ -160,6 +160,8 @@ class SamfileRead(object):
 
 # example of usage:
 # from rst_read import *
+# import logging
+# logging.basicConfig()
 # a= RstfileRead("cub000101.rst")
 # dir(a)
 # print a.sistable
