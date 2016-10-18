@@ -16,7 +16,6 @@
 """
 
 import os
-import gc
 import logging
 
 import numpy as np
@@ -49,7 +48,7 @@ class DosCube(Cube):
 
     def read_dicom(self, dcm):
         """ Imports the dose distribution from Dicom object.
-        
+
         :param Dicom dcm: a Dicom object
         """
         if "rtdose" not in dcm:
@@ -169,7 +168,7 @@ class DosCube(Cube):
 
     def create_dicom(self):
         """ Creates a Dicom RT-Dose object from self.
-        
+
         This function can be used to convert a TRiP98 Dose file to Dicom format.
 
         :returns: a Dicom RT-Dose object.
@@ -235,7 +234,7 @@ class DosCube(Cube):
 
     def write_dicom(self, directory):
         """ Write Dose-data to disk, in Dicom format.
-        
+
         This file will save the dose cube and a plan associated with that dose.
         Function call create_dicom() and create_dicom_plan() and then save these.
 
