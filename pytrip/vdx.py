@@ -41,18 +41,22 @@ logger = logging.getLogger(__name__)
 
 class VdxCube:
     """
-    VdxCube is the master class for dealing with vois structures,
-    a vdxcube object contains VoiCube objects which represent a VOI,
-    it could be ex a lung or the tumor.
-    The VoiCube contains Slices which corresponds to the CT slices,
-    and the slices contains contour object, which contains the contour data,
-    a slice can contain multiple, since TRiP only support one contour per slice
-    for each voi, it is necessary to merge contour
+    VdxCube is the master class for dealing with Volume of Interests (VOIs).
+    A VdxCube contains one or more VOIs which are structures which represent 
+    some organ (lung, eye ...) or target (GTV, PTV...)
+    The Voi object contains Slice objects which corresponds to the CT slices,
+    and the slice objects contains contour objects.
+    Each contour object are a set of points which delimit a closed region.
+    One single slice object can contain multiple contours.
+
+    Note, since TRiP98 only supports one contour per slice for each voi.
+    PyTRiP supports functions for connecting multiple contours to a single 
+    entity using infinte thin connects.
 
     VdxCube can import both dicom data and TRiP data,
     and export in the those formats.
 
-    We strongly recommend to load first CT or DOS cube, see example below
+    We strongly recommend to load a CT and/or a DOS cube first, see example below:
 
     c = CtxCube()
     c.read("TST000000")
@@ -60,21 +64,26 @@ class VdxCube:
     v = VdxCube("", c)
     v.read("TST000000.vdx")
     """
-
     def __init__(self, content, cube=None):
         self.vois = []
         self.cube = cube
         self.version = "1.2"
 
     def read_dicom(self, data, structure_ids=None):
+        """
+        Reads structures from a Dicom RTSS Object.
+
+        :param Dicom data: A Dicom RTSS object.
+        :param structure_ids: (TODO: undocumented)
+        """
         if "rtss" not in data:
             raise InputError("Input is not a valid rtss structure")
         dcm = data["rtss"]
         self.version = "2.0"
-        for i in range(len(dcm.ROIContours)):
-            if structure_ids is None or dcm.ROIContours[i].RefdROINumber in structure_ids:
+        for i, item in enumerate(dcm.ROIContours):
+            if structure_ids is None or item.RefdROINumber in structure_ids:
                 v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode('iso-8859-1'), self.cube)
-                v.read_dicom(dcm.RTROIObservations[i], dcm.ROIContours[i])
+                v.read_dicom(dcm.RTROIObservations[i], item)
                 self.add_voi(v)
         self.cube.xoffset = 0
         self.cube.yoffset = 0
@@ -84,10 +93,13 @@ class VdxCube:
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
+        """
+        :returns: a list of available voi names.
+        """
         names = [voi.name for voi in self.vois]
         return names
 
-    def __str__(self):
+    def __str__(self):  # Method for printing
         """
         VOI names separated by & sign
         :return:
@@ -95,9 +107,17 @@ class VdxCube:
         return '&'.join(self.get_voi_names())
 
     def add_voi(self, voi):
+        """ Appends a new voi to this class.
+        :param Voi voi: the voi to be appened to this class.
+        """
         self.vois.append(voi)
 
     def get_voi_by_name(self, name):
+        """ Returns a Voi object by its name.
+
+        :param str name: Name of voi to be returned.
+        :returns: the Voi which has exactly this name, else raise an Error.
+        """
         for voi in self.vois:
             if voi.name.lower() == name.lower():
                 return voi
