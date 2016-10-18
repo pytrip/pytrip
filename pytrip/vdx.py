@@ -763,12 +763,12 @@ class Voi:
             contours = data.Contours
         else:
             contours = data.ContourSequence
-        for i in range(len(contours)):
-            key = int((float(contours[i].ContourData[2]) - min(self.cube.slice_pos)) * 100)
+        for i, contour in enumerate(contours):
+            key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
             if key not in self.slices:
                 self.slices[key] = Slice(self.cube)
                 self.slice_z.append(key)
-            self.slices[key].add_dicom_contour(contours[i])
+            self.slices[key].add_dicom_contour(contour)
 
     def get_thickness(self):
         """
@@ -982,11 +982,11 @@ class Slice:
         :returns: a str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
-        for i in range(len(self.contour)):
+        for i, cnt in enumerate(self.contour):
             out += "contour %d\n" % i
             out += "internal false\n"
-            out += "number_of_points %d\n" % (self.contour[i].number_of_points() + 1)
-            out += self.contour[i].to_voxel_string()
+            out += "number_of_points %d\n" % (cnt.number_of_points() + 1)
+            out += cnt.to_voxel_string()
             out += "\n"
         return out
 
@@ -1085,11 +1085,10 @@ class Contour:
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
         out = ""
-        for i in range(len(self.contour)):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[i][0], self.contour[i][1], self.contour[i][2], 0,
-                                                         0, 0)
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1], self.contour[0][2], 0, 0,
-                                                     0)
+        for i, cnt in enumerate(self.contour):
+            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
+        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1], self.contour[0][2],
+                                                     0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
@@ -1123,9 +1122,9 @@ class Contour:
         """ (TODO: Document me)
         """
         remove_idx = []
-        for i in range(len(self.children)):
-            if contour.contains_contour(self.children[i]):
-                contour.push(self.children[i])
+        for i, child in enumerate(self.children):
+            if contour.contains_contour(child):
+                contour.push(child)
                 remove_idx.append(i)
         remove_idx.sort(reverse=True)
         for i in remove_idx:
