@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 
 class Cube(object):
     """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
-    The user should not use this class directly, but is instead referred to DosCube, CtxCube, LETCube classes 
+    The user should not use this class directly, but is instead referred to DosCube, CtxCube, LETCube classes
     and similar, as these inherits the Cube class and expose all attributes and methods from Cube.
     """
     def __init__(self, cube=None):

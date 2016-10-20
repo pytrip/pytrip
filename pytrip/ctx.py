@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-The CTX module contains the CtxCube class which is inherited from the Cube class. 
+The CTX module contains the CtxCube class which is inherited from the Cube class.
 It is used for handling CT-data, both Voxelplan and Dicom.
 """
 import os
