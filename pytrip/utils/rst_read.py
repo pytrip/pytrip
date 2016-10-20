@@ -61,9 +61,9 @@ class RstfileRead(object):
         if os.path.isfile(filename) is False:
             raise IOError("Could not find file " + filename)
         else:
-            rstinput_file = open(filename, 'r')
-            content = rstinput_file.readlines()
-            # close(rstinput_file)
+            content = ''
+            with open(filename, 'r') as rstinput_file:
+                content = rstinput_file.readlines()
             data_length = len(content)
             print("read", data_length, "lines of data.")
             i = 0
@@ -176,16 +176,3 @@ class SamfileRead(object):
     def __del__(self):
         object.__del__(self)
         print('deleted')
-
-# example of usage:
-# from rst_read import *
-# import logging
-# logging.basicConfig()
-# a= RstfileRead("cub000101.rst")
-# dir(a)
-# print a.sistable
-# print a.rstfile
-# print a.couchangle
-# print a.bolus
-# print a.submachines
-# b = a.submachine[0]

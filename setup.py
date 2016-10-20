@@ -194,7 +194,10 @@ setuptools.setup(
             'dicom2trip=pytrip.utils.dicom2trip:main',
             'cubeslice=pytrip.utils.cubeslice:main',
             'rst2sobp=pytrip.utils.rst2sobp:main',
+            'rst_plot=pytrip.utils.rst_plot:main'
+            'bevlet2oer=pytrip.utils.bevlet2oer:main',
             'gd2dat=pytrip.utils.gd2dat:main',
+            'gd2agr=pytrip.utils.gd2agr:main',
         ],
     },
     cmdclass=get_cmdclass())
