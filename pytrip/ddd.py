@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module provides the DDD class for handling depth-dose curve kernels for TRiP98.
 """
 import glob
 import numpy as np

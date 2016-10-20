@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module provides the LETCube for handling LET data. 
 """
 import os
 
@@ -32,6 +32,7 @@ class LETCube(Cube):
     It is similar to DosCubes and CtxCubes, but is intended to hold LET data.
     The object has build-in methods to read and write the LET data cubes,
     calculate the LET-volume historgrams, and write these to disk.
+    It is inherited from Cube, which contains many additional methods and attributes.
     """
 
     data_file_extension = "dos"

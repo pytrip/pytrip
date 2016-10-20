@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+The tripexecuter module provides functions for executing TRiP98 locally or remotely.
 """
 # do not check this file for PEP8 compatibility
 # flake8 complains about "E402 module level import not at top of file"

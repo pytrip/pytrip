@@ -17,7 +17,11 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module holds all the user needs to deal with Volume of interests.
+It provides the top-level VdxCube class, Voi, Slice and Contour classes. 
+The Voi class represents a volume of interest 'VOI', also called region of interest 'ROI' in Dicom lingo.
+Each Voi holds several Slice, which are noramlly synced with an associated CT-cube.
+Each Slice holds one or more Contours.
 """
 import os
 import re
@@ -54,7 +58,7 @@ class VdxCube:
     Each contour object are a set of points which delimit a closed region.
     One single slice object can contain multiple contours.
 
-    Vdx ---> Voi[] ---> Slice[] ---> Contour[] ---> Point[]
+    VdxCube ---> Voi[] ---> Slice[] ---> Contour[] ---> Point[]
 
     Note, since TRiP98 only supports one contour per slice for each voi.
     PyTRiP supports functions for connecting multiple contours to a single

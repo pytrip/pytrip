@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module provides the DosCube class, which the user should use for handling plan-generated dose distributions.
 """
 import os
 import logging

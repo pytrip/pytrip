@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+Auxilliary functions for handling Dicom data.
 """
 import os
 import dicom

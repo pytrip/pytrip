@@ -17,7 +17,8 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module provides the Cube class, which is used by the CTX, DOS, LET and VDX modules.
+A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
 import os
 import re
@@ -41,6 +42,8 @@ logger = logging.getLogger(__name__)
 
 class Cube(object):
     """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
+    The user should not use this class directly, but is instead referred to DosCube, CtxCube, LETCube classes 
+    and similar, as these inherits the Cube class and expose all attributes and methods from Cube.
     """
     def __init__(self, cube=None):
         if cube is not None:
