@@ -164,8 +164,9 @@ setuptools.setup(
 
         # OS and env
         'Environment :: Console',
-        'Operating System :: POSIX',
+        'Operating System :: POSIX :: Linux',
         'Operating System :: Unix',
+        'Operating System:: Microsoft:: Windows',
         'Operating System :: MacOS',
 
         # Pick your license as you wish (should match "license" above)
@@ -194,7 +195,7 @@ setuptools.setup(
             'dicom2trip=pytrip.utils.dicom2trip:main',
             'cubeslice=pytrip.utils.cubeslice:main',
             'rst2sobp=pytrip.utils.rst2sobp:main',
-            'rst_plot=pytrip.utils.rst_plot:main'
+            'rst_plot=pytrip.utils.rst_plot:main',
             'bevlet2oer=pytrip.utils.bevlet2oer:main',
             'gd2dat=pytrip.utils.gd2dat:main',
             'gd2agr=pytrip.utils.gd2agr:main',
