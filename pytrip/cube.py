@@ -1,18 +1,24 @@
+#
+#    Copyright (C) 2010-2016 PyTRiP98 Developers.
+#
+#    This file is part of PyTRiP98.
+#
+#    PyTRiP98 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    PyTRiP98 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
-    This file is part of PyTRiP.
-
-    PyTRiP is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    PyTRiP is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with PyTRiP.  If not, see <http://www.gnu.org/licenses/>
+This module provides the Cube class, which is used by the CTX, DOS, LET and VDX modules.
+A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
 import os
 import re
@@ -36,6 +42,8 @@ logger = logging.getLogger(__name__)
 
 class Cube(object):
     """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
+    The user should not use this class directly, but is instead referred to DosCube, CtxCube, LETCube classes
+    and similar, as these inherits the Cube class and expose all attributes and methods from Cube.
     """
     def __init__(self, cube=None):
         if cube is not None:

@@ -1,12 +1,26 @@
 #! /usr/bin/env python
+#
+#    Copyright (C) 2010-2016 PyTRiP98 Developers.
+#
+#    This file is part of PyTRiP98.
+#
+#    PyTRiP98 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    PyTRiP98 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
-    converts gd files to xmgrace files in .agr format.
-    06.10.2011 Armin Lühr
-    ---
-    comments:
-    still limited to .gd files with a single y column
+Converts GD files to xmgrace files in .agr format.
+TODO: Limited to .gd files with a single y column
 """
-
 import sys
 import os
 import logging
