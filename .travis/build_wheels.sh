@@ -70,6 +70,10 @@ do
     yum install -y tk-devel
 
     ## tests could fail
-    ${PYBIN}/dicom2trip
-    ${PYBIN}/trip2dicom
+    ${PYBIN}/dicom2trip --help
+    ${PYBIN}/trip2dicom --help
+    ${PYBIN}/rst2sobp --help
+    ${PYBIN}/dicom2trip --version
+    ${PYBIN}/trip2dicom --version
+    ${PYBIN}/rst2sobp --version
 done

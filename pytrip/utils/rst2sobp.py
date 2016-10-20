@@ -22,19 +22,28 @@ TODO: documentation here.
 """
 import sys
 import logging
+import argparse
+
+import pytrip as pt
 from pytrip.utils.rst_read import RstfileRead
 
 
 def main(args=sys.argv[1:]):
-    file = args[0]
-    a = RstfileRead(file)
-    fout = open("sobp.dat", 'w')
-    for i in range(a.submachines):
-        b = a.submachine[i]
-        for j in range(len(b.xpos)):
-            fout.writelines("%-10.6f%-10.2f%-10.2f%-10.2f%-10.4e\n" % (b.energy / 1000.0, b.xpos[j] / 10.0, b.ypos[j] /
-                                                                       10.0, b.focus / 10.0, b.particles[j]))
-    fout.close()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("rst_file", help="location of rst file in TRiP98 format", type=str)
+    parser.add_argument("sobp_file", help="location of SHIELD-HIT12A sobp.file to write", type=str)
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
+
+    rst_file_data = RstfileRead(args.rst_file)
+    with open(args.sobp_file, 'w') as fout:
+        fout.writelines("*ENERGY(GEV) X(CM)  Y(CM)     FWHM(cm)  WEIGHT\n")
+        for subm in rst_file_data.submachine:
+            for xpos, ypos, part in zip(subm.xpos, subm.ypos, subm.particles):
+                fout.writelines("{:<10.6f}{:<10.2f}{:<10.2f}{:<10.2f}{:<10.4e}\n".format(
+                    subm.energy / 1000.0, xpos / 10.0, ypos / 10.0, subm.focus / 10.0, part))
+    return 0
 
 
 if __name__ == '__main__':
