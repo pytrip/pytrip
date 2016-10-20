@@ -72,8 +72,12 @@ do
     ## tests could fail
     ${PYBIN}/dicom2trip --help
     ${PYBIN}/trip2dicom --help
+    ${PYBIN}/cubeslice --help
     ${PYBIN}/rst2sobp --help
+    ${PYBIN}/gd2dat --help
     ${PYBIN}/dicom2trip --version
     ${PYBIN}/trip2dicom --version
+    ${PYBIN}/cubeslice --version
     ${PYBIN}/rst2sobp --version
+    ${PYBIN}/gd2dat --version
 done

@@ -42,13 +42,16 @@ import sys
 import os
 import logging
 
+import argparse
+import pytrip as pt
+
 
 class ReadGd(object):
     """This class reads .gd files."""
 
-    def __init__(self, filename, exp=False, agr=False, LET=False):
+    def __init__(self, gd_filename, exp=False, agr=False, let=False):
         """ setup of object """
-        self.filename = filename
+        self.filename = gd_filename
         self.head = []
         self.legend = []
         self.indata = []
@@ -58,20 +61,11 @@ class ReadGd(object):
         self.xlabel = ""
         self.ylabel = ""
         self.h = 0
-        self.export_Bool = exp
+        self.export_bool = exp
         self.agr = agr
-        self.LET_Bool = LET
+        self.let_bool = let
 
         print('\n# Running the conversion scrip gd2dat.py')
-        for par in sys.argv:
-            if par == 'agr':
-                self.agr = True
-                self.export_Bool = True
-            elif par == 'LET':
-                self.LET_Bool = True
-            elif par[:3] == 'exp':
-                self.export_Bool = True
-
         if self.filename is None:
             print("No file name has been specified")
         else:
@@ -101,48 +95,44 @@ class ReadGd(object):
             if line[s] == 'x' or line[s] == 'X':
                 line_len = len(line)
                 self.xlabel = line[s + 2:line_len - 1]
-
             elif line[s] == 'y' or line[s] == 'Y':
                 line_len = len(line)
                 self.ylabel = line[s + 2:line_len - 1]
-            elif line[s] == 'h' \
-                    or line[s] == 'H' \
-                    or line[s] == 'a' \
-                    or line[s] == 'A':
+            elif line[s] in ('h', 'H', 'a', 'A'):
                 line_len = len(line)
                 p = 0
                 while p < line_len:
                     l2 = line[p:p + 2]
-                    legend_Bool = False
+                    legend_bool = False
                     if l2 == 'x ' or l2 == 'X ':
                         self.head.append('x')
                         self.h += 1
                         self.legend.append("x")
-                        legend_Bool = False
+                        legend_bool = False
                     elif l2 == 'y(' or l2 == 'Y(':
                         self.head.append('y')
                         self.h += 1
-                        legend_Bool = True
+                        legend_bool = True
                     elif l2 == 'm(' or l2 == 'M(':
                         self.head.append('m')
                         self.h += 1
-                        legend_Bool = True
+                        legend_bool = True
                     elif l2 == 'n(' or l2 == 'N(':
                         self.head.append('n')
                         self.h += 1
-                        legend_Bool = True
+                        legend_bool = True
                     elif l2 == 'l(' or l2 == 'L(':
                         self.head.append('l')
                         self.h += 1
-                        legend_Bool = True
+                        legend_bool = True
 
-                    if legend_Bool:
-                        legend_Bool = False
+                    if legend_bool:
+                        legend_bool = False
                         t = p + 1
                         while t < line_len:
                             if line[t] == ')':
                                 self.legend.append(line[p + 2:t])
-                                if (self.LET_Bool):
+                                if self.let_bool:
                                     if line[p + 2:t] == "mb^DoseLETme^":
                                         self.head[self.h - 1] = "y"
                                         self.legend[self.h - 1] = "DoseLET"
@@ -159,12 +149,8 @@ class ReadGd(object):
             elif line[s] == 'n' or line[s] == 'N':
                 break
             elif line[s].isdigit() or line[s] == '-':
-
                 line_len = len(line)
-                #                print len(line)     debug line
-                #                print line[:line_len-1]    debug line
                 linelist = (line[:line_len - 1]).split(' ')
-                # print linelist     debug line
                 self.indata.append(linelist)
 
         num = 0
@@ -175,29 +161,26 @@ class ReadGd(object):
                     self.xdata.append(ele[num])
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
-            elif self.head[num] == 'y' or self.head[num] == 'm' or self.head[num] == 'n':  # normal data
+            elif self.head[num] in ('y', 'm', 'n'):  # normal data
                 for ele in self.indata:
                     ydat.append(float(ele[num]))
                 self.data.append(ydat)
             num += 1
 
-        if self.export_Bool:
-            self.export()
-
-    def export(self):
-
-        len_file_name = len(self.filename)
-        out_file_name = self.filename[:len_file_name - 2]
-        if self.agr:
-            out_file_name += "agr"
-            print('# Writing data in a ".agr" file fragment: ' + out_file_name)
-        else:
-            out_file_name += "dat"
-            print('# Writing data in a ".dat" file: ' + out_file_name)
+    def export(self, out_file_name=None):
+        if out_file_name is None:
+            len_file_name = len(self.filename)
+            out_file_name = self.filename[:len_file_name - 2]
+            if self.agr:
+                out_file_name += "agr"
+                print('# Writing data in a ".agr" file fragment: ' + out_file_name)
+            else:
+                out_file_name += "dat"
+                print('# Writing data in a ".dat" file: ' + out_file_name)
 
         out_file = open(out_file_name, 'w')
 
-        if self.LET_Bool:
+        if self.let_bool:
             print('# Exporting also LET data  ')
 
         if self.agr:
@@ -219,13 +202,6 @@ class ReadGd(object):
 
         num = -1
         counter = 0
-
-        #        print self.h
-        #        print self.head
-        #        print self.legend
-        #        print "length self.data ", len(self.data)
-        #        print "length self.xdata ", len(self.xdata)
-        #        exit()
 
         while num < self.h - 1:
 
@@ -259,7 +235,6 @@ class ReadGd(object):
                     str_out += '# '
                 str_out += '@    s' + str(counter) + ' legend  "'
                 str_out += _legend + '"\n'
-                #                sys.stdout.write(str_out)
                 out_file.write(str_out)
 
                 str_out = '@    s' + str(counter) + ' comment "'
@@ -268,7 +243,6 @@ class ReadGd(object):
                 str_out += self.filename + ' "\n'
                 for i, ele in enumerate(self.data[num]):
                     str_out += self.xdata[i] + ' ' + str(ele) + '\n'
-                # sys.stdout.write(str_out)
                 out_file.write(str_out)
                 counter += 1
 
@@ -294,13 +268,28 @@ class ReadGd(object):
                 str_out += ' comment "' + self.filename + ' "\n'
                 for i, ele in enumerate(self.indata):
                     str_out += self.xdata[i] + ' ' + str((float(ele[num]) * float(ele[num - 1]))) + '\n'
-                # sys.stdout.write(str_out)
                 out_file.write(str_out)
 
                 counter += 1
 
 # end special handling for 'm'
 
+
+def main(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("gd_file", help="location of gd file", type=str)
+    parser.add_argument("dat_file", help="location of .dat to write", type=str, nargs='?')
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
+
+    gd_data = ReadGd(args.gd_file, let=False, exp=True)
+    gd_data.export(args.dat_file)
+
+    return 0
+
 if __name__ == '__main__':
     logging.basicConfig()
-    ReadGd(sys.argv[1], LET=True, exp=True)
+    sys.exit(main(sys.argv[1:]))
+
+# TODO add also exporting LET data

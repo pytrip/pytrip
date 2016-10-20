@@ -31,6 +31,7 @@ import pytrip.utils.trip2dicom
 import pytrip.utils.dicom2trip
 import pytrip.utils.cubeslice
 import pytrip.utils.rst2sobp
+import pytrip.utils.gd2dat
 
 from tests.test_base import get_files
 
@@ -80,6 +81,31 @@ class TestRst2SOBP(unittest.TestCase):
     def test_version(self):
         try:
             pytrip.utils.rst2sobp.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
+class TestGd2Dat(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp()
+
+        # convert CT cube to DICOM
+        pytrip.utils.gd2dat.main([self.gd_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
+    def test_version(self):
+        try:
+            pytrip.utils.gd2dat.main(["--version"])
         except SystemExit as e:
             self.assertEqual(e.code, 0)
 

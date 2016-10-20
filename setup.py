@@ -190,10 +190,11 @@ setuptools.setup(
     ext_modules=extensions,
     entry_points={
         'console_scripts': [
-            'rst2sobp=pytrip.utils.rst2sobp:main',
             'trip2dicom=pytrip.utils.trip2dicom:main',
             'dicom2trip=pytrip.utils.dicom2trip:main',
             'cubeslice=pytrip.utils.cubeslice:main',
+            'rst2sobp=pytrip.utils.rst2sobp:main',
+            'gd2dat=pytrip.utils.gd2dat:main',
         ],
     },
     cmdclass=get_cmdclass())
