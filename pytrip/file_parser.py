@@ -19,6 +19,8 @@
 """
 TODO: documentation here.
 """
+
+
 def parse_to_var(data, var, stoptag=""):
     out = {}
     i = 0
