@@ -152,7 +152,7 @@ test_debian_testing_py3:
           bevlet2oer --version
           rst_plot --version
 
-# ---------------------------------- debian 9 (testing) -----------------------------------------------
+# ---------------------------------- ubuntu 16.04 -----------------------------------------------
 
 test_ubuntu_1604_testing_py2:
   box: ubuntu:16.04
