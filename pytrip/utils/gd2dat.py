@@ -41,8 +41,8 @@ python gd2dat.py foo.gd agr
 import sys
 import os
 import logging
-
 import argparse
+
 import pytrip as pt
 
 
