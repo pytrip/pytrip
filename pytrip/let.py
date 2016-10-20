@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-This module provides the LETCube for handling LET data. 
+This module provides the LETCube for handling LET data.
 """
 import os
 

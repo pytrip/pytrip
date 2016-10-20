@@ -18,7 +18,7 @@
 #
 """
 This module holds all the user needs to deal with Volume of interests.
-It provides the top-level VdxCube class, Voi, Slice and Contour classes. 
+It provides the top-level VdxCube class, Voi, Slice and Contour classes.
 The Voi class represents a volume of interest 'VOI', also called region of interest 'ROI' in Dicom lingo.
 Each Voi holds several Slice, which are noramlly synced with an associated CT-cube.
 Each Slice holds one or more Contours.
