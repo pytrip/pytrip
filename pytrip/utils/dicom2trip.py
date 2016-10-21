@@ -22,23 +22,30 @@ Script for converting a DICOM file to TRiP98 / Voxelplan style files.
 """
 import sys
 import logging
-from pytrip import CtxCube, dicomhelper
+import argparse
+
+import pytrip as pt
 
 
 def main(args=sys.argv[1:]):
-    if len(args) != 2:
-        print("\tusage: dicom2trip folder basename")
-        exit()
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("dicom_folder", help="location of folder with DICOM files", type=str)
+    parser.add_argument("ctx_basename", help="basename of output file in TRiP98 format", type=str)
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
 
-    basename = args[1]
+    basename = args.ctx_basename
 
     # import DICOM
-    dcm = dicomhelper.read_dicom_folder(args[0])
-    c = CtxCube()
+    dcm = pt.dicomhelper.read_dicom_folder(args.dicom_folder)
+    c = pt.CtxCube()
     c.read_dicom(dcm)
 
     c.write_trip_header(basename + ".hed")
     c.write_trip_data(basename + ".ctx")
+    return 0
 
 
 if __name__ == '__main__':

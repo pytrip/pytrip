@@ -21,9 +21,10 @@
 TODO: documentation here.
 """
 import sys
+import argparse
 import logging
-from optparse import OptionParser
 
+import pytrip as pt
 from pytrip.utils.rst_read import RstfileRead
 
 
@@ -35,27 +36,25 @@ def main(args=sys.argv[1:]):
     matplotlib.use('Agg')
     from pylab import plt, ylabel, grid, xlabel, array
 
-    parser = OptionParser()
-    parser.add_option("-s", "--submachine", dest="subm", help="Select submachine to plot.", metavar="int")
-    parser.add_option(
-        "-f", "--factor", dest="fac", help="Factor for scaling the blobs. "
-        "Default is 1000.", metavar="int")
-    (options, args) = parser.parse_args(args)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("rst_file", help="location of rst file in TRiP98 format", type=str)
+    parser.add_argument("output_file", help="location of PNG file to save", type=str)
+    parser.add_argument("-s", "--submachine", help="Select submachine to plot.", type=int, default=1)
+    parser.add_argument("-f", "--factor", help="Factor for scaling the blobs. Default is 1000.", type=int, default=1000)
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
 
-    file = args[0]
-
-    sm = 1  # default
-    fac = 1000
-    if options.subm is not None:
-        sm = int(options.subm)
-    if options.fac is not None:
-        fac = int(options.fac)
+    file = args.rst_file
+    sm = args.submachine
+    fac = args.factor
 
     a = RstfileRead(file)
 
     # convert data in submachine to a nice array
     b = a.submachine[sm]
-    print("Submachine: ", sm, " - Energy:", b.energy, "MeV/u")
+    title = "Submachine: {:d} / {:d} - Energy: {:.3f} MeV/u".format(sm, len(a.submachine), b.energy)
+    print(title)
     cc = array(b.particles)
 
     cc = cc / cc.max() * fac
@@ -65,11 +64,10 @@ def main(args=sys.argv[1:]):
     ax.scatter(b.xpos, b.ypos, c=cc, s=cc, alpha=0.75)
     ylabel("mm")
     xlabel("mm")
-
     grid(True)
-
-    plt.show()
-
+    plt.title(title)
+    plt.savefig(args.output_file)
+    plt.close()
 
 if __name__ == '__main__':
     logging.basicConfig()

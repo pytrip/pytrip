@@ -25,14 +25,18 @@ import os
 import tempfile
 import glob
 import logging
-
 import shutil
-
-from tests.test_base import get_files
 
 import pytrip.utils.trip2dicom
 import pytrip.utils.dicom2trip
 import pytrip.utils.cubeslice
+import pytrip.utils.rst2sobp
+import pytrip.utils.gd2dat
+import pytrip.utils.gd2agr
+import pytrip.utils.bevlet2oer
+import pytrip.utils.rst_plot
+
+from tests.test_base import get_files
 
 logger = logging.getLogger(__name__)
 
@@ -52,10 +56,154 @@ class TestTrip2Dicom(unittest.TestCase):
         # check if destination directory is not empty
         self.assertTrue(os.listdir(tmpdir))
 
+    def test_version(self):
+        try:
+            pytrip.utils.trip2dicom.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
+class TestRst2SOBP(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.rst_file = os.path.join(testdir, "tst003001.rst")
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp()
+
+        # convert CT cube to DICOM
+        pytrip.utils.rst2sobp.main([self.rst_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
+    def test_version(self):
+        try:
+            pytrip.utils.rst2sobp.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
+class TestGd2Dat(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp()
+
+        # convert CT cube to DICOM
+        pytrip.utils.gd2dat.main([self.gd_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
+    def test_version(self):
+        try:
+            pytrip.utils.gd2dat.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
+class TestGd2Agr(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp()
+
+        # convert CT cube to DICOM
+        pytrip.utils.gd2agr.main([self.gd_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
+    def test_version(self):
+        try:
+            pytrip.utils.gd2agr.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
+class TestBevLet2Oer(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.gd_file = os.path.join(testdir, "tst003001.bevlet.gd")
+
+    def test_check(self):
+        self.assertRaises(SystemExit, pytrip.utils.bevlet2oer.main, [])
+
+    def test_version(self):
+        try:
+            pytrip.utils.bevlet2oer.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp()
+
+        # convert CT cube to DICOM
+        pytrip.utils.bevlet2oer.main([self.gd_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
+
+class TestRstPlot(unittest.TestCase):
+    def setUp(self):
+        testdir = get_files()
+        self.rst_file = os.path.join(testdir, "tst003001.rst")
+
+    def test_check(self):
+        self.assertRaises(SystemExit, pytrip.utils.rst_plot.main, [])
+
+    def test_version(self):
+        try:
+            pytrip.utils.rst_plot.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+    def test_generate(self):
+        fd, outfile = tempfile.mkstemp(suffix='.png')
+
+        # convert CT cube to DICOM
+        pytrip.utils.rst_plot.main([self.rst_file, outfile])
+
+        # check if destination file is not empty
+        self.assertTrue(os.path.exists(outfile))
+        self.assertGreater(os.path.getsize(outfile), 0)
+        self.assertEqual(imghdr.what(outfile), 'png')
+
+        os.close(fd)  # Windows needs it
+        os.remove(outfile)  # we need only temp filename, not the file
+
 
 class TestDicom2Trip(unittest.TestCase):
     def test_check(self):
         self.assertRaises(SystemExit, pytrip.utils.dicom2trip.main, [])
+
+    def test_version(self):
+        try:
+            pytrip.utils.dicom2trip.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
 
 
 class TestCubeSlicer(unittest.TestCase):
@@ -77,11 +225,11 @@ class TestCubeSlicer(unittest.TestCase):
         except SystemExit as e:
             self.assertEqual(e.code, 0)
 
-    # def test_version(self):
-    #     try:
-    #         pytrip.utils.cubeslice.main(["--version"])
-    #     except SystemExit as e:
-    #         self.assertEqual(e.code, 0)
+    def test_version(self):
+        try:
+            pytrip.utils.cubeslice.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
 
     def test_noarg(self):
         try:

@@ -97,10 +97,22 @@ test_debian_testing_py2:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
-
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
 
 test_debian_testing_py3:
   box: debian:testing
@@ -123,11 +135,24 @@ test_debian_testing_py3:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
 
-# ---------------------------------- debian 9 (testing) -----------------------------------------------
+# ---------------------------------- ubuntu 16.04 -----------------------------------------------
 
 test_ubuntu_1604_testing_py2:
   box: ubuntu:16.04
@@ -150,10 +175,22 @@ test_ubuntu_1604_testing_py2:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
-
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
 
 test_ubuntu_1604_testing_py3:
   box: ubuntu:16.04
@@ -176,12 +213,22 @@ test_ubuntu_1604_testing_py3:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
-
-
-
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
 # ---------------------------------- debian 8 jessie -----------------------------------------------
 
 test_debian_8_jessie_py2:
@@ -208,9 +255,22 @@ test_debian_8_jessie_py2:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
 
 
 
@@ -233,6 +293,19 @@ test_debian_8_jessie_py3:
     - script:
         name: test
         code: |
-          trip2dicom
-          dicom2trip
+          trip2dicom --help
+          dicom2trip --help
           cubeslice --help
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version

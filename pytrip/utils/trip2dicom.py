@@ -23,46 +23,45 @@ Script for converting Voxelplan / TRiP98 Ctx and Vdx data to a DICOM file.
 import os
 import sys
 import logging
+import argparse
 
-from pytrip import CtxCube, VdxCube
+import pytrip as pt
 
 
 def main(args=sys.argv[1:]):
-    print("\ttrip2dicom is a part of pytrip which was developed by \n\t"
-          "Niels Bassler (bassler@phys.au.dk) and \n\t"
-          "Jakob Toftegaard (jakob.toftegaard@gmail.com)")
+    # parse arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument("ctx_data", help="location of CT file (header or data) in TRiP98 format", type=str)
+    parser.add_argument("outputdir", help="Write resulting DICOM files to this directory.", type=str)
+    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
 
-    if len(args) != 2:
-        print("\tusage: trip2dicom.py headerfile output_folder")
-        print("\ttrip2dicom.py tripfile.hed dicomfolder/")
-        exit()
+    output_folder = args.outputdir
 
-    header_file_input_name = args[0]
-    header_basename = os.path.splitext(header_file_input_name)[0]
-    output_folder = args[1]
-
-    _, data_file_name = CtxCube.parse_path(header_file_input_name)
-    data_file_path = CtxCube.discover_file(data_file_name)
+    _, data_file_name = pt.CtxCube.parse_path(args.ctx_data)
+    data_file_path = pt.CtxCube.discover_file(data_file_name)
 
     if not os.path.exists(data_file_path):
         print("CTX file missing")
-        exit()
+        return 1
 
     print("Convert CT images")
-    c = CtxCube()
-    c.read(header_basename)
+    c = pt.CtxCube()
+    c.read(data_file_name)
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     c.write_dicom(output_folder)
 
-    if os.path.exists(header_basename + ".vdx"):
+    ctx_basename = os.path.splitext(data_file_path)[0]
+    ctx_path = ctx_basename + ".vdx"
+    if os.path.exists(ctx_path):
         print("Convert structures")
-        v = VdxCube(c)
-        v.read(header_basename + ".vdx")
-        if not os.path.exists(output_folder):
-            os.makedirs(output_folder)
+        v = pt.VdxCube(c)
+        v.read(ctx_path)
         v.write_dicom(output_folder)
     print("Done")
+    return 0
 
 
 if __name__ == '__main__':

@@ -22,56 +22,83 @@ Convert bevlet (Beams Eye View LET) to OER (Oxygen Enhancement Ratio) values.
 """
 import sys
 import os
+import argparse
 import logging
+
+import numpy as np
 from scipy import interpolate
-from pytrip import __file__
+
+import pytrip as pt
 
 
 class ReadGd(object):
-    '''read file'''
+    """read file"""
 
-    def __init__(self, filename, _dataset=0):
+    def __init__(self, gd_filename, _dataset=0, dat_filename=None):
 
-        if os.path.isfile(filename) is False:
-            raise IOError("Could not find file " + filename)
+        if os.path.isfile(gd_filename) is False:
+            raise IOError("Could not find file " + gd_filename)
 
         if _dataset > 2:
             print("DOS: Error- only 0,1,2 OER set available. Got:", _dataset)
-        path = os.path.dirname(__file__)
-        path_data = (os.path.join(path, "data/OER_barendsen.dat"), os.path.join(path, "data/OER_furusawa_HSG_C12.dat"),
-                     os.path.join(path, "data/OER_furusawa_V79_C12.dat"))
-        fd = open(path_data[_dataset], 'r')
-        lines = fd.readlines()
-        fd.close()
-        x = [line.split()[0] for line in lines]
-        y = [line.split()[1] for line in lines]
+        from pkg_resources import resource_string
+
+        model_files = ['OER_furusawa_V79_C12.dat', 'OER_furusawa_HSG_C12.dat', 'OER_barendsen.dat']
+        model_data = resource_string('pytrip', os.path.join('data', model_files[_dataset]))
+
+        lines = model_data.decode('ascii').split('\n')
+        x = np.asarray([float(line.split()[0]) for line in lines if line])
+        y = np.asarray([float(line.split()[1]) for line in lines if line])
         us = interpolate.UnivariateSpline(x, y, s=0.0)
 
-        gd_file = open(filename, 'r')
+        gd_file = open(gd_filename, 'r')
         gd_lines = gd_file.readlines()
         gd_file.close()
         first = True
         ignore_rest = False
+
+        if dat_filename is not None:
+            out_fd = open(dat_filename, 'w')
+        else:
+            out_fd = sys.stdout
+
         for line in gd_lines:
             if not (line[0].isdigit()):
-                string = "#" + line
+                tmp_string = "#" + line
                 if not first:
                     ignore_rest = True
             else:
                 first = False
                 if ignore_rest:
-                    string = "#" + line
+                    tmp_string = "#" + line
                 else:
-                    let = line.split()[7]
+                    let = float(line.split()[7])
                     oer = us(let)
-                    string = ""
+                    tmp_string = ""
                     for item in line.split():
-                        string = string + item + " "
-                    string = string + str(oer[0]) + "\n"
+                        tmp_string = tmp_string + item + " "
+                    tmp_string = tmp_string + str(oer) + "\n"
 
-            sys.stdout.write(string)
+            out_fd.write(tmp_string)
 
+        if dat_filename is not None:
+            out_fd.close()
+
+
+def main(args=sys.argv[1:]):
+    parser = argparse.ArgumentParser()
+    parser.add_argument("gd_file", help="location of bevlet gd file", type=str)
+    parser.add_argument("dat_file", help="location of OER .dat to write", type=str, nargs='?')
+    parser.add_argument('-m', '--model', help="OER model (0 - furusawa_V79_C12, 1 - furusawa_HSG_C12, 2 - barendsen)",
+                        type=int, choices=[0, 1, 2], default=2)
+    parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    args = parser.parse_args(args)
+
+    ReadGd(args.gd_file, args.model, args.dat_file)
+
+    return 0
 
 if __name__ == '__main__':
     logging.basicConfig()
-    ReadGd(sys.argv[1], 2)
+    sys.exit(main(sys.argv[1:]))

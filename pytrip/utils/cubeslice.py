@@ -24,10 +24,9 @@ import sys
 import argparse
 import logging
 
-from matplotlib.ticker import MultipleLocator
 from numpy import arange, meshgrid, ma
 
-from pytrip import dos, ctx, let
+import pytrip as pt
 
 logger = logging.getLogger(__name__)
 
@@ -44,21 +43,21 @@ def load_data_cube(filename):
     basename_cube = None
 
     # try to load LET cube
-    data_header, _ = let.LETCube.parse_path(filename)
+    data_header, _ = pt.LETCube.parse_path(filename)
     if data_header is not None:
         basename_cube = os.path.splitext(data_header)[0]
-        d = let.LETCube()
+        d = pt.LETCube()
 
     # try to load DOS cube
-    data_header, _ = dos.DosCube.parse_path(filename)
+    data_header, _ = pt.DosCube.parse_path(filename)
     if d is None and data_header is not None:
         basename_cube = os.path.splitext(data_header)[0]
-        d = dos.DosCube()
+        d = pt.DosCube()
 
     if d is not None:
         d.read(filename)
         logger.info("Data cube shape" + str(d.cube.shape))
-        if isinstance(d, dos.DosCube):
+        if isinstance(d, pt.DosCube):
             d *= 0.1  # convert %% to %
 
         dmax = d.cube.max()
@@ -79,14 +78,14 @@ def load_ct_cube(filename):
         return None, None
 
     logger.info("Reading " + filename)
-    ctx_header, _ = ctx.CtxCube.parse_path(filename)
+    ctx_header, _ = pt.CtxCube.parse_path(filename)
 
     if ctx_header is None:
         logger.warn("Path " + filename + " doesn't seem to point to proper CT cube")
         return None, None
 
     basename_cube = os.path.splitext(ctx_header)[0]
-    c = ctx.CtxCube()
+    c = pt.CtxCube()
     c.read(filename)
     logger.info("CT cube shape" + str(c.cube.shape))
 
@@ -101,23 +100,25 @@ def main(args=sys.argv[1:]):
 
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
-    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib.pyplot as plt
     from matplotlib import colors
+    from matplotlib.ticker import MultipleLocator
 
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", help="data cube(dos, let etc)", type=str, nargs='?')
     parser.add_argument("--ct", help="CT cube", type=str, nargs='?')
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument(
         "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=0)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
     parser.add_argument("-o", "--outputdir", dest='outputdir',
                         help="Write resulting files to this directory.", type=str, default=None)
+    parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
+    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     args = parser.parse_args(args)
 
     if args.verbosity == 1:
@@ -282,9 +283,9 @@ def main(args=sys.argv[1:]):
                     # extend='both',
                     orientation='vertical',
                     shrink=0.8)
-                if isinstance(data_cube, let.LETCube):
+                if isinstance(data_cube, pt.LETCube):
                     data_cb.set_label("LET [keV/um]")
-                elif isinstance(data_cube, dos.DosCube):
+                elif isinstance(data_cube, pt.DosCube):
                     data_cb.set_label("Relative dose [%]")
 
         fig.savefig(output_filename)
