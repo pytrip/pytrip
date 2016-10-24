@@ -69,11 +69,10 @@ class VdxCube:
 
     We strongly recommend to load a CT and/or a DOS cube first, see example below:
 
-    c = CtxCube()
-    c.read("TST000000")
-
-    v = VdxCube("", c)
-    v.read("TST000000.vdx")
+    >>> c = CtxCube()
+    >>> c.read("TST000000")
+    >>> v = VdxCube("", c)
+    >>> v.read("TST000000.vdx")
     """
     def __init__(self, content, cube=None):
         self.vois = []
