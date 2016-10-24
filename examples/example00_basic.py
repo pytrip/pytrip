@@ -32,7 +32,7 @@ d.write("out.dos")
 
 # print minium and maximum value found in cubes
 print(d1.cube.min(), d1.cube.max())
-print(d0.cube.min(), d0.cube.max())
+print(d2.cube.min(), d2.cube.max())
 
 # calculate new dose average LET cube
 l1 = pt.LETCube()

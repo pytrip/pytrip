@@ -6,8 +6,8 @@ Examples
 
 .. rubric:: Code snippets demonstrating PyTRiP capabilites.
 
-Example 00
-----------
+Example 00 - Cube arithmetic
+----------------------------
 
 This example demonstrates simple arithmetic on dose- and LET-cubes.
 Two dose cubes from two fields are summed to generate a new total dose cube.
@@ -21,10 +21,10 @@ All data are saved to disk.
    :lines: 19-
 
 
-Example 01
-----------
+Example 01 - Handling structures
+--------------------------------
 
-This example shows how one can select a region inside a CTX data cube, and perform some manipulation of it.
+This example shows how one can select a region inside a CTX data cube using a VDX file, and perform some manipulation of it.
 
 .. literalinclude:: ../examples/example01_vdx.py
    :language: python
@@ -33,7 +33,7 @@ This example shows how one can select a region inside a CTX data cube, and perfo
 
 Working with dose cubes is fully analogous to the CTX cubes.
 	   
-Example 02
+Example 02 - TRiP execution
 ----------
 
 In this example, we demonstrate how to actually perform a treatment plan using TRiP98.

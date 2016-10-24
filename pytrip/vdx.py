@@ -112,13 +112,13 @@ class VdxCube:
 
     def __str__(self):  # Method for printing
         """
-        VOI names separated by & sign
-        :return:
+        :returns: VOI names separated by '&' sign
         """
         return '&'.join(self.get_voi_names())
 
     def add_voi(self, voi):
         """ Appends a new voi to this class.
+
         :param Voi voi: the voi to be appened to this class.
         """
         self.vois.append(voi)
@@ -137,6 +137,7 @@ class VdxCube:
     def import_vdx(self, path):
         """ Reads a structure file in Voxelplan format.
         This method is identical to self.read() and self.read_vdx()
+
         :param str path: Full path including file extension.
         """
         self.read_vdx(path)
@@ -144,12 +145,14 @@ class VdxCube:
     def read(self, path):
         """ Reads a structure file in Voxelplan format.
         This method is identical to self.import_vdx() and self.read_vdx()
+
         :param str path: Full path including file extension.
         """
         self.read_vdx(path)
 
     def read_vdx(self, path):
         """ Reads a structure file in Voxelplan format.
+
         :param str path: Full path including file extension.
         """
         fp = open(path, "r")
@@ -197,6 +200,7 @@ class VdxCube:
 
     def write_to_voxel(self, path):
         """ Writes all VOIs in voxelplan format.
+
         :param str path: Full path, including file extension (.vdx).
         """
         fp = open(path, "w")
@@ -211,6 +215,7 @@ class VdxCube:
     def write_to_trip(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
         Identical to write().
+
         :param str path: Full path, including file extension (.vdx).
         """
         self.concat_contour()
@@ -219,12 +224,14 @@ class VdxCube:
     def write(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
         Identical to write_to_trip().
+
         :param str path: Full path, including file extension (.vdx).
         """
         self.write_to_trip(path)
 
     def create_dicom(self):
         """ Generates and returns Dicom RTSTRUCT object, which holds all VOIs.
+
         :returns: a Dicom RTSTRUCT object holding any VOIs.
         """
         if _dicom_loaded is False:
@@ -286,6 +293,7 @@ class VdxCube:
 
     def write_dicom(self, directory):
         """ Generates a Dicom RTSTRUCT object from self, and writes it to disk.
+
         :param str directory: Diretory where the rtss.dcm file will be saved.
         """
         dcm = self.create_dicom()
@@ -424,9 +432,9 @@ class Voi:
     VOIs may for instance be organs (lung, eye...) or targets (PTV, GTV...), or any other volume of interest.
     """
 
-    sagital = 2  # backwards compability to pytripgui
-    sagittal = 2
-    coronal = 1
+    sagital = 2  #: deprecated, backwards compability to pytripgui, do not use.
+    sagittal = 2  #: id for sagittal view
+    coronal = 1  #: id for coronal view
 
     def __init__(self, name, cube=None):
         self.cube = cube
@@ -469,6 +477,7 @@ class Voi:
 
     def add_slice(self, slice):
         """ Add another slice to this VOI, and update self.slice_z table.
+
         :param Slice slice: the Slice object to be appended.
         """
         key = int(slice.get_position() * 100)
@@ -568,6 +577,7 @@ class Voi:
     def get_2d_slice(self, plane, depth):
         """ Gets a 2d Slice object from the contour in either sagittal or coronal plane.
         Contours will be concated.
+
         :param int plane: either self.sagittal or self.coronal
         :param float depth: position of plane
         :returns: a Slice object.
@@ -640,6 +650,7 @@ class Voi:
 
     def create_dicom_label(self):
         """ Based on self.name and self.type, a Dicom ROI_LABEL is generated.
+
         :returns: a Dicom ROI_LABEL
         """
         roi_label = Dataset()
@@ -649,6 +660,7 @@ class Voi:
 
     def create_dicom_structure_roi(self):
         """ Based on self.name, an empty Dicom ROI is generated.
+
         :returns: a Dicom ROI.
         """
         roi = Dataset()
@@ -657,6 +669,7 @@ class Voi:
 
     def create_dicom_contour_data(self, i):
         """ Based on self.slices, Dicom conours are generated for the Dicom ROI.
+
         :returns: Dicom ROI_CONTOURS
         """
         roi_contours = Dataset()
@@ -789,6 +802,7 @@ class Voi:
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+
         :returns: a str holding the all lines needed for a Voxelplan formatted file.
         """
         if len(self.slices) is 0:
@@ -833,6 +847,7 @@ class Voi:
 
     def get_slice_at_pos(self, z):
         """ Returns nearest VOI Slice at position z.
+
         :param float z: position z in [mm]
         :returns: a Slice object found at position z.
         """
@@ -861,6 +876,7 @@ class Voi:
 
     def get_min_max(self):
         """ Set self.temp_min and self.temp_max if they dont exist.
+
         :returns: minimum and maximum x y coordinates in Voi.
         """
         temp_min, temp_max = None, None
@@ -889,12 +905,14 @@ class Slice:
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
+
         :param Contour contour: the contour to be added.
         """
         self.contour.append(contour)
 
     def add_dicom_contour(self, dcm):
         """ Adds a Dicom CONTOUR to the existing list of contours in this Slice class.
+
         :param Dicom dcm: a Dicom CONTOUR object.
         """
         offset = []
@@ -924,6 +942,7 @@ class Slice:
 
     def calculate_center(self):
         """ Calculate the center position of all contours in this slice.
+
         :returns: a list of center positions [x,y,z] in [mm] for each contour found.
         """
         tot_area = 0
@@ -988,6 +1007,7 @@ class Slice:
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+
         :returns: a str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
@@ -1023,6 +1043,7 @@ class Slice:
 
     def get_min_max(self):
         """ Set self.temp_min and self.temp_max if they dont exist.
+
         :returns: minimum and maximum x y coordinates in Voi.
         """
         temp_min, temp_max = self.contour[0].get_min_max()
@@ -1043,6 +1064,7 @@ class Contour:
 
     def push(self, contour):
         """ Push a contour on the contour stack.
+
         :param Contour contour: a Contour object.
         """
         for i in range(len(self.children)):
@@ -1053,6 +1075,7 @@ class Contour:
 
     def calculate_center(self):
         """ Calculate the center for a single contour, and the area of a contour in 3 dimensions.
+
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
         points = self.contour
@@ -1091,6 +1114,7 @@ class Contour:
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
         out = ""
@@ -1156,6 +1180,7 @@ class Contour:
 
     def print_child(self, level):
         """ Print child to stdout.
+
         :param int level: (TODO: needs documentation)
         """
         for i, item in enumerate(self.children):
