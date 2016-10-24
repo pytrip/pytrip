@@ -4,14 +4,14 @@
 Manipulating cubes
 ==================
 
-.. rubric:: How to use pytrip to manipulate CT and Dos cubes
+.. rubric:: How to use PyTRiP to manipulate CT and Dos cubes
 
 Introduction
 ============
 
-blabla
+In this chapter, we will demonstrate a bit more in detail, how to work with data cubes in PyTRiP.
 
-Using pytrip to load and display CT cube
+Using PyTRiP to load and display CT cube
 ========================================
 
 blabla
@@ -20,7 +20,7 @@ blabla
 
 
 
-Using pytrip to load and display DOS cube
+Using PyTRiP to load and display DOS cube
 =========================================
 
 blabla

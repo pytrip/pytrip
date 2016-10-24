@@ -1,4 +1,4 @@
-Welcome to pytrip98's documentation!
+PyTRiP98 Documentation
 ====================================
 
 Contents:
