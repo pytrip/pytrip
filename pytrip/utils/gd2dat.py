@@ -48,6 +48,7 @@ import pytrip as pt
 
 class ReadGd(object):
     """This class reads .gd files."""
+    # TODO: this class could go into main pytrip/ as well.
 
     def __init__(self, gd_filename, exp=False, agr=False, let=False):
         """ setup of object """
@@ -73,6 +74,8 @@ class ReadGd(object):
             self.read()
 
     def read(self):
+        """ Reads the filename set when constructing the ReadGd class
+        """
         if os.path.isfile(self.filename) is False:
             raise IOError("Could not find file " + self.filename)
 
@@ -168,6 +171,9 @@ class ReadGd(object):
             num += 1
 
     def export(self, out_file_name=None):
+        """ Export data to out_file_name
+        :params str out_file_name: full path to output file including file extension
+        """
         if out_file_name is None:
             len_file_name = len(self.filename)
             out_file_name = self.filename[:len_file_name - 2]
@@ -185,7 +191,7 @@ class ReadGd(object):
 
         if self.agr:
             header = "# Grace project file\n# \n@version 50122 \n"
-            #            header += "@page size 842, 595 \n@page scroll 5% \n"
+            # header += "@page size 842, 595 \n@page scroll 5% \n"
             header += "@page inout 5% \n@link page off \n"
 
             str_out = header + '@    title  "' + self.title + ' "\n'

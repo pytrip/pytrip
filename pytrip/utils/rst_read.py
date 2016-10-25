@@ -19,6 +19,9 @@
 #
 """
 Reads a Raster Scan File (.rst), which is an accelerator control file, specified by GSI.
+
+This function is deprecated and should use PyTRiP raster.py instead. See #156
+Further documentation will not be added.
 """
 
 import os

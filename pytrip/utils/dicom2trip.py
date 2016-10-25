@@ -28,6 +28,8 @@ import pytrip as pt
 
 
 def main(args=sys.argv[1:]):
+    """ Main function for dicom2trip.py
+    """
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("dicom_folder", help="location of folder with DICOM files", type=str)

@@ -18,14 +18,14 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This script plots the raster scan file for verication of the spot delivery of the ion accelerator.
 """
 import sys
 import argparse
 import logging
 
 import pytrip as pt
-from pytrip.utils.rst_read import RstfileRead
+from pytrip.utils.rst_read import RstfileRead  # TODO: use raster.py instead see #156
 
 
 def main(args=sys.argv[1:]):

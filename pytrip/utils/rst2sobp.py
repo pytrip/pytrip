@@ -18,20 +18,23 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This script converts a raster scan file in GSI format to a sobp.dat file which can be used by FLUKA or SHIELD-HIT12A
+to simulate the beam using Monte Carlo methods.
 """
 import sys
 import logging
 import argparse
 
 import pytrip as pt
-from pytrip.utils.rst_read import RstfileRead
+from pytrip.utils.rst_read import RstfileRead  # TODO: should use raster.py instead, see #156
 
 
 def main(args=sys.argv[1:]):
+    """ Main function of the rst2sobp script.
+    """
     parser = argparse.ArgumentParser()
-    parser.add_argument("rst_file", help="location of rst file in TRiP98 format", type=str)
-    parser.add_argument("sobp_file", help="location of SHIELD-HIT12A sobp.file to write", type=str)
+    parser.add_argument("rst_file", help="path to .rst input file in TRiP98 format", type=str)
+    parser.add_argument("sobp_file", help="path to the SHIELD-HIT12A/FLUKA sobp.dat output file", type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     args = parser.parse_args(args)
