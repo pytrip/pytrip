@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module contains a parser method for parsing voxelplan files.
 """
 
 
