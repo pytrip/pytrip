@@ -28,7 +28,7 @@ You can display the entire doscube by simply printing its string
     >>> dc
     ....
 
-
+We recommend you to take a look at the :doc:`Examples </examples>` and browse the :ref:`modindex` page.
 
 Converters
 ==========

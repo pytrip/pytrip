@@ -47,35 +47,31 @@ To see all available methods and attributes, one can run the
 
 command, or read the detailed documentation.
 
+Quick Installation Guide
+========================
 
-Installing
-==========
+PyTRiP is available for python 2.7, 3.2 or later, and can be installed via pip. If you intend to use **pytripgui** you
+need the python 2.7 version.
 
-PyTRiP is available for python2 and python3, and can be installed via pip.
+We recommend that you run a modern Linux distribution, like: **Ubuntu 16.04** or newer, **Debian 9 Stretch**
+(currently known as testing) or any updated rolling release (archLinux, openSUSE tumbleweed). In that case,
+be sure you have **python** and **python-pip** installed.
+To get them on Debian or Ubuntu, type being logged in as normal user::
 
-Prerequisites
--------------
+    $ sudo apt-get install python-pip
 
-  * python 2.7, 3.2 or later
-  * `NumPy <http://www.numpy.org/>`_ -- Better arrays and data processing.
-  * `matplotlib <http://matplotlib.org/>`_ -- Needed for plotting.
-  * `paramiko <http://www.paramiko.org/>`_ -- Needed for remote execution of TRiP98 via SSH.
+To automatically download and install the pytrip library, type::
 
+    $ sudo pip install pytrip98
 
-Python installers can be found at the python web site
-(http://python.org/download/).
+NOTE: the package is named **pytrip98**, while the name of library is **pytrip**.
 
-Installing using pip (all platforms)
-----------------------------------------------------
-The easiest way to install pydicom is using `pip <https://pypi.python.org/pypi/pip>`_::
+This command will automatically download and install **pytrip** for all users in your system.
 
-    pip install pytrip98
+For more detailed instruction, see the :doc:`Detailed Installation Guide </install>`
 
-Depending on your python version, there may be some warning messages,
-but the install should still be ok.
-
-.. note::
-    Pip comes pre-installed with Python newer than 3.4 and 2.?? (for 2.x family)
+To learn how to install **pytripgui** graphical user interface, proceed to following document page:
+https://github.com/pytrip/pytripgui
 
 
 Using PyTRiP
@@ -85,7 +81,7 @@ Once installed, the package can be imported at a python command line or used
 in your own python program with ``import pytrip as pt``.
 See the `examples directory
 <https://github.com/pytrip/pytrip/tree/examples>`_
-for both kinds of uses. Also see the :doc:`User Guide </user_guide>`
+for both kinds of uses. Also see the :doc:`User's Guide </user_guide>`
 for more details of how to use the package.
 
 
