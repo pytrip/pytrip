@@ -17,7 +17,8 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This module provides the DensityCube class and some special class to find robust angles for treament
+based on a quality index factor defined in http://dx.doi.org/10.3109/0284186X.2015.1067720.
 """
 import gc
 import os
@@ -34,16 +35,25 @@ import pytriplib
 
 
 def cmp_sort(a, b):
+    """ Sorting key. If gantry angle is equal, then sort by couch angle.
+    """
     if a["gantry"] == b["gantry"]:
         return a["couch"] - b["couch"]
     return a["gantry"] - b["gantry"]
 
 
 class DensityProjections:
+    """
+    Functions here were mosly used buy for the publication http://dx.doi.org/10.3109/0284186X.2015.1067720
+    """
     def __init__(self, cube):
+        """ TODO: Documentation
+        """
         self.cube = cube
 
     def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+        """ TODO: Documentation
+        """
         l = self.calculate_quality_list(voi, gantry, couch, calculate_from, stepsize, avoid=avoid, gradient=gradient)
         l = sorted(l, key=cmp_to_key(cmp_sort))
         grid_data = []
@@ -53,6 +63,8 @@ class DensityProjections:
         return l
 
     def calculate_quality_list(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+        """ TODO: Documentation
+        """
         q = Queue(32767)
         process = []
         d = voi.get_voi_cube()
@@ -78,6 +90,8 @@ class DensityProjections:
         return result
 
     def calculate_best_angles(self, voi, fields, min_dist=20, gantry_limits=[-90, 90], couch_limits=[0, 359], avoid=[]):
+        """ TODO: Documentation
+        """
         grid = self.calculate_quality_list(
             voi,
             range(gantry_limits[0], gantry_limits[1], 20),
@@ -98,6 +112,8 @@ class DensityProjections:
         return best_angles
 
     def optimize_angle(self, voi, couch, gantry, margin, iteration, avoid=[]):
+        """ TODO: Documentation
+        """
         if iteration is 0:
             return [gantry, couch]
         grid = self.calculate_quality_list(
@@ -115,6 +131,8 @@ class DensityProjections:
                                        avoid=[],
                                        voi_cube=None,
                                        gradient=True):
+        """ TODO: Documentation
+        """
         os.nice(1)
         for couch_angle in couch:
             qual = self.calculate_angle_quality(voi, gantry, couch_angle, calculate_from, stepsize, avoid, voi_cube,
@@ -130,6 +148,9 @@ class DensityProjections:
                                 avoid=[],
                                 voi_cube=None,
                                 gradient=True):
+        """
+        Calculates a quality index for a given gantry/couch combination.
+        """
         voi_min, voi_max = voi.get_min_max()
         for v in avoid:
             v_min, v_max = v.get_min_max()
@@ -156,12 +177,13 @@ class DensityProjections:
 
     def calculate_projection(self, voi, gantry, couch, calculate_from=0, stepsize=1.0):
         """
-        :param voi: tumortarget, type is Voi
-        :param gantry: angle in degree
-        :param couch: angle in degree
-        :param calculate_from: 0 is mass center 1 is the most distance point
-        in the tumor from the beamaxis
-        :param stepsize: relative to pixelsize 1 is a step of 1 pixel
+        TODO: documentation
+
+        :param Voi voi: tumortarget, type is Voi
+        :param float gantry: angle in degrees
+        :param float couch: angle in degrees
+        :param int calculate_from: 0 is mass center 1 is the most distant point in the tumor from the beamaxis
+        :param float stepsize: relative to pixelsize, 1 is a step of 1 pixel
         :return:
         """
         # min_structure = 5 TODO why not used ?
@@ -196,31 +218,55 @@ class DensityProjections:
         return data, start, [b, c]
 
     def calculate_back_start_voi(self, voi, start, beam_axis):
+        """ TODO: Documentation
+
+        :params voi:
+        :params start:
+        :params beam axis:
+        :returns:
+        """
         points = voi.get_3d_polygon() - start
         distance = min(np.dot(points, beam_axis))
         return start + distance * beam_axis
 
     def calculate_front_start_voi(self, voi, start, beam_axis):
+        """ TODO: Documentation
+
+        :params voi:
+        :params start:
+        :params beam axis:
+        :returns:
+        """
         points = voi.get_3d_polygon() - start
         distance = max(np.dot(points, beam_axis))
         return start + distance * beam_axis
 
 
 class DensityCube(Cube):
-    def __init__(self, ctxcube):
+    """ Class for working with denisity cubes [g/cm3]
+    """
+
+    def __init__(self, ctxcube, hlut_path="/data/hlut_den.dat"):
+        """ Creates a DensityCube based on a CTX cube and a Hounsfield lookup table.
+
+        :params CtxCube ctxcube:
+        :params str hlut_path: path to Hounsfield lookup table, relative from where pytrip was executed.
+        """
         self.ctxcube = ctxcube
         super(DensityCube, self).__init__(ctxcube)
         self.type = "Density"
         self.directory = os.path.dirname(os.path.abspath(__file__))
-        self.hlut_file = self.directory + "/data/hlut_den.dat"
+        self.hlut_file = os.path.join(self.directory, hlut_path)
         self.import_hlut()
         self.calculate_cube()
         self.ctxcube = None
 
     def calculate_cube(self):
+        """
+        Calculate the density values from HU table and interpolating the loaded hlut_data.
+        """
         ctxdata = self.ctxcube.cube
         ctxdata = ctxdata.reshape(self.dimx * self.dimy * self.dimz)
-        # ~ print self.dimx*self.dimy*self.dimz/1000000
         gc.collect()
 
         cube = interpolate.splev(ctxdata, self.hlut_data)
@@ -229,6 +275,8 @@ class DensityCube(Cube):
         self.cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
 
     def import_hlut(self):
+        """ Imports the Hounsfield lookup table and stores it into self.hlut_data
+        """
         fp = open(self.hlut_file, "r")
         lines = fp.read()
         fp.close()
