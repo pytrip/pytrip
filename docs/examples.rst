@@ -4,7 +4,7 @@
 Examples
 ========
 
-.. rubric:: Code snippets demonstrating PyTRiP capabilites.
+.. rubric:: Code snippets demonstrating PyTRiP capabilities.
 
 Example 00 - Cube arithmetic
 ----------------------------
@@ -34,7 +34,7 @@ This example shows how one can select a region inside a CTX data cube using a VD
 Working with dose cubes is fully analogous to the CTX cubes.
 	   
 Example 02 - TRiP execution
-----------
+---------------------------
 
 In this example, we demonstrate how to actually perform a treatment plan using TRiP98.
 Most of the lines concern with the setup of TRiP.

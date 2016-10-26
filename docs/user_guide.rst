@@ -16,7 +16,7 @@ The full potential of PyTRiP is exposed when using it as a library.
 Using the `dir()` and `help()` methods, you may explore what functions are available, check also the index and module tables found in this documentation. 
 
 CT and Dose data are handled by the "CtxCube" and "DosCube" classes, respectively. Structures (volume of interests) are handled by the VdxCube class.
-For instance, when a treament plan was made the resulting 3D dose distribution (and referred to as a "DosCube").
+For instance, when a treatment plan was made the resulting 3D dose distribution (and referred to as a "DosCube").
 
     >>> import pytrip as pt
     >>> dc = pt.DosCube()
@@ -52,7 +52,3 @@ A few converters based on PyTRiP are supplied as well. These converters are:
 
 :rst2sobp.py:
    Converts a raster scan file to a file which can be read by FLUKA or SHIELD-HIT12A.
-
-  
-			   
-			   

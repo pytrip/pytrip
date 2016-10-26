@@ -75,7 +75,7 @@ https://github.com/pytrip/pytripgui
 
 
 Using PyTRiP
-=============
+============
 
 Once installed, the package can be imported at a python command line or used
 in your own python program with ``import pytrip as pt``.
@@ -103,4 +103,4 @@ License
 =======
 
 PyTRiP98 is licensed under `GPLv3
-<https://github.com/pytrip/pytrip/blob/master/source/GPL_LICENSE.txt>`_.
+<https://github.com/pytrip/pytrip/blob/master/source/GPL_LICENSE>`_.
