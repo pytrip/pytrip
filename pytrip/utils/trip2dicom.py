@@ -29,6 +29,8 @@ import pytrip as pt
 
 
 def main(args=sys.argv[1:]):
+    """ Main function for trip2dicom.py
+    """
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("ctx_data", help="location of CT file (header or data) in TRiP98 format", type=str)

@@ -32,6 +32,11 @@ logger = logging.getLogger(__name__)
 
 
 def load_data_cube(filename):
+    """ Loads either a Dos or LET-cube.
+
+    :params str filname: path to Dos or LET-cube.
+    :returns: a DosCube or LETCube object and a str containing the path to the basename.
+    """
 
     if not filename:
         logger.warn("Empty data cube filename")
@@ -71,7 +76,11 @@ def load_data_cube(filename):
 
 
 def load_ct_cube(filename):
-    # load CT
+    """ loads the CT cube
+
+    :params str filename: path to filename which must be loaded
+    :returns: a CtxCube object and a str containing the path to the basename.
+    """
 
     if not filename:
         logger.warn("Empty CT cube filename")
@@ -97,6 +106,8 @@ def load_ct_cube(filename):
 
 
 def main(args=sys.argv[1:]):
+    """ The main function for cubeslice.py
+    """
 
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified

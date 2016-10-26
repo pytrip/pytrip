@@ -1,16 +1,15 @@
-Welcome to pytrip98's documentation!
-====================================
+PyTRiP98 Documentation
+======================
 
 Contents:
 
 .. toctree::
    :maxdepth: 2
 
-   readme
-   install
-   contributing
-   technical
-   authors
+   getting_started.rst
+   install.rst
+   user_guide.rst
+   interaction_with_trip.rst
    examples.rst
    Source Code <apidoc/pytrip>
 

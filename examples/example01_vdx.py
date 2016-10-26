@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This example shows how to use contours to select volume of interests inside a CTX cube. The VOI is then manipulated.
 """
 import pytrip as pt
 
@@ -49,6 +49,8 @@ mask = (voi_cube.cube == 1000)
 # Therefore we can apply the mask cube to the ctx cube and work with the values.
 # For instance we can set all HUs to zero within the Voi:
 my_ctx.cube[mask] = 0
+# or add 100 to all HUs of the voxels inside the mask:
+# my_ctx.cube[mask] += 100
 
 # save masked CT to the file in current directory
 masked_ctx = "masked.ctx"

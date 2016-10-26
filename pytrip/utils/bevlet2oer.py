@@ -18,7 +18,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Convert bevlet (Beams Eye View LET) to OER (Oxygen Enhancement Ratio) values.
+Convert .bevlet (Beams Eye View LET) to OER (Oxygen Enhancement Ratio) values.
 """
 import sys
 import os
@@ -31,10 +31,16 @@ from scipy import interpolate
 import pytrip as pt
 
 
-class ReadGd(object):
-    """read file"""
+class ReadGd(object):  # TODO: rename me
+    """Reads a bevlet formatted file.
+    TODO: must be renamed
+    """
 
     def __init__(self, gd_filename, _dataset=0, dat_filename=None):
+        """
+        :params str gd_filename: full path to bevlet file, including file extension.
+        :params str dat_filename: optional full path to output file name.
+        """
 
         if os.path.isfile(gd_filename) is False:
             raise IOError("Could not find file " + gd_filename)
@@ -51,9 +57,9 @@ class ReadGd(object):
         y = np.asarray([float(line.split()[1]) for line in lines if line])
         us = interpolate.UnivariateSpline(x, y, s=0.0)
 
-        gd_file = open(gd_filename, 'r')
-        gd_lines = gd_file.readlines()
-        gd_file.close()
+        with open(gd_filename, 'r') as gd_file:
+            gd_lines = gd_file.readlines()
+
         first = True
         ignore_rest = False
 
@@ -87,7 +93,7 @@ class ReadGd(object):
 
 def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
-    parser.add_argument("gd_file", help="location of bevlet gd file", type=str)
+    parser.add_argument("gd_file", help="location of .bevlet file", type=str)
     parser.add_argument("dat_file", help="location of OER .dat to write", type=str, nargs='?')
     parser.add_argument('-m', '--model', help="OER model (0 - furusawa_V79_C12, 1 - furusawa_HSG_C12, 2 - barendsen)",
                         type=int, choices=[0, 1, 2], default=2)

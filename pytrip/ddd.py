@@ -25,21 +25,31 @@ from scipy import interpolate
 
 
 class DDD:
+    """ Class for handling Depth-Dose Data.
+    """
     def __init__(self):
         pass
 
     def get_ddd_data(self, energy, points):
+        """ TODO: documentation
+        """
         e = self.get_nearest_energy(energy)
         return interpolate.splev(points, self.ddd_data[e])
 
     def get_dist(self, energy):
+        """ TODO: documentation
+        """
         return interpolate.splev(energy, self.max_dist)
 
     def get_ddd_by_energy(self, energy, points):
+        """ TODO: documentation
+        """
         ev_point = np.array([points, [energy] * len(points)])
         return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
 
     def get_ddd_grid(self, energy_list, n):
+        """ TODO: documentation
+        """
         # ddd_list = []
         energy = []
         dist = []
@@ -90,19 +100,22 @@ class DDD:
         # out = [dist, energy, data]
         # return np.reshape(np.transpose(out), (len(energy_list), n, 3))
 
-    def load_ddd(self, folderpath):
+    def load_ddd(self, directory):
+        """ Loads all .ddd files found in 'directory'
+
+        :params str directory: directory where the .ddd files are found.
+        """
         x_data = []
         y_data = []
         points = [[], []]
         ddd = {}
         max_dist = []
-        items = glob.glob(folderpath)
+        items = glob.glob(directory)
         for item in items:
             x_data = []
             y_data = []
-            f = open(item)
-            data = f.read()
-            f.close()
+            with open(item, 'r') as f:
+                data = f.read()
             lines = data.split('\n')
             for n, line in enumerate(data.split("\n")):
                 if line.find("energy") is not -1:

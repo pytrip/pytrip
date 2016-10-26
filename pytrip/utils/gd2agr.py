@@ -29,6 +29,8 @@ from pytrip.utils.gd2dat import ReadGd
 
 
 def main(args=sys.argv[1:]):
+    """ Main function for gd2agr.
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument("gd_file", help="location of gd file", type=str)
     parser.add_argument("dat_file", help="location of .dat to write", type=str, nargs='?')

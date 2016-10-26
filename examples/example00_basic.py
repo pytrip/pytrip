@@ -17,15 +17,9 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+Simple example of how to do arithmetic on Cube objects in PyTRiP.
 """
 import pytrip as pt
-
-# read a dose cube, divide by 2.0, and write to a new cube:
-d0 = pt.DosCube()
-d0.read("box050001.dos")
-d0 = d0 / 2.0
-d0.write("out0.dos")
 
 # sum two dose cubes, write result:
 print("Two half boxes: out.dos")
@@ -38,7 +32,7 @@ d.write("out.dos")
 
 # print minium and maximum value found in cubes
 print(d1.cube.min(), d1.cube.max())
-print(d0.cube.min(), d0.cube.max())
+print(d2.cube.min(), d2.cube.max())
 
 # calculate new dose average LET cube
 l1 = pt.LETCube()
@@ -48,7 +42,3 @@ l2.read("box053000.dosemlet.dos")
 
 l = ((d1 * l1) + (d2 * l2)) / (d1 + d2)
 l.write("out.dosemlet.dos")
-
-# load a vdx
-v = pt.VdxCube("", d0)
-v.read("contours.vdx")

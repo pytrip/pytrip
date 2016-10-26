@@ -71,11 +71,11 @@ my_plan.set_dedx_file(dedx_path)
 my_plan.set_hlut_file(hlut_path)
 my_plan.set_sis_file(sis_path)
 
-# To enable remote access to trip, uncomment following:
+# To enable remote access to trip, uncomment and eddit the following:
 # my_plan.set_remote_state(True)
-# my_plan.set_server("titan.phys.au.dk")
+# my_plan.set_server("titan.phys.au.dk")  # location of remote TRiP98 installation. Needs SSH access.
 # my_plan.set_username("xxxxxxxxx")
-# my_plan.set_password("xxxxxxxxx")
+# my_plan.set_password("xxxxxxxxx")  # to login using SSH-keys, leave this commented out.
 
 # add target VOI to the plan
 my_plan.add_voi(target_voi)

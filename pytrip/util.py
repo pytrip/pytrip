@@ -22,10 +22,20 @@ Module with auxilliary functions (mostly internal use).
 
 
 def get_class_name(item):
+    """
+    :returns: name of class of 'item' object.
+    """
     return item.__class__.__name__
 
 
 def evaluator(funct, name='funct'):
+    """ Wrapper for evaluating a function.
+
+    :params str funct: string which will be parsed
+    :params str name: name which will be assigned to created function.
+
+    :returns: function f build from 'funct' input.
+    """
     code = compile(funct, name, 'eval')
 
     def f(x):
