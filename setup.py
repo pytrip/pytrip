@@ -166,7 +166,7 @@ setuptools.setup(
         'Environment :: Console',
         'Operating System :: POSIX :: Linux',
         'Operating System :: Unix',
-        'Operating System:: Microsoft:: Windows',
+        'Operating System :: Microsoft:: Windows',
         'Operating System :: MacOS',
 
         # Pick your license as you wish (should match "license" above)
