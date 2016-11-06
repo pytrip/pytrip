@@ -1,3 +1,4 @@
+
 PyTRiP98 Documentation
 ======================
 
@@ -11,6 +12,7 @@ Contents:
    user_guide.rst
    interaction_with_trip.rst
    examples.rst
+   authors.rst
    Source Code <apidoc/pytrip>
 
 Indices and tables
