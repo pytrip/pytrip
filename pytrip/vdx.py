@@ -697,9 +697,18 @@ class Voi:
             line = content[i]
             if re.match("voi", line) is not None:
                 break
-#            TODO slices never used - does it make sense ?
-#            if re.match("#TransversalObjects", line) is not None:
-#                slices = int(line.split()[1])
+            if re.match("slice#", line) is not None:
+                s = Slice()
+                i = s.read_vdx_old(content, i)
+                if s.get_position() is None:
+                     raise Exception("cannot calculate slice position")
+                key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
+                self.slice_z.append(key)
+                self.slices[key] = s
+                print("sc,", s.contour[0].contour)
+            if re.match("#TransversalObjects", line) is not None:
+                slices = int(line.split()[1])
+                print("slices at beginning: " + str(slices))
             i += 1
         print(items)
         return i - 1
@@ -989,6 +998,32 @@ class Slice:
             i += 1
         return i - 1
 
+    def read_vdx_old(self, content, i):
+        """ Reads a single Slice from Voxelplan .vdx data from 'content'.
+
+        :params [str] content: list of lines with the .vdx content
+        :params int i: line number to the list.
+        :returns: current line number, after parsing the VOI.
+        """
+        line1 = content[i]
+        line2 = content[i+1]
+        line3 = content[i+2]
+
+        if not line1.startswith("slice#"):
+            return None
+        if not line2.startswith("#points"):
+            return None
+        if not line3.startswith("points"):
+            return None
+
+        self.slice_in_frame = float(line1.split()[1])
+
+        c = Contour([])
+        c.read_vdx_old(z_pos=self.slice_in_frame, xy_line=line3.split()[1:])
+        self.add_contour(c)
+
+        return i
+
     def create_dicom_contours(self):
         """ Creates and returns a list of Dicom CONTOUR objects from self.
         """
@@ -1149,6 +1184,17 @@ class Contour:
                     set_point = True
             i += 1
         return i - 1
+
+    def read_vdx_old(self, z_pos, xy_line):
+        """ Reads a single Contour from Voxelplan .vdx data from 'content'.
+        :returns: current line number, after parsing the VOI.
+        """
+
+        xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]
+        for x,y in xy_pairs:
+            self.contour.append([float(x), float(y), float(z_pos)])
+
+        return None
 
     def add_child(self, contour):
         """ (TODO: Document me)
