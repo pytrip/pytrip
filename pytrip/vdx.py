@@ -700,17 +700,19 @@ class Voi:
             if re.match("slice#", line) is not None:
                 s = Slice()
                 i = s.read_vdx_old(content, i)
+                for cont1 in s.contour:
+                    for cont2 in cont1.contour:
+                        cont2[0] *= self.cube.pixel_size
+                        cont2[1] *= self.cube.pixel_size
+                        cont2[2] *= self.cube.slice_distance
                 if s.get_position() is None:
                      raise Exception("cannot calculate slice position")
-                key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
+                key = int((float(s.get_position()) - min(self.cube.slice_pos)))
                 self.slice_z.append(key)
                 self.slices[key] = s
-                print("sc,", s.contour[0].contour)
             if re.match("#TransversalObjects", line) is not None:
                 slices = int(line.split()[1])
-                print("slices at beginning: " + str(slices))
             i += 1
-        print(items)
         return i - 1
 
     def read_vdx(self, content, i):
@@ -1192,7 +1194,7 @@ class Contour:
 
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]
         for x,y in xy_pairs:
-            self.contour.append([float(x), float(y), float(z_pos)])
+            self.contour.append([float(x)/10.0, float(y)/10.0, float(z_pos)])
 
         return None
 
