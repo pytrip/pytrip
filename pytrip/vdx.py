@@ -700,14 +700,15 @@ class Voi:
             if re.match("slice#", line) is not None:
                 s = Slice()
                 i = s.read_vdx_old(content, i)
-                for cont1 in s.contour:
-                    for cont2 in cont1.contour:
-                        cont2[0] *= self.cube.pixel_size
-                        cont2[1] *= self.cube.pixel_size
-                        cont2[2] *= self.cube.slice_distance
+                if self.cube is not None:
+                    for cont1 in s.contour:
+                        for cont2 in cont1.contour:
+                            cont2[0] *= self.cube.pixel_size
+                            cont2[1] *= self.cube.pixel_size
+                            cont2[2] *= self.cube.slice_distance
                 if s.get_position() is None:
                      raise Exception("cannot calculate slice position")
-                key = int((float(s.get_position()) - min(self.cube.slice_pos)))
+                key = 100*int((float(s.get_position()) - min(self.cube.slice_pos)))
                 self.slice_z.append(key)
                 self.slices[key] = s
             if re.match("#TransversalObjects", line) is not None:
