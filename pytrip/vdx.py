@@ -707,12 +707,16 @@ class Voi:
                             cont2[1] *= self.cube.pixel_size
                             cont2[2] *= self.cube.slice_distance
                 if s.get_position() is None:
-                     raise Exception("cannot calculate slice position")
-                key = 100*int((float(s.get_position()) - min(self.cube.slice_pos)))
+                    raise Exception("cannot calculate slice position")
+                if self.cube is not None:
+                    key = 100 * int((float(s.get_position()) - min(self.cube.slice_pos)))
+                else:
+                    key = 100 * int(s.get_position())
                 self.slice_z.append(key)
                 self.slices[key] = s
             if re.match("#TransversalObjects", line) is not None:
-                slices = int(line.split()[1])
+                pass
+                # slices = int(line.split()[1]) # TODO information about number of skipped slices
             i += 1
         return i - 1
 
@@ -1009,8 +1013,8 @@ class Slice:
         :returns: current line number, after parsing the VOI.
         """
         line1 = content[i]
-        line2 = content[i+1]
-        line3 = content[i+2]
+        line2 = content[i + 1]
+        line3 = content[i + 2]
 
         if not line1.startswith("slice#"):
             return None
@@ -1194,8 +1198,8 @@ class Contour:
         """
 
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]
-        for x,y in xy_pairs:
-            self.contour.append([float(x)/10.0, float(y)/10.0, float(z_pos)])
+        for x, y in xy_pairs:
+            self.contour.append([float(x) / 10.0, float(y) / 10.0, float(z_pos)])
 
         return None
 

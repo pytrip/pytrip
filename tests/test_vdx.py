@@ -45,7 +45,7 @@ class TestVdx(unittest.TestCase):
         logger.info("Creating CT cube from path " + self.cube000)
         c = pt.CtxCube()
         c.read(self.cube000)
-        v = pt.VdxCube(c, "")
+        v = pt.VdxCube("", c)
         logger.info("Adding VDX from path " + self.vdx)
         v.read(self.vdx)
 
@@ -86,19 +86,20 @@ class TestVdx(unittest.TestCase):
         target_voi = v.get_voi_by_name('target')
         self.assertEqual(target_voi.get_name(), 'target')
         self.assertEqual(target_voi.get_thickness(), 3)
-        self.assertEqual(target_voi.number_of_slices(), 0)  # TODO why there are no slices ?
+        self.assertEqual(target_voi.number_of_slices(), 18)
 
         logger.info("Checking Voi get_3d_polygon method")
         self.assertIsNotNone(target_voi.get_3d_polygon())
 
-        # TODO check why next is not working ?
-        # target_voi.get_2d_projection_on_basis( basis=((1,0,0),(0,2,0)))
+        # TODO add some assertions
+        target_voi.get_2d_projection_on_basis(basis=((1, 0, 0), (0, 2, 0)))
 
-        # TODO fix it !
-        # vc = target_voi.get_voi_cube()
+        # TODO add some assertions
+        vc = target_voi.get_voi_cube()
+        self.assertTrue(vc.is_compatible(c))
 
-        # TODO check it
-        # target_voi.create_point_tree()
+        # TODO add some assertions
+        target_voi.create_point_tree()
 
     def test_read_solo(self):
         logger.info("Checking reading VdxCube without CT cube loaded")
