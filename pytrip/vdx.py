@@ -682,7 +682,7 @@ class Voi:
 
     def read_vdx_old(self, content, i):
         """ Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
-
+        VDX format 1.2.
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -692,7 +692,6 @@ class Voi:
         self.name = items[1]
         self.type = int(items[3])
         i += 1
-        #        slices = 10000
         while i < len(content):
             line = content[i]
             if re.match("voi", line) is not None:
@@ -703,9 +702,10 @@ class Voi:
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
-                            cont2[2] *= self.cube.slice_distance
+                            cont2[2] = self.cube.slice_to_z(cont2[2])  # change from slice number to mm
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
+                # TODO investigate why 100 multiplier is needed
                 if self.cube is not None:
                     key = 100 * int((float(s.get_position()) - min(self.cube.slice_pos)))
                 else:
@@ -714,13 +714,13 @@ class Voi:
                 self.slices[key] = s
             if re.match("#TransversalObjects", line) is not None:
                 pass
-                # slices = int(line.split()[1]) # TODO information about number of skipped slices
+                # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
         return i - 1
 
     def read_vdx(self, content, i):
         """ Reads a single VOI from Voxelplan .vdx data from 'content'.
-
+        Format 2.0
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -814,7 +814,7 @@ class Voi:
         return abs(float(self.slice_z[1]) - float(self.slice_z[0])) / 100
 
     def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
 
         :returns: a str holding the all lines needed for a Voxelplan formatted file.
         """
@@ -968,7 +968,7 @@ class Slice:
 
     def read_vdx(self, content, i):
         """ Reads a single Slice from Voxelplan .vdx data from 'content'.
-
+        VDX format 2.0.
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1005,7 +1005,7 @@ class Slice:
 
     def read_vdx_old(self, content, i):
         """ Reads a single Slice from Voxelplan .vdx data from 'content'.
-
+        VDX format 1.2.
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1024,7 +1024,7 @@ class Slice:
         self.slice_in_frame = float(line1.split()[1])
 
         c = Contour([])
-        c.read_vdx_old(z_pos=self.slice_in_frame, xy_line=line3.split()[1:])
+        c.read_vdx_old(slice_number=self.slice_in_frame, xy_line=line3.split()[1:])
         self.add_contour(c)
 
         return i
@@ -1045,7 +1045,7 @@ class Slice:
         return contour_list
 
     def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0)
 
         :returns: a str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
@@ -1165,6 +1165,7 @@ class Contour:
 
     def read_vdx(self, content, i):
         """ Reads a single Contour from Voxelplan .vdx data from 'content'.
+        VDX format 2.0.
 
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
@@ -1190,16 +1191,18 @@ class Contour:
             i += 1
         return i - 1
 
-    def read_vdx_old(self, z_pos, xy_line):
-        """ Reads a single Contour from Voxelplan .vdx data from 'content'.
-        :returns: current line number, after parsing the VOI.
+    def read_vdx_old(self, slice_number, xy_line):
+        """ Reads a single Contour from Voxelplan .vdx data from 'content' and appends it to self.contour data
+        VDX format 1.2.
+        :params slice_number: list of numbers (as characters) with slice number
+        :params xy_line: list of numbers (as characters) representing X and Y coordinates of a contour
         """
 
-        xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]
+        # and example of xy_line: 3021 4761 2994 4899 2916 5015
+        xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]  # make list of pairs
         for x, y in xy_pairs:
-            self.contour.append([float(x) / 16.0, float(y) / 16.0, float(z_pos)])
-
-        return None
+            # TRiP98 saves X,Y coordinates as integers, to get [mm] they needs to be divided by 16
+            self.contour.append([float(x) / 16.0, float(y) / 16.0, float(slice_number)])
 
     def add_child(self, contour):
         """ (TODO: Document me)
