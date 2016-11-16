@@ -241,7 +241,7 @@ class VdxCube:
         meta.ImplementationClassUID = "1.2.3.4"
         ds = FileDataset("file", {}, file_meta=meta)
         if self.cube is not None:
-            ds.PatientsName = self.patient_name
+            ds.PatientsName = self.cube.patient_name
         else:
             ds.PatientsName = ""
         ds.PatientID = "123456"
@@ -623,8 +623,8 @@ class Voi:
         if hasattr(self, "center_pos"):
             return self.center_pos
         self.concat_contour()
-        tot_volume = 0
-        center_pos = np.array([0, 0, 0])
+        tot_volume = 0.0
+        center_pos = np.array([0.0, 0.0, 0.0])
         for key in self.slices:
             center, area = self.slices[key].calculate_center()
             tot_volume += area
@@ -703,8 +703,6 @@ class Voi:
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
-                            cont2[0] *= self.cube.pixel_size
-                            cont2[1] *= self.cube.pixel_size
                             cont2[2] *= self.cube.slice_distance
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
@@ -960,8 +958,8 @@ class Slice:
 
         :returns: a list of center positions [x,y,z] in [mm] for each contour found.
         """
-        tot_area = 0
-        center_pos = np.array([0, 0, 0])
+        tot_area = 0.0
+        center_pos = np.array([0.0, 0.0, 0.0])
         for contour in self.contour:
             center, area = contour.calculate_center()
             tot_area += area
@@ -1199,7 +1197,7 @@ class Contour:
 
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]
         for x, y in xy_pairs:
-            self.contour.append([float(x) / 10.0, float(y) / 10.0, float(z_pos)])
+            self.contour.append([float(x) / 16.0, float(y) / 16.0, float(z_pos)])
 
         return None
 
