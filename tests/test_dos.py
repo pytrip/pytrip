@@ -112,5 +112,6 @@ class TestDos(unittest.TestCase):
         os.remove(hed_file)
         os.remove(dos_file)
 
+
 if __name__ == '__main__':
     unittest.main()
