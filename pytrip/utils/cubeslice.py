@@ -222,13 +222,17 @@ def main(args=sys.argv[1:]):
 
     ax.set_aspect(1.0)
     for ax in fig.axes:
-        ax.grid(True)
+        ax.grid(True,which='minor')
 
-    ax.set_xlim(x_max, x_min)
-    ax.set_ylim(y_max, y_min)
+    ax.set_xlim(x_min - 0.5 * cube.pixel_size, x_max + 0.5 * cube.pixel_size)
+    ax.set_ylim(y_min - 0.5 * cube.pixel_size, y_max + 0.5 * cube.pixel_size)
 
-    minorLocator = MultipleLocator(1.5)
+    # print("x_min, x_max",x_min, x_max)
+    # print("y_min, y_max",y_min, y_max)
+
+    minorLocator = MultipleLocator(0.5)
     ax.xaxis.set_minor_locator(minorLocator)
+    ax.yaxis.set_minor_locator(minorLocator)
 
     # loop over each slice
     for ids in range(slice_start, slice_stop):  # starts at 0
@@ -252,9 +256,10 @@ def main(args=sys.argv[1:]):
             ct_im = ax.imshow(
                 ct_slice,
                 cmap=plt.cm.gray,
-                interpolation='bilinear',
-                origin="lower",
-                extent=[x_min, x_max, y_min, y_max])  # extent tells what the x and y coordinates are
+                interpolation='none',
+                origin="lower", # ['upper' | 'lower'], Place the [0,0] index of the array in the upper left or lower left corner of the axes.
+                extent=[y_min- 0.5 * cube.pixel_size, y_max + 0.5 * cube.pixel_size, x_min- 0.5 * cube.pixel_size, x_max + 0.5 * cube.pixel_size])  # scalars (left, right, bottom, top)
+            # The location, in data-coordinates, of the lower-left and upper-right corners
 
             # optionally add HU bar
             if args.HUbar and ct_cb is None:
@@ -280,7 +285,7 @@ def main(args=sys.argv[1:]):
             # plot new data cube
             data_im = ax.imshow(
                 tmpdat,
-                interpolation='bilinear',
+                interpolation='none',
                 cmap=cmap1,
                 norm=colors.Normalize(
                     vmin=0, vmax=dmax * 1.1, clip=False),
