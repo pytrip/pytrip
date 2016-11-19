@@ -24,7 +24,7 @@ import sys
 import argparse
 import logging
 
-from numpy import arange, meshgrid, ma
+from numpy import arange, ma
 
 import pytrip as pt
 
@@ -167,10 +167,10 @@ def main(args=sys.argv[1:]):
 
     cube = None
     cube_basename = None
-    if data_cube is not None:
+    if data_cube is not None:  # user provided path to data cube or to data and ct cubes
         cube = data_cube
         cube_basename = data_basename
-    elif ct_cube is not None:
+    elif ct_cube is not None:  # user provided only path to ct cube and not to data cube
         cube = ct_cube
         cube_basename = ct_basename
     else:
@@ -180,39 +180,35 @@ def main(args=sys.argv[1:]):
     # calculating common frame for printing cubes
     logger.info("Number of slices: " + str(cube.dimz))
 
-    # convert bin to actual position to center of bin
-    xmin = cube.xoffset + 0.5 * cube.pixel_size
-    ymin = cube.yoffset + 0.5 * cube.pixel_size
-    zmin = cube.zoffset + 0.5 * cube.slice_distance
+    # get actual X and Y positions of bin centers, for two opposite corners, lowest and highest
+    # i.e. assuming cube 5x5x5 with pixel_size 1 and slice_distance 1, we will have:
+    # xmin_center, ymin_center, zmin_center = 0.5, 0.5, 0
+    # xmax_center, ymax_center, zmax_center = 4.5, 4.5, 4
+    xmin_center, ymin_center, zmin_center = cube.indices_to_pos([0, 0, 0])
+    xmax_center, ymax_center, zmax_center = cube.indices_to_pos([cube.dimx - 1, cube.dimy - 1, cube.dimz - 1])
 
-    xmax = xmin + cube.dimx * cube.pixel_size
-    ymax = ymin + cube.dimy * cube.pixel_size
-    zmax = zmin + cube.dimz * cube.slice_distance
+    logger.info("First bin center: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin_center, ymin_center, zmin_center))
+    logger.info("Last bin center : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax_center, ymax_center, zmax_center))
 
-    logger.info("First bin pos: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin, ymin, zmin))
-    logger.info("Last bin pos : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax, ymax, zmax))
-
-    x = arange(xmin, xmax, cube.pixel_size)
-    y = arange(ymin, ymax, cube.pixel_size)
-    x_grid, y_grid = meshgrid(x, y)
-    x_max = x_grid.max()
-    x_min = x_grid.min()
-    y_max = y_grid.max()
-    y_min = y_grid.min()
+    # get lowest corner of leftmost lowest bin
+    xmin_lowest, ymin_lowest = xmin_center - 0.5 * cube.pixel_size, ymin_center - 0.5 * cube.pixel_size
+    # get highest corner of highest rightmost bin
+    xmax_highest, ymax_highest = xmax_center + 0.5 * cube.pixel_size, ymax_center + 0.5 * cube.pixel_size
 
     ct_cb = None
     data_cb = None
     ct_im = None
     data_im = None
 
+    # if user hasn't provided number of first slice, then argument parsing method will set it to zero
     slice_start = args.sstart
-    slice_stop = args.sstop
 
+    # user hasn't provided number of last slice, we assume then that the last one has number cube.dimz
+    slice_stop = args.sstop
     if slice_stop is None:
         slice_stop = cube.dimz
 
-    # Prepare figure and subplot (axis)
-    # They will stay the same during the loop
+    # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
     ax = fig.add_subplot(111, autoscale_on=False)
 
@@ -222,32 +218,29 @@ def main(args=sys.argv[1:]):
 
     ax.set_aspect(1.0)
     for ax in fig.axes:
-        ax.grid(True,which='minor')
+        ax.grid(True)
 
-    ax.set_xlim(x_min - 0.5 * cube.pixel_size, x_max + 0.5 * cube.pixel_size)
-    ax.set_ylim(y_min - 0.5 * cube.pixel_size, y_max + 0.5 * cube.pixel_size)
+    ax.set_xlim(xmin_lowest, xmax_highest)
+    ax.set_ylim(ymin_lowest, ymax_highest)
 
-    # print("x_min, x_max",x_min, x_max)
-    # print("y_min, y_max",y_min, y_max)
-
-    minorLocator = MultipleLocator(0.5)
+    minorLocator = MultipleLocator(cube.pixel_size)
     ax.xaxis.set_minor_locator(minorLocator)
     ax.yaxis.set_minor_locator(minorLocator)
 
     # loop over each slice
-    for ids in range(slice_start, slice_stop):  # starts at 0
+    for slice_id in range(slice_start, slice_stop):
 
-        output_filename = cube_basename + "_{:03d}".format(ids) + ".png"
+        output_filename = "{:s}_{:03d}.png".format(cube_basename, slice_id)
         if args.outputdir is not None:
             # use os.path.join() in order to add slash if it is missing.
             output_filename = os.path.join(args.outputdir, os.path.basename(output_filename))
         if args.verbosity == 0:
-            print("Write slice number: " + str(ids) + "/" + str(cube.dimz))
+            print("Write slice number: " + str(slice_id) + "/" + str(cube.dimz))
         if args.verbosity > 0:
-            logger.info("Write slice number: " + str(ids) + "/" + str(cube.dimz) + " to " + output_filename)
+            logger.info("Write slice number: " + str(slice_id) + "/" + str(cube.dimz) + " to " + output_filename)
 
         if ct_cube is not None:
-            ct_slice = ct_cube.cube[ids, :, :]
+            ct_slice = ct_cube.cube[slice_id, :, :]  # extract 2D slice from 3D cube
 
             # remove CT image from the current plot (if present) and replace later with new data
             if ct_im is not None:
@@ -256,10 +249,14 @@ def main(args=sys.argv[1:]):
             ct_im = ax.imshow(
                 ct_slice,
                 cmap=plt.cm.gray,
-                interpolation='none',
-                origin="lower", # ['upper' | 'lower'], Place the [0,0] index of the array in the upper left or lower left corner of the axes.
-                extent=[y_min- 0.5 * cube.pixel_size, y_max + 0.5 * cube.pixel_size, x_min- 0.5 * cube.pixel_size, x_max + 0.5 * cube.pixel_size])  # scalars (left, right, bottom, top)
-            # The location, in data-coordinates, of the lower-left and upper-right corners
+                interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
+                #  dataset of lower resolution than the output image
+                #  see http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html
+                origin="lower",  # ['upper' | 'lower']:
+                # Place the [0,0] index of the array in the upper left or lower left corner of the axes.
+                extent=[xmin_lowest, xmax_highest, ymin_lowest, ymax_highest]  # scalars (left, right, bottom, top) :
+                # the location, in data-coordinates, of the lower-left and upper-right corners
+            )
 
             # optionally add HU bar
             if args.HUbar and ct_cb is None:
@@ -267,8 +264,7 @@ def main(args=sys.argv[1:]):
                 ct_cb.set_label('HU')
 
         if data_cube is not None:
-            # Extract the slice
-            data_slice = data_cube.cube[ids, :, :]
+            data_slice = data_cube.cube[slice_id, :, :]  # extract 2D slice from 3D cube
 
             # remove data cube image from the current plot (if present) and replace later with new data
             if data_im is not None:
@@ -285,18 +281,21 @@ def main(args=sys.argv[1:]):
             # plot new data cube
             data_im = ax.imshow(
                 tmpdat,
-                interpolation='none',
                 cmap=cmap1,
-                norm=colors.Normalize(
-                    vmin=0, vmax=dmax * 1.1, clip=False),
+                norm=colors.Normalize(vmin=0, vmax=dmax * 1.1, clip=False),
                 alpha=0.7,
-                origin="lower",
-                extent=[x_min, x_max, y_min, y_max])
+                interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
+                #  dataset of lower resolution than the output image
+                #  see http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html
+                origin="lower",  # ['upper' | 'lower']:
+                # Place the [0,0] index of the array in the upper left or lower left corner of the axes.
+                extent=[xmin_lowest, xmax_highest, ymin_lowest, ymax_highest]  # scalars (left, right, bottom, top) :
+                # the location, in data-coordinates, of the lower-left and upper-right corners
+            )
 
             if data_cb is None:
                 data_cb = fig.colorbar(
                     data_im,
-                    # extend='both',
                     orientation='vertical',
                     shrink=0.8)
                 if isinstance(data_cube, pt.LETCube):
@@ -304,7 +303,8 @@ def main(args=sys.argv[1:]):
                 elif isinstance(data_cube, pt.DosCube):
                     data_cb.set_label("Relative dose [%]")
 
-        fig.savefig(output_filename)
+        # by default savefil will produce 800x600 resolution, setting dpi=200 is increasing it to 1600x1200
+        fig.savefig(output_filename, dpi=200)
 
     return 0
 
