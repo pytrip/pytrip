@@ -31,6 +31,7 @@ import pytriplib
 try:
     from dicom.dataset import Dataset, FileDataset
     from dicom.sequence import Sequence
+    from dicom import UID
 
     _dicom_loaded = True
 except:
@@ -136,16 +137,17 @@ class DosCube(Cube):
         :returns: a Dicom RT-plan object.
         """
         meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta)
+        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
         ds.PatientID = "123456"
         ds.PatientsSex = '0'
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
-        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
         ds.StudyInstanceUID = '1.2.3'
         ds.SOPInstanceUID = '1.2.3'
 
@@ -157,7 +159,7 @@ class DosCube(Cube):
         ds.RTPlanLabel = 'B1'
         ds.RTPlanTime = '000000'
         structure_ref = Dataset()
-        structure_ref.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+        structure_ref.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage
         structure_ref.RefdSOPInstanceUID = '1.2.3'
         ds.RefdStructureSets = Sequence([structure_ref])
 

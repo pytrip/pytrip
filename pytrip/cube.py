@@ -28,8 +28,8 @@ import logging
 import numpy as np
 
 try:
-    import dicom
     from dicom.dataset import Dataset, FileDataset
+    from dicom import UID
 
     _dicom_loaded = True
 except:
@@ -439,10 +439,11 @@ class Cube(object):
         if self.header_set is False:
             raise InputError("Header not loaded")
         meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta)
+        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
         ds.PatientID = "123456"
         ds.PatientsSex = '0'
@@ -451,7 +452,6 @@ class Cube(object):
         ds.AccessionNumber = ''
         ds.is_little_endian = True
         ds.is_implicit_VR = True
-        ds.file_meta.TransferSyntaxUID = dicom.UID.ImplicitVRLittleEndian
         ds.SOPClassUID = '1.2.3'  # !!!!!!!!
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!

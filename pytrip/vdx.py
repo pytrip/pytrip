@@ -40,6 +40,7 @@ import pytriplib
 try:
     from dicom.dataset import Dataset, FileDataset
     from dicom.sequence import Sequence
+    from dicom import UID
 
     _dicom_loaded = True
 except:
@@ -236,10 +237,12 @@ class VdxCube:
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
         meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
+        # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta)
+        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
             ds.PatientsName = self.cube.patient_name
         else:
@@ -251,7 +254,7 @@ class VdxCube:
         ds.AccessionNumber = ''
         ds.is_little_endian = True
         ds.is_implicit_VR = True
-        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.SeriesInstanceUID = '1.2.3'  # !!!!!!!!!!
@@ -1041,6 +1044,11 @@ class Slice:
             con.ContourData = contour
             con.ContourGeometricType = 'CLOSED_PLANAR'
             con.NumberofContourPoints = self.contour[i].number_of_points()
+            cont_image_item = Dataset()
+            cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+            # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
+            cont_image_item.ReferencedSOPInstanceUID = '1.2.3'  # TODO should point to...
+            con.ContourImageSequence = Sequence([cont_image_item])
             contour_list.append(con)
         return contour_list
 
