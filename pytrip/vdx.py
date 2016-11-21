@@ -676,8 +676,8 @@ class Voi:
         """
         roi_contours = Dataset()
         contours = []
-        for k in self.slices:
-            contours.extend(self.slices[k].create_dicom_contours())
+        for slice in self.slices.values():
+            contours.extend(slice.create_dicom_contours())
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
 
@@ -745,6 +745,8 @@ class Voi:
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
+                if self.cube is None:
+                    raise Exception("cube not loaded")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
@@ -1036,14 +1038,14 @@ class Slice:
         """ Creates and returns a list of Dicom CONTOUR objects from self.
         """
         contour_list = []
-        for i in range(len(self.contour)):
+        for item in self.contour:
             con = Dataset()
             contour = []
-            for p in self.contour[i].contour:
+            for p in item.contour:
                 contour.extend([p[0], p[1], p[2]])
             con.ContourData = contour
             con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = self.contour[i].number_of_points()
+            con.NumberofContourPoints = item.number_of_points()
             cont_image_item = Dataset()
             cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
             # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
@@ -1081,7 +1083,7 @@ class Slice:
         self.contour[0].concat()
 
     def remove_inner_contours(self):
-        """ Removes any "holes" in the contours of this slice, therby changing the topology of the contour.
+        """ Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
         """
         for i in range(len(self.contour) - 1, 0, -1):
             self.contour[0].push(self.contour[i])
