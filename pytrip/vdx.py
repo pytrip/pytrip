@@ -273,12 +273,29 @@ class VdxCube:
         roi_data_list = []
         roi_structure_roi_list = []
 
+        # to get DICOM which can be loaded in Eclipse we need to store information about UIDs of all slices in CT
+        # first we check if DICOM cube is loaded
         if self.cube is not None:
-            frame_of_ref_uid = Dataset()
-            frame_of_ref_uid.FrameOfReferenceUID = '1'
-            rt_ref_frame_study_seq = Dataset()
-            rt_ref_frame_study_seq.RTReferencedStudySequence = Sequence([])
-            ds.ReferencedFrameOfReferenceSequence = Sequence([frame_of_ref_uid, rt_ref_frame_study_seq])
+            rt_ref_series_data = Dataset()
+            rt_ref_series_data.SeriesInstanceUID = '1.2.3.4.5'
+            rt_ref_series_data.ContourImageSequence = Sequence([])
+
+            # each CT slice corresponds to one DICOM file
+            for slice_dicom in self.cube.create_dicom():
+                slice_dataset = Dataset()
+                slice_dataset.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+                slice_dataset.ReferencedSOPInstanceUID = slice_dicom.SOPInstanceUID  # most important - slice UID
+                rt_ref_series_data.ContourImageSequence.append(slice_dataset)
+
+            rt_ref_study_seq_data = Dataset()
+            rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
+            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3.4.5'
+            rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
+
+            rt_ref_frame_study_data = Dataset()
+            rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
+            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3.4.5'
+            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
 
         for i in range(self.number_of_vois()):
             roi_label = self.vois[i].create_dicom_label()
@@ -944,9 +961,7 @@ class Slice:
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(
-                np.array(
-                    dcm.ContourData, dtype=float), offset)))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset)))
 
     def get_position(self):
         """
@@ -1043,6 +1058,23 @@ class Slice:
     def create_dicom_contours(self):
         """ Creates and returns a list of Dicom CONTOUR objects from self.
         """
+
+        # in order to get DICOM readable by Eclipse we need to connect each contour with CT slice
+        # CT slices are identified by SOPInstanceUID
+        # first we assume some default value if we cannot figure out CT slice info (i.e. CT cube is not loaded)
+        ref_sop_instance_uid = '1.2.3'
+
+        # then we check if CT cube is loaded
+        if self.cube is not None:
+
+            # if CT cube is loaded we extract DICOM representation of the cube (1 dicom per slice)
+            # and select DICOM object for current slice based on slice position
+            # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
+            candidates = [dcm for dcm in self.cube.create_dicom() if dcm.SliceLocation == self.get_position()]
+            if len(candidates) > 0:
+                # finally we extract CT slice SOP Instance UID
+                ref_sop_instance_uid = candidates[0].SOPInstanceUID
+
         contour_list = []
         for item in self.contour:
             con = Dataset()
@@ -1054,8 +1086,7 @@ class Slice:
             con.NumberofContourPoints = item.number_of_points()
             cont_image_item = Dataset()
             cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
-            # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
-            cont_image_item.ReferencedSOPInstanceUID = '1.2.3'  # TODO should point to...
+            cont_image_item.ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
             con.ContourImageSequence = Sequence([cont_image_item])
             contour_list.append(con)
         return contour_list
