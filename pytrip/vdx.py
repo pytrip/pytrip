@@ -273,6 +273,13 @@ class VdxCube:
         roi_data_list = []
         roi_structure_roi_list = []
 
+        if self.cube is not None:
+            frame_of_ref_uid = Dataset()
+            frame_of_ref_uid.FrameOfReferenceUID = '1'
+            rt_ref_frame_study_seq = Dataset()
+            rt_ref_frame_study_seq.RTReferencedStudySequence = Sequence([])
+            ds.ReferencedFrameOfReferenceSequence = Sequence([frame_of_ref_uid, rt_ref_frame_study_seq])
+
         for i in range(self.number_of_vois()):
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
@@ -603,7 +610,7 @@ class Voi:
         if len(points1) > 0:
             points1.extend(reversed(points2))
             points1.append(points1[0])
-            s = Slice()
+            s = Slice(cube=self.cube)
             s.add_contour(Contour(points1))
         return s
 
@@ -700,7 +707,7 @@ class Voi:
             if re.match("voi", line) is not None:
                 break
             if re.match("slice#", line) is not None:
-                s = Slice()
+                s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)
                 if self.cube is not None:
                     for cont1 in s.contour:
@@ -741,7 +748,7 @@ class Voi:
             elif re.match("number_of_slices", line) is not None:
                 number_of_slices = int(line.split()[1])
             elif re.match("slice", line) is not None:
-                s = Slice()
+                s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
@@ -806,7 +813,7 @@ class Voi:
         for i, contour in enumerate(contours):
             key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
             if key not in self.slices:
-                self.slices[key] = Slice(self.cube)
+                self.slices[key] = Slice(cube=self.cube)
                 self.slice_z.append(key)
             self.slices[key].add_dicom_contour(contour)
 
@@ -919,7 +926,6 @@ class Slice:
     def __init__(self, cube=None):
         self.cube = cube
         self.contour = []
-        return
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.

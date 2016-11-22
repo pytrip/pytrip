@@ -85,8 +85,9 @@ class CtxCube(Cube):
             ds.RescaleSlope = 1.0
             ds.PixelRepresentation = 1
             ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
-                                       "%.3f" % (self.yoffset * self.pixel_size), "%.3f" % (self.slice_pos[i])]
-            ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+                                       "%.3f" % (self.yoffset * self.pixel_size),
+                                       "%.3f" % (self.slice_pos[i])]
+            ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
             ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
 
             ds.SeriesDate = '19010101'  # !!!!!!!!
