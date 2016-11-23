@@ -265,9 +265,10 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = ''
-        ds.StructureSetDate = ''
-        ds.StructureSetTime = ''
+        ds.StructureSetLabel = 'pyTRiP plan'
+        ds.StructureSetDate = '19010101'
+        ds.StructureSetTime = '000000'
+        ds.StructureSetName = 'ROI'
         ds.Modality = 'RTSTRUCT'
         roi_label_list = []
         roi_data_list = []
