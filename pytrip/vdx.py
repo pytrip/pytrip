@@ -40,6 +40,7 @@ import pytriplib
 try:
     from dicom.dataset import Dataset, FileDataset
     from dicom.sequence import Sequence
+    from dicom import UID
 
     _dicom_loaded = True
 except:
@@ -236,10 +237,12 @@ class VdxCube:
         if _dicom_loaded is False:
             raise ModuleNotLoadedError("Dicom")
         meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'
+        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
+        # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        ds = FileDataset("file", {}, file_meta=meta)
+        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
             ds.PatientsName = self.cube.patient_name
         else:
@@ -251,7 +254,7 @@ class VdxCube:
         ds.AccessionNumber = ''
         ds.is_little_endian = True
         ds.is_implicit_VR = True
-        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'
+        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.SeriesInstanceUID = '1.2.3'  # !!!!!!!!!!
@@ -262,13 +265,38 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = ''
-        ds.StructureSetDate = ''
-        ds.StructureSetTime = ''
+        ds.StructureSetLabel = 'pyTRiP plan'
+        ds.StructureSetDate = '19010101'
+        ds.StructureSetTime = '000000'
+        ds.StructureSetName = 'ROI'
         ds.Modality = 'RTSTRUCT'
         roi_label_list = []
         roi_data_list = []
         roi_structure_roi_list = []
+
+        # to get DICOM which can be loaded in Eclipse we need to store information about UIDs of all slices in CT
+        # first we check if DICOM cube is loaded
+        if self.cube is not None:
+            rt_ref_series_data = Dataset()
+            rt_ref_series_data.SeriesInstanceUID = '1.2.3.4.5'
+            rt_ref_series_data.ContourImageSequence = Sequence([])
+
+            # each CT slice corresponds to one DICOM file
+            for slice_dicom in self.cube.create_dicom():
+                slice_dataset = Dataset()
+                slice_dataset.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+                slice_dataset.ReferencedSOPInstanceUID = slice_dicom.SOPInstanceUID  # most important - slice UID
+                rt_ref_series_data.ContourImageSequence.append(slice_dataset)
+
+            rt_ref_study_seq_data = Dataset()
+            rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
+            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3.4.5'
+            rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
+
+            rt_ref_frame_study_data = Dataset()
+            rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
+            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3.4.5'
+            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
 
         for i in range(self.number_of_vois()):
             roi_label = self.vois[i].create_dicom_label()
@@ -600,7 +628,7 @@ class Voi:
         if len(points1) > 0:
             points1.extend(reversed(points2))
             points1.append(points1[0])
-            s = Slice()
+            s = Slice(cube=self.cube)
             s.add_contour(Contour(points1))
         return s
 
@@ -673,8 +701,8 @@ class Voi:
         """
         roi_contours = Dataset()
         contours = []
-        for k in self.slices:
-            contours.extend(self.slices[k].create_dicom_contours())
+        for slice in self.slices.values():
+            contours.extend(slice.create_dicom_contours())
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
 
@@ -697,7 +725,7 @@ class Voi:
             if re.match("voi", line) is not None:
                 break
             if re.match("slice#", line) is not None:
-                s = Slice()
+                s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)
                 if self.cube is not None:
                     for cont1 in s.contour:
@@ -738,10 +766,12 @@ class Voi:
             elif re.match("number_of_slices", line) is not None:
                 number_of_slices = int(line.split()[1])
             elif re.match("slice", line) is not None:
-                s = Slice()
+                s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
+                if self.cube is None:
+                    raise Exception("cube not loaded")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)
                 self.slices[key] = s
@@ -801,7 +831,7 @@ class Voi:
         for i, contour in enumerate(contours):
             key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
             if key not in self.slices:
-                self.slices[key] = Slice(self.cube)
+                self.slices[key] = Slice(cube=self.cube)
                 self.slice_z.append(key)
             self.slices[key].add_dicom_contour(contour)
 
@@ -914,7 +944,6 @@ class Slice:
     def __init__(self, cube=None):
         self.cube = cube
         self.contour = []
-        return
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -933,9 +962,7 @@ class Slice:
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(
-                np.array(
-                    dcm.ContourData, dtype=float), offset)))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset)))
 
     def get_position(self):
         """
@@ -1032,15 +1059,36 @@ class Slice:
     def create_dicom_contours(self):
         """ Creates and returns a list of Dicom CONTOUR objects from self.
         """
+
+        # in order to get DICOM readable by Eclipse we need to connect each contour with CT slice
+        # CT slices are identified by SOPInstanceUID
+        # first we assume some default value if we cannot figure out CT slice info (i.e. CT cube is not loaded)
+        ref_sop_instance_uid = '1.2.3'
+
+        # then we check if CT cube is loaded
+        if self.cube is not None:
+
+            # if CT cube is loaded we extract DICOM representation of the cube (1 dicom per slice)
+            # and select DICOM object for current slice based on slice position
+            # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
+            candidates = [dcm for dcm in self.cube.create_dicom() if dcm.SliceLocation == self.get_position()]
+            if len(candidates) > 0:
+                # finally we extract CT slice SOP Instance UID
+                ref_sop_instance_uid = candidates[0].SOPInstanceUID
+
         contour_list = []
-        for i in range(len(self.contour)):
+        for item in self.contour:
             con = Dataset()
             contour = []
-            for p in self.contour[i].contour:
+            for p in item.contour:
                 contour.extend([p[0], p[1], p[2]])
             con.ContourData = contour
             con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = self.contour[i].number_of_points()
+            con.NumberofContourPoints = item.number_of_points()
+            cont_image_item = Dataset()
+            cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+            cont_image_item.ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
+            con.ContourImageSequence = Sequence([cont_image_item])
             contour_list.append(con)
         return contour_list
 
@@ -1073,7 +1121,7 @@ class Slice:
         self.contour[0].concat()
 
     def remove_inner_contours(self):
-        """ Removes any "holes" in the contours of this slice, therby changing the topology of the contour.
+        """ Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
         """
         for i in range(len(self.contour) - 1, 0, -1):
             self.contour[0].push(self.contour[i])
