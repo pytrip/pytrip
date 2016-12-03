@@ -17,7 +17,7 @@ then
     sudo apt-get install -y libblas-dev liblapack-dev gfortran libfreetype6-dev g++
 fi
 
-pip install --upgrade virtualenv$VENVVER pip$PIPVER setuptools tox wheel
+pip install --upgrade virtualenv$VENVVER pip$PIPVER setuptools$STVER tox wheel
 
 pip install -r requirements.txt
 pip install -r tests/requirements-test.txt
