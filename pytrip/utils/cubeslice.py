@@ -123,7 +123,7 @@ def main(args=sys.argv[1:]):
     parser.add_argument("--data", help="data cube(dos, let etc)", type=str, nargs='?')
     parser.add_argument("--ct", help="CT cube", type=str, nargs='?')
     parser.add_argument(
-        "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=0)
+        "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=1)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
     parser.add_argument("-o", "--outputdir", dest='outputdir',
@@ -200,6 +200,10 @@ def main(args=sys.argv[1:]):
     ct_im = None
     data_im = None
 
+    if args.sstart == 0:
+        logger.error("First slice must be 1 or greater.")
+        exit(1)
+        
     # if user hasn't provided number of first slice, then argument parsing method will set it to zero
     slice_start = args.sstart
 
@@ -228,7 +232,7 @@ def main(args=sys.argv[1:]):
     ax.yaxis.set_minor_locator(minorLocator)
 
     # loop over each slice
-    for slice_id in range(slice_start, slice_stop):
+    for slice_id in range(slice_start, slice_stop + 1):
 
         output_filename = "{:s}_{:03d}.png".format(cube_basename, slice_id)
         if args.outputdir is not None:
@@ -240,7 +244,7 @@ def main(args=sys.argv[1:]):
             logger.info("Write slice number: " + str(slice_id) + "/" + str(cube.dimz) + " to " + output_filename)
 
         if ct_cube is not None:
-            ct_slice = ct_cube.cube[slice_id, :, :]  # extract 2D slice from 3D cube
+            ct_slice = ct_cube.cube[slice_id - 1, :, :]  # extract 2D slice from 3D cube
 
             # remove CT image from the current plot (if present) and replace later with new data
             if ct_im is not None:
@@ -264,7 +268,7 @@ def main(args=sys.argv[1:]):
                 ct_cb.set_label('HU')
 
         if data_cube is not None:
-            data_slice = data_cube.cube[slice_id, :, :]  # extract 2D slice from 3D cube
+            data_slice = data_cube.cube[slice_id - 1, :, :]  # extract 2D slice from 3D cube
 
             # remove data cube image from the current plot (if present) and replace later with new data
             if data_im is not None:
