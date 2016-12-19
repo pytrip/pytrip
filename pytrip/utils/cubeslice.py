@@ -47,8 +47,9 @@ def load_data_cube(filename):
     d = None
     basename_cube = None
 
+    # TODO to be improved when #66 is fixed"
     if "dosemlet" in filename.lower():
-        # try to load LET cube    
+        # try to load LET cube
         data_header, _ = pt.LETCube.parse_path(filename)
         if data_header is not None:
             basename_cube = os.path.splitext(data_header)[0]
