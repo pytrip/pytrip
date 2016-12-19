@@ -203,7 +203,7 @@ def main(args=sys.argv[1:]):
     if args.sstart == 0:
         logger.error("First slice must be 1 or greater.")
         exit(1)
-        
+
     # if user hasn't provided number of first slice, then argument parsing method will set it to zero
     slice_start = args.sstart
 
@@ -231,17 +231,28 @@ def main(args=sys.argv[1:]):
     ax.xaxis.set_minor_locator(minorLocator)
     ax.yaxis.set_minor_locator(minorLocator)
 
+    text_slice = ax.text(0.0, 1.05, "", size=8, transform=ax.transAxes)
+
     # loop over each slice
     for slice_id in range(slice_start, slice_stop + 1):
 
         output_filename = "{:s}_{:03d}.png".format(cube_basename, slice_id)
+
+        slice_str = str(slice_id) + "/" + str(cube.dimz)
         if args.outputdir is not None:
             # use os.path.join() in order to add slash if it is missing.
             output_filename = os.path.join(args.outputdir, os.path.basename(output_filename))
         if args.verbosity == 0:
-            print("Write slice number: " + str(slice_id) + "/" + str(cube.dimz))
+            print("Write slice number: " + slice_str)
         if args.verbosity > 0:
-            logger.info("Write slice number: " + str(slice_id) + "/" + str(cube.dimz) + " to " + output_filename)
+            logger.info("Write slice number: " + slice_str + " to " + output_filename)
+
+        if ct_cube is not None:
+            slice_str += " zpos = {:.2f} mm".format(ct_cube.slice_to_z(slice_id - 1))
+        else:
+            slice_str += " zpos = {:.2f} mm".format(data_cube.slice_to_z(slice_id - 1))
+
+        text_slice.set_text(slice_str)
 
         if ct_cube is not None:
             ct_slice = ct_cube.cube[slice_id - 1, :, :]  # extract 2D slice from 3D cube
