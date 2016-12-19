@@ -259,7 +259,7 @@ class TestCubeSlicer(unittest.TestCase):
         ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos,
                                                      '--ct', self.ctx,
                                                      '-f', '5',
-                                                     '-t', '6',
+                                                     '-t', '5',
                                                      '-o', working_dir])
         self.assertEqual(ret_code, 0)
 
