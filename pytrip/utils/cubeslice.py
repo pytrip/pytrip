@@ -47,17 +47,18 @@ def load_data_cube(filename):
     d = None
     basename_cube = None
 
-    # try to load LET cube
-    data_header, _ = pt.LETCube.parse_path(filename)
-    if data_header is not None:
-        basename_cube = os.path.splitext(data_header)[0]
-        d = pt.LETCube()
-
-    # try to load DOS cube
-    data_header, _ = pt.DosCube.parse_path(filename)
-    if d is None and data_header is not None:
-        basename_cube = os.path.splitext(data_header)[0]
-        d = pt.DosCube()
+    if "dosemlet" in filename.lower():
+        # try to load LET cube    
+        data_header, _ = pt.LETCube.parse_path(filename)
+        if data_header is not None:
+            basename_cube = os.path.splitext(data_header)[0]
+            d = pt.LETCube()
+    else:
+        # try to load DOS cube
+        data_header, _ = pt.DosCube.parse_path(filename)
+        if d is None and data_header is not None:
+            basename_cube = os.path.splitext(data_header)[0]
+            d = pt.DosCube()
 
     if d is not None:
         d.read(filename)
