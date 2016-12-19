@@ -248,8 +248,8 @@ def main(args=sys.argv[1:]):
             logger.info("Write slice number: " + slice_str + " to " + output_filename)
 
         slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
-                                                                               cube.dimz,
-                                                                               cube.slice_to_z(slice_id - 1))
+                                                                              cube.dimz,
+                                                                              cube.slice_to_z(slice_id - 1))
         text_slice.set_text(slice_str)
 
         if ct_cube is not None:
