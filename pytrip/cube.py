@@ -73,11 +73,14 @@ class Cube(object):
             self._set_number_of_bytes()
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
         else:
+            import getpass
+            from pytrip import __version__ as _ptversion
+
             self.header_set = False
             self.version = "2.0"
             self.modality = "CT"
-            self.created_by = "pytrip"
-            self.creation_info = "create by pytrip"
+            self.created_by = getpass.getuser()
+            self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
             self.num_bytes = ""
@@ -349,7 +352,7 @@ class Cube(object):
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
-            self.patient_name = "Anonymeous"
+            self.patient_name = "Anonymous"
         output_str += "patient_name " + str(self.patient_name) + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
