@@ -135,9 +135,9 @@ def main(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     if args.verbosity == 1:
-        logging.basicConfig(level=logging.INFO)
+        logger.setLevel('INFO')
     if args.verbosity > 1:
-        logging.basicConfig(level=logging.DEBUG)
+        logger.setLevel('DEBUG')
 
     if args.data is None and args.ct is None:
         logger.error("Provide location of at least one cube")
