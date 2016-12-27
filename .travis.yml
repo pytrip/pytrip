@@ -96,8 +96,6 @@ matrix:
     # jobs allowed to fail
     allow_failures:
     # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/119
-        - python: 3.6
-          env: TOXENV=py36
         - python: nightly
           env: TOXENV=py37
 
