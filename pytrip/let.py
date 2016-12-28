@@ -19,8 +19,6 @@
 """
 This module provides the LETCube for handling LET data.
 """
-import os
-
 import numpy as np
 from pytrip.cube import Cube
 import pytriplib
@@ -35,7 +33,8 @@ class LETCube(Cube):
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = "dos"
+    data_file_extension = ".dosemlet.dos"
+    header_file_extension = ".dosemlet.hed"
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
@@ -43,16 +42,13 @@ class LETCube(Cube):
     def write(self, path):
         """Write the LETCube and its header to a file with the filename 'path'.
 
-        Any suffix will be stripped from 'path' and replaced with '.dosemlet.hed' and '.dosemlet.dos'.
-
-        :param str path: Full path of files to be written. File extension will be replaced.
+        :param str path: path to header file, data file or basename (without extension)
 
         """
-        f_split = os.path.splitext(path)
-        header_file = f_split[0] + ".dosemlet.hed"
-        dos_file = f_split[0] + ".dosemlet.dos"
+
+        header_file, let_file = self.parse_path(path_name=path)
         self.write_trip_header(header_file)
-        self.write_trip_data(dos_file)
+        self.write_trip_data(let_file)
 
     def get_max(self):
         """ Returns the largest value in the LETCube.
