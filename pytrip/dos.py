@@ -44,8 +44,8 @@ class DosCube(Cube):
     """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos suffix.
     This class can also handle Dicom files.
     """
-    data_file_extension = "dos"
-    header_file_extension = "hed"
+    data_file_extension = ".dos"
+    header_file_extension = ".hed"
 
     def __init__(self, cube=None):
         super(DosCube, self).__init__(cube)
@@ -233,9 +233,8 @@ class DosCube(Cube):
 
         :param str path: Path, any file extentions will be ignored.
         """
-        f_split = os.path.splitext(path)
-        header_file = f_split[0] + '.' + self.header_file_extension
-        dos_file = f_split[0] + '.' + self.data_file_extension
+
+        header_file, dos_file = self.parse_path(path_name=path)
         self.write_trip_header(header_file)
         self.write_trip_data(dos_file)
 

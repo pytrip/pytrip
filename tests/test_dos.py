@@ -101,8 +101,8 @@ class TestDos(unittest.TestCase):
         os.close(fd)  # Windows needs it
         os.remove(outfile)  # we need only temp filename, not the file
         c.write(outfile)
-        hed_file = outfile + '.' + DosCube.header_file_extension
-        dos_file = outfile + '.' + DosCube.data_file_extension
+        hed_file = outfile + DosCube.header_file_extension
+        dos_file = outfile + DosCube.data_file_extension
         self.assertTrue(os.path.exists(hed_file))
         self.assertTrue(os.path.exists(dos_file))
         logger.info("Checking if output file " + hed_file + " is not empty")

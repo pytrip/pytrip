@@ -61,8 +61,8 @@ class TestLet(unittest.TestCase):
         os.close(fd)  # Windows needs it
         os.remove(outfile)  # we need only temp filename, not the file
         l.write(outfile)
-        hed_file = outfile + '.' + LETCube.header_file_extension
-        dos_file = outfile + '.' + LETCube.data_file_extension
+        hed_file = outfile + LETCube.header_file_extension
+        dos_file = outfile + LETCube.data_file_extension
         self.assertTrue(os.path.exists(hed_file))
         self.assertTrue(os.path.exists(dos_file))
         logger.info("Checking if output file " + hed_file + " is not empty")

@@ -519,6 +519,8 @@ class Cube(object):
         ('gimli.son.of.gloin.hed', 'gimli.son.of.gloin.ctx')
         >>> CtxCube.parse_path("bilbo.dos")
         (None, None)
+        >>> pt.CtxCube.parse_path("/home/pytrip/patient.ctx")
+        ('/home/pytrip/patient.hed', '/home/pytrip/patient.ctx')
         >>> from pytrip import DosCube
         >>> DosCube.parse_path("bilbo.dos")
         ('bilbo.hed', 'bilbo.dos')
@@ -534,36 +536,24 @@ class Cube(object):
         >>> LETCube.parse_path("aragorn.ctx")
         (None, None)
 
-        :param path_name:
-        :return:
+        :param path_name: path to header file, data file or basename path (path to file without extension).
+        Path can be absolute or relative. It can also lead to gzipped files.
+        :return: pair of filenames for header and data
         """
 
         logger.info("Parsing " + path_name)
 
-        #  path can end with .gz or not (be archive or not)
-        is_path_gzipped = path_name.endswith(".gz")
-
-        logger.debug("is file gzipped ? " + str(is_path_gzipped))
-
-        # strip .gz from path (if present)
-        uncompressed_path_name = path_name
-        if is_path_gzipped:
-            uncompressed_path_name = os.path.splitext(path_name)[0]
-
-        logger.debug("uncompressed filename: " + uncompressed_path_name)
-
-        # now we have few possibilities
-        #  1. file with known extension (i.e. TST001.hed or TST001.ctx)
-        #  2. file without extension (i.e. TST001) or with unknown extension (i.e. TST001.mp3)
-        # to distinguish these cases we will use has_path_known_extension flag
+        # this method is intended to be used by subclasess of Cube (i.e. DosCube, LETCube, CtxCube)
+        # let us ensure first if these subclassess define file extensions corresponding to header and data files
 
         # checking if current class has data extension attribute, to compare with data file extension
         if 'data_file_extension' in cls.__dict__:
             class_data_file_extension = cls.data_file_extension.lower()
             logger.debug("class data filename extension: " + class_data_file_extension)
         else:  # class without extension, we assume in such case file is given without extension
-            logger.error("Class " + str(cls) + " doesn't have data_file_extension field")
-            class_data_file_extension = None
+            error_msg = "Class " + str(cls) + " doesn't have data_file_extension field"
+            logger.error(error_msg)
+            raise NotImplementedError(error_msg)
 
         # checking if current class has header extension attribute, to compare with header file extension
         if 'header_file_extension' in cls.__dict__:
@@ -572,43 +562,42 @@ class Cube(object):
         else:  # class without extension, we assume in such case file is given without extension
             error_msg = "Class " + str(cls) + " doesn't have header_file_extension field"
             logger.error(error_msg)
-            raise InputError(error_msg)
+            raise NotImplementedError(error_msg)
 
-        # Case 1. - known extension, header file
-        if uncompressed_path_name.endswith(class_header_file_extension):
-            has_path_known_extension = True
-            logger.debug("case 1, header file, has known extension ? " + str(has_path_known_extension))
-        # Case 2. - file without extension
-        elif not os.path.splitext(uncompressed_path_name)[1]:
-            has_path_known_extension = False
-            logger.debug("case 2, file without extension, has known extension ? " + str(has_path_known_extension))
-        # Case 3. - file with extension (but not a header file), checking if extension is known for data file
-        else:
-            # splitting filename into core + extension parts
-            has_path_known_extension = uncompressed_path_name.endswith(class_data_file_extension)
-            logger.debug("case 3, extension known ? " + str(has_path_known_extension))
+        #  path can end with .gz or not (be it archive or not). Let us check it
+        is_path_gzipped = path_name.endswith(".gz")
+        logger.debug("is file gzipped ? " + str(is_path_gzipped))
 
-        logger.debug("has file known extension ? " + str(has_path_known_extension))
+        # strip .gz from path (if present)
+        uncompressed_path_name = path_name
+        if is_path_gzipped:
+            uncompressed_path_name = os.path.splitext(path_name)[0]
+        logger.debug("uncompressed filename: " + uncompressed_path_name)
 
-        if has_path_known_extension:
-            if uncompressed_path_name.endswith(class_header_file_extension):  # header file
-                logger.debug("header file ")
-                header_file = uncompressed_path_name
-                basename_end_index = uncompressed_path_name.rfind(class_header_file_extension)
-                cube_filename = uncompressed_path_name[:basename_end_index] + class_data_file_extension
-            else:  # cube file
-                logger.debug("cube file ")
-                basename_end_index = uncompressed_path_name.rfind(class_data_file_extension)
-                header_file = uncompressed_path_name[:basename_end_index] + class_header_file_extension
-                cube_filename = uncompressed_path_name
-        else:
-            if not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
-                logger.debug("file without extension ")
-                header_file = uncompressed_path_name + "." + class_header_file_extension
-                cube_filename = uncompressed_path_name + "." + class_data_file_extension
-            else:   # a problem
-                logger.debug("a problem ")
-                header_file, cube_filename = None, None
+        # we have several options:
+        # 1. file with header extension (i.e. blabla.hed or blabla.dosemlet.hed)
+        # 2. file with data extension (i.e. blabla.ctx, blabla.dos., blabla.dosemlet.dos)
+        # 3. file without extension (i.e. blabla)
+        # 4. file with unknown extensions (i.e. blabla.mp3)
+        # Options 1-3 can be parsed, option 4 will give us empty result
+
+        if uncompressed_path_name.endswith(class_header_file_extension):  # header file
+            logger.debug("header file ")
+            header_file = uncompressed_path_name
+            basename_end_index = uncompressed_path_name.rfind(class_header_file_extension)
+            cube_filename = uncompressed_path_name[:basename_end_index] + class_data_file_extension
+        elif uncompressed_path_name.endswith(class_data_file_extension):  # cube file
+            logger.debug("cube file ")
+            basename_end_index = uncompressed_path_name.rfind(class_data_file_extension)
+            header_file = uncompressed_path_name[:basename_end_index] + class_header_file_extension
+            cube_filename = uncompressed_path_name
+        elif not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
+            logger.debug("file without extension ")
+            header_file = uncompressed_path_name + class_header_file_extension
+            cube_filename = uncompressed_path_name + class_data_file_extension
+        else:   # a problem (i.e. uknown exception)
+            logger.debug("a problem (unknown extension?) with path " + path_name)
+            header_file, cube_filename = None, None
 
         return header_file, cube_filename
 
