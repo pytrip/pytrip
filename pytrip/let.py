@@ -35,7 +35,8 @@ class LETCube(Cube):
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = "dos"
+    data_file_extension = "dosemlet.dos"
+    header_file_extension = "dosemlet.hed"
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
@@ -49,8 +50,8 @@ class LETCube(Cube):
 
         """
         f_split = os.path.splitext(path)
-        header_file = f_split[0] + ".dosemlet.hed"
-        dos_file = f_split[0] + ".dosemlet.dos"
+        header_file = f_split[0] + '.' + self.header_file_extension
+        dos_file = f_split[0] + '.' + self.data_file_extension
         self.write_trip_header(header_file)
         self.write_trip_data(dos_file)
 

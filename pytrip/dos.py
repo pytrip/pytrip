@@ -45,6 +45,7 @@ class DosCube(Cube):
     This class can also handle Dicom files.
     """
     data_file_extension = "dos"
+    header_file_extension = "hed"
 
     def __init__(self, cube=None):
         super(DosCube, self).__init__(cube)
@@ -233,8 +234,8 @@ class DosCube(Cube):
         :param str path: Path, any file extentions will be ignored.
         """
         f_split = os.path.splitext(path)
-        header_file = f_split[0] + ".hed"
-        dos_file = f_split[0] + ".dos"
+        header_file = f_split[0] + '.' + self.header_file_extension
+        dos_file = f_split[0] + '.' + self.data_file_extension
         self.write_trip_header(header_file)
         self.write_trip_data(dos_file)
 

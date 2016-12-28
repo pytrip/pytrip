@@ -68,11 +68,11 @@ class TestCtx(unittest.TestCase):
 
         # save cube and calculate hashsum
         c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
-        f = open(outfile + ".ctx", 'rb')
+        f = open(outfile + '.' + CtxCube.data_file_extension, 'rb')
         generated_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
-        logger.debug("Removing " + outfile + ".ctx")
-        os.remove(outfile + ".ctx")
+        logger.debug("Removing " + outfile + '.' + CtxCube.data_file_extension)
+        os.remove(outfile + '.' + CtxCube.data_file_extension)
         logger.debug("Removing " + outfile + ".hed")
         os.remove(outfile + ".hed")
         # compare checksums
