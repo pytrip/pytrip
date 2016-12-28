@@ -526,11 +526,11 @@ class Cube(object):
         (None, None)
         >>> from pytrip import LETCube
         >>> LETCube.parse_path("aragorn.dosemlet.dos")
-        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.hed')
+        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.dos')
         >>> LETCube.parse_path("aragorn.dosemlet")
         (None, None)
         >>> LETCube.parse_path("aragorn")
-        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.hed')
+        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.dos')
         >>> LETCube.parse_path("aragorn.ctx")
         (None, None)
 
@@ -570,7 +570,7 @@ class Cube(object):
             class_header_file_extension = cls.header_file_extension.lower()
             logger.debug("class data filename extension: " + class_header_file_extension)
         else:  # class without extension, we assume in such case file is given without extension
-            error_msg = "Class " + str(cls) + " doesn't have data_file_extension field"
+            error_msg = "Class " + str(cls) + " doesn't have header_file_extension field"
             logger.error(error_msg)
             raise InputError(error_msg)
 
@@ -582,12 +582,10 @@ class Cube(object):
         elif not os.path.splitext(uncompressed_path_name)[1]:
             has_path_known_extension = False
             logger.debug("case 2, file without extension, has known extension ? " + str(has_path_known_extension))
-        # Case 3. - file with extension, checking if known
+        # Case 3. - file with extension (but not a header file), checking if extension is known for data file
         else:
             # splitting filename into core + extension parts
-            core_name, core_ext = os.path.splitext(uncompressed_path_name)
-            logger.debug("case 3, file with extension, core: " + core_name + " extension: " + core_ext)
-            has_path_known_extension = (core_ext.lower() == "." + class_data_file_extension)
+            has_path_known_extension = uncompressed_path_name.endswith(class_data_file_extension)
             logger.debug("case 3, extension known ? " + str(has_path_known_extension))
 
         logger.debug("has file known extension ? " + str(has_path_known_extension))
@@ -596,10 +594,12 @@ class Cube(object):
             if uncompressed_path_name.endswith(class_header_file_extension):  # header file
                 logger.debug("header file ")
                 header_file = uncompressed_path_name
-                cube_filename = os.path.splitext(uncompressed_path_name)[0] + "." + class_data_file_extension
+                basename_end_index = uncompressed_path_name.rfind(class_header_file_extension)
+                cube_filename = uncompressed_path_name[:basename_end_index] + class_data_file_extension
             else:  # cube file
                 logger.debug("cube file ")
-                header_file = os.path.splitext(uncompressed_path_name)[0] + "." + class_header_file_extension
+                basename_end_index = uncompressed_path_name.rfind(class_data_file_extension)
+                header_file = uncompressed_path_name[:basename_end_index] + class_header_file_extension
                 cube_filename = uncompressed_path_name
         else:
             if not os.path.splitext(uncompressed_path_name)[1]:  # file without extension

@@ -43,3 +43,7 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 # to prevent it, we add null logging handler, as suggested by Python documentation:
 # as described here: https://docs.python.org/3/howto/logging.html#library-config
 logging.getLogger(__name__).addHandler(logging.NullHandler())
+
+from ._version import get_versions
+__version__ = get_versions()['version']
+del get_versions
