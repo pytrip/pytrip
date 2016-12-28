@@ -47,21 +47,27 @@ def load_data_cube(filename):
     d = None
     basename_cube = None
 
-    # TODO to be improved when #66 is fixed"
-    if "dosemlet" in filename.lower():
-        # try to load LET cube
-        data_header, _ = pt.LETCube.parse_path(filename)
-        if data_header is not None:
-            basename_cube = os.path.splitext(data_header)[0]
-            d = pt.LETCube()
-    else:
-        # try to load DOS cube
-        data_header, _ = pt.DosCube.parse_path(filename)
-        if d is None and data_header is not None:
-            basename_cube = os.path.splitext(data_header)[0]
-            d = pt.DosCube()
+    # try to parse filename, first for LET then DOS cube
+    # LET cube file have extension .dosemlet.dos, DOS cube files have extension .dos
+    # this means that LET cube file can be interpreted as DOS cube file
+    # it is then important to check first for LET cube
+    #
+    # looping over classes is used in case support for other cubes needs to be added and to avoid code duplication
+    for cube_cls in (pt.LETCube, pt.DosCube):
+        data_header, _ = cube_cls.parse_path(filename)  # parse input file path
+        logger.debug("Checking if {:s} fits with {:s} class".format(filename, cube_cls.__name__))
+        if data_header is not None:  # parsing successful
+            logger.debug("Extracted data header {:s}".format(data_header))
 
-    if d is not None:
+            # extracting basename
+            # we are not using python splitext function, as LET cube has double extension: .dosemlet.dos
+            basename_end_index = data_header.rfind(cube_cls.header_file_extension)
+            basename_cube = data_header[:basename_end_index]
+
+            d = cube_cls()  # creating cube object, reading file will be done later
+            break  # escaping from the loop
+
+    if d is not None:  # parsing successful, we can proceed to reading the file
         d.read(filename)
         logger.info("Data cube shape" + str(d.cube.shape))
         if isinstance(d, pt.DosCube):
@@ -70,9 +76,8 @@ def load_data_cube(filename):
         dmax = d.cube.max()
         dmin = d.cube.min()
         logger.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
-
-    if d is None:
-        logger.warn("Filename " + filename + " is neither valid DOS neither LET cube")
+    else:
+        logger.warn("Filename " + filename + " is neither valid DOS nor LET cube")
 
     return d, basename_cube
 
@@ -157,14 +162,14 @@ def main(args=sys.argv[1:]):
     if data_cube is not None and ct_cube is not None:
         if not data_cube.is_compatible(ct_cube):
             logger.error("Cubes don't match")
-            logger.info("Cube 1 " + args.dos + " shape {:d} x {:d} x {:d}".format(data_cube.dimx, data_cube.dimy,
-                                                                                  data_cube.dimz))
-            logger.info("Cube 1 " + args.dos + " pixel {:g} [cm], slice {:g} [cm]".format(data_cube.pixel_size,
-                                                                                          data_cube.slice_distance))
-            logger.info("Cube 2 " + args.ctx + " shape {:d} x {:d} x {:d}".format(ct_cube.dimx, ct_cube.dimy,
-                                                                                  ct_cube.dimz))
-            logger.info("Cube 2 " + args.ctx + " pixel {:g} [cm], slice {:g} [cm]".format(ct_cube.pixel_size,
-                                                                                          ct_cube.slice_distance))
+            logger.info("Cube 1 " + args.data + " shape {:d} x {:d} x {:d}".format(data_cube.dimx, data_cube.dimy,
+                                                                                   data_cube.dimz))
+            logger.info("Cube 1 " + args.data + " pixel {:g} [cm], slice {:g} [cm]".format(data_cube.pixel_size,
+                                                                                           data_cube.slice_distance))
+            logger.info("Cube 2 " + args.ct + " shape {:d} x {:d} x {:d}".format(ct_cube.dimx, ct_cube.dimy,
+                                                                                 ct_cube.dimz))
+            logger.info("Cube 2 " + args.ct + " pixel {:g} [cm], slice {:g} [cm]".format(ct_cube.pixel_size,
+                                                                                         ct_cube.slice_distance))
             return 2
 
     cube = None
