@@ -1,35 +1,8 @@
-  include *.rst
-  include *.txt
-  include *.py
-  include requirements.txt
-  include tests/requirements-test.txt
-  include *.yml
-  recursive-include docs *.py
-  recursive-include docs *.rst
-  recursive-include pytrip98 *.py
-  recursive-include tests *.py
-  recursive-include tests *.tar.gz
-  recursive-include examples *.py
-
-  exclude .gitkeep
-  exclude .gitconfig
-  exclude tox.ini
-  exclude .travis.yml
-  exclude appveyor.yml
-  prune .travis
-  prune install_deps.sh
-
-  include GPL_LICENSE
-  include LICENSE
-  include INSTALL
-  recursive-include appveyor *.sh
-  recursive-include pytrip *.c
   recursive-include pytrip *.py
-  recursive-include tests *.dat
-  recursive-include tests *.exec
-  recursive-include tests *.gd
-  recursive-include tests *.gz
-  recursive-include tests *.hed
-  recursive-include tests *.md
-  recursive-include tests *.rst
-  recursive-include tests *.vdx
+  recursive-include examples *.py
+  exclude *.sh *.yml *.ini *.txt .gitkeep *.so
+  exclude versioneer.py *LICENSE
+  prune appveyor
+  prune docs
+  prune .travis
+  prune tests
