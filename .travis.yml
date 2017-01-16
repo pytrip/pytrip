@@ -1,14 +1,6 @@
-# before commiting check this file here: https://lint.travis-ci.org/
+# before committing check this file here: https://lint.travis-ci.org/
 
 language: python
-
-cache:
-  directories:
-  - ~/.cache/pip
-  - ~/.pyenv
-
-before_cache:
-  - rm -f $HOME/.cache/pip/log/debug.log
 
 services:
   - docker
@@ -110,7 +102,7 @@ before_install:
   - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
   - sudo bash ./install_deps.sh $PYTHON_VERSION
 
-# install freetype, lapack etc and finally packages from requirement.txt
+# install packages from requirement.txt and other stuff
 install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait bash ./.travis/install_linux.sh ; fi
   - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/install_osx.sh ; fi

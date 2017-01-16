@@ -183,7 +183,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
-    package_data={'pytrip': ['data/*.dat']},
+    package_data={'pytrip': ['data/*.dat', 'pytriplib.*']},
     install_requires=[
         'matplotlib', 'numpy', 'pydicom', 'scipy'
     ],
