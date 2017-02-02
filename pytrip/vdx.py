@@ -75,7 +75,7 @@ class VdxCube:
     >>> v = VdxCube("", c)
     >>> v.read("TST000000.vdx")
     """
-    def __init__(self, content, cube=None):
+    def __init__(self, content=None, cube=None):
         self.vois = []
         self.cube = cube
         self.version = "1.2"
@@ -91,14 +91,37 @@ class VdxCube:
             raise InputError("Input is not a valid rtss structure")
         dcm = data["rtss"]
         self.version = "2.0"
-        for i, item in enumerate(dcm.ROIContours):
+
+        if hasattr(dcm, 'ROIContours'):
+            _contours = dcm.ROIContours
+        elif hasattr(dcm, 'ROIContourSequence'):
+            _contours = dcm.ROIContourSequence
+        else:
+            logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
+            exit()
+
+        for i, item in enumerate(_contours):
             if structure_ids is None or item.RefdROINumber in structure_ids:
-                v = Voi(dcm.RTROIObservations[i].ROIObservationLabel.decode('iso-8859-1'), self.cube)
-                v.read_dicom(dcm.RTROIObservations[i], item)
+                if hasattr(dcm, "RTROIObservations"):
+                    _roi = dcm.RTROIObservations[i]
+                elif hasattr(dcm, "RTROIObservationsSequence"):
+                    _roi = dcm.RTROIObservationsSequence[i]
+                else:
+                    logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
+                    exit()
+
+                if hasattr(_roi, "ROIObservationLabel"):
+                    v = Voi(_roi.ROIObservationLabel.decode('iso-8859-1'), self.cube)
+                else:
+                    v = Voi("(NoNameROI %d)".format(i), self.cube)
+                v.read_dicom(_roi, item)
+
                 self.add_voi(v)
+
         self.cube.xoffset = 0
         self.cube.yoffset = 0
         self.cube.zoffset = 0
+
         """shift = min(self.cube.slice_pos)
         for i in range(len(self.cube.slice_pos)):
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
