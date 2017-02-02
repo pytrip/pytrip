@@ -45,8 +45,17 @@ def main(args=sys.argv[1:]):
     c = pt.CtxCube()
     c.read_dicom(dcm)
 
+    v = pt.CtxCube(cube=c)
+
+    try:
+        v.read_dicom(dcm)
+        v.write_trip_data(basename + ".vdx")
+    except:
+        pass
+
     c.write_trip_header(basename + ".hed")
     c.write_trip_data(basename + ".ctx")
+
     return 0
 
 
