@@ -6,5 +6,3 @@
   prune docs
   prune .travis
   prune tests
-include versioneer.py
-include pytrip/_version.py
