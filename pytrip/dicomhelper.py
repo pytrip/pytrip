@@ -24,10 +24,21 @@ import dicom
 
 
 def compare_dicom_key(dcm):
+    """ Specifying the sorting key for CT images.
+    """
     return float(dcm.ImagePositionPatient[2])
 
 
 def read_dicom_folder(path):
+    """ Reads a folder with dicom files.
+    Identifies each dicom file with .dcm suffix and returns a dict containing a dicom object.
+    Dicom object may be "CT", "RTSTRUCT", "RTDOSE" or "RTPLAN".
+    Corresponding keys for lookup are "images", "rtss", "rtdose" or "rtplan" repsectively.
+    CT objects are lists of images. They will be sorted by the position in patient given
+    by the ImagePositionPatient[2] tag.
+
+    :returns: A dict containing dicom objects and corresponding keys 'images','rtss','rtdose' or 'rtplan'.
+    """
     if not os.path.isdir(path):
         raise IOError("Folder does not exist")
     data = {}
