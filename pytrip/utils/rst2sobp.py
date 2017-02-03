@@ -24,9 +24,7 @@ to simulate the beam using Monte Carlo methods.
 import sys
 import logging
 import argparse
-
 import pytrip as pt
-from pytrip.utils.rst_read import RstfileRead  # TODO: should use raster.py instead, see #156
 
 
 def main(args=sys.argv[1:]):
@@ -39,11 +37,13 @@ def main(args=sys.argv[1:]):
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     args = parser.parse_args(args)
 
-    rst_file_data = RstfileRead(args.rst_file)
+    rst = pt.Rst()
+    rst.load_field(args.rst_file)
+    
     with open(args.sobp_file, 'w') as fout:
         fout.writelines("*ENERGY(GEV) X(CM)  Y(CM)     FWHM(cm)  WEIGHT\n")
-        for subm in rst_file_data.submachine:
-            for xpos, ypos, part in zip(subm.xpos, subm.ypos, subm.particles):
+        for subm in rst.machines:
+            for xpos, ypos, part in subm.raster_points:
                 fout.writelines("{:<10.6f}{:<10.2f}{:<10.2f}{:<10.2f}{:<10.4e}\n".format(
                     subm.energy / 1000.0, xpos / 10.0, ypos / 10.0, subm.focus / 10.0, part))
     return 0
