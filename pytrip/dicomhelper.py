@@ -33,7 +33,7 @@ def read_dicom_folder(path):
 
     # list of allowed dicom file extentions names
     # all in lower case
-    dicom_suffix = ['.dcm','.ima']
+    dicom_suffix = ['.dcm', '.ima']
 
     data = {}
     folder = os.listdir(path)
