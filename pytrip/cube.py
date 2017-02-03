@@ -285,7 +285,7 @@ class Cube(object):
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
         self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * (value)
-        self.slice_dimension = dimz
+        self.slice_dimension = dimx
         self.num_bytes = 2
         self.data_type = "integer"
         self.pydata_type = np.int16
