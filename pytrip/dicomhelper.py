@@ -30,10 +30,15 @@ def compare_dicom_key(dcm):
 def read_dicom_folder(path):
     if not os.path.isdir(path):
         raise IOError("Folder does not exist")
+
+    # list of allowed dicom file extentions names
+    # all in lower case
+    dicom_suffix = ['.dcm','.ima']
+
     data = {}
     folder = os.listdir(path)
     for item in folder:
-        if os.path.splitext(item)[1] == ".dcm":
+        if os.path.splitext(item)[1].lower() in dicom_suffix:
             dcm = dicom.read_file(os.path.join(path, item), force=True)
             # TODO figureout what was it about (see below)
             # if dicom.__version__ >= "0.9.5":
