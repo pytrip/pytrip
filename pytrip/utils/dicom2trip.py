@@ -26,6 +26,8 @@ import argparse
 
 import pytrip as pt
 
+logger = logging.getLogger(__name__)
+
 
 def main(args=sys.argv[1:]):
     """ Main function for dicom2trip.py
@@ -40,21 +42,27 @@ def main(args=sys.argv[1:]):
 
     basename = args.ctx_basename
 
+    if args.verbosity == 1:
+        logger.setLevel('INFO')
+    if args.verbosity > 1:
+        logger.setLevel('DEBUG')
+
     # import DICOM
     dcm = pt.dicomhelper.read_dicom_folder(args.dicom_folder)
     c = pt.CtxCube()
     c.read_dicom(dcm)
 
-    v = pt.VdxCube(None,cube=c)
+    vdx_cube = pt.VdxCube(content=None, cube=c)
 
     try:
-        v.read_dicom(dcm)
-        v.write_trip_data(basename + ".vdx")
+        vdx_cube.read_dicom(dcm)
+        vdx_cube.write_trip_data(basename + ".vdx")
     except:
+        logger.warning("No contour information found in DICOM")
         pass
 
-    c.write_trip_header(basename + ".hed")
-    c.write_trip_data(basename + ".ctx")
+    c.write_trip_header(basename + pt.CtxCube.header_file_extension)
+    c.write_trip_data(basename + pt.CtxCube.data_file_extension)
 
     return 0
 
