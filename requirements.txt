@@ -1,7 +1,6 @@
 numpy<1.12 ; python_version >= '3.2' and python_version < '3.4' # numpy starting from 1.12 doesn't support python 3.2 and 3.3
 numpy ; python_version < '3.0' or python_version >= '3.4' # newest numpy for py 2.7, 3.4 and higher
-# matplotlib starting from 2.0, doesn't work well with Python 3.2 and 3.3 and Windows
-matplotlib<=1.5.1 ; (python_version >= '3.2' and python_version < '3.4') or os_name == 'nt' # py 3.2 and 3.3 and Windows
-matplotlib ; (python_version < '3.0' or python_version >= '3.4') and os_name != 'nt' # py 2.7 , 3.4 and higher and not Windows
+# matplotlib starting from 2.0, doesn't work well, see issue #226 and others
+matplotlib<=1.5.3 
 pydicom
 scipy
