@@ -76,8 +76,10 @@ class Rst:
             data = f.read()
         data = data.split("\n")
         out, i = parse_to_var(data, self.var_dict, "submachine#")
-        for key, item in out.iteritems():
+        # print(out)
+        for key, item in out.items():
             setattr(self, key, item)
+            # print(key, item)
         if hasattr(self, "bolus"):
             self.bolus = float(self.bolus)
         for machine in range(int(self.submachines)):
