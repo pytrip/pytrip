@@ -95,7 +95,7 @@ def min_list(a, b):
 
 def array_to_point_array(points, offset):
     point = [[points[3 * i] - offset[0], points[3 * i + 1] - offset[1], points[3 * i + 2] - offset[2]]
-             for i in range(len(points) / 3)]
+             for i in range(int(len(points) / 3))]
     return point
 
 
