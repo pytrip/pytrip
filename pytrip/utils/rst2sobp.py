@@ -38,7 +38,7 @@ def main(args=sys.argv[1:]):
     args = parser.parse_args(args)
 
     rst = pt.Rst()
-    rst.load_field(args.rst_file)
+    rst.read(args.rst_file)
 
     with open(args.sobp_file, 'w') as fout:
         fout.writelines("*ENERGY(GEV) X(CM)  Y(CM)     FWHM(cm)  WEIGHT\n")
