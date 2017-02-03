@@ -89,7 +89,7 @@ To have the code working, two things are needed:
 First let us install ``versioneer`` package and generate necessary files::
 
    $ pip install versioneer
-   $ versioneer install
+   $ ./install_versioneer.sh
 
 Now code can be run by typing::
 
@@ -149,7 +149,7 @@ Get Started for non-GIT developers
 2. Follow steps 4-6 from the instruction for GIT-aware developers. Install versioneer::
 
    $ pip install versioneer
-   $ versioneer install
+   $ ./install_versioneer.sh
 
 To run code locally, prefix usual calls with ``PYTHONPATH=.``::
 
