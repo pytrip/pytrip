@@ -67,7 +67,7 @@ class Rst:
         """
         self.data = dicom.read_file(path)
 
-    def load_field(self, path):  # TODO: load_field() -> read()
+    def read(self, path):
         """ Load and parse a raster scan (.rst) file.
 
         :param str path: Full path to the file to be loaded, including file extension.
@@ -76,10 +76,9 @@ class Rst:
             data = f.read()
         data = data.split("\n")
         out, i = parse_to_var(data, self.var_dict, "submachine#")
-        # print(out)
+
         for key, item in out.items():
             setattr(self, key, item)
-            # print(key, item)
         if hasattr(self, "bolus"):
             self.bolus = float(self.bolus)
         for machine in range(int(self.submachines)):
