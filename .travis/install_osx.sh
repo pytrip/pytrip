@@ -25,6 +25,8 @@ fi
 # for other interpreters pointed out by TOXENV look at the end of the script
 pip install --user --upgrade versioneer
 ~/Library/Python/2.7/bin/versioneer install
+git reset HEAD MANIFEST.in
+git reset HEAD pytrip/__init__.py
 
 # For native python 2.7 we can jump out
 if [[ $TOXENV == py27* ]] ; then exit 0; fi

@@ -27,6 +27,8 @@ do
     ${PYBIN}/pip install versioneer
     cd /io
     ${PYBIN}/versioneer install
+    git reset HEAD MANIFEST.in
+    git reset HEAD pytrip/__init__.py
     cd -
 
     # Install requirements and get the exit code
