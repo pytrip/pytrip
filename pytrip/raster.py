@@ -230,15 +230,15 @@ class SubMachine:
             outgrid[o[0]:o[0] + size[0], o[1]:o[1] + size[1]] += gauss[i] * grid
 
         # store new grid in l which will be returned
-        l = []
+        _l = []
         for i in range(len(outgrid)):
             for j in range(len(outgrid[0])):  # run along y indices
-                # only append to result grid l, if we have a reasonable number of particles in this spot.
+                # only append to result grid _l, if we have a reasonable number of particles in this spot.
                 if outgrid[i, j] > 2000:  # spot threshold is 2000 particles
-                    l.append([(i - zero2[0]) * self.stepsize[0],
-                              (j - zero2[1]) * self.stepsize[1],
-                              outgrid[i, j]])
-        return l
+                    _l.append([(i - zero2[0]) * self.stepsize[0],
+                               (j - zero2[1]) * self.stepsize[1],
+                               outgrid[i, j]])
+        return _l
 
     def save_random_error_machine(self, fp, sigma):
         """ Generates and stores a single energy layer where Gaussian blur has been applied.

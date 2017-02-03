@@ -39,7 +39,7 @@ def main(args=sys.argv[1:]):
 
     rst = pt.Rst()
     rst.load_field(args.rst_file)
-    
+
     with open(args.sobp_file, 'w') as fout:
         fout.writelines("*ENERGY(GEV) X(CM)  Y(CM)     FWHM(cm)  WEIGHT\n")
         for subm in rst.machines:
