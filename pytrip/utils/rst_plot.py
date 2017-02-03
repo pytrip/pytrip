@@ -25,7 +25,6 @@ import argparse
 import logging
 
 import pytrip as pt
-from pytrip.utils.rst_read import RstfileRead  # TODO: use raster.py instead see #156
 
 
 def main(args=sys.argv[1:]):
@@ -49,19 +48,29 @@ def main(args=sys.argv[1:]):
     sm = args.submachine
     fac = args.factor
 
-    a = RstfileRead(file)
+    a = pt.Rst()
+    a.read(file)
 
     # convert data in submachine to a nice array
-    b = a.submachine[sm]
-    title = "Submachine: {:d} / {:d} - Energy: {:.3f} MeV/u".format(sm, len(a.submachine), b.energy)
+    b = a.machines[sm]
+
+    x = []
+    y = []
+    z = []
+    for _x, _y, _z in b.raster_points:
+        x.append(_x)
+        y.append(_y)
+        z.append(_z)
+
+    title = "Submachine: {:d} / {:d} - Energy: {:.3f} MeV/u".format(sm, len(a.machines), b.energy)
     print(title)
-    cc = array(b.particles)
+    cc = array(z)
 
     cc = cc / cc.max() * fac
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
-    ax.scatter(b.xpos, b.ypos, c=cc, s=cc, alpha=0.75)
+    ax.scatter(x, y, c=cc, s=cc, alpha=0.75)
     ylabel("mm")
     xlabel("mm")
     grid(True)
