@@ -277,7 +277,7 @@ class Cube(object):
         :param int dimz: number of voxels along z
         :param float pixel_size: size of each pixel (x == y) in [mm]
         :param float slice_distance: the distance between two slices (z) in [mm]
-        :param float slice_offset: star position of the first slice in [mm] (default 0.0 mm)
+        :param float slice_offset: start position of the first slice in [mm] (default 0.0 mm)
         """
         self.dimx = dimx
         self.dimy = dimy
@@ -285,14 +285,12 @@ class Cube(object):
         self.slice_number = dimz
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
-        self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * (value)
+        self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * value
         self.slice_dimension = dimx
         self.num_bytes = 2
         self.data_type = "integer"
         self.pydata_type = np.int16
-        self.slice_pos = []
-        for _i, i in enumerate(range(dimz)):
-            self.slice_pos.append(slice_distance * i + slice_offset)
+        self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
 
     def override_cube_values(self, voi, value):
