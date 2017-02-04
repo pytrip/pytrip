@@ -72,10 +72,10 @@ class VdxCube:
 
     >>> c = CtxCube()
     >>> c.read("TST000000")
-    >>> v = VdxCube("", c)
+    >>> v = VdxCube(c)
     >>> v.read("TST000000.vdx")
     """
-    def __init__(self, content=None, cube=None):
+    def __init__(self, cube=None):
         self.vois = []
         self.cube = cube
         self.version = "1.2"

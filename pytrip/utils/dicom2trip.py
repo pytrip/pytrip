@@ -52,7 +52,7 @@ def main(args=sys.argv[1:]):
     c = pt.CtxCube()
     c.read_dicom(dcm)
 
-    vdx_cube = pt.VdxCube(content=None, cube=c)
+    vdx_cube = pt.VdxCube(cube=c)
 
     try:
         vdx_cube.read_dicom(dcm)

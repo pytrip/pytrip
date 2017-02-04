@@ -59,7 +59,7 @@ def main(args=sys.argv[1:]):
     ctx_path = ctx_basename + ".vdx"
     if os.path.exists(ctx_path):
         print("Convert structures")
-        v = pt.VdxCube(content="", cube=c)
+        v = pt.VdxCube(cube=c)
         v.read(ctx_path)
         v.write_dicom(output_folder)
     print("Done")
