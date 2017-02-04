@@ -759,7 +759,7 @@ class TripExecuter(object):
         ctx = self.images
         ctx.patient_name = self.plan_name
         ctx.write(os.path.join(out_path + ".ctx"))
-        structures = VdxCube("", ctx)
+        structures = VdxCube(ctx)
         structures.version = "2.0"
         liste = []
         area = 0
@@ -816,7 +816,7 @@ class TripExecuter(object):
         ctx = self.images
         ctx.patient_name = self.plan_name
         ctx.write(os.path.join(out_path + ".ctx"))
-        structures = VdxCube("", ctx)
+        structures = VdxCube(ctx)
         structures.version = "2.0"
         for voi in self.plan.get_vois():
             voxelplan_voi = voi.get_voi().get_voi_data()

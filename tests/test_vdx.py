@@ -45,7 +45,7 @@ class TestVdx(unittest.TestCase):
         logger.info("Creating CT cube from path " + self.cube000)
         c = pt.CtxCube()
         c.read(self.cube000)
-        v = pt.VdxCube("", c)
+        v = pt.VdxCube(c)
         logger.info("Adding VDX from path " + self.vdx)
         v.read(self.vdx)
 
@@ -103,7 +103,7 @@ class TestVdx(unittest.TestCase):
 
     def test_read_solo(self):
         logger.info("Checking reading VdxCube without CT cube loaded")
-        v = pt.VdxCube("")
+        v = pt.VdxCube()
         v.read(self.vdx)
 
     def test_create_voi_cube(self):
