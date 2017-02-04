@@ -33,12 +33,18 @@ logger = logging.getLogger(__name__)
 
 
 class TestRst(unittest.TestCase):
+    """ Test the raster.py files
+    """
     def setUp(self):
+        """ Prepare files for tests
+        """
         testdir = tests.test_base.get_files()
         self.rst000 = os.path.join(testdir, "tst003001.rst")
         logger.info("Testing .rst from path " + self.rst000)
 
     def test_read(self):
+        """ Check if we are able to read a simple .rst file
+        """
         r = Rst()
         r.read(self.rst000)
         self.assertEqual(r.submachines, '17')
@@ -48,12 +54,18 @@ class TestRst(unittest.TestCase):
 
 
 class TestRst2Sobp(unittest.TestCase):
+    """ Test the rst2sobp.py script
+    """
     def setUp(self):
+        """ Prepare files for tests
+        """
         testdir = tests.test_base.get_files()
         self.rst000 = os.path.join(testdir, "tst003001.rst")
         logger.info("Testing rst2sobp.py using .rst from path " + self.rst000)
 
     def test_generate(self):
+        """ Execute rst2sobp.py and make sure a non-empty file exists.
+        """
         fd, outfile = tempfile.mkstemp()
 
         pytrip.utils.rst2sobp.main(args=[self.rst000, outfile])
