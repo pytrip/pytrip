@@ -27,7 +27,6 @@ do
     ${PYBIN}/pip install versioneer
     cd /io
     ${PYBIN}/versioneer install
-    git add -f pytrip/_version.py
     cd -
 
     # Install requirements and get the exit code

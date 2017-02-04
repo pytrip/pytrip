@@ -13,7 +13,9 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
 versioneer install
 
 # keeping generated files in repo is bad practice
-# versioneer.py, pytrip/_version.py are excluded in .gitignore
-# modifications in MANIFEST.in and pytrip/__init__.py are exluded from staging by following commands: 
+# versioneer.py, pytrip/_version.py and modifications in MANIFEST.in and pytrip/__init__.py 
+# are exluded from staging by following commands: 
+git reset HEAD versioneer.py
+git reset HEAD pytrip/_version.py
 git reset HEAD MANIFEST.in
 git reset HEAD pytrip/__init__.py
