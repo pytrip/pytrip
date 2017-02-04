@@ -23,7 +23,7 @@ import os
 import unittest
 import logging
 import tempfile
-import shutil
+# import shutil
 
 import tests.test_base
 from pytrip.raster import Rst
@@ -46,6 +46,7 @@ class TestRst(unittest.TestCase):
         self.assertEqual(r.machines[0].energy, 120.2)
         self.assertEqual(r.machines[0].raster_points[0], [27.0, -24.0, 2844850.0])
 
+
 class TestRst2Sobp(unittest.TestCase):
     def setUp(self):
         testdir = tests.test_base.get_files()
@@ -63,6 +64,7 @@ class TestRst2Sobp(unittest.TestCase):
 
         os.close(fd)  # Windows needs it
         os.remove(outfile)  # we need only temp filename, not the file
+
 
 if __name__ == '__main__':
     unittest.main()
