@@ -67,7 +67,7 @@ class Rst:
         """
         self.data = dicom.read_file(path)
 
-    def load_field(self, path):  # TODO: load_field() -> read()
+    def read(self, path):
         """ Load and parse a raster scan (.rst) file.
 
         :param str path: Full path to the file to be loaded, including file extension.
@@ -76,7 +76,8 @@ class Rst:
             data = f.read()
         data = data.split("\n")
         out, i = parse_to_var(data, self.var_dict, "submachine#")
-        for key, item in out.iteritems():
+
+        for key, item in out.items():
             setattr(self, key, item)
         if hasattr(self, "bolus"):
             self.bolus = float(self.bolus)
@@ -228,15 +229,15 @@ class SubMachine:
             outgrid[o[0]:o[0] + size[0], o[1]:o[1] + size[1]] += gauss[i] * grid
 
         # store new grid in l which will be returned
-        l = []
+        _l = []
         for i in range(len(outgrid)):
             for j in range(len(outgrid[0])):  # run along y indices
-                # only append to result grid l, if we have a reasonable number of particles in this spot.
+                # only append to result grid _l, if we have a reasonable number of particles in this spot.
                 if outgrid[i, j] > 2000:  # spot threshold is 2000 particles
-                    l.append([(i - zero2[0]) * self.stepsize[0],
-                              (j - zero2[1]) * self.stepsize[1],
-                              outgrid[i, j]])
-        return l
+                    _l.append([(i - zero2[0]) * self.stepsize[0],
+                               (j - zero2[1]) * self.stepsize[1],
+                               outgrid[i, j]])
+        return _l
 
     def save_random_error_machine(self, fp, sigma):
         """ Generates and stores a single energy layer where Gaussian blur has been applied.
