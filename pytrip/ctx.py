@@ -88,6 +88,13 @@ class CtxCube(Cube):
         ds.PixelRepresentation = 1
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
 
+        # .HED files do not carry any time stamp (other than the usual file meta data)
+        # so let's just fill it with current times. (Can be overriden by user)
+        ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
+        ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
+
         # Eclipse tags
         from dicom.tag import Tag
         ds.add_new(Tag(0x0018, 0x0060), 'DS', '')  # KVP
@@ -100,14 +107,6 @@ class CtxCube(Cube):
                                         "%.3f" % (self.slice_pos[i])]
 
             _ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
-
-            # .HED files do not carry any time stamp (other than the usual file meta data)
-            # so let's just fill it with current times. (Can be overriden by user)
-            _ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
-            _ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
-            _ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
-            _ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
-
             _ds.SliceLocation = str(self.slice_pos[i])
             _ds.InstanceNumber = str(i + 1)
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
