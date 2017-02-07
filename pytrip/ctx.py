@@ -117,15 +117,15 @@ class CtxCube(Cube):
         self.write_trip_header(header_file)
         self.write_trip_data(ctx_file)
 
-    def write_dicom(self, path):
+    def write_dicom(self, directory):
         """ Write CT-data to disk, in Dicom format.
 
-        :param str path: directory to write to. If path/ does not exist, it will be created.
+        :param str directory: directory to write to. If directory does not exist, it will be created.
         """
 
-        if not os.path.exists(path):
-            os.makedirs(path)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
 
         dcm_list = self.create_dicom()
         for i in range(len(dcm_list)):
-            dcm_list[i].save_as(os.path.join(path, "ct.%d.dcm" % (dcm_list[i].InstanceNumber - 1)))
+            dcm_list[i].save_as(os.path.join(directory, "CT.PYTRIP.%d.dcm" % (dcm_list[i].InstanceNumber)))
