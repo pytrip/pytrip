@@ -472,8 +472,14 @@ class Cube(object):
         ds.Rows = self.dimx
         ds.Columns = self.dimy
         ds.SliceThickness = str(self.slice_distance)
-
         ds.PixelSpacing = [self.pixel_size, self.pixel_size]
+
+        # Add eclipse friendly IDs
+        ds.add_new(Tag(0x0020,0x0010), 'SH', '')  # Study ID
+        ds.add_new(Tag(0x0008,0x0090), 'PN', '')  # Referring Physician's Name
+        ds.add_new(Tag(0x0020,0x1040), 'LO', '')  # Position Reference Indicator
+        ds.add_new(Tag(0x0020,0x0011), 'IS', '')  # SeriesNumber
+
         return ds
 
     def merge(self, cube):

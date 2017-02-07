@@ -88,6 +88,11 @@ class CtxCube(Cube):
         ds.PixelRepresentation = 1
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
 
+        # Eclipse tags
+        from dicom.tag import Tag
+        ds.add_new(Tag(0x0018, 0x0060), 'DS', '')  # KVP
+        ds.add_new(Tag(0x0020, 0x0012), 'IS', '')  # AcquisitionNumber
+
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
             _ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
