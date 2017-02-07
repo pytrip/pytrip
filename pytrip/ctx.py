@@ -89,16 +89,15 @@ class CtxCube(Cube):
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
 
         # .HED files do not carry any time stamp (other than the usual file meta data)
-        # so let's just fill it with current times. (Can be overriden by user)
+        # so let's just fill it with current times. (Can be overridden by user)
         ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
         ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
 
         # Eclipse tags
-        from dicom.tag import Tag
-        ds.add_new(Tag(0x0018, 0x0060), 'DS', '')  # KVP
-        ds.add_new(Tag(0x0020, 0x0012), 'IS', '')  # AcquisitionNumber
+        ds.KVP = ''  # KVP tag 0x0018, 0x0060
+        ds.AcquisitionNumber = ''  # AcquisitionNumber tag 0x0020, 0x0012
 
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
@@ -138,6 +137,5 @@ class CtxCube(Cube):
             os.makedirs(directory)
 
         dcm_list = self.create_dicom()
-
-        for i in range(len(dcm_list)):
-            dcm_list[i].save_as(os.path.join(directory, "CT.PYTRIP.%d.dcm" % (dcm_list[i].InstanceNumber)))
+        for dcm_item in dcm_list:
+            dcm_item.save_as(os.path.join(directory, "CT.PYTRIP.{:d}.dcm".format(dcm_item.InstanceNumber)))
