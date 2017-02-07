@@ -56,7 +56,7 @@ def main(args=sys.argv[1:]):
 
     try:
         vdx_cube.read_dicom(dcm)
-        vdx_cube.write_trip_data(basename + ".vdx")
+        vdx_cube.write_trip(basename + ".vdx")
     except:
         logger.warning("No contour information found in DICOM")
         pass

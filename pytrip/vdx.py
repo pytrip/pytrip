@@ -235,7 +235,7 @@ class VdxCube:
             fp.write(voi.to_voxel_string())
         fp.close()
 
-    def write_to_trip(self, path):
+    def write_trip(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
         Identical to write().
 
