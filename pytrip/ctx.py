@@ -96,7 +96,12 @@ class CtxCube(Cube):
         ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
 
         # Eclipse tags
+
+        # Manufacturer of the equipment that produced the composite instances.
+        ds.Manufacturer = self.creation_info  # Manufacturer tag,0x0008, 0x0070
+
         ds.KVP = ''  # KVP tag 0x0018, 0x0060
+
         ds.AcquisitionNumber = ''  # AcquisitionNumber tag 0x0020, 0x0012
 
         for i in range(len(self.cube)):
