@@ -21,6 +21,7 @@ The CTX module contains the CtxCube class which is inherited from the Cube class
 It is used for handling CT-data, both Voxelplan and Dicom.
 """
 import os
+import datetime
 
 import numpy as np
 
@@ -70,31 +71,36 @@ class CtxCube(Cube):
         """
         data = []
 
-        for i in range(len(self.cube)):
-            ds = self.create_dicom_base()
-            ds.Modality = 'CT'
-            ds.SamplesperPixel = 1
-            ds.BitsAllocated = self.num_bytes * 8
-            ds.BitsStored = self.num_bytes * 8
-            ds.HighBit = self.num_bytes * 8 - 1
-            ds.PatientPosition = 'HFS'
-            ds.RescaleIntercept = 0.0
-            ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
 
-            ds.PatientPosition = 'HFS'
-            ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
-            ds.RescaleSlope = 1.0
-            ds.PixelRepresentation = 1
+        ds = self.create_dicom_base()
+        ds.Modality = 'CT'
+        ds.SamplesperPixel = 1
+        ds.BitsAllocated = self.num_bytes * 8
+        ds.BitsStored = self.num_bytes * 8
+        ds.HighBit = self.num_bytes * 8 - 1
+        ds.PatientPosition = 'HFS'
+        ds.RescaleIntercept = 0.0
+        ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
+        ds.PatientPosition = 'HFS'
+        # ds.SeriesInstanceUID is created in the top-level cube class
+        # ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
+        ds.RescaleSlope = 1.0
+        ds.PixelRepresentation = 1
+        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+        
+        for i in range(len(self.cube)):
             ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
                                        "%.3f" % (self.yoffset * self.pixel_size),
                                        "%.3f" % (self.slice_pos[i])]
-            ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+
             ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
 
-            ds.SeriesDate = '19010101'  # !!!!!!!!
-            ds.ContentDate = '19010101'  # !!!!!!
-            ds.SeriesTime = '000000'  # !!!!!!!!!
-            ds.ContentTime = '000000'  # !!!!!!!!!
+            # .HED files do not carry any time stamp (other than the usual file meta data)
+            # so let's just fill it with current times. (Can be overriden by user)
+            ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
+            ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
+            ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
+            ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
 
             ds.SliceLocation = str(self.slice_pos[i])
             ds.InstanceNumber = str(i + 1)

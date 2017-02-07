@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import logging
+import datetime
 
 import numpy as np
 
@@ -462,8 +463,9 @@ class Cube(object):
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
-        ds.StudyDate = '19010101'  # !!!!!!!
-        ds.StudyTime = '000000'  # !!!!!!!!!!
+        ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
+        ds.StudyDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.StudyTime = datetime.datetime.today().strftime('%H%M%S')
         ds.PhotometricInterpretation = 'MONOCHROME2'
         ds.SamplesPerPixel = 1
         ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
