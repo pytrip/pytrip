@@ -120,8 +120,12 @@ class CtxCube(Cube):
     def write_dicom(self, path):
         """ Write CT-data to disk, in Dicom format.
 
-        :param str path: Full path,  including file extention.
+        :param str path: directory to write to. If path/ does not exist, it will be created.
         """
+
+        if not os.path.exists(path):
+            os.makedirs(path)
+
         dcm_list = self.create_dicom()
         for i in range(len(dcm_list)):
             dcm_list[i].save_as(os.path.join(path, "ct.%d.dcm" % (dcm_list[i].InstanceNumber - 1)))
