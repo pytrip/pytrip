@@ -22,6 +22,7 @@ It is used for handling CT-data, both Voxelplan and Dicom.
 """
 import os
 import datetime
+import copy
 
 import numpy as np
 
@@ -71,7 +72,6 @@ class CtxCube(Cube):
         """
         data = []
 
-
         ds = self.create_dicom_base()
         ds.Modality = 'CT'
         ds.SamplesperPixel = 1
@@ -87,28 +87,29 @@ class CtxCube(Cube):
         ds.RescaleSlope = 1.0
         ds.PixelRepresentation = 1
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
-        
-        for i in range(len(self.cube)):
-            ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
-                                       "%.3f" % (self.yoffset * self.pixel_size),
-                                       "%.3f" % (self.slice_pos[i])]
 
-            ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
+        for i in range(len(self.cube)):
+            _ds = copy.deepcopy(ds)
+            _ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
+                                        "%.3f" % (self.yoffset * self.pixel_size),
+                                        "%.3f" % (self.slice_pos[i])]
+
+            _ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
 
             # .HED files do not carry any time stamp (other than the usual file meta data)
             # so let's just fill it with current times. (Can be overriden by user)
-            ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
-            ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
-            ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
-            ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
+            _ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
+            _ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
+            _ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
+            _ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
 
-            ds.SliceLocation = str(self.slice_pos[i])
-            ds.InstanceNumber = str(i + 1)
-            pixel_array = np.zeros((ds.Rows, ds.Columns), dtype=self.pydata_type)
+            _ds.SliceLocation = str(self.slice_pos[i])
+            _ds.InstanceNumber = str(i + 1)
+            pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]
-            ds.PixelData = pixel_array.tostring()
-            ds.pixel_array = pixel_array
-            data.append(ds)
+            _ds.PixelData = pixel_array.tostring()
+            _ds.pixel_array = pixel_array
+            data.append(_ds)
         return data
 
     def write(self, path):
@@ -133,5 +134,6 @@ class CtxCube(Cube):
             os.makedirs(directory)
 
         dcm_list = self.create_dicom()
+
         for i in range(len(dcm_list)):
             dcm_list[i].save_as(os.path.join(directory, "CT.PYTRIP.%d.dcm" % (dcm_list[i].InstanceNumber)))
