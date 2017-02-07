@@ -21,6 +21,7 @@ This module provides the DosCube class, which the user should use for handling p
 """
 import os
 import logging
+import datetime
 
 import numpy as np
 
@@ -154,11 +155,11 @@ class DosCube(Cube):
 
         ds.Modality = "RTPLAN"
         ds.SeriesDescription = 'RT Plan'
-        ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
-        ds.RTPlanDate = '19010101'
+        ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
+        ds.RTPlanDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.RTPlanGeometry = ''
         ds.RTPlanLabel = 'B1'
-        ds.RTPlanTime = '000000'
+        ds.RTPlanTime = datetime.datetime.today().strftime('%H%M%S')
         structure_ref = Dataset()
         structure_ref.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage
         structure_ref.RefdSOPInstanceUID = '1.2.3'
