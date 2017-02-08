@@ -250,7 +250,7 @@ class VdxCube:
 
         :param str path: Full path, including file extension (.vdx).
         """
-        self.write_to_trip(path)
+        self.write_trip(path)
 
     def create_dicom(self):
         """ Generates and returns Dicom RTSTRUCT object, which holds all VOIs.
