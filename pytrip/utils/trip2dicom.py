@@ -27,6 +27,8 @@ import argparse
 
 import pytrip as pt
 
+logger = logging.getLogger(__name__)
+
 
 def main(args=sys.argv[1:]):
     """ Main function for trip2dicom.py
@@ -37,11 +39,18 @@ def main(args=sys.argv[1:]):
     parser.add_argument("outputdir", help="Write resulting DICOM files to this directory.", type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
-    args = parser.parse_args(args)
+    parsed_args = parser.parse_args(args)
 
-    output_folder = args.outputdir
+    if parsed_args.verbosity == 1:
+        logging.basicConfig(level=logging.INFO)
+    elif parsed_args.verbosity > 1:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig()
 
-    _, data_file_name = pt.CtxCube.parse_path(args.ctx_data)
+    output_folder = parsed_args.outputdir
+
+    _, data_file_name = pt.CtxCube.parse_path(parsed_args.ctx_data)
     data_file_path = pt.CtxCube.discover_file(data_file_name)
 
     if not os.path.exists(data_file_path):
@@ -67,5 +76,4 @@ def main(args=sys.argv[1:]):
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
     sys.exit(main(sys.argv[1:]))

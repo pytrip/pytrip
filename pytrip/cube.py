@@ -24,6 +24,7 @@ import os
 import re
 import sys
 import logging
+import datetime
 
 import numpy as np
 
@@ -462,16 +463,23 @@ class Cube(object):
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
-        ds.StudyDate = '19010101'  # !!!!!!!
-        ds.StudyTime = '000000'  # !!!!!!!!!!
+        ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
+        ds.StudyDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.StudyTime = datetime.datetime.today().strftime('%H%M%S')
         ds.PhotometricInterpretation = 'MONOCHROME2'
         ds.SamplesPerPixel = 1
         ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
         ds.Rows = self.dimx
         ds.Columns = self.dimy
         ds.SliceThickness = str(self.slice_distance)
-
         ds.PixelSpacing = [self.pixel_size, self.pixel_size]
+
+        # Add eclipse friendly IDs
+        ds.StudyID = ''  # Study ID tag 0x0020,0x0010
+        ds.ReferringPhysiciansName = ''  # Referring Physician's Name tag 0x0008,0x0090
+        ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
+        ds.SeriesNumber = ''  # SeriesNumber tag 0x0020,0x0011
+
         return ds
 
     def merge(self, cube):

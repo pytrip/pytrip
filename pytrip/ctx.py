@@ -21,6 +21,8 @@ The CTX module contains the CtxCube class which is inherited from the Cube class
 It is used for handling CT-data, both Voxelplan and Dicom.
 """
 import os
+import datetime
+import copy
 
 import numpy as np
 
@@ -70,39 +72,52 @@ class CtxCube(Cube):
         """
         data = []
 
+        ds = self.create_dicom_base()
+        ds.Modality = 'CT'
+        ds.SamplesperPixel = 1
+        ds.BitsAllocated = self.num_bytes * 8
+        ds.BitsStored = self.num_bytes * 8
+        ds.HighBit = self.num_bytes * 8 - 1
+        ds.PatientPosition = 'HFS'
+        ds.RescaleIntercept = 0.0
+        ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
+        ds.PatientPosition = 'HFS'
+        # ds.SeriesInstanceUID is created in the top-level cube class
+        # ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
+        ds.RescaleSlope = 1.0
+        ds.PixelRepresentation = 1
+        ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
+
+        # .HED files do not carry any time stamp (other than the usual file meta data)
+        # so let's just fill it with current times. (Can be overridden by user)
+        ds.SeriesDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.ContentDate = datetime.datetime.today().strftime('%Y%m%d')
+        ds.SeriesTime = datetime.datetime.today().strftime('%H%M%S')
+        ds.ContentTime = datetime.datetime.today().strftime('%H%M%S')
+
+        # Eclipse tags
+
+        # Manufacturer of the equipment that produced the composite instances.
+        ds.Manufacturer = self.creation_info  # Manufacturer tag,0x0008, 0x0070
+
+        ds.KVP = ''  # KVP tag 0x0018, 0x0060
+
+        ds.AcquisitionNumber = ''  # AcquisitionNumber tag 0x0020, 0x0012
+
         for i in range(len(self.cube)):
-            ds = self.create_dicom_base()
-            ds.Modality = 'CT'
-            ds.SamplesperPixel = 1
-            ds.BitsAllocated = self.num_bytes * 8
-            ds.BitsStored = self.num_bytes * 8
-            ds.HighBit = self.num_bytes * 8 - 1
-            ds.PatientPosition = 'HFS'
-            ds.RescaleIntercept = 0.0
-            ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
+            _ds = copy.deepcopy(ds)
+            _ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
+                                        "%.3f" % (self.yoffset * self.pixel_size),
+                                        "%.3f" % (self.slice_pos[i])]
 
-            ds.PatientPosition = 'HFS'
-            ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
-            ds.RescaleSlope = 1.0
-            ds.PixelRepresentation = 1
-            ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
-                                       "%.3f" % (self.yoffset * self.pixel_size),
-                                       "%.3f" % (self.slice_pos[i])]
-            ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
-            ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
-
-            ds.SeriesDate = '19010101'  # !!!!!!!!
-            ds.ContentDate = '19010101'  # !!!!!!
-            ds.SeriesTime = '000000'  # !!!!!!!!!
-            ds.ContentTime = '000000'  # !!!!!!!!!
-
-            ds.SliceLocation = str(self.slice_pos[i])
-            ds.InstanceNumber = str(i + 1)
-            pixel_array = np.zeros((ds.Rows, ds.Columns), dtype=self.pydata_type)
+            _ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
+            _ds.SliceLocation = str(self.slice_pos[i])
+            _ds.InstanceNumber = str(i + 1)
+            pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]
-            ds.PixelData = pixel_array.tostring()
-            ds.pixel_array = pixel_array
-            data.append(ds)
+            _ds.PixelData = pixel_array.tostring()
+            _ds.pixel_array = pixel_array
+            data.append(_ds)
         return data
 
     def write(self, path):
@@ -117,11 +132,15 @@ class CtxCube(Cube):
         self.write_trip_header(header_file)
         self.write_trip_data(ctx_file)
 
-    def write_dicom(self, path):
+    def write_dicom(self, directory):
         """ Write CT-data to disk, in Dicom format.
 
-        :param str path: Full path,  including file extention.
+        :param str directory: directory to write to. If directory does not exist, it will be created.
         """
+
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+
         dcm_list = self.create_dicom()
-        for i in range(len(dcm_list)):
-            dcm_list[i].save_as(os.path.join(path, "ct.%d.dcm" % (dcm_list[i].InstanceNumber - 1)))
+        for dcm_item in dcm_list:
+            dcm_item.save_as(os.path.join(directory, "CT.PYTRIP.{:d}.dcm".format(dcm_item.InstanceNumber)))
