@@ -71,14 +71,9 @@ matrix:
     # python 3.3 is handled separately as at the time no matplotlib package is provided for py3.3
     #   and matplotlib has to be compiled from sources which takes a lot of time
         - python: 3.5
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
-          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m"
-# TODO fix an issue https://github.com/pytrip/pytrip/issues/70 before enabling
-#        - python: 3.5
-#          env: TOXENV=packaging PRECMD=linux32 TARGET=cp33-cp33m
-#        - python: 3.5
-#          env: TOXENV=packaging TARGET=cp33-cp33m
+          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET=source
     # fired only when making release (on tags): MacOSX wheel packages
