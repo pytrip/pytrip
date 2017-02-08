@@ -38,17 +38,19 @@ def main(args=sys.argv[1:]):
     parser.add_argument("ctx_basename", help="basename of output file in TRiP98 format", type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
-    args = parser.parse_args(args)
+    parsed_args = parser.parse_args(args)
 
-    basename = args.ctx_basename
+    if parsed_args.verbosity == 1:
+        logging.basicConfig(level=logging.INFO)
+    elif parsed_args.verbosity > 1:
+        logging.basicConfig(level=logging.DEBUG)
+    else:
+        logging.basicConfig()
 
-    if args.verbosity == 1:
-        logger.setLevel('INFO')
-    if args.verbosity > 1:
-        logger.setLevel('DEBUG')
+    basename = parsed_args.ctx_basename
 
     # import DICOM
-    dcm = pt.dicomhelper.read_dicom_folder(args.dicom_folder)
+    dcm = pt.dicomhelper.read_dicom_folder(parsed_args.dicom_folder)
     c = pt.CtxCube()
     c.read_dicom(dcm)
 
@@ -68,5 +70,4 @@ def main(args=sys.argv[1:]):
 
 
 if __name__ == '__main__':
-    logging.basicConfig()
     sys.exit(main(sys.argv[1:]))
