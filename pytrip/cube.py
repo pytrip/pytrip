@@ -445,6 +445,12 @@ class Cube(object):
             raise ModuleNotLoadedError("Dicom")
         if self.header_set is False:
             raise InputError("Header not loaded")
+
+        # TODO tags + code datatypes are described here:
+        # https://www.dabsoft.ch/dicom/6/6/#(0020,0012)
+        # datatype codes are described here:
+        # ftp://dicom.nema.org/medical/DICOM/2013/output/chtml/part05/sect_6.2.html
+
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
         meta.MediaStorageSOPInstanceUID = "1.2.3"
@@ -478,7 +484,7 @@ class Cube(object):
         ds.StudyID = ''  # Study ID tag 0x0020,0x0010
         ds.ReferringPhysiciansName = ''  # Referring Physician's Name tag 0x0008,0x0090
         ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
-        ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String) 
+        ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
 
         return ds
 
