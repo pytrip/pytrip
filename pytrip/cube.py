@@ -478,7 +478,7 @@ class Cube(object):
         ds.StudyID = ''  # Study ID tag 0x0020,0x0010
         ds.ReferringPhysiciansName = ''  # Referring Physician's Name tag 0x0008,0x0090
         ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
-        ds.SeriesNumber = 1  # SeriesNumber tag 0x0020,0x0011
+        ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String) 
 
         return ds
 
