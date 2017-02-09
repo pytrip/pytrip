@@ -102,7 +102,7 @@ class CtxCube(Cube):
 
         ds.KVP = ''  # KVP tag 0x0018, 0x0060
 
-        ds.AcquisitionNumber = ''  # AcquisitionNumber tag 0x0020, 0x0012
+        ds.AcquisitionNumber = 1  # AcquisitionNumber tag 0x0020, 0x0012
 
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)

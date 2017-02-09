@@ -453,7 +453,7 @@ class Cube(object):
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
         ds.PatientID = "123456"
-        ds.PatientsSex = '0'
+        ds.PatientsSex = ''
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
@@ -478,7 +478,7 @@ class Cube(object):
         ds.StudyID = ''  # Study ID tag 0x0020,0x0010
         ds.ReferringPhysiciansName = ''  # Referring Physician's Name tag 0x0008,0x0090
         ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
-        ds.SeriesNumber = ''  # SeriesNumber tag 0x0020,0x0011
+        ds.SeriesNumber = 1  # SeriesNumber tag 0x0020,0x0011
 
         return ds
 
