@@ -109,11 +109,10 @@ class VdxCube:
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
                     exit()
-
-                if hasattr(_roi, "ROIObservationLabel"):
-                    v = Voi(_roi.ROIObservationLabel.decode('iso-8859-1'), self.cube)
+                if hasattr(dcm.StructureSetROISequence[i], "ROIName"):
+                    v = Voi(dcm.StructureSetROISequence[i].ROIName, self.cube)
                 else:
-                    v = Voi("(NoNameROI %d)".format(i), self.cube)
+                    v = Voi("(UnnamedROI #{d})".format(i), self.cube)
                 v.read_dicom(_roi, item)
 
                 self.add_voi(v)
