@@ -116,6 +116,7 @@ class CtxCube(Cube):
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]
             _ds.PixelData = pixel_array.tostring()
+            _ds.PixelSpacing = [str(self.pixel_size),str(self.pixel_size)]
             _ds.pixel_array = pixel_array
             data.append(_ds)
         return data
