@@ -347,7 +347,7 @@ class VdxCube:
         :param str directory: Diretory where the rtss.dcm file will be saved.
         """
         dcm = self.create_dicom()
-        dcm.save_as(os.path.join(directory, "RTSTUCT.PYTRIP.dcm"))
+        dcm.save_as(os.path.join(directory, "RTSTRUCT.PYTRIP.dcm"))
 
 
 def _voi_point_cmp(a, b):
