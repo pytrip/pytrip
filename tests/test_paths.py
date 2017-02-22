@@ -39,7 +39,7 @@ TODO: documentation here.
 
 # v = VdxCube("",c)
 # v.read_dicom(dcm)
-# #~ v.write_to_trip("../../../DicomData/test/test.vdx")
+# #~ v.write_trip("../../../DicomData/test/test.vdx")
 # voi = v.get_voi_by_name("ptv 3mm")
 # #~ d.load_from_structure(voi,1000)
 # voi.create_point_tree()
@@ -60,7 +60,7 @@ TODO: documentation here.
 #
 # v = VdxCube("",c)
 # v.read_dicom(dcm)
-# #~ v.write_to_trip("../../../DicomData/test/test.vdx")
+# #~ v.write_trip("../../../DicomData/test/test.vdx")
 # voi = v.get_voi_by_name("ctv")
 # #~ d.load_from_structure(voi,1000)
 # voi.create_point_tree()

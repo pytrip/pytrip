@@ -780,7 +780,7 @@ class TripExecuter(object):
                 voxelplan_voi.type = '0'
         for voxelplan_voi in liste:
             structures.add_voi(voxelplan_voi)
-        structures.write_to_trip(out_path + ".vdx")
+        structures.write_trip(out_path + ".vdx")
 
     def compress_files(self):
         """
@@ -825,7 +825,7 @@ class TripExecuter(object):
                 voxelplan_voi.type = '1'
             else:
                 voxelplan_voi.type = '0'
-        structures.write_to_trip(out_path + ".vdx")
+        structures.write_trip(out_path + ".vdx")
 
     def get_transport(self):
         transport = paramiko.Transport((self.plan.get_server(), 22))

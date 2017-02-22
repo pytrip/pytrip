@@ -245,7 +245,7 @@ class VdxCube:
 
     def write(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
-        Identical to write_to_trip().
+        Identical to write_trip().
 
         :param str path: Full path, including file extension (.vdx).
         """
