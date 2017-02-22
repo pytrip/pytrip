@@ -481,8 +481,8 @@ class Cube(object):
         ds.PixelSpacing = [self.pixel_size, self.pixel_size]
 
         # Add eclipse friendly IDs
-        ds.StudyID = ''  # Study ID tag 0x0020,0x0010
-        ds.ReferringPhysiciansName = ''  # Referring Physician's Name tag 0x0008,0x0090
+        ds.StudyID = '1'  # Study ID tag 0x0020,0x0010 (type SH - Short String)
+        ds.ReferringPhysiciansName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
         ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
 
