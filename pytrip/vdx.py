@@ -905,7 +905,8 @@ class Voi:
         thickness = self.get_thickness()
         for k in self.slice_z:
             sl = self.slices[k]
-            pos = sl.get_position()
+            pos = sl.get_position()  # returns different systems depending on what happend before
+            pos += min(self.cube.slice_pos)  # this is a teporary hack for now, may break something else.
             out += "slice %d\n" % i
             out += "slice_in_frame %.3f\n" % pos
             out += "thickness %.3f reference " \
@@ -1109,13 +1110,8 @@ class Slice:
             # and select DICOM object for current slice based on slice position
             # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
 
-            from pytrip.util import float_compare
-
-            _eps = 0.00001
             
-            candidates = [dcm for dcm in self.cube.create_dicom() if float_compare(dcm.SliceLocation,
-                                                                                   self.get_position(),
-                                                                                   _eps)]
+            candidates = [dcm for dcm in self.cube.create_dicom() if np.isclose(dcm.SliceLocation,                                                                                   self.get_position())]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
@@ -1252,8 +1248,10 @@ class Contour:
         out = ""
         for i, cnt in enumerate(self.contour):
             out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
+
+        # repeat the first point, to close the contour
         out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
-                                                     self.contour[0][2] + self.cube.slice_pos[0],
+                                                     self.contour[0][2] + _zoffset,
                                                      0, 0, 0)
         return out
 

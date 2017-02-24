@@ -43,10 +43,3 @@ def evaluator(funct, name='funct'):
 
     f.__name__ = name
     return f
-
-def find_nearest(array, value):
-    idx = (np.abs(array - value)).argmin()
-    return array[idx]
-
-def float_compare(a, b, eps):
-    return abs(a - b) < eps
