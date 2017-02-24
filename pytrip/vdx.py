@@ -1279,7 +1279,9 @@ class Contour:
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]  # make list of pairs
         for x, y in xy_pairs:
             # TRiP98 saves X,Y coordinates as integers, to get [mm] they needs to be divided by 16
-            self.contour.append([float(x) / 16.0, float(y) / 16.0, float(slice_number)])
+            self.contour.append([self.cube.pixel_size * float(x) / 16.0,
+                                 self.cube.pixel_size * float(y) / 16.0,
+                                 float(slice_number)])
 
     def add_child(self, contour):
         """ (TODO: Document me)
