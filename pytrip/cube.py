@@ -191,41 +191,12 @@ class Cube(object):
     def slice_to_z(self, idx):
         """ Return z-position in [mm] of slice with index idx.
 
-        :params int idx: index number of slice
-        :returns: position of slice in [mm]
+        :params int idx: index number of slice (no bound check)
+        :returns: position of slice in [mm] including offset
         """
         # TODO: out of bounds, return nearest neighbour. Update docstring.
-        return idx * self.slice_distance + self.zoffset
-
-    def pos_to_indices(self, pos):
-        """ Translate a real x,y,z position in [mm] to voxel indices, including any offets.
-
-        The z position is always following the slice positions.
-
-        :params indices: tuple or list of float positions (x,y,z) or [x,y,z]
-        :returns: list of positions,including offsets, as a list of floats [x,y,z]
-        """
-        indices = [int(pos[0] / self.pixel_size - self.xoffset / self.pixel_size),
-                   int(pos[1] / self.pixel_size - self.yoffset / self.pixel_size),
-                   int(pos[2] / self.slice_distance - self.zoffset / self.slice_distance)]
-        return indices  # TODO: out of bounds, return nearest neighbour. Update docstring.
-
-    def get_value_at_indice(self, idx):  # TODO: indice -> index (indece is wrong grammar)
-        """ Retrieves the value of a voxel at index [i,j,k].
-
-        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
-        :returns: The voxel value at index[i,j,k]
-        """
-        # TODO: out of bounds, throw error.
-        return self.cube[idx[2]][idx[1]][idx[0]]
-
-    def get_value_at_pos(self, pos):
-        """ Retrieves the value of a voxel at postion [x,y,z] in [mm], including any offsets.
-
-        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
-        :returns: The voxel value at index[i,j,k]
-        """
-        return self.get_value_at_indice(self.pos_to_indices(pos))
+        # return idx * self.slice_distance + self.zoffset
+        return self.slice_pos[idx] + self.zoffset
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
         """ Create Cube from a given equation.
