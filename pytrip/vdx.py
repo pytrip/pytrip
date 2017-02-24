@@ -79,6 +79,11 @@ class VdxCube:
         self.vois = []
         self.cube = cube
         self.version = "1.2"
+        if cube is not None:
+            self.patient_id = cube.patient_id
+        else:
+            import datetime
+            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
 
     def read_dicom(self, data, structure_ids=None):
         """
@@ -269,11 +274,11 @@ class VdxCube:
             ds.PatientsName = self.cube.patient_name
             ds.Manufacturer = self.cube.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         else:
-            ds.PatientsName = ''
+            ds.PatientsName = ""
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
-        ds.PatientID = "123456"
-        ds.PatientsSex = '0'
+        ds.PatientID = self.patient_id  # patient_id of the VdxCube, from CtxCube during __init__.
+        ds.PatientsSex = 'O'
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
