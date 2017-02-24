@@ -194,9 +194,9 @@ class Cube(object):
         :params int idx: index number of slice (no bound check)
         :returns: position of slice in [mm] including offset
         """
-        # TODO: out of bounds, return nearest neighbour. Update docstring.
-        # return idx * self.slice_distance + self.zoffset
-        return self.slice_pos[idx] + self.zoffset
+        print(idx)
+        # note that self.slice_pos contains an array of positions including any zoffset.
+        return self.slice_pos[int(idx)]
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
         """ Create Cube from a given equation.
@@ -648,7 +648,15 @@ class Cube(object):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
             i += 1
+
+        # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
+        # Here we convert to an acutual offset in mm, which is stored in self.
         self.zoffset *= self.slice_distance
+
+        # generate slice position tables, if absent in header file
+        # Note:
+        # - ztable in .hed is _without_ offset
+        # - self.slice_pos however holds values _including_ offset.
         if has_ztable is not True:
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
