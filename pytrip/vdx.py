@@ -267,8 +267,11 @@ class VdxCube:
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
             ds.PatientsName = self.cube.patient_name
+            ds.Manufacturer = self.cube.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         else:
-            ds.PatientsName = ""
+            ds.PatientsName = ''
+            ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
+        ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.PatientID = "123456"
         ds.PatientsSex = '0'
         ds.PatientsBirthDate = '19010101'
@@ -284,6 +287,7 @@ class VdxCube:
         ds.SeriesDate = '19010101'  # !!!!!!!!
         ds.ContentDate = '19010101'  # !!!!!!
         ds.StudyDate = '19010101'  # !!!!!!!
+        ds.StudyID = '1'  # Study ID tag 0x0020,0x0010 (type SH - Short String)
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
@@ -292,6 +296,9 @@ class VdxCube:
         ds.StructureSetTime = '000000'
         ds.StructureSetName = 'ROI'
         ds.Modality = 'RTSTRUCT'
+        ds.ROIGenerationAlgorithm = '0'  # ROI Generation Algorithm tag, 0x3006,0x0036 (type CS - Code String)
+        ds.ReferringPhysiciansName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
+
         roi_label_list = []
         roi_data_list = []
         roi_structure_roi_list = []

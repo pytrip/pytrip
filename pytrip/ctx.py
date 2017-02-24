@@ -98,7 +98,7 @@ class CtxCube(Cube):
         # Eclipse tags
 
         # Manufacturer of the equipment that produced the composite instances.
-        ds.Manufacturer = self.creation_info  # Manufacturer tag,0x0008, 0x0070
+        ds.Manufacturer = self.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
 
         ds.KVP = ''  # KVP tag 0x0018, 0x0060
 
