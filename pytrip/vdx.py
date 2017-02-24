@@ -278,7 +278,8 @@ class VdxCube:
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.PatientID = self.patient_id  # patient_id of the VdxCube, from CtxCube during __init__.
-        ds.PatientsSex = 'O'
+        ds.PatientsSex = 'O'  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        #                       Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
