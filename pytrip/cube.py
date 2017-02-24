@@ -463,8 +463,8 @@ class Cube(object):
         ds.PatientsName = self.patient_name
         if self.patient_id is None:
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
-        ds.PatientsSex = 'O'  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
-        #                       Enumerated Values: M = male F = female O = other.
+        ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        #                      Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
