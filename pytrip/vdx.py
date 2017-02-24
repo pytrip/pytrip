@@ -730,13 +730,14 @@ class Voi:
         return roi
 
     def create_dicom_contour_data(self, i):
-        """ Based on self.slices, Dicom conours are generated for the Dicom ROI.
+        """ Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
         :returns: Dicom ROI_CONTOURS
         """
         roi_contours = Dataset()
         contours = []
         for slice in self.slices.values():
+            logger.info("Get contours from slice at {:10.3f} mm".format(slice.get_position()))
             contours.extend(slice.create_dicom_contours())
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
@@ -1006,7 +1007,6 @@ class Slice:
         """
         if len(self.contour) == 0:
             return None
-        # print("NBget_position:",self.contour[0].contour[0][2])
         return self.contour[0].contour[0][2]
 
     def get_intersections(self, pos):
@@ -1113,16 +1113,6 @@ class Slice:
 
             _eps = 0.00001
             
-            _found = False
-            for _dcm in self.cube.create_dicom():
-                print("NBNB:", _dcm.SliceLocation, self.get_position())
-                if float_compare(_dcm.SliceLocation, self.get_position(), _eps):
-                    print("<<<<<<<<<< FOUND")
-                    _found = True
-            if not _found:
-                print("oops")
-                exit()
-
             candidates = [dcm for dcm in self.cube.create_dicom() if float_compare(dcm.SliceLocation,
                                                                                    self.get_position(),
                                                                                    _eps)]
