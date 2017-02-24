@@ -664,7 +664,7 @@ class Voi:
             points1.extend(reversed(points2))
             points1.append(points1[0])
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(points1))
+            s.add_contour(Contour(points1), cube=self.cube)
         return s
 
     def define_colors(self):
@@ -761,7 +761,7 @@ class Voi:
                 break
             if re.match("slice#", line) is not None:
                 s = Slice(cube=self.cube)
-                i = s.read_vdx_old(content, i)
+                i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
@@ -809,7 +809,7 @@ class Voi:
                 if self.cube is None:
                     raise Exception("cube not loaded")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
-                self.slice_z.append(key)
+                self.slice_z.append(key)  # in integer format, and without zoffset
                 self.slices[key] = s
             elif re.match("voi", line) is not None:
                 break
@@ -998,16 +998,16 @@ class Slice:
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset)))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
 
     def get_position(self):
         """
-        :returns: the position of this slice in [mm]
+        :returns: the position of this slice in [mm] including zoffset
         """
         if len(self.contour) == 0:
             return None
-        print("contour[0].contour[0]NBNBNB:",self.contour[0].contour[0])
-        return self.contour[0].contour[0][2] + self.cube.slice_pos[0]
+        # print("NBget_position:",self.contour[0].contour[0][2])
+        return self.contour[0].contour[0][2]
 
     def get_intersections(self, pos):
         """ (TODO: needs documentation)
@@ -1258,10 +1258,12 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
+        _zoffset = self.cube.slice_pos[0]
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1], self.contour[0][2],
+            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
+        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
+                                                     self.contour[0][2] + self.cube.slice_pos[0],
                                                      0, 0, 0)
         return out
 
