@@ -188,15 +188,14 @@ class Cube(object):
                indices[2] * self.slice_distance + self.zoffset]
         return pos
 
-    def slice_to_z(self, idx):
+    def slice_to_z(self, slice_number):
         """ Return z-position in [mm] of slice with index idx.
 
-        :params int idx: index number of slice (no bound check)
+        :params int slice_number: slice number, starting at 1 and no bound check done here.
         :returns: position of slice in [mm] including offset
         """
-        print(idx)
         # note that self.slice_pos contains an array of positions including any zoffset.
-        return self.slice_pos[int(idx)]
+        return self.slice_pos[int(slice_number) - 1]
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
         """ Create Cube from a given equation.
@@ -349,15 +348,17 @@ class Cube(object):
         # """output_str += "zoffset " +
         # str(int(round(self.zoffset/self.slice_distance))) + "\n" """
         output_str += "dimz " + str(self.dimz) + "\n"
-        output_str += "z_table no\n"
+        if self.z_table:
+            output_str += "z_table yes\n"
+            output_str += "slice_no  position  thickness  gantry_tilt\n"
+            for i in range(len(self.slice_pos)):
+                output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1,
+                                                                       self.slice_pos[i],
+                                                                       self.slice_distance,
+                                                                       0)  # gantry tilt
+        else:
+            output_str += "z_table no\n"
 
-        # """if self.z_table is True:
-        #     output_str += "z_table yes\n"
-        #     output_str += "slice_no  position  thickness  gantry_tilt\n"
-        #     for i in range(len(self.slice_pos)):
-        #         output_str +=
-        # "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],
-        # self.slice_distance,0)"""
         with open(path, "w+") as f:
             f.write(output_str)
 
