@@ -765,7 +765,8 @@ class Voi:
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
-                            cont2[2] = self.cube.slice_to_z(cont2[2])  # change from slice number to mm
+                            # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
+                            cont2[2] = self.cube.slice_to_z(cont2[2])
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
                 # TODO investigate why 100 multiplier is needed
@@ -1005,7 +1006,8 @@ class Slice:
         """
         if len(self.contour) == 0:
             return None
-        return self.contour[0].contour[0][2]
+        print("contour[0].contour[0]NBNBNB:",self.contour[0].contour[0])
+        return self.contour[0].contour[0][2] + self.cube.slice_pos[0]
 
     def get_intersections(self, pos):
         """ (TODO: needs documentation)
@@ -1106,7 +1108,24 @@ class Slice:
             # if CT cube is loaded we extract DICOM representation of the cube (1 dicom per slice)
             # and select DICOM object for current slice based on slice position
             # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
-            candidates = [dcm for dcm in self.cube.create_dicom() if dcm.SliceLocation == self.get_position()]
+
+            from pytrip.util import float_compare
+
+            _eps = 0.00001
+            
+            _found = False
+            for _dcm in self.cube.create_dicom():
+                print("NBNB:", _dcm.SliceLocation, self.get_position())
+                if float_compare(_dcm.SliceLocation, self.get_position(), _eps):
+                    print("<<<<<<<<<< FOUND")
+                    _found = True
+            if not _found:
+                print("oops")
+                exit()
+
+            candidates = [dcm for dcm in self.cube.create_dicom() if float_compare(dcm.SliceLocation,
+                                                                                   self.get_position(),
+                                                                                   _eps)]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID

@@ -256,7 +256,7 @@ def main(args=sys.argv[1:]):
 
         slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
                                                                               cube.dimz,
-                                                                              cube.slice_to_z(slice_id - 1))
+                                                                              cube.slice_to_z(slice_id))
         text_slice.set_text(slice_str)
 
         if ct_cube is not None:
