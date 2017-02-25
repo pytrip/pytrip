@@ -767,7 +767,7 @@ class Voi:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
                             # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
-                            cont2[2] = self.cube.slice_to_z(cont2[2])
+                            cont2[2] = self.cube.slice_to_z(int(cont2[2]))
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
                 # TODO investigate why 100 multiplier is needed
