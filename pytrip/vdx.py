@@ -664,7 +664,7 @@ class Voi:
             points1.extend(reversed(points2))
             points1.append(points1[0])
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(points1), cube=self.cube)
+            s.add_contour(Contour(points1, cube=self.cube))
         return s
 
     def define_colors(self):
