@@ -860,4 +860,3 @@ class Cube(object):
             cube = cube.byteswap()
         cube.tofile(path)
         return
-

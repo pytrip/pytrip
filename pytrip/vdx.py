@@ -1110,8 +1110,8 @@ class Slice:
             # and select DICOM object for current slice based on slice position
             # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
 
-            
-            candidates = [dcm for dcm in self.cube.create_dicom() if np.isclose(dcm.SliceLocation,                                                                                   self.get_position())]
+            candidates = [dcm for dcm in self.cube.create_dicom() if np.isclose(dcm.SliceLocation,
+                                                                                self.get_position())]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
