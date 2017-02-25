@@ -819,12 +819,12 @@ class Voi:
 
     def get_roi_type_number(self, type_name):
         """
-        :returns: 1 if GTV or CTV, else 0.
+        :returns: 1 if GTV or CTV, 10 for EXTERNAL, else 0.
         """
         if type_name == 'EXTERNAL':
-            return 0  # TODO: should be 10?
+            return 10
         elif type_name == 'AVOIDANCE':
-            return 0
+            return 2
         elif type_name == 'ORGAN':
             return 0
         elif type_name == 'GTV':
@@ -857,7 +857,8 @@ class Voi:
         if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
             return
 
-        self.type = self.get_roi_type_number(np.typename)
+        _roi_type_name = info.RTROIInterpretedType
+        self.type = self.get_roi_type_number(_roi_type_name)
         self.color = data.ROIDisplayColor
         if "Contours" in data.dir():
             contours = data.Contours
