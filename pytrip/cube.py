@@ -180,7 +180,7 @@ class Cube(object):
 
         The z position is always following the slice positions.
 
-        :params indices: tuple or list of integer indices (i,j,k) or [i,j,k]
+        :params [int] indices: tuple or list of integer indices (i,j,k) or [i,j,k]
         :returns: list of positions,including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
@@ -189,13 +189,13 @@ class Cube(object):
         return pos
 
     def slice_to_z(self, slice_number):
-        """ Return z-position in [mm] of slice with index idx.
+        """ Return z-position in [mm] of slice number (starting at 1).
 
         :params int slice_number: slice number, starting at 1 and no bound check done here.
         :returns: position of slice in [mm] including offset
         """
         # note that self.slice_pos contains an array of positions including any zoffset.
-        return self.slice_pos[int(slice_number) - 1]
+        return self.slice_pos[slice_number - 1]
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
         """ Create Cube from a given equation.
@@ -351,11 +351,9 @@ class Cube(object):
         if self.z_table:
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
-            for i in range(len(self.slice_pos)):
-                output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1,
-                                                                       self.slice_pos[i],
-                                                                       self.slice_distance,
-                                                                       0)  # gantry tilt
+            for i, item enumerate(self.slice_pos):
+                output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
+                                                                       self.slice_distance, 0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
@@ -841,12 +839,14 @@ class Cube(object):
         self.header_set = True
 
     def set_z_table(self, dcm):
-        """ Creates the slice lookup table based on a given Dicom object.
+        """ Creates the slice position lookup table based on a given Dicom object.
+        The table is attached to self.
+
         :param Dicom dcm: dicom object provided by pydicom.
         """
         self.slice_pos = []
-        for i in range(len(dcm["images"])):
-            self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
+        for i, dcm_image in enumerate(dcm["images"]):
+            self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
@@ -860,14 +860,4 @@ class Cube(object):
             cube = cube.byteswap()
         cube.tofile(path)
         return
-        # TODO after return - probably forgotten
-        # f = open(path, "wb+")
-        # out = ""
-        # _format = self.format_str[0] + self.format_str[1] * self.dimx
-        # # i = 0 TODO why not used ?
-        # for image in self.cube:
-        #     out = ""
-        #     for line in image:
-        #         out += pack(_format, *line)
-        #     f.write(out)
-        # f.close()
+
