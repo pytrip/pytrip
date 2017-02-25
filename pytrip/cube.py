@@ -58,6 +58,7 @@ class Cube(object):
             self.num_bytes = cube.num_bytes
             self.byte_order = cube.byte_order
             self.patient_name = cube.patient_name
+            self.patient_id = cube.patient_id
             self.slice_dimension = cube.slice_dimension
             self.pixel_size = cube.pixel_size
             self.slice_distance = cube.slice_distance
@@ -87,6 +88,7 @@ class Cube(object):
             self.num_bytes = ""
             self.byte_order = "vms"  # aix or vms
             self.patient_name = ""
+            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')  # create a new patient ID if absent
             self.slice_dimension = ""  # eg. 256 meaning 256x256 pixels.
             self.pixel_size = ""  # size in mm
             self.slice_distance = ""  # thickness of slice
@@ -293,6 +295,7 @@ class Cube(object):
         self.pydata_type = np.int16
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
+        self.patient_id = None
 
     def override_cube_values(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -458,8 +461,10 @@ class Cube(object):
         meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
-        ds.PatientID = "123456"
-        ds.PatientsSex = ''
+        if self.patient_id is None:
+            ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+        ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        #                      Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
