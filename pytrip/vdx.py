@@ -1275,12 +1275,18 @@ class Contour:
         :params xy_line: list of numbers (as characters) representing X and Y coordinates of a contour
         """
 
+        if self.cube is None:
+            _pixel_size = 1.0
+            logger.warning("Reading .vdx in 1.2 format: no CTX cube associated, setting pixel_size to 1.0.")
+        else:
+            _pixel_size = self.cube.pixel_size
+
         # and example of xy_line: 3021 4761 2994 4899 2916 5015
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]  # make list of pairs
         for x, y in xy_pairs:
             # TRiP98 saves X,Y coordinates as integers, to get [mm] they needs to be divided by 16
-            self.contour.append([self.cube.pixel_size * float(x) / 16.0,
-                                 self.cube.pixel_size * float(y) / 16.0,
+            self.contour.append([_pixel_size * float(x) / 16.0,
+                                 _pixel_size * float(y) / 16.0,
                                  float(slice_number)])
 
     def add_child(self, contour):
