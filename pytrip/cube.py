@@ -180,7 +180,7 @@ class Cube(object):
 
         The z position is always following the slice positions.
 
-        :params indices: tuple or list of integer indices (i,j,k) or [i,j,k]
+        :params [int] indices: tuple or list of integer indices (i,j,k) or [i,j,k]
         :returns: list of positions,including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
@@ -188,44 +188,14 @@ class Cube(object):
                indices[2] * self.slice_distance + self.zoffset]
         return pos
 
-    def slice_to_z(self, idx):
-        """ Return z-position in [mm] of slice with index idx.
+    def slice_to_z(self, slice_number):
+        """ Return z-position in [mm] of slice number (starting at 1).
 
-        :params int idx: index number of slice
-        :returns: position of slice in [mm]
+        :params int slice_number: slice number, starting at 1 and no bound check done here.
+        :returns: position of slice in [mm] including offset
         """
-        # TODO: out of bounds, return nearest neighbour. Update docstring.
-        return idx * self.slice_distance + self.zoffset
-
-    def pos_to_indices(self, pos):
-        """ Translate a real x,y,z position in [mm] to voxel indices, including any offets.
-
-        The z position is always following the slice positions.
-
-        :params indices: tuple or list of float positions (x,y,z) or [x,y,z]
-        :returns: list of positions,including offsets, as a list of floats [x,y,z]
-        """
-        indices = [int(pos[0] / self.pixel_size - self.xoffset / self.pixel_size),
-                   int(pos[1] / self.pixel_size - self.yoffset / self.pixel_size),
-                   int(pos[2] / self.slice_distance - self.zoffset / self.slice_distance)]
-        return indices  # TODO: out of bounds, return nearest neighbour. Update docstring.
-
-    def get_value_at_indice(self, idx):  # TODO: indice -> index (indece is wrong grammar)
-        """ Retrieves the value of a voxel at index [i,j,k].
-
-        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
-        :returns: The voxel value at index[i,j,k]
-        """
-        # TODO: out of bounds, throw error.
-        return self.cube[idx[2]][idx[1]][idx[0]]
-
-    def get_value_at_pos(self, pos):
-        """ Retrieves the value of a voxel at postion [x,y,z] in [mm], including any offsets.
-
-        :param [int*3] idx: list of integers descibing the i,j,k of the data cube.
-        :returns: The voxel value at index[i,j,k]
-        """
-        return self.get_value_at_indice(self.pos_to_indices(pos))
+        # note that self.slice_pos contains an array of positions including any zoffset.
+        return self.slice_pos[slice_number - 1]
 
     def create_cube_from_equation(self, equation, center, limits, radial=True):
         """ Create Cube from a given equation.
@@ -378,15 +348,15 @@ class Cube(object):
         # """output_str += "zoffset " +
         # str(int(round(self.zoffset/self.slice_distance))) + "\n" """
         output_str += "dimz " + str(self.dimz) + "\n"
-        output_str += "z_table no\n"
+        if self.z_table:
+            output_str += "z_table yes\n"
+            output_str += "slice_no  position  thickness  gantry_tilt\n"
+            for i, item in enumerate(self.slice_pos):
+                output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
+                                                                       self.slice_distance, 0)  # 0 gantry tilt
+        else:
+            output_str += "z_table no\n"
 
-        # """if self.z_table is True:
-        #     output_str += "z_table yes\n"
-        #     output_str += "slice_no  position  thickness  gantry_tilt\n"
-        #     for i in range(len(self.slice_pos)):
-        #         output_str +=
-        # "  %d\t%.4f\t%.4f\t%.4f\n"%(i+1,self.slice_pos[i],
-        # self.slice_distance,0)"""
         with open(path, "w+") as f:
             f.write(output_str)
 
@@ -677,7 +647,15 @@ class Cube(object):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
             i += 1
+
+        # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
+        # Here we convert to an acutual offset in mm, which is stored in self.
         self.zoffset *= self.slice_distance
+
+        # generate slice position tables, if absent in header file
+        # Note:
+        # - ztable in .hed is _without_ offset
+        # - self.slice_pos however holds values _including_ offset.
         if has_ztable is not True:
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
@@ -861,12 +839,14 @@ class Cube(object):
         self.header_set = True
 
     def set_z_table(self, dcm):
-        """ Creates the slice lookup table based on a given Dicom object.
+        """ Creates the slice position lookup table based on a given Dicom object.
+        The table is attached to self.
+
         :param Dicom dcm: dicom object provided by pydicom.
         """
         self.slice_pos = []
-        for i in range(len(dcm["images"])):
-            self.slice_pos.append(float(dcm["images"][i].ImagePositionPatient[2]))
+        for i, dcm_image in enumerate(dcm["images"]):
+            self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
     def write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
@@ -880,14 +860,3 @@ class Cube(object):
             cube = cube.byteswap()
         cube.tofile(path)
         return
-        # TODO after return - probably forgotten
-        # f = open(path, "wb+")
-        # out = ""
-        # _format = self.format_str[0] + self.format_str[1] * self.dimx
-        # # i = 0 TODO why not used ?
-        # for image in self.cube:
-        #     out = ""
-        #     for line in image:
-        #         out += pack(_format, *line)
-        #     f.write(out)
-        # f.close()

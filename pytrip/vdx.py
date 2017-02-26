@@ -664,7 +664,7 @@ class Voi:
             points1.extend(reversed(points2))
             points1.append(points1[0])
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(points1))
+            s.add_contour(Contour(points1, cube=self.cube))
         return s
 
     def define_colors(self):
@@ -730,13 +730,14 @@ class Voi:
         return roi
 
     def create_dicom_contour_data(self, i):
-        """ Based on self.slices, Dicom conours are generated for the Dicom ROI.
+        """ Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
         :returns: Dicom ROI_CONTOURS
         """
         roi_contours = Dataset()
         contours = []
         for slice in self.slices.values():
+            logger.info("Get contours from slice at {:10.3f} mm".format(slice.get_position()))
             contours.extend(slice.create_dicom_contours())
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
@@ -761,11 +762,12 @@ class Voi:
                 break
             if re.match("slice#", line) is not None:
                 s = Slice(cube=self.cube)
-                i = s.read_vdx_old(content, i)
+                i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
-                            cont2[2] = self.cube.slice_to_z(cont2[2])  # change from slice number to mm
+                            # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
+                            cont2[2] = self.cube.slice_to_z(int(cont2[2]))
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
                 # TODO investigate why 100 multiplier is needed
@@ -808,7 +810,7 @@ class Voi:
                 if self.cube is None:
                     raise Exception("cube not loaded")
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
-                self.slice_z.append(key)
+                self.slice_z.append(key)  # in integer format, and without zoffset
                 self.slices[key] = s
             elif re.match("voi", line) is not None:
                 break
@@ -903,7 +905,8 @@ class Voi:
         thickness = self.get_thickness()
         for k in self.slice_z:
             sl = self.slices[k]
-            pos = sl.get_position()
+            pos = sl.get_position()  # returns different systems depending on what happend before
+            pos += min(self.cube.slice_pos)  # this is a teporary hack for now, may break something else.
             out += "slice %d\n" % i
             out += "slice_in_frame %.3f\n" % pos
             out += "thickness %.3f reference " \
@@ -997,11 +1000,11 @@ class Slice:
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset)))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
 
     def get_position(self):
         """
-        :returns: the position of this slice in [mm]
+        :returns: the position of this slice in [mm] including zoffset
         """
         if len(self.contour) == 0:
             return None
@@ -1106,7 +1109,9 @@ class Slice:
             # if CT cube is loaded we extract DICOM representation of the cube (1 dicom per slice)
             # and select DICOM object for current slice based on slice position
             # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
-            candidates = [dcm for dcm in self.cube.create_dicom() if dcm.SliceLocation == self.get_position()]
+
+            candidates = [dcm for dcm in self.cube.create_dicom() if np.isclose(dcm.SliceLocation,
+                                                                                self.get_position())]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
@@ -1239,10 +1244,18 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
+        if self.cube is None:
+            _zoffset = 0.0
+        else:
+            _zoffset = self.cube.slice_pos[0]
+
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1], self.contour[0][2],
+            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
+
+        # repeat the first point, to close the contour
+        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
+                                                     self.contour[0][2] + _zoffset,
                                                      0, 0, 0)
         return out
 
