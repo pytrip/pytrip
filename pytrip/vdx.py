@@ -1244,7 +1244,11 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
-        _zoffset = self.cube.slice_pos[0]
+        if self.cube is None:
+            _zoffset = 0.0
+        else:
+            _zoffset = self.cube.slice_pos[0]
+
         out = ""
         for i, cnt in enumerate(self.contour):
             out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
