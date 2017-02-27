@@ -11,12 +11,6 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
 # check ubuntu version
 lsb_release -a
 
-if [[ $TOXENV == py27* ]] || [[ $TOXENV == pep8* ]] || [[ $TOXENV == py32* ]] || [[ $TOXENV == py33* ]] || [[ $TOXENV == py36* ]];
-then
-    sudo apt-get -qq update
-    sudo apt-get install -y libblas-dev liblapack-dev gfortran libfreetype6-dev g++
-fi
-
 pip install --upgrade virtualenv$VENVVER pip$PIPVER setuptools$STVER tox wheel
 
 pip install -r requirements.txt

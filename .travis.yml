@@ -62,7 +62,9 @@ matrix:
     #   and matplotlib has to be compiled from sources which takes a lot of time
     # documentation checks and PEP8 code quality checks included in packaging
         - python: 3.5
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
+        - python: 3.5
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
