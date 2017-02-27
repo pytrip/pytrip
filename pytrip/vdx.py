@@ -549,6 +549,9 @@ class Voi:
         self.slice_z.append(key)
         self.slices[key] = slice
 
+        #NBnew
+        self.slices2.append(slice)        
+
     def get_name(self):
         """
         :returns: The name of this VOI.
@@ -783,7 +786,7 @@ class Voi:
                 self.slice_z.append(key)
                 self.slices[key] = s
 
-                self.slices2.append((s,s.get_position()))  # nbnew
+                self.slices2.append(s)  # nbnew
                 
             if re.match("#TransversalObjects", line) is not None:
                 pass
@@ -821,7 +824,7 @@ class Voi:
                 self.slice_z.append(key)  # in integer format, and without zoffset
                 self.slices[key] = s
 
-                self.slices2.append((s,s.get_position()))  # nbnew
+                self.slices2.append(s)  # nbnew
                 
             elif re.match("voi", line) is not None:
                 break
@@ -878,11 +881,22 @@ class Voi:
         else:
             contours = data.ContourSequence
         for i, contour in enumerate(contours):
-            key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
-            if key not in self.slices:
-                self.slices[key] = Slice(cube=self.cube)
-                self.slice_z.append(key)
-            self.slices[key].add_dicom_contour(contour)
+
+            #  NBnew: replacement
+            _z_pos = contour.ContourData[2]
+            # if we have a new z_position, add a new slice object to self.slices2
+            if _z_pos not in [i[1] for i in self.slices2]:
+                self.slices2.append(Slice(cube=self.cube))
+            
+                _slice = self.get_slice_from_pos(_z_pos)  # hope the scope is retained, else this wont work
+                _slice.add_dicom_contour(contour)
+
+            # old code:
+            # key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
+            # if key not in self.slices:
+            #    self.slices[key] = Slice(cube=self.cube)
+            #    self.slice_z.append(key)
+            # self.slices[key].add_dicom_contour(contour)
 
     def get_thickness(self):
         """
@@ -915,8 +929,8 @@ class Voi:
         out += "\n"
         i = 0
         thickness = self.get_thickness()
-        for k in self.slice_z:
-            sl = self.slices[k]
+        for _slice in self.slices2:
+            sl = _slice[0]
             pos = sl.get_position()  # returns different systems depending on what happend before
             pos += min(self.cube.slice_pos)  # this is a teporary hack for now, may break something else.
             out += "slice %d\n" % i
@@ -925,15 +939,15 @@ class Voi:
                    "start_pos %.3f stop_pos %.3f\n" % \
                    (thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
             out += "number_of_contours %d\n" % \
-                   self.slices[k].number_of_contours()
-            out += self.slices[k].to_voxel_string()
+                   sl.number_of_contours()
+            out += sl.to_voxel_string()
             i += 1
         return out
 
     def get_row_intersections(self, pos):
         """ (TODO: Documentation needed)
         """
-        slice = self.get_slice_at_pos(pos[2])
+        slice = self.get_slice_at_pos2(pos[2])
         if slice is None:
             return None
         return np.sort(slice.get_intersections(pos))
@@ -941,31 +955,31 @@ class Voi:
     def get_slice_at_pos2(self, z):
         """ Returns VOI slice at position z """
         
-        _slice = [item for item in self.slices2 if np.isclose(item[1], z, atol=self.get_thickness() * 0.5)][0]
+        _slice = [item for item in self.slices2 if np.isclose(item.get_position(), z, atol=self.get_thickness() * 0.5)]
         # _slice = [item for item in self.slices2 if item[1] == z]
 
         if len(_slice) == 0:
             logger.warning("could not find slice in get_slice_at_pos2")
             return None
         else:
-            print("NBnew: found slice at pos for z:",_slice, z, self.get_thickness())
-            return _slice[0]  # return slice
+            print("NBnew: found slice at pos for z:",_slice[0], z, self.get_thickness())
+            return _slice[0] # return slice, which is the first element of the store tuple
 
-    def get_slice_at_pos(self, z):
-        """ Returns nearest VOI Slice at position z.
-
-        :param float z: position z in [mm]
-        :returns: a Slice object found at position z.
-        """
-        print("zzz:",z)
-        thickness = self.get_thickness() / 2 * 100
-        for key in self.slices.keys():
-            key = key
-            low = z * 100 - thickness
-            high = z * 100 + thickness
-            if (low < key < 100 * z) or (high > key >= 100 * z):
-                return self.slices[key]
-        return None
+#    def get_slice_at_pos(self, z):
+#        """ Returns nearest VOI Slice at position z.
+#
+#        :param float z: position z in [mm]
+#        :returns: a Slice object found at position z.
+#        """
+#        print("zzz:",z)
+#        thickness = self.get_thickness() / 2 * 100
+#        for key in self.slices.keys():
+#            key = key
+#            low = z * 100 - thickness
+#            high = z * 100 + thickness
+#            if (low < key < 100 * z) or (high > key >= 100 * z):
+#                return self.slices[key]
+#        return None
 
     def number_of_slices(self):
         """
@@ -989,11 +1003,11 @@ class Voi:
         temp_min, temp_max = None, None
         if hasattr(self, "temp_min"):
             return self.temp_min, self.temp_max
-        for key in self.slices:
+        for _slice in self.slices:
             if temp_min is None:
-                temp_min, temp_max = self.slices[key].get_min_max()
+                temp_min, temp_max = _slice.get_min_max()
             else:
-                min1, max1 = self.slices[key].get_min_max()
+                min1, max1 = _slice.get_min_max()
                 temp_min = pytrip.res.point.min_list(temp_min, min1)
                 temp_max = pytrip.res.point.max_list(temp_max, max1)
         self.temp_min = temp_min
