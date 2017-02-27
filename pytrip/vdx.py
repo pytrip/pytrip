@@ -393,6 +393,7 @@ def create_cube(cube, name, center, width, height, depth):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [
                 [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
                 [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z],
@@ -425,6 +426,7 @@ def create_voi_from_cube(cube, name, value=100):
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(value)
         s = Slice(cube)
+        s.thickness = cube.slice_distance
         if not len(contour):
             continue
         points = np.zeros((len(contour[0]), 3))
@@ -456,6 +458,7 @@ def create_cylinder(cube, name, center, radius, depth):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [[x[0], x[1], z] for x in p]
             if points:
                 c = Contour(points, cube)
@@ -482,6 +485,7 @@ def create_sphere(cube, name, center, radius):
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
             if len(points) > 0:
                 c = Contour(points, cube)
