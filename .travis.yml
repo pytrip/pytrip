@@ -2,6 +2,9 @@
 
 language: python
 
+services:
+  - docker
+
 env:
   global:
     - PYPIUSER=grzanka
@@ -84,19 +87,19 @@ dist: trusty
 before_install:
   - PYTHON_VERSION="py3"
   - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
-  - sudo bash ./install_deps.sh $PYTHON_VERSION
+  - sudo ./install_deps.sh $PYTHON_VERSION
 
 # install packages from requirement.txt and other stuff
 install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait bash ./.travis/install_linux.sh ; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install_linux.sh ; fi
 # dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
-#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/install_osx.sh ; fi
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait ./.travis/install_osx.sh ; fi
 
 # finally run tox tests
 script:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 8 ; fi
 # dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
-#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait ./.travis/run_osx.sh ; fi
 # in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
-  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
+  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
 
