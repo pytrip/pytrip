@@ -505,7 +505,6 @@ class Voi:
         self.name = name
         self.is_concated = False
         self.type = 90
-        # self.slice_z = []  # not needed anymore
         self.slices = []
         self.color = [0, 230, 0]  # default colour
         self.define_colors()
@@ -563,8 +562,8 @@ class Voi:
         """
         self.concat_contour()
         data = []
-        for slice in self.slices:
-            data.extend(self.slices[slice].contour[0].contour)
+        for sl in self.slices:
+            data.extend(sl.contour[0].contour)
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
@@ -582,20 +581,21 @@ class Voi:
         """
         points = {}
         self.concat_contour()
-        slice_keys = sorted(self.slices.keys())
-        for key in slice_keys:
-            contour = self.slices[key].contour[0].contour
+
+        for sl in self.slices:  # TODO: should be sorted
+            contour = sl.contour[0].contour
             p = {}
             for x in contour:
                 p[x[0], x[1], x[2]] = []
             points.update(p)
-        n_slice = len(slice_keys)
+        n_slice = len(self.slices)
         last_contour = None
-        for i, key in enumerate(slice_keys):
-            contour = self.slices[key].contour[0].contour
+
+        for i, sl in enumerate(self.slices):
+            contour = sl.contour[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[slice_keys[i + 1]].contour[0].contour
+                next_contour = self.slices[i + 1].contour[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -951,7 +951,7 @@ class Voi:
         """
         if not self.is_concated:
             for sl in self.slices:
-                sl.concat_contour()  # TODO: check scope
+                sl.concat_contour()
         self.is_concated = True
 
     def get_min_max(self):
