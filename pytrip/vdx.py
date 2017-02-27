@@ -874,8 +874,9 @@ class Voi:
             # if we have a new z_position, add a new slice object to self.slices
             if _z_pos not in [i.get_position() for i in self.slices]:
                 logger.debug("Append new slice at z_position {:f} to slices list:".format(_z_pos))
-                self.slices.append(Slice(cube=self.cube))
-                self.slices[-1].add_dicom_contour(contour)
+                sl = Slice(cube=self.cube)
+                sl.add_dicom_contour(contour)
+                self.slices.append(sl)
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
