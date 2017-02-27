@@ -299,7 +299,7 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = 'pyTRiP plan'
+        ds.StructureSetLabel = 'PyTRiP plan'
         ds.StructureSetDate = '19010101'
         ds.StructureSetTime = '000000'
         ds.StructureSetName = 'ROI'
@@ -739,9 +739,15 @@ class Voi:
         """
         roi_contours = Dataset()
         contours = []
+
+        dcmcube = None
+        if self.cube is not None:
+            dcmcube = self.cube.create_dicom()
+
         for _slice in self.slices:
             logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
-            contours.extend(_slice.create_dicom_contours())
+            contours.extend(_slice.create_dicom_contours(dcmcube))
+
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
 
@@ -1108,7 +1114,7 @@ class Slice:
 
         return i
 
-    def create_dicom_contours(self):
+    def create_dicom_contours(self, dcmcube):
         """ Creates and returns a list of Dicom CONTOUR objects from self.
         """
 
@@ -1118,14 +1124,9 @@ class Slice:
         ref_sop_instance_uid = '1.2.3'
 
         # then we check if CT cube is loaded
-        if self.cube is not None:
-
-            # if CT cube is loaded we extract DICOM representation of the cube (1 dicom per slice)
-            # and select DICOM object for current slice based on slice position
-            # it is time consuming as for each call of this method we generate full DICOM representation (improve!)
-
-            candidates = [dcm for dcm in self.cube.create_dicom() if np.isclose(dcm.SliceLocation,
-                                                                                self.get_position())]
+        if dcmcube is not None:
+            candidates = [dcm for dcm in dcmcube if np.isclose(dcm.SliceLocation,
+                                                               self.get_position())]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
