@@ -2,9 +2,6 @@
 
 language: python
 
-services:
-  - docker
-
 env:
   global:
     - PYPIUSER=grzanka
@@ -77,9 +74,10 @@ matrix:
         - python: 3.5
           env: TOXENV=packaging TARGET=source
     # fired only when making release (on tags): MacOSX wheel packages
-        - os: osx
-          language: generic
-          env: TOXENV=packaging
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#        - os: osx
+#          language: generic
+#          env: TOXENV=packaging
     # jobs allowed to fail
     allow_failures:
     # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/119
@@ -100,12 +98,14 @@ before_install:
 # install packages from requirement.txt and other stuff
 install:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait bash ./.travis/install_linux.sh ; fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/install_osx.sh ; fi
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/install_osx.sh ; fi
 
 # finally run tox tests
 script:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 8 ; fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
 # in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
   - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
 
