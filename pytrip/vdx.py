@@ -79,11 +79,13 @@ class VdxCube:
         self.vois = []
         self.cube = cube
         self.version = "1.2"
-        if cube is not None:
+        if self.cube is not None:
             self.patient_id = cube.patient_id
+            logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
             self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+            logger.debug("VDX class creates new patient_id {}".format(self.patient_id))
 
     def read_dicom(self, data, structure_ids=None):
         """
@@ -751,6 +753,8 @@ class Voi:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+
+        logger.debug("Reading legacy 1.2 VDX format.")
         line = content[i]
         items = line.split()
         self.name = items[1]
@@ -1089,7 +1093,7 @@ class Slice:
 
         self.slice_in_frame = float(line1.split()[1])
 
-        c = Contour([])
+        c = Contour([], self.cube)
         c.read_vdx_old(slice_number=self.slice_in_frame, xy_line=line3.split()[1:])
         self.add_contour(c)
 
