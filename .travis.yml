@@ -10,15 +10,15 @@ env:
 matrix:
     include:
     # Linux tests for various python versions
-        - os: linux
-          python: 2.7
-          env: TOXENV=py27
+#        - os: linux
+#          python: 2.7
+#          env: TOXENV=py27
         - os: linux
           python: 3.5
           env: TOXENV=coverage
-        - os: linux
-          python: 3.2
-          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0" STVER="<30.0.0"
+#        - os: linux
+#          python: 3.2
+#          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0" STVER="<30.0.0"
         - os: linux
           python: 3.3
           env: TOXENV=py33
@@ -35,9 +35,10 @@ matrix:
           python: nightly
           env: TOXENV=py37
     # MacOSX tests for various python versions
-        - os: osx
-          language: generic
-          env: TOXENV=py35
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py35
 # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/109
 #        - os: osx
 #          language: generic
@@ -51,29 +52,19 @@ matrix:
 #        - os: osx
 #          language: generic
 #          env: TOXENV=py27
-    # documentation checks
-        - os: linux
-          python: 3.4
-          env: TOXENV=docs
-    # PEP8 code quality checks (py2 and py3)
-        - os: linux
-          python: 2.7
-          env: TOXENV=pep8
-        - os: linux
-          python: 3.4
-          env: TOXENV=pep8
     # fired only when making release (on tags): manylinux1 pep packages (32 and 64 bits)
     # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
     # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
     # python 3.3 is handled separately as at the time no matplotlib package is provided for py3.3
     #   and matplotlib has to be compiled from sources which takes a lot of time
+    # documentation checks and PEP8 code quality checks included in packaging
         - python: 3.5
           env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET=source
-    # fired only when making release (on tags): MacOSX wheel packages
+# fired only when making release (on tags): MacOSX wheel packages
 # dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
 #        - os: osx
 #          language: generic
