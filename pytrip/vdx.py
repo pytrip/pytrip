@@ -509,6 +509,7 @@ class Voi:
         self.slices = {}
         self.color = [0, 230, 0]  # default colour
         self.define_colors()
+        self.slices2 = []  # NBnew
 
     def create_copy(self, margin=0):
         """
@@ -781,6 +782,9 @@ class Voi:
                     key = 100 * int(s.get_position())
                 self.slice_z.append(key)
                 self.slices[key] = s
+
+                self.slices2.append((s,s.get_position()))  # nbnew
+                
             if re.match("#TransversalObjects", line) is not None:
                 pass
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
@@ -816,6 +820,9 @@ class Voi:
                 key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
                 self.slice_z.append(key)  # in integer format, and without zoffset
                 self.slices[key] = s
+
+                self.slices2.append((s,s.get_position()))  # nbnew
+                
             elif re.match("voi", line) is not None:
                 break
             elif len(self.slices) >= number_of_slices:
@@ -931,12 +938,26 @@ class Voi:
             return None
         return np.sort(slice.get_intersections(pos))
 
+    def get_slice_at_pos2(self, z):
+        """ Returns VOI slice at position z """
+        
+        _slice = [item for item in self.slices2 if np.isclose(item[1], z, atol=self.get_thickness() * 0.5)][0]
+        # _slice = [item for item in self.slices2 if item[1] == z]
+
+        if len(_slice) == 0:
+            logger.warning("could not find slice in get_slice_at_pos2")
+            return None
+        else:
+            print("NBnew: found slice at pos for z:",_slice, z, self.get_thickness())
+            return _slice[0]  # return slice
+
     def get_slice_at_pos(self, z):
         """ Returns nearest VOI Slice at position z.
 
         :param float z: position z in [mm]
         :returns: a Slice object found at position z.
         """
+        print("zzz:",z)
         thickness = self.get_thickness() / 2 * 100
         for key in self.slices.keys():
             key = key
@@ -1006,7 +1027,7 @@ class Slice:
         offset.append(float(min(self.cube.slice_pos)))
         self.contour.append(
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
-
+        
     def get_position(self):
         """
         :returns: the position of this slice in [mm] including zoffset
