@@ -323,20 +323,22 @@ class VdxCube:
                 slice_dataset = Dataset()
                 slice_dataset.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
                 slice_dataset.ReferencedSOPInstanceUID = slice_dicom.SOPInstanceUID  # most important - slice UID
+                #print(slice_dataset.ReferencedSOPInstanceUID)
+                #exit()
                 rt_ref_series_data.ContourImageSequence.append(slice_dataset)
 
             rt_ref_study_seq_data = Dataset()
             rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
-            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3.4.5'
+            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3'
             rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
 
             rt_ref_frame_study_data = Dataset()
             rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
-            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3.4.5'
+            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
             ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])  # (3006, 0010) 'Referenced Frame of Reference Sequence'
 
-            ####print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)  
-            ####exit()
+            print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)
+            exit()
         
         for i in range(self.number_of_vois()):
             logger.debug("Write ROI #{:d} to DICOM object".format(i))
@@ -350,14 +352,18 @@ class VdxCube:
 
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
             roi_structure_roi.ROINumber = str(i + 1)
+
+            # (3006, 0024) Referenced Frame of Reference UID   (UI)
             roi_structure_roi.ReferencedFrameOfReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
-            
+            ###print("roi_structure_roi.ReferencedFrameOfReferenceUID:",roi_structure_roi.ReferencedFrameOfReferenceUID)
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
         ds.RTROIObservations = Sequence(roi_label_list)
         ds.ROIContours = Sequence(roi_data_list)
         ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+        ####ds.FrameofReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
+        print("",ds.FrameofReferenceUID)
         ####print(roi_structure_roi_list)
         ####print(ds.StructureSetROIs)
         return ds
