@@ -35,15 +35,16 @@ environment:
 #      PYTHON_VERSION: "3.3"
 #      MINICONDAPATH: "C:\\Miniconda3-x64"
 
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python34"
-      PYTHON_VERSION: "3.4"
-      MINICONDAPATH: "C:\\Miniconda3"
-
-    - platform: x64
-      PYTHON_ROOT: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4"
-      MINICONDAPATH: "C:\\Miniconda3-x64"
+#   dropping Python 3.4 support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python34"
+#      PYTHON_VERSION: "3.4"
+#      MINICONDAPATH: "C:\\Miniconda3"
+#
+#    - platform: x64
+#      PYTHON_ROOT: "C:\\Python34-x64"
+#      PYTHON_VERSION: "3.4"
+#      MINICONDAPATH: "C:\\Miniconda3-x64"
 
 # Python3.5 needs VS 14.0 (2015)
     - platform: x86
@@ -108,5 +109,6 @@ test_script:
   - bash appveyor\deploy_package.sh
 
 # upload artifacts
-artifacts:
-  - path: dist\*whl
+# disabling to save the space
+#artifacts:
+#  - path: dist\*whl

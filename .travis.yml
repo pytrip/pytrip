@@ -16,6 +16,8 @@ matrix:
         - os: linux
           python: 2.7
           env: TOXENV=py27
+# it doesn't make sense to run normal tests for py35, as coverage will run them and upload
+# coverage includes also testing documentation generation with sphinx
         - os: linux
           python: 3.5
           env: TOXENV=coverage
@@ -29,18 +31,16 @@ matrix:
           python: 3.4
           env: TOXENV=py34
         - os: linux
-          python: 3.5
-          env: TOXENV=py35
-        - os: linux
           python: 3.6
           env: TOXENV=py36
         - os: linux
           python: nightly
           env: TOXENV=py37
     # MacOSX tests for various python versions
-        - os: osx
-          language: generic
-          env: TOXENV=py35
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#        - os: osx
+#          language: generic
+#          env: TOXENV=py35
 # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/109
 #        - os: osx
 #          language: generic
@@ -54,32 +54,25 @@ matrix:
 #        - os: osx
 #          language: generic
 #          env: TOXENV=py27
-    # documentation checks
-        - os: linux
-          python: 3.4
-          env: TOXENV=docs
-    # PEP8 code quality checks (py2 and py3)
-        - os: linux
-          python: 2.7
-          env: TOXENV=pep8
-        - os: linux
-          python: 3.4
-          env: TOXENV=pep8
     # fired only when making release (on tags): manylinux1 pep packages (32 and 64 bits)
     # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
     # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
     # python 3.3 is handled separately as at the time no matplotlib package is provided for py3.3
     #   and matplotlib has to be compiled from sources which takes a lot of time
+    # documentation checks and PEP8 code quality checks included in packaging
         - python: 3.5
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
+        - python: 3.5
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
         - python: 3.5
           env: TOXENV=packaging TARGET=source
-    # fired only when making release (on tags): MacOSX wheel packages
-        - os: osx
-          language: generic
-          env: TOXENV=packaging
+# fired only when making release (on tags): MacOSX wheel packages
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#        - os: osx
+#          language: generic
+#          env: TOXENV=packaging
     # jobs allowed to fail
     allow_failures:
     # TODO before uncommenting fix https://github.com/pytrip/pytrip/issues/119
@@ -95,17 +88,19 @@ dist: trusty
 before_install:
   - PYTHON_VERSION="py3"
   - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
-  - sudo bash ./install_deps.sh $PYTHON_VERSION
+  - sudo ./install_deps.sh $PYTHON_VERSION
 
 # install packages from requirement.txt and other stuff
 install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait bash ./.travis/install_linux.sh ; fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/install_osx.sh ; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install_linux.sh ; fi
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait ./.travis/install_osx.sh ; fi
 
 # finally run tox tests
 script:
   - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox -- -n 8 ; fi
-  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait bash ./.travis/run_osx.sh ; fi
+# dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
+#  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait ./.travis/run_osx.sh ; fi
 # in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
-  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then bash .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
+  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then .travis/deploy_package.sh pypi "$TARGET" $PRECMD; fi
 
