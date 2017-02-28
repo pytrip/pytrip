@@ -93,11 +93,11 @@ class Cube(object):
             self.pixel_size = ""  # size in mm
             self.slice_distance = ""  # thickness of slice
             self.slice_number = ""  # number of slices in file.
-            self.xoffset = 0
+            self.xoffset = 0.0
             self.dimx = ""  # number of pixels along x (e.g. 256)
-            self.yoffset = 0
+            self.yoffset = 0.0
             self.dimy = ""
-            self.zoffset = 0
+            self.zoffset = 0.0
             self.dimz = ""
             self.slice_pos = []
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
@@ -335,18 +335,15 @@ class Cube(object):
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        # output_str +=
-        # "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
-        output_str += "xoffset 0\n"
+        output_str += "xoffset {:d}\n".format(int(round(self.xoffset/self.pixel_size)))
         output_str += "dimx " + str(self.dimx) + "\n"
-        # output_str +=
-        # "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
-        output_str += "yoffset 0\n"
+        output_str += "yoffset {:d}\n".format(int(round(self.yoffset/self.pixel_size)))
         output_str += "dimy " + str(self.dimy) + "\n"
-        output_str += "zoffset 0\n"
 
-        # """output_str += "zoffset " +
-        # str(int(round(self.zoffset/self.slice_distance))) + "\n" """
+        # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
+        # to apply zoffset, z_table should be used instead.
+        # This means, self.zoffset should not be used anywhere.
+        output_str += "zoffset 0\n"
         output_str += "dimz " + str(self.dimz) + "\n"
         if self.z_table:
             output_str += "z_table yes\n"
@@ -822,14 +819,13 @@ class Cube(object):
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientsName
         self.slice_dimension = int(ds.Rows)  # should be changed ?
-        self.pixel_size = float(ds.PixelSpacing[0])
-        self.slice_distance = abs(
-            float(dcm["images"][0].ImagePositionPatient[2]) - float(dcm["images"][1].ImagePositionPatient[2]))
+        self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
+        self.slice_distance = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
         self.slice_number = len(dcm["images"])
         self.xoffset = float(ds.ImagePositionPatient[0])
-        self.dimx = int(ds.Rows)
+        self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
-        self.dimy = int(ds.Columns)
+        self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(ds.ImagePositionPatient[2])
         self.dimz = len(dcm["images"])
         self.z_table = True
