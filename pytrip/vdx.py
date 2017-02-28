@@ -1028,6 +1028,9 @@ class Slice:
         offset.append(float(self.cube.xoffset))
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
+
+        logger.debug("Dicom contour offsets {:f}{:f}{:f}:".offset[0],offset[1],offset[2])
+
         self.contour.append(
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
 
