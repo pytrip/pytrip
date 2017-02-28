@@ -146,7 +146,7 @@ class TestVdx(unittest.TestCase):
         self.assertEqual(s.number_of_contours(), 1)
 
         logger.info("Checking Contour create_dicom_contours method")
-        dicom_cont = s.create_dicom_contours()
+        dicom_cont = s.create_dicom_contours(v.cube.create_dicom())
         self.assertEqual(len(dicom_cont), 1)
 
         contour = s.contour[0]
