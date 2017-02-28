@@ -265,7 +265,7 @@ class Cube(object):
         self.pydata_type = np.int16
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
-        self.patient_id = None
+        self.patient_id = ''
 
     def override_cube_values(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -431,9 +431,10 @@ class Cube(object):
         meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
-        if self.patient_id is None or self.patient_id == '':
-            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
-        ds.PatientID = self.patient_id
+        if self.patient_id in (None, ''):
+            ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+        else:
+            ds.PatientID = self.patient_id  # Patient ID tag 0x0010,0x0020 (type LO - Long String)
         ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'

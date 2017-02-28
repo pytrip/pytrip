@@ -145,8 +145,10 @@ class DosCube(Cube):
         meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
-        if self.patient_id is None:
+        if self.patient_id in (None, ''):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+        else:
+            ds.PatientID = self.patient_id  # Patient ID tag 0x0010,0x0020 (type LO - Long String)
         ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'
