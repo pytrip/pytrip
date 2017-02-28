@@ -299,7 +299,7 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = 'PyTRiP plan'
+        ds.StructureSetLabel = 'PyTRiP Structures'
         ds.StructureSetDate = '19010101'
         ds.StructureSetTime = '000000'
         ds.StructureSetName = 'ROI'
@@ -333,9 +333,13 @@ class VdxCube:
             rt_ref_frame_study_data = Dataset()
             rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
             rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3.4.5'
-            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
+            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])  # (3006, 0010) 'Referenced Frame of Reference Sequence'
 
+            ####print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)  
+            ####exit()
+        
         for i in range(self.number_of_vois()):
+            logger.debug("Write ROI #{:d} to DICOM object".format(i))
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
@@ -346,13 +350,16 @@ class VdxCube:
 
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
             roi_structure_roi.ROINumber = str(i + 1)
-
+            roi_structure_roi.ReferencedFrameOfReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
+            
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
         ds.RTROIObservations = Sequence(roi_label_list)
         ds.ROIContours = Sequence(roi_data_list)
         ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+        ####print(roi_structure_roi_list)
+        ####print(ds.StructureSetROIs)
         return ds
 
     def write_dicom(self, directory):
