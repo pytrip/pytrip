@@ -431,8 +431,9 @@ class Cube(object):
         meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
-        if self.patient_id is None:
-            ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+        if self.patient_id is None or self.patient_id == '':
+            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+        ds.PatientID = self.patient_id
         ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
         ds.PatientsBirthDate = '19010101'
