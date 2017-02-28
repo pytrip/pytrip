@@ -79,11 +79,13 @@ class VdxCube:
         self.vois = []
         self.cube = cube
         self.version = "1.2"
-        if cube is not None:
+        if self.cube is not None:
             self.patient_id = cube.patient_id
+            logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
             self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
+            logger.debug("VDX class creates new patient_id {}".format(self.patient_id))
 
     def read_dicom(self, data, structure_ids=None):
         """
@@ -391,6 +393,7 @@ def create_cube(cube, name, center, width, height, depth):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [
                 [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
                 [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z],
@@ -423,6 +426,7 @@ def create_voi_from_cube(cube, name, value=100):
         isodose_obj = cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(value)
         s = Slice(cube)
+        s.thickness = cube.slice_distance
         if not len(contour):
             continue
         points = np.zeros((len(contour[0]), 3))
@@ -454,6 +458,7 @@ def create_cylinder(cube, name, center, radius, depth):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [[x[0], x[1], z] for x in p]
             if points:
                 c = Contour(points, cube)
@@ -480,6 +485,7 @@ def create_sphere(cube, name, center, radius):
         if center[2] - radius <= z <= center[2] + radius:
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
+            s.thickness = cube.slice_distance
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
             if len(points) > 0:
                 c = Contour(points, cube)
@@ -503,8 +509,7 @@ class Voi:
         self.name = name
         self.is_concated = False
         self.type = 90
-        self.slice_z = []
-        self.slices = {}
+        self.slices = []
         self.color = [0, 230, 0]  # default colour
         self.define_colors()
 
@@ -542,9 +547,7 @@ class Voi:
 
         :param Slice slice: the Slice object to be appended.
         """
-        key = int(slice.get_position() * 100)
-        self.slice_z.append(key)
-        self.slices[key] = slice
+        self.slices.append(slice)
 
     def get_name(self):
         """
@@ -563,8 +566,8 @@ class Voi:
         """
         self.concat_contour()
         data = []
-        for slice in self.slices:
-            data.extend(self.slices[slice].contour[0].contour)
+        for sl in self.slices:
+            data.extend(sl.contour[0].contour)
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
@@ -582,20 +585,21 @@ class Voi:
         """
         points = {}
         self.concat_contour()
-        slice_keys = sorted(self.slices.keys())
-        for key in slice_keys:
-            contour = self.slices[key].contour[0].contour
+
+        for sl in self.slices:  # TODO: should be sorted
+            contour = sl.contour[0].contour
             p = {}
             for x in contour:
                 p[x[0], x[1], x[2]] = []
             points.update(p)
-        n_slice = len(slice_keys)
+        n_slice = len(self.slices)
         last_contour = None
-        for i, key in enumerate(slice_keys):
-            contour = self.slices[key].contour[0].contour
+
+        for i, sl in enumerate(self.slices):
+            contour = sl.contour[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[slice_keys[i + 1]].contour[0].contour
+                next_contour = self.slices[i + 1].contour[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -647,14 +651,13 @@ class Voi:
         self.concat_contour()
         points1 = []
         points2 = []
-        for key in sorted(self.slice_z):
-            slice = self.slices[key]
+        for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -736,9 +739,9 @@ class Voi:
         """
         roi_contours = Dataset()
         contours = []
-        for slice in self.slices.values():
-            logger.info("Get contours from slice at {:10.3f} mm".format(slice.get_position()))
-            contours.extend(slice.create_dicom_contours())
+        for _slice in self.slices:
+            logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
+            contours.extend(_slice.create_dicom_contours())
         roi_contours.Contours = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
 
@@ -751,6 +754,8 @@ class Voi:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+
+        logger.debug("Reading legacy 1.2 VDX format.")
         line = content[i]
         items = line.split()
         self.name = items[1]
@@ -770,17 +775,15 @@ class Voi:
                             cont2[2] = self.cube.slice_to_z(int(cont2[2]))
                 if s.get_position() is None:
                     raise Exception("cannot calculate slice position")
-                # TODO investigate why 100 multiplier is needed
-                if self.cube is not None:
-                    key = 100 * int((float(s.get_position()) - min(self.cube.slice_pos)))
-                else:
-                    key = 100 * int(s.get_position())
-                self.slice_z.append(key)
-                self.slices[key] = s
+
+                self.slices.append(s)
+
             if re.match("#TransversalObjects", line) is not None:
                 pass
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
+
+        # TODO: prior returns, sort slices
         return i - 1
 
     def read_vdx(self, content, i):
@@ -809,14 +812,15 @@ class Voi:
                     raise Exception("cannot calculate slice position")
                 if self.cube is None:
                     raise Exception("cube not loaded")
-                key = int((float(s.get_position()) - min(self.cube.slice_pos)) * 100)
-                self.slice_z.append(key)  # in integer format, and without zoffset
-                self.slices[key] = s
+                self.slices.append(s)
+
             elif re.match("voi", line) is not None:
                 break
             elif len(self.slices) >= number_of_slices:
                 break
             i += 1
+
+        # TODO: prior returns, sort slices
         return i - 1
 
     def get_roi_type_number(self, type_name):
@@ -867,19 +871,16 @@ class Voi:
         else:
             contours = data.ContourSequence
         for i, contour in enumerate(contours):
-            key = int((float(contour.ContourData[2]) - min(self.cube.slice_pos)) * 100)
-            if key not in self.slices:
-                self.slices[key] = Slice(cube=self.cube)
-                self.slice_z.append(key)
-            self.slices[key].add_dicom_contour(contour)
 
-    def get_thickness(self):
-        """
-        :returns: thickness of slice in [mm]. If there is only one slice, 3 mm is returned.
-        """
-        if len(self.slice_z) <= 1:
-            return 3  # TODO: what is this? And shoudn't it be float?
-        return abs(float(self.slice_z[1]) - float(self.slice_z[0])) / 100
+            # get current slice position
+            _z_pos = contour.ContourData[2]
+
+            # if we have a new z_position, add a new slice object to self.slices
+            if _z_pos not in [i.get_position() for i in self.slices]:
+                logger.debug("Append new slice at z_position {:f} to slices list:".format(_z_pos))
+                sl = Slice(cube=self.cube)
+                sl.add_dicom_contour(contour)
+                self.slices.append(sl)
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
@@ -903,19 +904,18 @@ class Voi:
         out += "number_of_slices %d\n" % self.number_of_slices()
         out += "\n"
         i = 0
-        thickness = self.get_thickness()
-        for k in self.slice_z:
-            sl = self.slices[k]
+
+        for sl in self.slices:
             pos = sl.get_position()  # returns different systems depending on what happend before
             pos += min(self.cube.slice_pos)  # this is a teporary hack for now, may break something else.
             out += "slice %d\n" % i
             out += "slice_in_frame %.3f\n" % pos
             out += "thickness %.3f reference " \
                    "start_pos %.3f stop_pos %.3f\n" % \
-                   (thickness, pos - 0.5 * thickness, pos + 0.5 * thickness)
+                   (sl.thickness, pos - 0.5 * sl.thickness, pos + 0.5 * sl.thickness)
             out += "number_of_contours %d\n" % \
-                   self.slices[k].number_of_contours()
-            out += self.slices[k].to_voxel_string()
+                   sl.number_of_contours()
+            out += sl.to_voxel_string()
             i += 1
         return out
 
@@ -928,19 +928,21 @@ class Voi:
         return np.sort(slice.get_intersections(pos))
 
     def get_slice_at_pos(self, z):
-        """ Returns nearest VOI Slice at position z.
-
-        :param float z: position z in [mm]
-        :returns: a Slice object found at position z.
         """
-        thickness = self.get_thickness() / 2 * 100
-        for key in self.slices.keys():
-            key = key
-            low = z * 100 - thickness
-            high = z * 100 + thickness
-            if (low < key < 100 * z) or (high > key >= 100 * z):
-                return self.slices[key]
-        return None
+        Finds and returns a slice object found at position z [mm] (float).
+
+        :param float z: slice position in absolute coordiantes (i.e. including any offsets)
+        :returns: VOI slice at position z, z position may be approxiamte
+        """
+
+        _slice = [item for item in self.slices if np.isclose(item.get_position(), z,
+                                                             atol=item.thickness * 0.5)]
+        if len(_slice) == 0:
+            logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
+            return None
+        else:
+            logger.debug("found slice at pos for z:", _slice[0], z, _slice[0].thickness)
+            return _slice[0]
 
     def number_of_slices(self):
         """
@@ -952,8 +954,8 @@ class Voi:
         """ Concat all contours in all slices found in this VOI.
         """
         if not self.is_concated:
-            for k in self.slices.keys():
-                self.slices[k].concat_contour()
+            for sl in self.slices:
+                sl.concat_contour()
         self.is_concated = True
 
     def get_min_max(self):
@@ -964,11 +966,11 @@ class Voi:
         temp_min, temp_max = None, None
         if hasattr(self, "temp_min"):
             return self.temp_min, self.temp_max
-        for key in self.slices:
+        for _slice in self.slices:
             if temp_min is None:
-                temp_min, temp_max = self.slices[key].get_min_max()
+                temp_min, temp_max = _slice.get_min_max()
             else:
-                min1, max1 = self.slices[key].get_min_max()
+                min1, max1 = _slice.get_min_max()
                 temp_min = pytrip.res.point.min_list(temp_min, min1)
                 temp_max = pytrip.res.point.max_list(temp_max, max1)
         self.temp_min = temp_min
@@ -983,6 +985,11 @@ class Slice:
     def __init__(self, cube=None):
         self.cube = cube
         self.contour = []
+
+        # the slice positions are recorded, however the thickness
+        # may be smaller than just the distance between two slices.
+        # Therefore it is here set to some small non-zero value.
+        self.thickness = 0.1  # assume some default value
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -1039,6 +1046,7 @@ class Slice:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+        self.thickness = 0.1  # some small default value
         line = content[i]
         number_of_contours = 0
         i += 1
@@ -1049,6 +1057,8 @@ class Slice:
             elif re.match("thickness", line) is not None:
                 items = line.split()
                 self.thickness = float(items[1])
+                logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
+
                 if len(items) == 7:
                     self.start_pos = float(items[4])
                     self.stop_pos = float(items[6])
@@ -1076,6 +1086,9 @@ class Slice:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+
+        # VDX cubes in version 1.2 do not hold any information on slice thicknesses.
+
         line1 = content[i]
         line2 = content[i + 1]
         line3 = content[i + 2]
@@ -1089,7 +1102,7 @@ class Slice:
 
         self.slice_in_frame = float(line1.split()[1])
 
-        c = Contour([])
+        c = Contour([], self.cube)
         c.read_vdx_old(slice_number=self.slice_in_frame, xy_line=line3.split()[1:])
         self.add_contour(c)
 

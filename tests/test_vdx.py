@@ -85,7 +85,6 @@ class TestVdx(unittest.TestCase):
         logger.info("Checking Vdx get_voi_by_name method")
         target_voi = v.get_voi_by_name('target')
         self.assertEqual(target_voi.get_name(), 'target')
-        self.assertEqual(target_voi.get_thickness(), 3)
         self.assertEqual(target_voi.number_of_slices(), 18)
 
         logger.info("Checking Voi get_3d_polygon method")
