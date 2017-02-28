@@ -851,7 +851,7 @@ class Voi:
         elif type_id == 1:
             return 'CTV'
         elif type_id == 0:
-            return 'other'
+            return 'ORGAN'
         return ''
 
     def read_dicom(self, info, data):
