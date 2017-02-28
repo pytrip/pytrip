@@ -337,8 +337,8 @@ class VdxCube:
             rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
             ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])  # (3006, 0010) 'Referenced Frame of Reference Sequence'
 
-            print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)
-            exit()
+            ####print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)
+            ####exit()
         
         for i in range(self.number_of_vois()):
             logger.debug("Write ROI #{:d} to DICOM object".format(i))
@@ -1009,6 +1009,8 @@ class Slice:
         # may be smaller than just the distance between two slices.
         # Therefore it is here set to some small non-zero value.
         self.thickness = 0.1  # assume some default value
+        if cube is not None:
+            self.thickness = cube.slice_distance
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
