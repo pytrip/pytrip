@@ -330,7 +330,10 @@ class Cube(object):
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
             self.patient_name = "Anonymous"
-        output_str += "patient_name " + str(self.patient_name) + "\n"
+        # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX        
+        _fname = os.path.basename(path)
+        _pname = os.path.splitext(_fname)[0]
+        output_str += "patient_name " + _pname + "\n"
         output_str += "slice_dimension " + str(self.slice_dimension) + "\n"
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
