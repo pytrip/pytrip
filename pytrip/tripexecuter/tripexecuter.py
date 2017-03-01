@@ -696,9 +696,9 @@ class TripExecuter(object):
             norun = ""
         p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
-        p.stdin.write(self.trip_exec)
+        p.stdin.write(self.trip_exec.encode("ascii"))
         p.stdin.flush()
-        while (True):
+        while True:
             retcode = p.poll()  # returns None while subprocess is running
             answer_stdout = p.stdout.readline()
             answer_stderr = p.stderr.readline()
