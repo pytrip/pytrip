@@ -124,9 +124,9 @@ class VdxCube:
 
                 self.add_voi(v)
 
-        self.cube.xoffset = 0
-        self.cube.yoffset = 0
-        self.cube.zoffset = 0
+        # self.cube.xoffset = 0
+        # self.cube.yoffset = 0
+        # self.cube.zoffset = 0
 
         """shift = min(self.cube.slice_pos)
         for i in range(len(self.cube.slice_pos)):
@@ -1024,15 +1024,22 @@ class Slice:
 
         :param Dicom dcm: a Dicom CONTOUR object.
         """
+
+        # grab the offsets from the CT cube object. Note that these are in mm.
+        
         offset = []
         offset.append(float(self.cube.xoffset))
         offset.append(float(self.cube.yoffset))
         offset.append(float(min(self.cube.slice_pos)))
+        
+        logger.debug("Dicom contour offsets {:f}{:f}{:f}:".format(offset[0],offset[1],offset[2]))
 
-        logger.debug("Dicom contour offsets {:f}{:f}{:f}:".offset[0],offset[1],offset[2])
-
+        #self.contour.append(
+        #    Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
+        
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), [0.0,0.0,0.0]),
+                    self.cube))
 
     def get_position(self):
         """
@@ -1277,18 +1284,18 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
-        if self.cube is None:
-            _zoffset = 0.0
-        else:
-            _zoffset = self.cube.slice_pos[0]
+        #if self.cube is None:
+        #    _zoffset = 0.0
+        #else:
+        #    _zoffset = self.cube.slice_pos[0]
 
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
+            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
 
         # repeat the first point, to close the contour
         out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
-                                                     self.contour[0][2] + _zoffset,
+                                                     self.contour[0][2],
                                                      0, 0, 0)
         return out
 

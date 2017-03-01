@@ -106,9 +106,10 @@ class CtxCube(Cube):
 
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
-            _ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size),
-                                        "%.3f" % (self.yoffset * self.pixel_size),
-                                        "%.3f" % (self.slice_pos[i])]
+            # recall that self.x-/y-/zoffset are in integer pixels
+            _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset * self.pixel_size),
+                                        "{:.3f}".format(self.yoffset * self.pixel_size),
+                                        "{:.3f}".format(self.slice_pos[i])]
 
             _ds.SOPInstanceUID = '2.16.1.113662.2.12.0.3057.1241703565.' + str(i + 1)
             _ds.SliceLocation = str(self.slice_pos[i])

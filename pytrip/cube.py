@@ -63,11 +63,11 @@ class Cube(object):
             self.pixel_size = cube.pixel_size
             self.slice_distance = cube.slice_distance
             self.slice_number = cube.slice_number
-            self.xoffset = cube.xoffset
+            self.xoffset = cube.xoffset  # self.xoffset are in mm, synced with DICOM contours
             self.dimx = cube.dimx
-            self.yoffset = cube.yoffset
+            self.yoffset = cube.yoffset  # self.yoffset are in mm, synced with DICOM contours
             self.dimy = cube.dimy
-            self.zoffset = cube.zoffset
+            self.zoffset = cube.zoffset  # self.zoffset are in mm, synced with DICOM contours
             self.dimz = cube.dimz
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
@@ -826,7 +826,7 @@ class Cube(object):
         self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
         self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
-        self.zoffset = float(ds.ImagePositionPatient[2])
+        self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
         self.dimz = len(dcm["images"])
         self.z_table = True
         self.set_z_table(dcm)
@@ -840,6 +840,9 @@ class Cube(object):
 
         :param Dicom dcm: dicom object provided by pydicom.
         """
+        # TODO: can we rely on that this will always be sorted?
+        # if yes, then all references to whether this is sorted or not can be removed hereafter
+        # (see also pytripgui) /NBassler
         self.slice_pos = []
         for i, dcm_image in enumerate(dcm["images"]):
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
