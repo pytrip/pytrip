@@ -41,11 +41,13 @@ class FieldCollection(pytripObj):
     def __getitem__(self, i):
         return self.fields[i]
 
-    def next(self):
+    def __next__(self):  # Python3 iterator method
         if self.iter >= len(self.fields):
             raise StopIteration
         self.iter += 1
         return self.fields[self.iter - 1]
+
+    next = __next__  # Python2 iterator method
 
     def add_field(self, field):
         if field.get_name() == "":

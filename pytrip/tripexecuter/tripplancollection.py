@@ -42,11 +42,13 @@ class TripPlanCollection(pytripObj):
         self.iter = 0
         return self
 
-    def next(self):
+    def __next__(self):  # Python3 iterator method
         if self.iter >= len(self.plans):
             raise StopIteration
         self.iter += 1
         return self.plans[self.iter - 1]
+
+    next = __next__  # Python2 iterator method
 
     def get_plan_by_id(self, id):
         return self.plans[id]
