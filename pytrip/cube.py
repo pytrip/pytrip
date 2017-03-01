@@ -63,11 +63,11 @@ class Cube(object):
             self.pixel_size = cube.pixel_size
             self.slice_distance = cube.slice_distance
             self.slice_number = cube.slice_number
-            self.xoffset = cube.xoffset
+            self.xoffset = cube.xoffset  # self.xoffset are in mm, synced with DICOM contours
             self.dimx = cube.dimx
-            self.yoffset = cube.yoffset
+            self.yoffset = cube.yoffset  # self.yoffset are in mm, synced with DICOM contours
             self.dimy = cube.dimy
-            self.zoffset = cube.zoffset
+            self.zoffset = cube.zoffset  # self.zoffset are in mm, synced with DICOM contours
             self.dimz = cube.dimz
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
@@ -93,11 +93,11 @@ class Cube(object):
             self.pixel_size = ""  # size in mm
             self.slice_distance = ""  # thickness of slice
             self.slice_number = ""  # number of slices in file.
-            self.xoffset = 0
+            self.xoffset = 0.0
             self.dimx = ""  # number of pixels along x (e.g. 256)
-            self.yoffset = 0
+            self.yoffset = 0.0
             self.dimy = ""
-            self.zoffset = 0
+            self.zoffset = 0.0
             self.dimz = ""
             self.slice_pos = []
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
@@ -335,18 +335,15 @@ class Cube(object):
         output_str += "pixel_size " + str(self.pixel_size) + "\n"
         output_str += "slice_distance " + str(self.slice_distance) + "\n"
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        # output_str +=
-        # "xoffset " + str(int(round(self.xoffset/self.pixel_size))) + "\n"
-        output_str += "xoffset 0\n"
+        output_str += "xoffset {:d}\n".format(int(round(self.xoffset/self.pixel_size)))
         output_str += "dimx " + str(self.dimx) + "\n"
-        # output_str +=
-        # "yoffset " + str(int(round(self.yoffset/self.pixel_size))) + "\n"
-        output_str += "yoffset 0\n"
+        output_str += "yoffset {:d}\n".format(int(round(self.yoffset/self.pixel_size)))
         output_str += "dimy " + str(self.dimy) + "\n"
-        output_str += "zoffset 0\n"
 
-        # """output_str += "zoffset " +
-        # str(int(round(self.zoffset/self.slice_distance))) + "\n" """
+        # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
+        # to apply zoffset, z_table should be used instead.
+        # This means, self.zoffset should not be used anywhere.
+        output_str += "zoffset 0\n"
         output_str += "dimz " + str(self.dimz) + "\n"
         if self.z_table:
             output_str += "z_table yes\n"
@@ -651,14 +648,18 @@ class Cube(object):
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
-        # Here we convert to an acutual offset in mm, which is stored in self.
+        # Here we convert to an acutual offset in mm, which is stored in self
+        self.xoffset *= self.pixel_size
+        self.yoffset *= self.pixel_size
         self.zoffset *= self.slice_distance
+
+        logger.debug("TRiP loaded offsets: {:f} {:f} {:f}".format(self.xoffset, self.yoffset, self.zoffset))
 
         # generate slice position tables, if absent in header file
         # Note:
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
-        if has_ztable is not True:
+        if has_ztable is False:
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance
@@ -824,15 +825,14 @@ class Cube(object):
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientsName
         self.slice_dimension = int(ds.Rows)  # should be changed ?
-        self.pixel_size = float(ds.PixelSpacing[0])
-        self.slice_distance = abs(
-            float(dcm["images"][0].ImagePositionPatient[2]) - float(dcm["images"][1].ImagePositionPatient[2]))
+        self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
+        self.slice_distance = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
         self.slice_number = len(dcm["images"])
         self.xoffset = float(ds.ImagePositionPatient[0])
-        self.dimx = int(ds.Rows)
+        self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
-        self.dimy = int(ds.Columns)
-        self.zoffset = float(ds.ImagePositionPatient[2])
+        self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
+        self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
         self.dimz = len(dcm["images"])
         self.z_table = True
         self.set_z_table(dcm)
@@ -846,6 +846,9 @@ class Cube(object):
 
         :param Dicom dcm: dicom object provided by pydicom.
         """
+        # TODO: can we rely on that this will always be sorted?
+        # if yes, then all references to whether this is sorted or not can be removed hereafter
+        # (see also pytripgui) /NBassler
         self.slice_pos = []
         for i, dcm_image in enumerate(dcm["images"]):
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))

@@ -124,9 +124,9 @@ class VdxCube:
 
                 self.add_voi(v)
 
-        self.cube.xoffset = 0
-        self.cube.yoffset = 0
-        self.cube.zoffset = 0
+        # self.cube.xoffset = 0
+        # self.cube.yoffset = 0
+        # self.cube.zoffset = 0
 
         """shift = min(self.cube.slice_pos)
         for i in range(len(self.cube.slice_pos)):
@@ -299,7 +299,7 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = 'PyTRiP plan'
+        ds.StructureSetLabel = 'PyTRiP Structures'
         ds.StructureSetDate = '19010101'
         ds.StructureSetTime = '000000'
         ds.StructureSetName = 'ROI'
@@ -327,15 +327,17 @@ class VdxCube:
 
             rt_ref_study_seq_data = Dataset()
             rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
-            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3.4.5'
+            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3'
             rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
 
             rt_ref_frame_study_data = Dataset()
             rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
-            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3.4.5'
+            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
+            # (3006, 0010) 'Referenced Frame of Reference Sequence'
             ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
 
         for i in range(self.number_of_vois()):
+            logger.debug("Write ROI #{:d} to DICOM object".format(i))
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
@@ -347,6 +349,8 @@ class VdxCube:
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
             roi_structure_roi.ROINumber = str(i + 1)
 
+            # (3006, 0024) Referenced Frame of Reference UID   (UI)
+            roi_structure_roi.ReferencedFrameOfReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
@@ -996,6 +1000,8 @@ class Slice:
         # may be smaller than just the distance between two slices.
         # Therefore it is here set to some small non-zero value.
         self.thickness = 0.1  # assume some default value
+        if cube is not None:
+            self.thickness = cube.slice_distance
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -1009,12 +1015,12 @@ class Slice:
 
         :param Dicom dcm: a Dicom CONTOUR object.
         """
-        offset = []
-        offset.append(float(self.cube.xoffset))
-        offset.append(float(self.cube.yoffset))
-        offset.append(float(min(self.cube.slice_pos)))
+
+        # do not apply any offset here, since everything is written in real world coordinates.
+        _offset = [0.0, 0.0, 0.0]
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
+                    self.cube))
 
     def get_position(self):
         """
@@ -1259,18 +1265,14 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
-        if self.cube is None:
-            _zoffset = 0.0
-        else:
-            _zoffset = self.cube.slice_pos[0]
 
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], _zoffset + cnt[2], 0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
 
         # repeat the first point, to close the contour
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
-                                                     self.contour[0][2] + _zoffset,
+        out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0], self.contour[0][1],
+                                                     self.contour[0][2],
                                                      0, 0, 0)
         return out
 
