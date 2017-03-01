@@ -646,14 +646,18 @@ class Cube(object):
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
-        # Here we convert to an acutual offset in mm, which is stored in self.
+        # Here we convert to an acutual offset in mm, which is stored in self
+        self.xoffset *= self.pixel_size
+        self.yoffset *= self.pixel_size
         self.zoffset *= self.slice_distance
+
+        logger.debug("TRiP loaded offsets: {:f} {:f} {:f}".format(self.xoffset, self.yoffset, self.zoffset))
 
         # generate slice position tables, if absent in header file
         # Note:
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
-        if has_ztable is not True:
+        if has_ztable is False:
             self.slice_pos = [float(j) for j in range(self.slice_number)]
             for i in range(self.slice_number):
                 self.slice_pos[i] = self.zoffset + i * self.slice_distance

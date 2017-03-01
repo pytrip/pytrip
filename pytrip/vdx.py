@@ -323,8 +323,6 @@ class VdxCube:
                 slice_dataset = Dataset()
                 slice_dataset.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
                 slice_dataset.ReferencedSOPInstanceUID = slice_dicom.SOPInstanceUID  # most important - slice UID
-                #print(slice_dataset.ReferencedSOPInstanceUID)
-                #exit()
                 rt_ref_series_data.ContourImageSequence.append(slice_dataset)
 
             rt_ref_study_seq_data = Dataset()
@@ -335,11 +333,9 @@ class VdxCube:
             rt_ref_frame_study_data = Dataset()
             rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
             rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
-            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])  # (3006, 0010) 'Referenced Frame of Reference Sequence'
+            # (3006, 0010) 'Referenced Frame of Reference Sequence'
+            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
 
-            ####print("FOOBAR",ds.ReferencedFrameOfReferenceSequence)
-            ####exit()
-        
         for i in range(self.number_of_vois()):
             logger.debug("Write ROI #{:d} to DICOM object".format(i))
             roi_label = self.vois[i].create_dicom_label()
@@ -355,17 +351,12 @@ class VdxCube:
 
             # (3006, 0024) Referenced Frame of Reference UID   (UI)
             roi_structure_roi.ReferencedFrameOfReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
-            ###print("roi_structure_roi.ReferencedFrameOfReferenceUID:",roi_structure_roi.ReferencedFrameOfReferenceUID)
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
         ds.RTROIObservations = Sequence(roi_label_list)
         ds.ROIContours = Sequence(roi_data_list)
         ds.StructureSetROIs = Sequence(roi_structure_roi_list)
-        ####ds.FrameofReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
-        print("",ds.FrameofReferenceUID)
-        ####print(roi_structure_roi_list)
-        ####print(ds.StructureSetROIs)
         return ds
 
     def write_dicom(self, directory):
@@ -1025,20 +1016,10 @@ class Slice:
         :param Dicom dcm: a Dicom CONTOUR object.
         """
 
-        # grab the offsets from the CT cube object. Note that these are in mm.
-        
-        offset = []
-        offset.append(float(self.cube.xoffset))
-        offset.append(float(self.cube.yoffset))
-        offset.append(float(min(self.cube.slice_pos)))
-        
-        logger.debug("Dicom contour offsets {:f}{:f}{:f}:".format(offset[0],offset[1],offset[2]))
-
-        #self.contour.append(
-        #    Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), offset), self.cube))
-        
+        # do not apply any offset here, since everything is written in real world coordinates.
+        _offset = [0.0, 0.0, 0.0]
         self.contour.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), [0.0,0.0,0.0]),
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
                     self.cube))
 
     def get_position(self):
@@ -1284,17 +1265,13 @@ class Contour:
 
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
-        #if self.cube is None:
-        #    _zoffset = 0.0
-        #else:
-        #    _zoffset = self.cube.slice_pos[0]
 
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
 
         # repeat the first point, to close the contour
-        out += " %.3f %.3f %.3f %.3f %.3f %.3f\n" % (self.contour[0][0], self.contour[0][1],
+        out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0], self.contour[0][1],
                                                      self.contour[0][2],
                                                      0, 0, 0)
         return out
