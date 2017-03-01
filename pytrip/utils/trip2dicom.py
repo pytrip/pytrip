@@ -36,7 +36,7 @@ def main(args=sys.argv[1:]):
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("ctx_data", help="location of CT file (header or data) in TRiP98 format", type=str)
-    parser.add_argument("outputdir", help="Write resulting DICOM files to this directory.", type=str)
+    parser.add_argument("outputdir", help="write resulting DICOM files to this directory", type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     parsed_args = parser.parse_args(args)
@@ -54,12 +54,13 @@ def main(args=sys.argv[1:]):
     data_file_path = pt.CtxCube.discover_file(data_file_name)
 
     if not os.path.exists(data_file_path):
-        print("CTX file missing")
+        logger.error("CTX file missing")
         return 1
 
-    print("Convert CT images")
+    logger.info("Convert CT images...")
     c = pt.CtxCube()
     c.read(data_file_name)
+
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
     c.write_dicom(output_folder)
@@ -67,11 +68,14 @@ def main(args=sys.argv[1:]):
     ctx_basename = os.path.splitext(data_file_path)[0]
     ctx_path = ctx_basename + ".vdx"
     if os.path.exists(ctx_path):
-        print("Convert structures")
+        logger.info("Convert VDX structures...")
         v = pt.VdxCube(cube=c)
         v.read(ctx_path)
         v.write_dicom(output_folder)
-    print("Done")
+    else:
+        logger.info("No VDX data found for conversion.")
+
+    logger.info("Done")
     return 0
 
 

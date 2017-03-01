@@ -51,20 +51,25 @@ def main(args=sys.argv[1:]):
 
     # import DICOM
     dcm = pt.dicomhelper.read_dicom_folder(parsed_args.dicom_folder)
-    c = pt.CtxCube()
-    c.read_dicom(dcm)
 
-    vdx_cube = pt.VdxCube(cube=c)
+    if 'images' in dcm:
+        c = pt.CtxCube()
+        c.read_dicom(dcm)
+        logger.info("Write CtxCube header... {}".format(basename + pt.CtxCube.header_file_extension))
+        c.write_trip_header(basename + pt.CtxCube.header_file_extension)
+        logger.info("Write CtxCube...        {}".format(basename + pt.CtxCube.data_file_extension))
+        c.write_trip_data(basename + pt.CtxCube.data_file_extension)
+    else:
+        logger.warning("No CT data found in {}".format(parsed_args.dicom_folder))
+        c = None
 
-    try:
+    if 'rtss' in dcm:
+        logger.info("Write VdxCube...        {}".format(basename + ".vdx"))
+        vdx_cube = pt.VdxCube(cube=c)
         vdx_cube.read_dicom(dcm)
         vdx_cube.write_trip(basename + ".vdx")
-    except:
-        logger.warning("No contour information found in DICOM")
-        pass
-
-    c.write_trip_header(basename + pt.CtxCube.header_file_extension)
-    c.write_trip_data(basename + pt.CtxCube.data_file_extension)
+    else:
+        logger.warning("No RTSTRUCT data found in {}".format(parsed_args.dicom_folder))
 
     return 0
 
