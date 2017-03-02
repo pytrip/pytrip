@@ -23,7 +23,6 @@ import os
 import shutil
 import tarfile
 import copy
-import uuid
 
 import numpy as np
 from subprocess import Popen, PIPE
@@ -147,7 +146,8 @@ class TripExecuter(object):
         self.plan_name = self.plan.get_name().replace(" ", "_")
         self.working_path = os.path.expandvars(self.plan.get_working_dir())
         if not hasattr(self, "folder_name"):
-            self.folder_name = str(uuid.uuid4())
+            import tempfile
+            self.folder_name = tempfile.mkdtemp(prefix='trip98_', dir=self.plan.get_working_dir())
         self.path = os.path.join(self.working_path, self.folder_name)
         self.prepare_folder()
         self.convert_files_to_voxelplan()
