@@ -916,15 +916,13 @@ class Voi:
         i = 0
 
         for sl in self.slices:
-            pos = sl.get_position()  # returns different systems depending on what happend before
-            pos += min(self.cube.slice_pos)  # this is a teporary hack for now, may break something else.
-            out += "slice %d\n" % i
-            out += "slice_in_frame %.3f\n" % pos
-            out += "thickness %.3f reference " \
-                   "start_pos %.3f stop_pos %.3f\n" % \
-                   (sl.thickness, pos - 0.5 * sl.thickness, pos + 0.5 * sl.thickness)
-            out += "number_of_contours %d\n" % \
-                   sl.number_of_contours()
+            pos = sl.get_position()
+            out += "slice {:d}\n".format(i)
+            out += "slice_in_frame {:.3f}\n".format(pos)
+            out += "thickness {:.3f} reference start_pos {:.3f} stop_pos {:.3f}\n".format(sl.thickness,
+                                                                                          pos - 0.5 * sl.thickness,
+                                                                                          pos + 0.5 * sl.thickness)
+            out += "number_of_contours {:d}\n".format(sl.number_of_contours())
             out += sl.to_voxel_string()
             i += 1
         return out
@@ -1081,7 +1079,7 @@ class Slice:
             elif re.match("number_of_contours", line) is not None:
                 number_of_contours = int(line.split()[1])
             elif re.match("contour", line) is not None:
-                c = Contour([])
+                c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
             elif re.match("slice", line) is not None:
@@ -1266,12 +1264,18 @@ class Contour:
         :returns: a str holding the contour points needed for a Voxelplan formatted file.
         """
 
+        # The vdx files require all contours to be mapped to a CT cube starting at (x,y) = (0,0)
+        # However, z may be mapped directly as found in the dicom file by using z_tables in .hed
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0], cnt[1], cnt[2], 0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0] - self.cube.xoffset,
+                                                         cnt[1] - self.cube.yoffset,
+                                                         cnt[2],
+                                                         0, 0, 0)
 
         # repeat the first point, to close the contour
-        out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0], self.contour[0][1],
+        out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
+                                                     self.contour[0][1] - self.cube.yoffset,
                                                      self.contour[0][2],
                                                      0, 0, 0)
         return out
@@ -1293,7 +1297,9 @@ class Contour:
                 if j >= points - 1:
                     break
                 con_dat = line.split()
-                self.contour.append([float(con_dat[0]), float(con_dat[1]), float(con_dat[2])])
+                self.contour.append([float(con_dat[0]) + self.cube.xoffset,
+                                     float(con_dat[1]) + self.cube.yoffset,
+                                     float(con_dat[2])])
                 j += 1
             else:
                 if re.match("internal_false", line) is not None:
