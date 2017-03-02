@@ -330,7 +330,7 @@ class Cube(object):
         output_str += "byte_order " + self.byte_order + "\n"
         if self.patient_name == "":
             self.patient_name = "Anonymous"
-        # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX        
+        # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX
         _fname = os.path.basename(path)
         _pname = os.path.splitext(_fname)[0]
         output_str += "patient_name {}\n".format(_pname)
