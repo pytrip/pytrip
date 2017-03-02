@@ -43,11 +43,13 @@ class VoiCollection(pytripObj):
     def __getitem__(self, i):
         return self.vois[i]
 
-    def next(self):
+    def __next__(self):  # Python3 iterator method
         if self.iter >= len(self.vois):
             raise StopIteration
         self.iter += 1
         return self.vois[self.iter - 1]
+
+    next = __next__  # Python2 iterator method
 
     def get_vois(self):
         return self.vois
