@@ -318,7 +318,7 @@ class Cube(object):
     def write_trip_header(self, path):
         """ Write a TRiP98 formatted header file, based on the available meta data.
 
-        :param path: fully qualified path, including file extention (.hed)
+        :param path: fully qualified path, including file extension (.hed)
         """
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
@@ -333,7 +333,7 @@ class Cube(object):
         # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX
         _fname = os.path.basename(path)
         _pname = os.path.splitext(_fname)[0]
-        output_str += "patient_name {}\n".format(_pname)
+        output_str += "patient_name {:s}\n".format(_pname)
         output_str += "slice_dimension {:d}\n".format(self.slice_dimension)
         output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
         output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
