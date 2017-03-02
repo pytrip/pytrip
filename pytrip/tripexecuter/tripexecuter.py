@@ -688,28 +688,29 @@ class TripExecuter(object):
         fp_stdout = open(os.path.join(self.working_path, self.folder_name, self.logfile_stdout), "w")
         fp_stderr = open(os.path.join(self.working_path, self.folder_name, self.logfile_stderr), "w")
 
-        os.chdir("%s" % (self.path))
+        os.chdir("{:s}".format(self.path))
 
         if not self._runtrip:  # for testing
             norun = "echo "
         else:
             norun = ""
+
+        # start local process running TRiP98
         p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
-        p.stdin.write(self.trip_exec.encode("ascii"))
-        p.stdin.flush()
-        while True:
-            retcode = p.poll()  # returns None while subprocess is running
-            answer_stdout = p.stdout.readline()
-            answer_stderr = p.stderr.readline()
-            logger.debug("Remote answer stdout:" + answer_stdout)
-            logger.debug("Remote answer stderr:" + answer_stderr)
-            fp_stdout.write(answer_stdout)
-            fp_stderr.write(answer_stderr)
-            self.log(answer_stdout)
-            if retcode is not None:  # runs until process stops
-                break  # TODO: check return code
-        os.chdir("..")
+        # fill standard input with configuration file conent
+        # wait until process is finished and get standard output and error streams
+        stdout, stderr = p.communicate(self.trip_exec.encode("ascii"))
+
+        if stdout is not None:
+            logger.debug("Local answer stdout:" + stdout.decode("ascii"))
+            fp_stdout.write(stdout.decode("ascii"))
+            self.log(stdout.decode("ascii"))
+        if stderr is not None:
+            logger.debug("Local answer stderr:" + stderr.decode("ascii"))
+            fp_stderr.write(stderr.decode("ascii"))
+
+        os.chdir('..')
 
         fp_stdout.close()
         fp_stderr.close()
