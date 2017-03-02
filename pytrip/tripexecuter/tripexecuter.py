@@ -147,7 +147,7 @@ class TripExecuter(object):
         self.plan_name = self.plan.get_name().replace(" ", "_")
         self.working_path = os.path.expandvars(self.plan.get_working_dir())
         if not hasattr(self, "folder_name"):
-            self.folder_name = str(uuid.uuid4())
+            self.folder_name = str("tripexe_{}".format(uuid.uuid4()))
         self.path = os.path.join(self.working_path, self.folder_name)
         self.prepare_folder()
         self.convert_files_to_voxelplan()
