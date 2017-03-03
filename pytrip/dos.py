@@ -56,8 +56,8 @@ class DosCube(Cube):
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom
         # method is that subsequent calls to write method shouldn't changed UIDs
-        if self.cube is not None:
-            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
+        if cube is not None:
+            self._dicom_study_instance_uid = cube._dicom_study_instance_uid
         else:
             self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
         self._plan_dicom_series_instance_uid = UID.generate_uid(prefix=None)
