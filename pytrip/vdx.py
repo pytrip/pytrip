@@ -84,7 +84,8 @@ class VdxCube:
         # method is that subsequent calls to write method shouldn't changed UIDs
         self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
         self._structs_dicom_series_instance_uid = UID.generate_uid(prefix=None)
-        self._stucts_sop_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_sop_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_rt_series_instance_uid = UID.generate_uid(prefix=None)
 
         self.version = "1.2"
         if self.cube is not None:
@@ -110,7 +111,7 @@ class VdxCube:
 
         self._dicom_study_instance_uid = dcm.StudyInstanceUID
         self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
-        self._stucts_sop_instance_uid = dcm.SOPInstanceUID
+        self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
         if hasattr(dcm, 'ROIContours'):
             _contours = dcm.ROIContours
@@ -303,7 +304,7 @@ class VdxCube:
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
 
         # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
-        ds.SOPInstanceUID = self._stucts_sop_instance_uid
+        ds.SOPInstanceUID = self._structs_sop_instance_uid
 
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         # self._dicom_study_instance_uid may be either set in __init__ when creating new object
@@ -342,7 +343,7 @@ class VdxCube:
         # first we check if DICOM cube is loaded
         if self.cube is not None:
             rt_ref_series_data = Dataset()
-            rt_ref_series_data.SeriesInstanceUID = '1.2.3.4.5'
+            rt_ref_series_data.SeriesInstanceUID = self.cube._ct_dicom_series_instance_uid
             rt_ref_series_data.ContourImageSequence = Sequence([])
 
             # each CT slice corresponds to one DICOM file
