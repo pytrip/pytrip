@@ -74,11 +74,11 @@ class Cube(object):
             self._set_number_of_bytes()
 
             # unique for whole structure set
-            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
-            self._ct_dicom_series_instance_uid = self.cube._ct_dicom_series_instance_uid
+            self._dicom_study_instance_uid = cube._dicom_study_instance_uid
+            self._ct_dicom_series_instance_uid = cube._ct_dicom_series_instance_uid
 
             # unique for each CT slice
-            self._ct_sop_instance_uid = self.cube._ct_sop_instance_uid
+            self._ct_sop_instance_uid = cube._ct_sop_instance_uid
 
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
 
