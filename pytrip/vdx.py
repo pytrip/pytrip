@@ -299,7 +299,8 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = 'PyTRiP Structures'
+        ds.StructureSetLabel = 'PyTRiP structs'  # Structure set label tag, 0x3006,0x0002 (type SH - Short String)
+        # Short string (SH) is limited to 16 characters !
         ds.StructureSetDate = '19010101'
         ds.StructureSetTime = '000000'
         ds.StructureSetName = 'ROI'
