@@ -25,7 +25,6 @@ import re
 import sys
 import logging
 import datetime
-
 import numpy as np
 
 try:
@@ -73,9 +72,13 @@ class Cube(object):
             self.slice_pos = cube.slice_pos
             self._set_format_str()
             self._set_number_of_bytes()
+
+            # unique for whole structure set
+            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
+            self._ct_dicom_series_instance_uid = self.cube._ct_dicom_series_instance_uid
+
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
 
-            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
         else:
             import getpass
             from pytrip import __version__ as _ptversion
@@ -102,9 +105,14 @@ class Cube(object):
             self.zoffset = 0.0
             self.dimz = ""
             self.slice_pos = []
-            self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
 
-            self._dicom_study_instance_uid = UID.generate_uid(prefix="1.2.")
+            # UIDs unique for whole structure set
+            # generation of UID is done here in init, the reason why we are not generating them in create_dicom
+            # method is that subsequent calls to write method shouldn't changed UIDs
+            self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
+            self._ct_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+
+            self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
 
     def __add__(self, other):
         c = type(self)(self)
@@ -270,7 +278,7 @@ class Cube(object):
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
         self.patient_id = ''
-        self._dicom_study_instance_uid = UID.generate_uid(prefix="1.2.")
+        self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
 
     def override_cube_values(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -449,10 +457,21 @@ class Cube(object):
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.3'  # !!!!!!!!
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
+
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
+        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Study Instance UID for structures is the same as Study Instance UID for CTs
         ds.StudyInstanceUID = self._dicom_study_instance_uid
+
+        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
+        # self._ct_dicom_series_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Series Instance UID for structures might be different than Series Instance UID for CTs
+        ds.SeriesInstanceUID = self._ct_dicom_series_instance_uid
+
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
-        ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
         ds.StudyDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.StudyTime = datetime.datetime.today().strftime('%H%M%S')
         ds.PhotometricInterpretation = 'MONOCHROME2'
@@ -848,6 +867,10 @@ class Cube(object):
         self.set_byteorder()
         self._set_format_str()
         self.header_set = True
+
+        # unique for whole structure set
+        self._dicom_study_instance_uid = ds.StudyInstanceUID
+        self._ct_dicom_series_instance_uid = ds.SeriesInstanceUID
 
     def set_z_table(self, dcm):
         """ Creates the slice position lookup table based on a given Dicom object.

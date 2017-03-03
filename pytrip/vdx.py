@@ -78,9 +78,17 @@ class VdxCube:
     def __init__(self, cube=None):
         self.vois = []
         self.cube = cube
+
+        # UIDs unique for whole structure set
+        # generation of UID is done here in init, the reason why we are not generating them in create_dicom
+        # method is that subsequent calls to write method shouldn't changed UIDs
+        self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+
         self.version = "1.2"
         if self.cube is not None:
             self.patient_id = cube.patient_id
+            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
             logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
@@ -98,6 +106,9 @@ class VdxCube:
             raise InputError("Input is not a valid rtss structure")
         dcm = data["rtss"]
         self.version = "2.0"
+
+        self._dicom_study_instance_uid = dcm.StudyInstanceUID
+        self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
 
         if hasattr(dcm, 'ROIContours'):
             _contours = dcm.ROIContours
@@ -288,13 +299,19 @@ class VdxCube:
         ds.is_little_endian = True
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
-        if self.cube is None:
-            ds.StudyInstanceUID = UID.generate_uid(prefix="1.2.")
-        else:
-            ds.StudyInstanceUID = self.cube.create_dicom().StudyInstanceUID
+
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
-        ds.StudyInstanceUID = '1.2.3'  # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
-        ds.SeriesInstanceUID = '1.2.3'  # !!!!!!!!!!
+        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Study Instance UID for structures is the same as Study Instance UID for CTs
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+
+        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
+        # self._rt_dicom_series_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Series Instance UID for structures might be different than Series Instance UID for CTs
+        ds.SeriesInstanceUID = self._structs_dicom_series_instance_uid
+
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.SeriesDate = '19010101'  # !!!!!!!!
         ds.ContentDate = '19010101'  # !!!!!!
