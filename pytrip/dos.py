@@ -154,9 +154,8 @@ class DosCube(Cube):
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
-        ds.StudyInstanceUID = '1.2.3'
-        ds.SOPInstanceUID = '1.2.3'
-
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         ds.Modality = "RTPLAN"
         ds.SeriesDescription = 'RT Plan'
         ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")

@@ -288,8 +288,12 @@ class VdxCube:
         ds.is_little_endian = True
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
-        ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
-        ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
+        if self.cube is None:
+            ds.StudyInstanceUID = UID.generate_uid(prefix="1.2.")
+        else:
+            ds.StudyInstanceUID = self.cube.create_dicom().StudyInstanceUID
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
+        ds.StudyInstanceUID = '1.2.3'  # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         ds.SeriesInstanceUID = '1.2.3'  # !!!!!!!!!!
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.SeriesDate = '19010101'  # !!!!!!!!

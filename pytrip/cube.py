@@ -74,6 +74,8 @@ class Cube(object):
             self._set_format_str()
             self._set_number_of_bytes()
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+
+            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
         else:
             import getpass
             from pytrip import __version__ as _ptversion
@@ -101,6 +103,8 @@ class Cube(object):
             self.dimz = ""
             self.slice_pos = []
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
+
+            self._dicom_study_instance_uid = UID.generate_uid(prefix="1.2.")
 
     def __add__(self, other):
         c = type(self)(self)
@@ -266,6 +270,7 @@ class Cube(object):
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
         self.patient_id = ''
+        self._dicom_study_instance_uid = UID.generate_uid(prefix="1.2.")
 
     def override_cube_values(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -444,7 +449,8 @@ class Cube(object):
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.3'  # !!!!!!!!
         ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
-        ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
         ds.StudyDate = datetime.datetime.today().strftime('%Y%m%d')
