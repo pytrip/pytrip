@@ -218,12 +218,12 @@ def main(args=sys.argv[1:]):
 
     # user hasn't provided number of last slice, we assume then that the last one has number cube.dimz
     slice_stop = args.sstop
-    if slice_stop is None and data_cube is not None:
+    if slice_stop is None:
         slice_stop = cube.dimz
 
     # user hasn't provided maximum limit of colorscale, we assume then maximum value of data cube, if present
     data_colorscale_max = args.csmax
-    if data_colorscale_max is None:
+    if data_colorscale_max is None and data_cube is not None:
         data_colorscale_max = cube.cube.max()
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
@@ -302,14 +302,16 @@ def main(args=sys.argv[1:]):
             cmap1.set_over("k", alpha=0.0)
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
-            dmax = data_cube.cube.max()
-            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrifical goat
+            dmax = data_cube.cube.max() * 1.1
+            if data_colorscale_max is not None:
+                dmax = data_colorscale_max
+            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
             data_im = ax.imshow(
                 tmpdat,
                 cmap=cmap1,
-                norm=colors.Normalize(vmin=0, vmax=dmax * 1.1, clip=False),
+                norm=colors.Normalize(vmin=0, vmax=dmax, clip=False),
                 alpha=0.7,
                 interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
                 #  dataset of lower resolution than the output image
