@@ -133,6 +133,8 @@ def main(args=sys.argv[1:]):
         "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=1)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
+    parser.add_argument("-m", "--max", type=float, dest='csmax', metavar='csmax',
+                        help="Maximum value of colorscale for plotting data")
     parser.add_argument("-o", "--outputdir", dest='outputdir',
                         help="Write resulting files to this directory.", type=str, default=None)
     parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
@@ -216,8 +218,13 @@ def main(args=sys.argv[1:]):
 
     # user hasn't provided number of last slice, we assume then that the last one has number cube.dimz
     slice_stop = args.sstop
-    if slice_stop is None:
+    if slice_stop is None and data_cube is not None:
         slice_stop = cube.dimz
+
+    # user hasn't provided maximum limit of colorscale, we assume then maximum value of data cube, if present
+    data_colorscale_max = args.csmax
+    if data_colorscale_max is None:
+        data_colorscale_max = cube.cube.max()
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
