@@ -24,7 +24,7 @@ import sys
 import argparse
 import logging
 
-from numpy import arange, ma
+from numpy import arange, ma, NINF
 
 import pytrip as pt
 
@@ -153,7 +153,7 @@ def main(args=sys.argv[1:]):
     # Check if different output path was requested. If yes, then check if it exists.
     if args.outputdir is not None:
         if os.path.isdir(args.outputdir) is False:
-            logger.error("Output directory " + args.outputdir + "does not exist.")
+            logger.error("Output directory " + args.outputdir + " does not exist.")
             return 1
 
     data_cube, data_basename = load_data_cube(args.data)
@@ -222,9 +222,11 @@ def main(args=sys.argv[1:]):
         slice_stop = cube.dimz
 
     # user hasn't provided maximum limit of colorscale, we assume then maximum value of data cube, if present
+    # we clip data to the maximum value of colorscale
     data_colorscale_max = args.csmax
     if data_colorscale_max is None and data_cube is not None:
         data_colorscale_max = cube.cube.max()
+    data_cube.cube.clip(NINF, data_colorscale_max, data_cube.cube)
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
@@ -303,8 +305,6 @@ def main(args=sys.argv[1:]):
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
             dmax = data_cube.cube.max() * 1.1
-            if data_colorscale_max is not None:
-                dmax = data_colorscale_max
             tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
