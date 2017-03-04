@@ -33,8 +33,8 @@ class LETCube(Cube):
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = ".dosemlet.dos"
-    header_file_extension = ".dosemlet.hed"
+    data_file_extension = "dosemlet.dos"
+    header_file_extension = "dosemlet.hed"
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
