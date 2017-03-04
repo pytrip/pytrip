@@ -53,6 +53,16 @@ class DosCube(Cube):
         self.type = "DOS"
         self.target_dose = 0.0
 
+        # UIDs unique for whole structure set
+        # generation of UID is done here in init, the reason why we are not generating them in create_dicom
+        # method is that subsequent calls to write method shouldn't changed UIDs
+        if cube is not None:
+            self._dicom_study_instance_uid = cube._dicom_study_instance_uid
+        else:
+            self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
+        self._plan_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+        self._dose_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+
     def read_dicom(self, dcm):
         """ Imports the dose distribution from Dicom object.
 
@@ -154,12 +164,20 @@ class DosCube(Cube):
         ds.PatientsBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
-        ds.StudyInstanceUID = '1.2.3'
-        ds.SOPInstanceUID = '1.2.3'
+
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
+        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Study Instance UID for structures is the same as Study Instance UID for CTs
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+
+        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
+        # self._pl_dicom_series_instance_uid may be either set in __init__ when creating new object
+        #   Series Instance UID might be different than Series Instance UID for CTs
+        ds.SeriesInstanceUID = self._plan_dicom_series_instance_uid
 
         ds.Modality = "RTPLAN"
         ds.SeriesDescription = 'RT Plan'
-        ds.SeriesInstanceUID = UID.generate_uid(prefix="2.25.")
         ds.RTPlanDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.RTPlanGeometry = ''
         ds.RTPlanLabel = 'B1'
@@ -218,7 +236,17 @@ class DosCube(Cube):
                                    "%.3f" % (self.slice_pos[0])]
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
         ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'
-        ds.SeriesInstanceUID = '1.2.246.352.71.2.320687012.28240.20090603082420'
+
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
+        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Study Instance UID for structures is the same as Study Instance UID for CTs
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+
+        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
+        # self._dose_dicom_series_instance_uid may be either set in __init__ when creating new object
+        #   Series Instance UID might be different than Series Instance UID for CTs
+        ds.SeriesInstanceUID = self._dose_dicom_series_instance_uid
 
         # Bind to rtplan
         rt_set = Dataset()

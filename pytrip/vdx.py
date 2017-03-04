@@ -78,9 +78,19 @@ class VdxCube:
     def __init__(self, cube=None):
         self.vois = []
         self.cube = cube
+
+        # UIDs unique for whole structure set
+        # generation of UID is done here in init, the reason why we are not generating them in create_dicom
+        # method is that subsequent calls to write method shouldn't changed UIDs
+        self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_sop_instance_uid = UID.generate_uid(prefix=None)
+        self._structs_rt_series_instance_uid = UID.generate_uid(prefix=None)
+
         self.version = "1.2"
         if self.cube is not None:
             self.patient_id = cube.patient_id
+            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
             logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
@@ -98,6 +108,10 @@ class VdxCube:
             raise InputError("Input is not a valid rtss structure")
         dcm = data["rtss"]
         self.version = "2.0"
+
+        self._dicom_study_instance_uid = dcm.StudyInstanceUID
+        self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
+        self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
         if hasattr(dcm, 'ROIContours'):
             _contours = dcm.ROIContours
@@ -267,8 +281,8 @@ class VdxCube:
             raise ModuleNotLoadedError("Dicom")
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
-        # see https://github.com/darcymason/pydicom/blob/master/pydicom/_uid_dict.py
-        meta.MediaStorageSOPInstanceUID = "1.2.3"
+        # SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
+        meta.MediaStorageSOPInstanceUID = self._structs_sop_instance_uid
         meta.ImplementationClassUID = "1.2.3.4"
         meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
@@ -288,9 +302,22 @@ class VdxCube:
         ds.is_little_endian = True
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
-        ds.SOPInstanceUID = '1.2.3'  # !!!!!!!!!!
-        ds.StudyInstanceUID = '1.2.3'  # !!!!!!!!!!
-        ds.SeriesInstanceUID = '1.2.3'  # !!!!!!!!!!
+
+        # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
+        ds.SOPInstanceUID = self._structs_sop_instance_uid
+
+        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
+        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Study Instance UID for structures is the same as Study Instance UID for CTs
+        ds.StudyInstanceUID = self._dicom_study_instance_uid
+
+        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
+        # self._rt_dicom_series_instance_uid may be either set in __init__ when creating new object
+        #   or set when import a DICOM file
+        #   Series Instance UID for structures might be different than Series Instance UID for CTs
+        ds.SeriesInstanceUID = self._structs_dicom_series_instance_uid
+
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.SeriesDate = '19010101'  # !!!!!!!!
         ds.ContentDate = '19010101'  # !!!!!!
@@ -316,7 +343,7 @@ class VdxCube:
         # first we check if DICOM cube is loaded
         if self.cube is not None:
             rt_ref_series_data = Dataset()
-            rt_ref_series_data.SeriesInstanceUID = '1.2.3.4.5'
+            rt_ref_series_data.SeriesInstanceUID = self.cube._ct_dicom_series_instance_uid
             rt_ref_series_data.ContourImageSequence = Sequence([])
 
             # each CT slice corresponds to one DICOM file
