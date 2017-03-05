@@ -155,6 +155,10 @@ class Cube(object):
         c.cube[np.isnan(c.cube)] = 0  # fix division by zero NaNs
         return c
 
+    __truediv__ = __div__
+
+    # TODO __floordiv__ should also be handled
+
     def is_compatible(self, other):
         """ Check if this Cube object is compatible in size and dimensions with 'other' cube.
 
