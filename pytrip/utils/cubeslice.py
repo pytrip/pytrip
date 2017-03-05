@@ -24,7 +24,7 @@ import sys
 import argparse
 import logging
 
-from numpy import arange, ma
+from numpy import arange, ma, NINF
 
 import pytrip as pt
 
@@ -133,6 +133,8 @@ def main(args=sys.argv[1:]):
         "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=1)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
+    parser.add_argument("-m", "--max", type=float, dest='csmax', metavar='csmax',
+                        help="Maximum value of colorscale for plotting data")
     parser.add_argument("-o", "--outputdir", dest='outputdir',
                         help="Write resulting files to this directory.", type=str, default=None)
     parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
@@ -151,7 +153,7 @@ def main(args=sys.argv[1:]):
     # Check if different output path was requested. If yes, then check if it exists.
     if args.outputdir is not None:
         if os.path.isdir(args.outputdir) is False:
-            logger.error("Output directory " + args.outputdir + "does not exist.")
+            logger.error("Output directory " + args.outputdir + " does not exist.")
             return 1
 
     data_cube, data_basename = load_data_cube(args.data)
@@ -218,6 +220,13 @@ def main(args=sys.argv[1:]):
     slice_stop = args.sstop
     if slice_stop is None:
         slice_stop = cube.dimz
+
+    # user hasn't provided maximum limit of colorscale, we assume then maximum value of data cube, if present
+    # we clip data to the maximum value of colorscale
+    data_colorscale_max = args.csmax
+    if data_colorscale_max is None and data_cube is not None:
+        data_colorscale_max = cube.cube.max()
+    data_cube.cube.clip(NINF, data_colorscale_max, data_cube.cube)
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
@@ -295,14 +304,16 @@ def main(args=sys.argv[1:]):
             cmap1.set_over("k", alpha=0.0)
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
-            dmax = data_cube.cube.max()
-            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrifical goat
+            dmax = data_cube.cube.max() * 1.1
+            if data_colorscale_max is not None and data_cube is not None:
+                dmax = data_colorscale_max * 1.1
+            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
             data_im = ax.imshow(
                 tmpdat,
                 cmap=cmap1,
-                norm=colors.Normalize(vmin=0, vmax=dmax * 1.1, clip=False),
+                norm=colors.Normalize(vmin=0, vmax=dmax, clip=False),
                 alpha=0.7,
                 interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
                 #  dataset of lower resolution than the output image
