@@ -82,7 +82,6 @@ class Cube(object):
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
 
         else:
-            import getpass
             from pytrip import __version__ as _ptversion
 
             self.header_set = False
