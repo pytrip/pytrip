@@ -305,6 +305,8 @@ def main(args=sys.argv[1:]):
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
             dmax = data_cube.cube.max() * 1.1
+            if data_colorscale_max is not None and data_cube is not None:
+                dmax = data_colorscale_max * 1.1
             tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
