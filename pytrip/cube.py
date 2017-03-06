@@ -349,10 +349,13 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
+        from distutils.version import LooseVersion
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
-        output_str += "created_by " + self.created_by + "\n"
-        output_str += "creation_info " + self.creation_info + "\n"
+        # include created_by and creation_info only for files newer than 1.4
+        if LooseVersion(self.version) >= LooseVersion("1.4"):
+            output_str += "created_by {:s}\n".format(self.created_by)
+            output_str += "creation_info {:s}\n".format(self.creation_info)
         output_str += "primary_view " + self.primary_view + "\n"
         output_str += "data_type " + self.data_type + "\n"
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
