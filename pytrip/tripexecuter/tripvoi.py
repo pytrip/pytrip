@@ -118,7 +118,7 @@ class TripVoi(pytripObj):
     def is_plan_selected(self):
         return self.selected
 
-    def toogle_plan_selected(self, plan):
+    def toggle_plan_selected(self, plan):
         self.selected = not self.selected
 
     def get_name(self):
@@ -145,7 +145,7 @@ class TripVoi(pytripObj):
         except Exception:
             raise InputError("Dose should be a number larger or equal to 0")
 
-    def toogle_target(self):
+    def toggle_target(self):
         if self.is_oar() is True:
             return False
         if self.target is True:
@@ -154,7 +154,7 @@ class TripVoi(pytripObj):
             self.target = True
         return self.target
 
-    def toogle_oar(self):
+    def toggle_oar(self):
         if self.is_target() is True:
             return False
         if self.oar is True:
@@ -170,8 +170,8 @@ class TripVoi(pytripObj):
     def is_selected(self):
         return self._voi.is_selected()
 
-    def toogle_selected(self):
-        self._voi.toogle_selected()
+    def toggle_selected(self):
+        self._voi.toggle_selected()
 
     def is_oar(self):
         return self.oar

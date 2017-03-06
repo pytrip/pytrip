@@ -56,7 +56,7 @@ class Field(pytripObj):
     def is_selected(self):
         return self.selected
 
-    def toogle_selected(self):
+    def toggle_selected(self):
         self.selected = not self.selected
 
     def get_gantry(self):
