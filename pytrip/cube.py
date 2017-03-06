@@ -50,6 +50,7 @@ class Cube(object):
             self.header_set = cube.header_set
             self.version = cube.version
             self.modality = cube.modality
+            self.created_by = cube.created_by
             self.creation_info = cube.creation_info
             self.primary_view = cube.primary_view
             self.data_type = cube.data_type
@@ -82,11 +83,13 @@ class Cube(object):
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
 
         else:
+            import getpass
             from pytrip import __version__ as _ptversion
 
             self.header_set = False
             self.version = "2.0"
             self.modality = "CT"
+            self.created_by = getpass.getuser()
             self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
@@ -342,8 +345,13 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
+        from distutils.version import LooseVersion
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
+        # include created_by and creation_info only for files newer than 1.4
+        if LooseVersion(self.version) >= LooseVersion("1.4"):
+            output_str += "created_by {:s}\n".format(self.created_by)
+            output_str += "creation_info {:s}\n".format(self.creation_info)
         output_str += "primary_view " + self.primary_view + "\n"
         output_str += "data_type " + self.data_type + "\n"
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
@@ -639,6 +647,12 @@ class Cube(object):
                 self.version = content[i].split()[1]
             if re.match("modality", content[i]) is not None:
                 self.modality = content[i].split()[1]
+            if re.match("created_by", content[i]) is not None:
+                self.created_by = content[i].replace("created_by ", "", 1)
+                self.created_by = self.created_by.rstrip()
+            if re.match("creation_info", content[i]) is not None:
+                self.creation_info = content[i].replace("creation_info ", "", 1)
+                self.creation_info = self.creation_info.rstrip()
             if re.match("primary_view", content[i]) is not None:
                 self.primary_view = content[i].split()[1]
             if re.match("data_type", content[i]) is not None:
@@ -850,6 +864,7 @@ class Cube(object):
             raise ModuleNotLoadedError("Dicom")
         ds = dcm["images"][0]
         self.version = "1.4"
+        self.created_by = "pytrip"
         self.creation_info = "Created by PyTRiP98;"
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
