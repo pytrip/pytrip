@@ -33,7 +33,6 @@ from pytrip.raster import Rst
 from pytrip.let import LETCube
 from pytrip.ctimage import CTImages
 from pytrip.dicomhelper import read_dicom_folder
-from pytrip.util import load
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
