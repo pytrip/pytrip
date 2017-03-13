@@ -27,12 +27,12 @@ def rcr_surviving_fraction(dose, let, oxy=None, model_parameters=None):
     """
     Function which returns surving fraction
     """
-
+    
     if oxy is None:
-        return _normoxic_survival(dose, let)
+        return _normoxic_survival(dose.cube, let.cube)
 
     else:
-        return _hypoxic_survival(dose, let, oxy)
+        return _hypoxic_survival(dose.cube, let.cube, oxy.cube)
 
 
 def _f(let):
