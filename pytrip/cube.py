@@ -918,13 +918,3 @@ class Cube(object):
             cube = cube.byteswap()
         cube.tofile(path)
         return
-
-    @classmethod
-    def save(cls, path):
-        """ Saves the object as a pickle object.
-        :params: path where file is stored.
-        """
-
-        import pickle
-        with open(path, 'wb') as f:
-            pickle.dump(cls, f, pickle.HIGHEST_PROTOCOL)
