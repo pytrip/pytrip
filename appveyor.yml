@@ -80,7 +80,7 @@ install:
   - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
   - activate python%PYTHON_VERSION%
 # as scipy doesn't yet have wheels for windows, install it using conda
-  - conda install -q --name python%PYTHON_VERSION% scipy
+  - conda install -q --name python%PYTHON_VERSION% "scipy<0.19"
 # install usual requirements
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt

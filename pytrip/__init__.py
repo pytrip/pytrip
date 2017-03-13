@@ -24,6 +24,7 @@ TODO: documentation here.
 # flake8: noqa
 
 import logging
+from pytrip.cube import Cube
 from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube, Voi
