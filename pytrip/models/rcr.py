@@ -17,72 +17,87 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-The RCR model is based on the paper from TODO.
+The RCR model is based on the paper from Antonovic et al.
+https://doi.org/10.1093/jrr/rru020
+Parameters are set for C-12 ions only.
 """
 
 import numpy as np
 
 
-def rcr_surviving_fraction(dose, let, oxy=None, model_parameters=None):
+def rcr_tcp(dose, let, oxy=None, voi=None, ncells=1.0, fractions=1):
+    """
+    Returns TCP within VOI or within entire cube, if VOI is not given
+    Equation (7) in https://doi.org/10.1093/jrr/rru020
+    assuming static oxygenation during all fractions.
+    (Equation (8) would require a new oxy cube after every fractionation, not implemented.)
+    """
+
+    # _sf = rcr_surviving_fraction(dose, let, oxy)
+
+    # TODO: extract masked array
+    # _tcp = np.exp( -sum(ncells * (_sf)^fractions))
+    pass
+
+
+def rcr_surviving_fraction(dose, let, oxy=None):
     """
     Function which returns surving fraction
+    Equation (3) in https://doi.org/10.1093/jrr/rru020
     """
-    
+
+    a0 = 5.7
+    a1 = 1.3
+    b1 = 2.0
+    c0 = 5.7
+    c1 = 0.2
+    ln = 423.0
+
     if oxy is None:
-        return _normoxic_survival(dose.cube, let.cube)
-
+        ocube = 1.0
     else:
-        return _hypoxic_survival(dose.cube, let.cube, oxy.cube)
-
-
-def _f(let):
-    """ f function from Dasu paper, takes let-cube as parameter
-    """
-    let[let == 0] = 0.01
-    ld = 86
-    return (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
-
-
-def rcr_oer(let):
-    """ OER function from Dasu paper, takes let-cube as parameter
-    :returns: cube containing the oxygen enhancement ratio
-    """
-    omin = 1.10
-    omax = 2.92
-    lo = 114
-    _o = omin + (omax - omin) * np.exp(-(let/lo)(let/lo))
-    return _o
-
-
-def _normoxic_survival(dose, let):
-    a0 = 5.7
-    a1 = 1.3
-    b1 = 2.0
-    c0 = 5.7
-    c1 = 0.2
-    ln = 423
-
-    a = a0 * _f(let) + a1 * np.exp(-let/ln)
-    b = b1 * np.exp(-let/ln)
-    c = c0 * _f(let) + c1 * np.exp(-let/ln)
-    sv = np.exp(-dose * a) + dose * b * np.exp(-dose * c)
-    return sv
-
-
-def _hypoxic_survival(dose, let, oxy):
-    """
-    TODO: add support for heterogenous oxygeneation
-    """
-    a0 = 5.7
-    a1 = 1.3
-    b1 = 2.0
-    c0 = 5.7
-    c1 = 0.2
-    ln = 423
-    ocube = rcr_oer(let)
+        ocube = rcr_oer_po2(let, oxy)
+        # ocube = rcr_oer(let)  # TODO: this was old version, not sure how to include.
 
     a = (a0 * _f(let) + a1 * np.exp(-let/ln)) / ocube
     b = b1 * np.exp(-let/ln) / ocube
     c = (c0 * _f(let) + c1 * np.exp(-let/ln)) / ocube
-    sv = np.exp(-dose * a) + dose * b * np.exp(-dose * c)
-    return sv
+
+    sf = np.exp(-dose * a) + dose * b * np.exp(-dose * c)
+    return sf
+
+
+def _f(let):
+    """
+    f function from Dasu paper, takes let-cube as parameter
+    Equation (7) in https://doi.org/10.1093/jrr/rru020
+    """
+
+    let[let == 0] = 0.01
+    ld = 86.0
+    return (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
+
+
+def rcr_oer(let):
+    """
+    ~O dose modifying factor.
+    Equation (2) in https://doi.org/10.1093/jrr/rru020
+    :returns: cube containing the oxygen enhancement ratio
+    """
+
+    omin = 1.10
+    omax = 2.92
+    lo = 114.0
+    _o = omin + (omax - omin) * np.exp(-(let/lo)(let/lo))
+    return _o
+
+
+def rcr_oer_po2(let, oxy):
+    """
+    ~O dose modifying factor, taking varying pO2 into account
+    Equation (1) in https://doi.org/10.1093/jrr/rru020
+    :returns: cube containing the oxygen enhancement ratio
+    """
+    k = 2.5  # mmHg
+    _o = rcr_oer(let) * (k + rcr_oer(let)) / (k + rcr_oer(let) * oxy)
+    return _o
