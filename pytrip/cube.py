@@ -120,6 +120,63 @@ class Cube(object):
 
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
 
+    def __iadd__(self, other):
+        """
+        Overwrite += operator, in-place addition
+        When overflow/underflow happens underlying cube will be upcated to larger type (i.e. int16 to int32)
+        When two different types are added, self can be also upcasted to argument type (only if needed)
+        :param other:
+        :return:
+        """
+
+        if Cube in other.__class__.__bases__:  # if second argument is also a Cube
+
+            if self.cube.dtype == other.cube.dtype:  # same datatype for both cubes
+                # if self > MAX - other & other > 0 then and overflow may happen
+                # if self < MIN - other & other < 0 then and underflow may happen
+                maxv = np.iinfo(self.cube.dtype).max
+                minv = np.iinfo(self.cube.dtype).min
+                if np.any((self.cube > maxv - other.cube) & (other > 0)) or \
+                        np.any((self.cube < minv - other.cube) & (other < 0)):
+                    pass # overflow or underflow detected
+                    type_letter = self.cube.dtype.kind
+                    type_bytes = 2 * self.cube.dtype.itemsize
+                    try:
+                        new_type = np.dtype(type_letter + str(type_bytes))
+                    except TypeError:
+                        raise Exception("uder/overflow detected, cannot be solved by upcasting")
+                    self.cube = self.cube.astype(new_type)
+                    self.cube += other.cube
+                    self.set_data_type(self.cube.dtype)
+                else: # no overflow/underflow detected
+                    self.cube += other.cube
+            else:  # different datatypes for both cubes
+                are_both_subtype = lambda x, y, z: (np.issubdtype(x, z) and np.issubdtype(x, z))
+                if are_both_subtype(self.cube.dtype, other.cube.dtype, np.number) or \
+                        are_both_subtype(self.cube.dtype, other.cube.dtype, np.unsignedinteger) or \
+                        are_both_subtype(self.cube.dtype, other.cube.dtype, np.floating):
+                    # both cubes share the same master type and differ only by number of bytes
+                    # let us upcast to the one with higher number of bytes
+                    if self.cube.dtype.itemsize > other.cube.dtype.itemsize:
+                        self.cube += other.cube
+                    else:
+                        self.cube = self.cube.astype(other.cube.dtype)
+                        self.cube += other.cube
+                        self.set_data_type(self.cube.dtype)
+                else:
+                    new_data_type = np.result_type(self.cube, other.cube)
+                    self.cube = self.cube.astype(new_data_type)
+                    self.cube += other.cube
+                    self.set_data_type(self.cube.dtype)
+
+        else:  # if second argument is a scalar
+
+            self.cube += other
+            # cube datatype might change (i.e. int + float is int)
+            self.set_data_type(self.cube.dtype)
+
+        return self
+
     def __add__(self, other):
         c = type(self)(self)
         if Cube in other.__class__.__bases__:
@@ -414,9 +471,9 @@ class Cube(object):
     def _set_format_str(self):
         """Set format string accoring to byte_order.
         """
-        if (self.byte_order == "vms"):
+        if self.byte_order == "vms":
             self.format_str = "<"
-        elif (self.byte_order == "aix"):
+        elif self.byte_order == "aix":
             self.format_str = ">"
         self._set_number_of_bytes()
 
