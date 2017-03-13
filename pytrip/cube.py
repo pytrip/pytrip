@@ -42,8 +42,8 @@ logger = logging.getLogger(__name__)
 
 class Cube(object):
     """ Top level class for 3-dimensional data cubes used by e.g. DosCube, CtxCube and LETCube.
-    Otherwise, this cube class may be used for storing different kinds of data, such as number of cells,
-    oxygenation level, surviving fraction, etc.
+    The user should not use this class directly, but is instead referred to DosCube, CtxCube, LETCube classes
+    and similar, as these inherits the Cube class and expose all attributes and methods from Cube.
     """
     def __init__(self, cube=None):
         if cube is not None:
@@ -918,3 +918,13 @@ class Cube(object):
             cube = cube.byteswap()
         cube.tofile(path)
         return
+
+    @classmethod
+    def save(cls, path):
+        """ Saves the object as a pickle object.
+        :params: path where file is stored.
+        """
+
+        import pickle
+        with open(path, 'wb') as f:
+            pickle.dump(cls, f, pickle.HIGHEST_PROTOCOL)
