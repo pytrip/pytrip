@@ -27,12 +27,13 @@ import logging
 from pytrip.models.proton import rbe_carabe
 from pytrip.models.proton import rbe_wedenberg
 from pytrip.models.proton import rbe_mcnamara
+from pytrip.models.rcr import sf_rcr
 
 logger = logging.getLogger(__name__)
 
 
 class TestProton(unittest.TestCase):
-    """ Test the proton.py files
+    """ Test the proton.py models
     """
     def setUp(self):
         """ Prepare files for tests
@@ -46,6 +47,8 @@ class TestProton(unittest.TestCase):
         rbe1 = rbe_carabe(10.0, 10.0, 5.0)
         rbe2 = rbe_carabe(10.0, 17.0, 5.0)
         self.assertGreater(rbe2, rbe1)
+        self.assertGreater(rbe2, 1.0)  # Carabe can actually return values below 1.0 for RBE
+        self.assertGreater(10.0, rbe2)  # Sanity check
 
     def test_wedenberg(self):
         """ Check if we are able to calculate a few RBE values
@@ -54,6 +57,8 @@ class TestProton(unittest.TestCase):
         rbe1 = rbe_wedenberg(10.0, 10.0, 5.0)
         rbe2 = rbe_wedenberg(10.0, 17.0, 5.0)
         self.assertGreater(rbe2, rbe1)
+        self.assertGreater(rbe2, 1.0)
+        self.assertGreater(10.0, rbe2)  # Sanity check
 
     def test_mcnamara(self):
         """ Check if we are able to calculate a few RBE values
@@ -62,6 +67,44 @@ class TestProton(unittest.TestCase):
         rbe1 = rbe_mcnamara(10.0, 10.0, 5.0)
         rbe2 = rbe_mcnamara(10.0, 17.0, 5.0)
         self.assertGreater(rbe2, rbe1)
+        self.assertGreater(rbe2, 1.0)
+        self.assertGreater(10.0, rbe2)  # Sanity check
+
+
+class TestRCR(unittest.TestCase):
+    """ Test the rcr.py model
+    """
+    def setUp(self):
+        """ Prepare files for tests
+        """
+        pass
+
+    def test_rcr(self):
+        """ Test RCR model
+        """
+        dose = 2.0  # Gy
+        let = 50.0  # keV/um
+
+        sf1 = sf_rcr(dose, let)
+        # Survival should always be 0.0 <= sf <= 1.0
+        self.assertGreater(1.0, sf1)
+        self.assertGreater(sf1, 0.0)
+
+        # add hypoxia, should increase survival
+        sf2 = sf_rcr(dose, let, 10.0)  # some oxygenation -> less survival
+        self.assertGreater(1.0, sf2)
+        self.assertGreater(sf2, 0.0)
+
+        sf1 = sf_rcr(dose, let, 0.0)  # no oxygenation -> much survival
+        self.assertGreater(1.0, sf2)
+        self.assertGreater(sf2, 0.0)
+        self.assertGreater(sf1, sf2)
+
+        # increase LET, should reduce survival
+        sf2 = sf_rcr(dose, let + 10.0)
+        self.assertGreater(1.0, sf2)
+        self.assertGreater(sf2, 0.0)
+        self.assertGreater(sf1, sf2)
 
 
 if __name__ == '__main__':
