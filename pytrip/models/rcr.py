@@ -28,19 +28,23 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def rbe_rcr(dose_ion, let, ax, bx, oxy=None):
+def rbe_rcr(dose_ion, let, alpha_x, beta_x, oxy=None):
     """
     Returns the RBE for a given dose/let cube.
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle real cubes.
+
     :params dose_ion: ion physical dose in [Gy]
     :params let: LET in [keV/um]
-    :params ax: alpha for X-rays in [Gy^-1]
-    :params bx: beta for X-rays in [Gy^-2]
+    :params alpha_x: alpha for X-rays in [Gy^-1]
+    :params beta_x: beta for X-rays in [Gy^-2]
     :params oxy: optional oxygenation cube in [mmHgO_2]
     """
 
     # Calculate sf_ion(D_ion, let, oxy)
     # from pytrip.models.aux import rbe_from_sfion
-    # rbe_from_sfion(_sf, dose_ion, ax, bx)
+    # rbe_from_sfion(_sf, dose_ion, alpha_x, beta_x)
     logger.warning("rcr_rbe not implemented yet.")
     pass  # TODO: not implemented yet.
 
@@ -49,6 +53,13 @@ def surviving_fraction_rcr(dose, let, oxy=None):
     """
     Function which returns surving fraction
     Equation (3) in https://doi.org/10.1093/jrr/rru020
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle real cubes.
+
+    :params dose: physical ion dose in [Gy]
+    :params let: LET in keV/um
+    :params oxy: optional oxygenation in [mmHgO_2]
     """
 
     a0 = 5.7
@@ -76,17 +87,38 @@ def _f(let):
     """
     f function from Dasu paper, takes let-cube as parameter
     Equation (7) in https://doi.org/10.1093/jrr/rru020
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle real cubes.
+
+    :params let: LET in keV/um
+
+    :returns: result of the f function
     """
 
-    let[let == 0] = 0.01
     ld = 86.0
-    return (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
+    result = (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
+
+    # map any zero LET areas to 0.0
+    if hasattr(result, "__len__"):  # for numpy arrays
+        result[result == np.inf] = 0.0
+    else:  # for scalar floats. TODO: handler for pt.Cube()
+        if result == np.inf:
+            result = 0.0
+
+    return result
 
 
 def oer_rcr(let):
     """
     ~O dose modifying factor.
     Equation (2) in https://doi.org/10.1093/jrr/rru020
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle real cubes.
+
+    :params let: LET in keV/um
+
     :returns: cube containing the oxygen enhancement ratio
     """
 
@@ -101,6 +133,13 @@ def oer_po2_rcr(let, oxy):
     """
     ~O dose modifying factor, taking varying pO2 into account
     Equation (1) in https://doi.org/10.1093/jrr/rru020
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle real cubes.
+
+    :params let: LET in keV/um
+    :params oxy: oxygenation in [mmHgO_2]
+
     :returns: cube containing the oxygen enhancement ratio
     """
     k = 2.5  # mmHg
