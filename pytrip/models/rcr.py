@@ -23,21 +23,26 @@ Parameters are set for C-12 ions only.
 """
 
 import numpy as np
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def rcr_tcp(dose, let, oxy=None, voi=None, ncells=1.0, fractions=1):
+def rcr_rbe(dose, let, ax, bx, oxy=None):
     """
-    Returns TCP within VOI or within entire cube, if VOI is not given
-    Equation (7) in https://doi.org/10.1093/jrr/rru020
-    assuming static oxygenation during all fractions.
-    (Equation (8) would require a new oxy cube after every fractionation, not implemented.)
+    Returns the RBE for a given dose/let cube.
+    :params dose: Dose in [Gy]
+    :params let: LET in [keV/um]
+    :params ax: alpha for X-rays in [Gy^-1]
+    :params bx: beta for X-rays in [Gy^-2]
+    :params oxy: optional oxygenation cube in [mmHgO_2]
     """
 
-    # _sf = rcr_surviving_fraction(dose, let, oxy)
-
-    # TODO: extract masked array
-    # _tcp = np.exp( -sum(ncells * (_sf)^fractions))
-    pass
+    # Calculate sf_ion(D_ion, let, oxy)
+    # Solve for D_x: bD2 + aD + ln(sf_ion) = 0
+    # RBE = D_x / D_ion
+    logger.warning("rcr_rbe not implemented yet.")
+    pass  # TODO: not implemented yet.
 
 
 def rcr_surviving_fraction(dose, let, oxy=None):
