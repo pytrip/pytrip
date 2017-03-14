@@ -49,7 +49,7 @@ def rbe_rcr(dose_ion, let, alpha_x, beta_x, oxy=None):
     pass  # TODO: not implemented yet.
 
 
-def surviving_fraction_rcr(dose, let, oxy=None):
+def sf_rcr(dose, let, oxy=None):
     """
     Function which returns surving fraction
     Equation (3) in https://doi.org/10.1093/jrr/rru020
@@ -125,7 +125,7 @@ def oer_rcr(let):
     omin = 1.10
     omax = 2.92
     lo = 114.0
-    _o = omin + (omax - omin) * np.exp(-(let/lo)(let/lo))
+    _o = omin + (omax - omin) * np.exp(-(let/lo)*(let/lo))
     return _o
 
 
