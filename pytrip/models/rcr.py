@@ -28,10 +28,10 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def rcr_rbe(dose, let, ax, bx, oxy=None):
+def rcr_rbe(dose_ion, let, ax, bx, oxy=None):
     """
     Returns the RBE for a given dose/let cube.
-    :params dose: Dose in [Gy]
+    :params dose_ion: ion physical dose in [Gy]
     :params let: LET in [keV/um]
     :params ax: alpha for X-rays in [Gy^-1]
     :params bx: beta for X-rays in [Gy^-2]
@@ -39,8 +39,8 @@ def rcr_rbe(dose, let, ax, bx, oxy=None):
     """
 
     # Calculate sf_ion(D_ion, let, oxy)
-    # Solve for D_x: bD2 + aD + ln(sf_ion) = 0
-    # RBE = D_x / D_ion
+    # from pytrip.models.aux import rbe_from_sfion
+    # rbe_from_sfion(_sf, dose_ion, ax, bx)
     logger.warning("rcr_rbe not implemented yet.")
     pass  # TODO: not implemented yet.
 
