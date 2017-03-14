@@ -4,5 +4,5 @@ numpy ; python_version < '3.0' or python_version >= '3.4' # newest numpy for py 
 matplotlib<=1.5.3 
 pydicom
 scipy<0.16.1 ; (python_version >= '3.2' and python_version < '3.4') and (os_name != 'nt') # newer versions of scipy doesn't have manylinux1 package for python 3.3
-scipy<0.19 ; os_name == 'nt'
-scipy ; (python_version < '3.2' or python_version >= '3.4') and (os_name != 'nt') # newest numpy for py 2.7, 3.4 and higher
+scipy<0.20 ; os_name == 'nt' # all Windows versions
+scipy<0.20 ; (python_version < '3.2' or python_version >= '3.4') and (os_name != 'nt') # Linux with py 2.7, 3.4 and higher
