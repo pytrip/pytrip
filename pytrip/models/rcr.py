@@ -28,7 +28,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def rcr_rbe(dose_ion, let, ax, bx, oxy=None):
+def rbe_rcr(dose_ion, let, ax, bx, oxy=None):
     """
     Returns the RBE for a given dose/let cube.
     :params dose_ion: ion physical dose in [Gy]
@@ -45,7 +45,7 @@ def rcr_rbe(dose_ion, let, ax, bx, oxy=None):
     pass  # TODO: not implemented yet.
 
 
-def rcr_surviving_fraction(dose, let, oxy=None):
+def surviving_fraction_rcr(dose, let, oxy=None):
     """
     Function which returns surving fraction
     Equation (3) in https://doi.org/10.1093/jrr/rru020
@@ -61,8 +61,8 @@ def rcr_surviving_fraction(dose, let, oxy=None):
     if oxy is None:
         ocube = 1.0
     else:
-        ocube = rcr_oer_po2(let, oxy)
-        # ocube = rcr_oer(let)  # TODO: this was old version, not sure how to include.
+        ocube = oer_po2_rcr(let, oxy)
+        # ocube = oer_rcr(let)  # TODO: this was old version, not sure how to include.
 
     a = (a0 * _f(let) + a1 * np.exp(-let/ln)) / ocube
     b = b1 * np.exp(-let/ln) / ocube
@@ -83,7 +83,7 @@ def _f(let):
     return (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
 
 
-def rcr_oer(let):
+def oer_rcr(let):
     """
     ~O dose modifying factor.
     Equation (2) in https://doi.org/10.1093/jrr/rru020
@@ -97,12 +97,12 @@ def rcr_oer(let):
     return _o
 
 
-def rcr_oer_po2(let, oxy):
+def oer_po2_rcr(let, oxy):
     """
     ~O dose modifying factor, taking varying pO2 into account
     Equation (1) in https://doi.org/10.1093/jrr/rru020
     :returns: cube containing the oxygen enhancement ratio
     """
     k = 2.5  # mmHg
-    _o = rcr_oer(let) * (k + rcr_oer(let)) / (k + rcr_oer(let) * oxy)
+    _o = oer_rcr(let) * (k + oer_rcr(let)) / (k + oer_rcr(let) * oxy)
     return _o
