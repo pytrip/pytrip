@@ -18,6 +18,23 @@
 #
 """
 Collection of proton RBE models.
+
+[1] A. Carabe, M. Moteabbed, N. Depauw, J. Schuemann, and H. Paganetti,
+"Range uncertainty in proton therapy due to variable biological effectiveness,"
+Phys. Med. Biol. 57(5), 1159–1172 (2012).
+https://doi.org/10.1088/0031-9155/57/5/1159
+
+[2] M. Wedenberg, B. Lind, and B. Haardemark,
+"A model for the relative biological effectiveness of protons:
+The tissue specific parameter alpha/beta of photons is a predictor for the sensitivity to LET changes,"
+Acta Oncol. 52(3), 580–588 (2013).
+http://dx.doi.org/10.3109/0284186X.2012.705892
+
+[3]  A. L. McNamara, J. Schuemann, and H. Paganetti,
+"A phenomenological relative biological effectiveness (RBE) model for proton therapy based on all published
+in vitro cell survival data,"
+Phys. Med. Biol. 60(21), 8399–8416
+https://doi.org/10.1088/0031-9155/60/21/8399
 """
 
 import numpy as np
@@ -29,7 +46,17 @@ logger = logging.getLogger(__name__)
 def rbe_carabe(dose, let, abx):
     """
     Carabe proton RBE model
-    :ref:
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle Cube() class directly
+
+    :params dose: physical proton dose in [Gy]
+    :params let: LET in [keV/um]
+    :params abx: alpha_x / beta_x [Gy^-1]
+
+    :returns: RBE for the given parameters
+
+    :ref: https://doi.org/10.1088/0031-9155/57/5/1159
     """
 
     _labx = 2.686 * let / abx
@@ -44,7 +71,17 @@ def rbe_carabe(dose, let, abx):
 def rbe_wedenberg(dose, let, abx):
     """
     Wedenberg proton RBE model
-    :ref:
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle Cube() class directly
+
+    :params dose: physical proton dose in [Gy]
+    :params let: LET in [keV/um]
+    :params abx: alpha_x / beta_x [Gy^-1]
+
+    :returns: RBE for the given parameters
+
+    :ref: http://dx.doi.org/10.3109/0284186X.2012.705892
     """
 
     _apx = 1.000 + 0.434 * let / abx
@@ -57,7 +94,17 @@ def rbe_wedenberg(dose, let, abx):
 def rbe_mcnamara(dose, let, abx):
     """
     McNamara proton RBE model
-    :ref:
+
+    input parameters may be either numpy.array or scalars
+    TODO: handle Cube() class directly
+
+    :params dose: physical proton dose in [Gy]
+    :params let: LET in [keV/um]
+    :params abx: alpha_x / beta_x [Gy^-1]
+
+    :returns: RBE for the given parameters
+
+    :ref: https://doi.org/10.1088/0031-9155/60/21/8399
     """
 
     _apx = 0.999064 + 0.35605 * let / abx

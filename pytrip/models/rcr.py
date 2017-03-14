@@ -91,7 +91,7 @@ def _f(let):
     input parameters may be either numpy.array or scalars
     TODO: handle real cubes.
 
-    :params let: LET in keV/um
+    :params let: LET in [keV/um]
 
     :returns: result of the f function
     """
@@ -117,7 +117,7 @@ def oer_rcr(let):
     input parameters may be either numpy.array or scalars
     TODO: handle real cubes.
 
-    :params let: LET in keV/um
+    :params let: LET in [keV/um]
 
     :returns: cube containing the oxygen enhancement ratio
     """
@@ -137,7 +137,7 @@ def oer_po2_rcr(let, oxy):
     input parameters may be either numpy.array or scalars
     TODO: handle real cubes.
 
-    :params let: LET in keV/um
+    :params let: LET in [keV/um]
     :params oxy: oxygenation in [mmHgO_2]
 
     :returns: cube containing the oxygen enhancement ratio
