@@ -100,11 +100,11 @@ def _f(let):
     result = (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
 
     # map any zero LET areas to 0.0
-    if hasattr(result, "__len__"):  # for numpy arrays
-        result[result == np.inf] = 0.0
-    else:  # for scalar floats. TODO: handler for pt.Cube()
+    if np.isscalar(result):  # scalar
         if result == np.inf:
             result = 0.0
+    else:
+        result[result == np.inf] = 0.0  # numpy arrays
 
     return result
 
