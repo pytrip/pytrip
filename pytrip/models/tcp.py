@@ -20,6 +20,7 @@
 TCP models
 """
 
+import numpy as np
 import logging
 
 logger = logging.getLogger(__name__)
@@ -32,11 +33,31 @@ def tcp_voi(sf, voi=None, ncells=1.0, fractions=1):
     This is equation (7) in https://doi.org/10.1093/jrr/rru020
     assuming static oxygenation during all fractions.
     (Equation (8) would require a new oxy cube after every fractionation, not implemented.)
+
+    :params numpy.array sf: numpy array, surviving fraction cube
+    :params Voi voi: pytrip Voi() class object
+    :params float ncells: number of cells in each voxel, or a cube of surviving fractions
+    :params int fractions: number of fractions, default is 1
     """
 
-    # _sf = rcr_surviving_fraction(dose, let, oxy)
+    tcp = 0
 
-    # TODO: extract masked array
-    # _tcp = np.exp( -sum(ncells * (_sf)^fractions))
-    logger.warning("tcp_voi() not implemented yet")
-    pass
+    if voi is None:
+        # make a new mask which is true in all pixel values
+        mask = np.ones(sf.shape, dtype=bool)
+    else:
+        # mark ony those values as true, which are within the VOI
+        voi_cube = voi.get_voi_cube()
+        mask = (voi_cube.cube == 1000)
+
+    # ncells may be either a scalar or a cube.
+    if np.isscalar(ncells):
+        tcp = np.exp(-sum(ncells * sf[mask]**fractions))
+    else:
+        # better make sure that the cells cube has the same size as the surviving fraction cube
+        if ncells.shape == sf.shape:
+            tcp = np.exp(-sum(ncells[mask] * sf[mask]**fractions))
+        else:
+            logger.error("ncells array shape does not match surviving fraction shape.")
+
+    return tcp
