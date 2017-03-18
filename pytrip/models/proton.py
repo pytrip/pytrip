@@ -21,24 +21,24 @@ Collection of proton RBE models.
 
 [1] A. Carabe, M. Moteabbed, N. Depauw, J. Schuemann, and H. Paganetti,
 "Range uncertainty in proton therapy due to variable biological effectiveness,"
-Phys. Med. Biol. 57(5), 1159–1172 (2012).
+Phys. Med. Biol. 57(5), 1159-1172 (2012).
 https://doi.org/10.1088/0031-9155/57/5/1159
 
 [2] M. Wedenberg, B. Lind, and B. Haardemark,
 "A model for the relative biological effectiveness of protons:
 The tissue specific parameter alpha/beta of photons is a predictor for the sensitivity to LET changes,"
-Acta Oncol. 52(3), 580–588 (2013).
+Acta Oncol. 52(3), 580-588 (2013).
 http://dx.doi.org/10.3109/0284186X.2012.705892
 
 [3]  A. L. McNamara, J. Schuemann, and H. Paganetti,
 "A phenomenological relative biological effectiveness (RBE) model for proton therapy based on all published
 in vitro cell survival data,"
-Phys. Med. Biol. 60(21), 8399–8416
+Phys. Med. Biol. 60(21), 8399-8416
 https://doi.org/10.1088/0031-9155/60/21/8399
 """
 
-import numpy as np
 import logging
+import numpy as np
 
 logger = logging.getLogger(__name__)
 
