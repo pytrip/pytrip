@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#    Copyright (C) 2010-2016 PyTRiP98 Developers.
+#    Copyright (C) 2010-2017 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -91,7 +91,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'PyTRiP98'
-copyright = '2016, PyTRiP98 Developers'
+copyright = '2017, PyTRiP98 Developers'
 author = 'Leszek Grzanka, Niels Bassler'
 
 # The version info for the project you're documenting, acts as replacement for
