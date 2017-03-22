@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2016 PyTRiP98 Developers.
+#    Copyright (C) 2010-2017 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
