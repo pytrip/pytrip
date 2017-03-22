@@ -58,9 +58,9 @@ environment:
       PYTHON_VERSION: "3.5"
       MINICONDAPATH: "C:\\Miniconda35-x64"
       os: Visual Studio 2015
-
 init:
 # add Python interpreter to PATH variable
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
