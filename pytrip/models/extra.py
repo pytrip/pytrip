@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Auxilliary tools
+Additional tools which are not tied to any particular model.
 """
 import numpy as np
 import logging

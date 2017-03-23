@@ -43,8 +43,8 @@ def rbe_rcr(dose_ion, let, alpha_x, beta_x, oxy=None):
     """
 
     # Calculate sf_ion(D_ion, let, oxy)
-    # from pytrip.models.aux import rbe_from_sfion
-    # rbe_from_sfion(_sf, dose_ion, alpha_x, beta_x)
+    # from pytrip.models.extra import rbe_from_sf
+    # rbe_from_sf(_sf, dose_ion, alpha_x, beta_x)
     logger.warning("rcr_rbe not implemented yet.")
     pass  # TODO: not implemented yet.
 
