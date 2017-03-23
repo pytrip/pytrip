@@ -59,6 +59,19 @@ environment:
       MINICONDAPATH: "C:\\Miniconda35-x64"
       os: Visual Studio 2015
 
+# Python3.6 needs VS 14.0 (2015)
+    - platform: x86
+      PYTHON_ROOT: "C:\\Python36"
+      PYTHON_VERSION: "3.6"
+      MINICONDAPATH: "C:\\Miniconda36"
+      os: Visual Studio 2015
+
+    - platform: x64
+      PYTHON_ROOT: "C:\\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      MINICONDAPATH: "C:\\Miniconda36-x64"
+      os: Visual Studio 2015
+
 init:
 # add Python interpreter to PATH variable
   - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
