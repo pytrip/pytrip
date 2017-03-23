@@ -60,8 +60,7 @@ environment:
       os: Visual Studio 2015
 init:
 # add Python interpreter to PATH variable
-  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
-  - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/install-git-2.12.1.ps1'))  - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
 # add Miniconda to PATH variable
   - set PATH=%MINICONDAPATH%\Scripts;%PATH%
 # following this one: https://github.com/audreyr/cookiecutter/issues/599
