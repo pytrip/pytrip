@@ -1235,6 +1235,8 @@ class Contour:
         self.cube = cube
         self.children = []
         self.contour = contour
+        # contour_closed: if set to True, the last point in the contour will be repeated when writing VDX files.
+        self.contour_closed = False
 
     def push(self, contour):
         """ Push a contour on the contour stack.
@@ -1301,16 +1303,21 @@ class Contour:
                                                          cnt[2],
                                                          0, 0, 0)
 
-        # repeat the first point, to close the contour
-        out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
-                                                     self.contour[0][1] - self.cube.yoffset,
-                                                     self.contour[0][2],
-                                                     0, 0, 0)
+        # repeat the first point, to close the contour, if needed
+        if self.contour_closed:
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
+                                                         self.contour[0][1] - self.cube.yoffset,
+                                                         self.contour[0][2],
+                                                         0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
         """ Reads a single Contour from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
+
+        Note here the last point is repeated if the contour is closed.
+        If we have a point of interest, the length is 1.
+        Length 2 should thus never occur.
 
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
@@ -1336,6 +1343,16 @@ class Contour:
                     points = int(line.split()[1])
                     set_point = True
             i += 1
+
+        # check if the contour is closed
+        if len(self.contour > 1):  # check if this is an actual contour, and not a POI
+            if self.contour[0] == self.contour[-1]:
+                self.contour_closed = True
+                # remove last element
+                del self.contour[-1]
+            else:
+                self.contour_closed = False
+
         return i - 1
 
     def read_vdx_old(self, slice_number, xy_line):
@@ -1358,6 +1375,15 @@ class Contour:
             self.contour.append([_pixel_size * float(x) / 16.0,
                                  _pixel_size * float(y) / 16.0,
                                  float(slice_number)])
+
+        # check if the contour is closed
+        if len(self.contour > 1):  # check if this is an actual contour, and not a POI
+            if self.contour[0] == self.contour[-1]:
+                self.contour_closed = True
+                # remove last element
+                del self.contour[-1]
+            else:
+                self.contour_closed = False
 
     def add_child(self, contour):
         """ (TODO: Document me)
