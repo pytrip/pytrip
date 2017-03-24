@@ -1339,7 +1339,7 @@ class Contour:
         while i < len(content):
             line = content[i]
             if set_point:
-                if j >= points - 1:
+                if j >= points:
                     break
                 con_dat = line.split()
                 self.contour.append([float(con_dat[0]) + self.cube.xoffset,
@@ -1357,10 +1357,10 @@ class Contour:
         # check if the contour is closed
         # self.contour[:] holds the actual data points
         if len(self.contour) > 1:  # check if this is an actual contour, and not a POI
-            # if first data point is the same as the last data point we have closed contour            
+            # if first data point is the same as the last data point we have closed contour
             if self.contour[0] == self.contour[-1]:
                 self.contour_closed = True
-                # and trash the last element
+                # and trash the last data point
                 del self.contour[-1]
             else:
                 self.contour_closed = False
