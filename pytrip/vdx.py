@@ -466,7 +466,7 @@ def create_voi_from_cube(cube, name, value=100):
 
         points[:, 2] = i * cube.slice_distance
         c = Contour(points.tolist(), cube)
-        c.contour_closed = True # TODO: Probably the last point is double here
+        c.contour_closed = True  # TODO: Probably the last point is double here
         s.add_contour(c)
 
         v.add_slice(s)
@@ -523,7 +523,7 @@ def create_sphere(cube, name, center, radius):
             points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
             if len(points) > 0:
                 c = Contour(points, cube)
-                c.contour_closed = True  # TODO: Probably the last point is double here                
+                c.contour_closed = True  # TODO: Probably the last point is double here
                 s.add_contour(c)
                 v.add_slice(s)
     return v
@@ -1324,7 +1324,7 @@ class Contour:
         """ Reads a single Contour from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
 
-        Note: 
+       Note:
         - in VDX files the last contour point is repeated if the contour is closed.
         - If we have a point of interest, the length is 1.
         - Length 2 and 3 should thus never occur in VDX files (assuming all contours are closed)
