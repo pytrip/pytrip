@@ -50,10 +50,8 @@ class DDD:
     def get_ddd_grid(self, energy_list, n):
         """ TODO: documentation
         """
-        # ddd_list = []
         energy = []
         dist = []
-        # point = []
         data = []
 
         ddd_e = self.ddd.keys()
@@ -133,10 +131,8 @@ class DDD:
 
         max_dist = np.array(sorted(max_dist, key=lambda x: x[0]))
         self.max_dist = interpolate.splrep(max_dist[:, 0], max_dist[:, 1], s=0)
-        #        spl_points = 1000
-        #        xi = np.linspace(0, max_dist[-1, 1], spl_points)
         ddd_list = []
-        for key, value in ddd.iteritems():
+        for key, value in ddd.items():
             points[0].extend(value[0])
             points[1].extend(len(value[0]) * [key])
             ddd_list.extend(value[1])
