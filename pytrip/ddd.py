@@ -19,6 +19,11 @@
 """
 This module provides the DDD class for handling depth-dose curve kernels for TRiP98.
 """
+import time
+import os
+from glob import glob
+from numbers import Number
+
 import glob
 import logging
 import numpy as np
@@ -28,122 +33,273 @@ logger = logging.getLogger(__name__)
 
 
 class DDD:
-    """ Class for handling Depth-Dose Data.
-    """
+    def __init__(self, projectile=None, energy=None, data=None):
+        # default members
+        self.filetype = 'ddd'
+        self.fileversion = '19980520'
+        self.filedate = time.strftime('%c'),  # Locale's appropriate date and time representation
+        self.material = 'H2O'
+        self.composition = 'H2O'
+        self.density = 1.0  # floating point number, density of material
+
+        # values to be filled by user
+        self.projectile = projectile
+        self.energy = energy
+        self.data = data
+
+    def read(self, filename):
+        ddd = DDDFileReader.read(filename)
+        # update self with data read from the file
+        for item in vars(ddd):
+            setattr(self, item, getattr(ddd, item))
+
+    def write(self, filename):
+        DDDFileWriter.write(self, filename)
+
+    # data section - Z axis getter
+    @property
+    def z(self):
+        if self.data is None:
+            return self.data
+        else:
+            return self.data[:, 0]
+
+    # data section - dose axis getter
+    @property
+    def dose(self):
+        if self.data is None:
+            return self.data
+        else:
+            return self.data[:, 1]
+
+    # data section - fwhm1 axis getter
+    @property
+    def fwhm1(self):
+        if self.data is None:
+            return self.data
+        elif self.data.shape[1] >= 3:
+            return self.data[:, 2]
+        return None
+
+    # data section - factor axis getter
+    @property
+    def factor(self):
+        if self.data is None:
+            return self.data
+        elif self.data.shape[1] >= 4:
+            return self.data[:, 3]
+        return None
+
+    # data section - fwhm2 axis getter
+    @property
+    def fwhm2(self):
+        if self.data is None:
+            return self.data
+        elif self.data.shape[1] >= 5:
+            return self.data[:, 4]
+
+    # validate energy
+    @property
+    def energy(self):
+        return self._energy
+
+    @energy.setter
+    def energy(self, e):
+        if isinstance(e, Number):  # check if a number
+            if e < 0.0:
+                raise Exception("Energy should be a positive number")
+        self._energy = e
+
+    # validate density
+    @property
+    def density(self):
+        return self._density
+
+    @density.setter
+    def density(self, d):
+        if isinstance(d, Number):  # check if a number
+            if d < 0.0:
+                raise Exception("Density should be a positive number")
+        self._density = d
+
+
+class DDDCollection:
     def __init__(self):
-        pass
+        self.members = {}
 
-    def get_ddd_data(self, energy, points):
-        """ TODO: documentation
-        """
-        e = self.get_nearest_energy(energy)
-        return self.ddd_data[e](points)
+    def read(self, path):
+        if os.path.isfile(path):  # single file
+            ddd = DDDFileReader(path)
+            self.members[ddd.energy] = ddd
+        elif os.path.isdir(path):  # single directory
+            glob_expression = os.path.join(path, "*.ddd")
+            self._read_from_glob_expression(glob_expression)
+        else:  # treat as glob expression by default
+            self._read_from_glob_expression(path)
 
-    def get_dist(self, energy):
-        """ TODO: documentation
-        """
-        return self.max_dist(energy)
+    def _read_from_glob_expression(self, glob_expr):
+        for item in glob(glob_expr):
+            ddd = DDDFileReader.read(item)
+            if ddd.energy in self.members:
+                raise Exception("DDD file with energy {:g} already present in collection".format(ddd.energy))
+            self.members[ddd.energy] = ddd
 
-    def get_ddd_by_energy(self, energy, points):
-        """ TODO: documentation
-        """
+    def write(self, directory):
+        prefix = "file_"
+        suffix = ".ddd"
+        for energy, ddd in self.members.items():
+            path = os.path.join(directory, "{:s}{:g}{:s}".format(prefix, energy, suffix))
+            ddd.write(path)
+
+
+class DDDFileReader:
+    # list of allowed tags in DDD file, extracted from members of DDD class
+    _ddd_class_members = vars(DDD()).keys()
+
+    @staticmethod
+    def _is_number(s):
         try:
-            from scipy import interpolate
-        except ImportError as e:
-            logger.error("Please install scipy to be able to use spline-based interpolation")
-            raise e
-        ev_point = np.array([points, [energy] * len(points)])
-        return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
+            float(s)
+            return True
+        except ValueError:
+            return False
 
-    def get_ddd_grid(self, energy_list, n):
-        """ TODO: documentation
+    @classmethod
+    def _read_metadata(cls, filename):
         """
-        energy = []
-        dist = []
-        data = []
-
-        ddd_e = self.ddd.keys()
-        ddd_e = sorted(ddd_e)
-
-        for e in energy_list:
-            idx = np.where((np.array(ddd_e) >= e))[0][0] - 1
-
-            d_lower = self.ddd[ddd_e[idx]]
-            d_upper = self.ddd[ddd_e[idx + 1]]
-
-            lower_idx = np.where(max(d_lower[1, :]) == d_lower[1, :])[0][0]
-            upper_idx = np.where(max(d_upper[1, :]) == d_upper[1, :])[0][0]
-
-            offset = 1 / (ddd_e[idx + 1] - ddd_e[idx]) * (e - ddd_e[idx + 1])
-            x_offset = (d_upper[0, upper_idx] - d_lower[0, lower_idx]) * offset
-            y_offset = 1 + (1 - d_upper[1, upper_idx] / d_lower[1, lower_idx]) * offset
-
-            depth = d_upper[0, :] + x_offset
-            ddd = d_upper[1, :] * y_offset
-            xi = np.linspace(0, depth[-1], n)
-            spl = RegularInterpolator(x=depth, y=ddd)
-            data.extend(spl(xi))
-            dist.extend(xi)
-            energy.extend([e] * n)
-
-        out = [dist, energy, data]
-        return np.reshape(np.transpose(out), (len(energy_list), n, 3))
-
-        # TODO why it is not used ?
-        # ddd_list = []
-        # energy = []
-        # dist = []
-        # point = []
-        # for e in energy_list:
-        #     dist.extend(np.linspace(0, self.get_dist(e), n))
-        #     energy.extend([e] * n)
-        # point.append(dist)
-        # point.append(energy)
-        # data = interpolate.griddata(self.points,
-        #                             self.ddd_list,
-        #                             np.transpose(point),
-        #                             method='linear')
-        # out = [dist, energy, data]
-        # return np.reshape(np.transpose(out), (len(energy_list), n, 3))
-
-    def load_ddd(self, directory):
-        """ Loads all .ddd files found in 'directory'
-
-        :params str directory: directory where the .ddd files are found.
+        get metadata from file and save as dictionary
+        keys are tag names
+        values are extracted from the part of line which is following tag name
+        for special tag named `ddd` line number is saved as a value
+        :param filename: path to the filename
+        :return: dictionary with metadata (empty if file is missing)
         """
-        x_data = []
-        y_data = []
-        points = [[], []]
-        ddd = {}
-        max_dist = []
-        items = glob.glob(directory)
-        for item in items:
-            x_data = []
-            y_data = []
-            with open(item, 'r') as f:
-                data = f.read()
-            lines = data.split('\n')
-            for n, line in enumerate(data.split("\n")):
-                if line.find("energy") is not -1:
-                    energy = float(line.split()[1])
-                if line.find('!') is -1 and line.find('#') is -1:
-                    break
-            for i in range(n, len(lines)):
-                if len(lines[i]) < 3:
-                    continue
-                point = [float(s) for s in lines[i].split()]
-                x_data.append(point[0] * 10)
-                y_data.append(point[1])
-            ddd[energy] = np.array([x_data, y_data])
-            max_dist.append([energy, x_data[-1]])
+        metadata_dict = {}
 
-        max_dist = np.array(sorted(max_dist, key=lambda x: x[0]))
-        self.max_dist = RegularInterpolator(x=max_dist[:, 0], y=max_dist[:, 1])
-        ddd_list = []
-        for key, value in ddd.items():
-            points[0].extend(value[0])
-            points[1].extend(len(value[0]) * [key])
-            ddd_list.extend(value[1])
-        self.ddd_list = ddd_list
-        self.ddd = ddd
-        self.points = np.transpose(points)
+        with open(filename, 'r') as f:
+            for line_no, line in enumerate(f.readlines()):
+
+                # check line starting with non-allowed characters
+                if not line.startswith(('!', '#', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-')):
+                    raise Exception("Line starting with incompatible character in {:s}, "
+                                    "line no: {:d}".format(filename, line_no))
+
+                # split the line using whitespace as separator
+                line_items = line.split()
+
+                # check for empty lines
+                if not line_items:
+                    raise Exception("Empty line found in {:s}, line no: {:d}".format(filename, line_no))
+
+                # line not empty, get candidate for tag
+                first_item = line_items[0]
+
+                if first_item.startswith('!'):  # line with tag
+
+                    # get tag
+                    tag = first_item[1:]
+
+                    # check if tag is not empty
+                    if not tag:
+                        raise Exception("Empty tag found in {:s}, line no: {:d}".format(filename, line_no))
+
+                    # check if tag is allowed
+                    if tag not in cls._ddd_class_members and tag != 'ddd':
+                        raise Exception("Incompatible tag {:s} found in {:s}, line no: {:d}".format(
+                            tag,
+                            filename,
+                            line_no))
+
+                    # check if tag is doubled
+                    if tag in metadata_dict:
+                        raise Exception("Doubled {:s} tag found in {:s}, line no: {:d}".format(
+                            tag,
+                            filename,
+                            line_no))
+
+                    # get value (removing white spaces from left and right part)
+                    value = line[len(first_item):].rstrip().lstrip()
+
+                    # put tag and value in the dictionary
+                    if tag in cls._ddd_class_members:
+                        metadata_dict[tag] = value
+                    else:
+                        metadata_dict[tag] = line_no
+
+                elif line.startswith('#'):  # comment line
+                    pass
+                elif cls._is_number(first_item):  # looks like line with data
+                    pass
+                else:
+                    raise Exception("Unknown line found in {:s}, line no: {:d}".format(filename, line_no))
+        return metadata_dict
+
+    @classmethod
+    def read(cls, filename):
+        """Construct an DDD object from data in a file."""
+
+        # read metadata from file and save in metadata_dict dictionary
+        # keys are tag names
+        # values are extracted from the part of line which is following tag name
+        # for special tag named `ddd` line number is saved as a value
+        metadata_dict = cls._read_metadata(filename)
+
+        try:
+            data_part_line_no = metadata_dict['ddd']
+        except KeyError:
+            raise Exception("No data section in file {:s}".format(filename))
+
+        # read data from data part of the file
+        data = np.loadtxt(filename,
+                          comments=('#', '!'),  # skip tag and comment lines
+                          skiprows=data_part_line_no,  # skip block with tags
+                          ndmin=2,  # ensure loading at least 2D array (columns and rows)
+                          )
+
+        if data.shape[1] < 2 or data.shape[1] > 5:
+            raise Exception("File {:s} should have between 2 and 5 columns of data")
+
+        # conversion from numbers to floats for specific items
+        metadata_dict['energy'] = float(metadata_dict['energy'])
+        metadata_dict['density'] = float(metadata_dict['density'])
+
+        ddd = DDD()
+        for tag, value in metadata_dict.items():
+            setattr(ddd, tag, value)
+
+        ddd.data = data
+
+        return ddd
+
+
+class DDDFileWriter:
+    _ddd_header_template = """!filetype    ddd
+!fileversion   {fileversion:s}
+!filedate      {filedate:s}
+!projectile    {projectile:s}
+!material      {material:s}
+!composition   {composition:s}
+!density {density:f}
+!energy {energy:f}
+#   z[g/cm**2] dE/dz[MeV/(g/cm**2)] FWHM1[g/cm**2] factor FWHM2[g/cm**2]
+!ddd"""
+
+    @classmethod
+    def write(cls, ddd, filename):
+        # prepare header of DDD file
+        header = cls._ddd_header_template.format(
+            fileversion=ddd.fileversion,
+            filedate=ddd.filedate,
+            projectile=ddd.projectile,
+            material=ddd.material,
+            composition=ddd.composition,
+            density=ddd.density,
+            energy=ddd.energy)
+
+        # write the contents of the files
+        np.savetxt(fname=filename,
+                   X=ddd.data,
+                   delimiter=' ',
+                   fmt='%g',
+                   comments='',
+                   header=header)
