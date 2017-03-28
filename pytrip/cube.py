@@ -207,7 +207,7 @@ class Cube(object):
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
                (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               indices[2] * self.slice_distance + self.zoffset]
+               self.slice_pos[indices[2]]
         return pos
 
     def slice_to_z(self, slice_number):
