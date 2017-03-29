@@ -986,7 +986,7 @@ class Voi:
             logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
             return None
         else:
-            logger.debug("found slice at pos for z:", _slice[0], z, _slice[0].thickness)
+            logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
             return _slice[0]
 
     def number_of_slices(self):
