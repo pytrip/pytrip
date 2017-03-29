@@ -105,8 +105,29 @@ class DDDFile:
         self.energy = energy
         self.data = data
 
-    def dose(self, r, z):
-        pass
+        # B-spline representation of 1-D curve
+        self._dedz_bspline = self._get_bspline(self.de_dz)
+        self._fwhm1_bspline = self._get_bspline(self.fwhm1)  # may be None if FWHM1 data missing
+        self._factor_bspline = self._get_bspline(self.factor)  # may be None if factor data missing
+        self._fwhm2_bspline = self._get_bspline(self.fwhm2)  # may be None if FWHM2 data missing
+
+    def dose(self, r_cm, z_cm):
+        if self.data.shape[1] < 3:  # no information about FWHM in the files
+            return self.de_dz(z_cm)
+        elif self.data.shape[1] < 5:  # single gaussian data
+            return GaussianModel.single_gauss_MeV_g(
+                r_cm=r_cm,
+                amp_MeV_cm_g=self.de_dz(z_cm),
+                sigma_cm=self.fwhm1(z_cm) / GaussianModel.fwhm_to_sigma
+            )
+        else:  # double gaussian data
+            return GaussianModel.double_gauss_MeV_g(
+                r_cm=r_cm,
+                amp_MeV_cm_g=self.de_dz(z_cm),
+                sigma1_cm=self.fwhm1(z_cm) / GaussianModel.fwhm_to_sigma,
+                weight=self.factor(z_cm),
+                sigma2_cm=self.fwhm2(z_cm) / GaussianModel.fwhm_to_sigma,
+            )
 
     def read(self, filename):
         ddd = DDDFileReader.read(filename)
@@ -120,44 +141,85 @@ class DDDFile:
     # data section - Z axis getter
     @property
     def z(self):
-        if self.data is None:
-            return self.data
-        else:
+        if self.data is not None:
             return self.data[:, 0]
+        return None
 
-    # data section - dose axis getter
-    @property
-    def de_dz(self):
+    def de_dz(self, z_cm=None):
+        """
+        Evaluate dE/dz (central axis dose) from DDD set
+        If z_cm is provided then perform B-spline interpolation to get intermediate values
+        If z_cm is None, return full table of dE/dz from DDD file
+        :param z_cm:
+        :return:
+        """
         if self.data is None:
-            return self.data
-        else:
+            return None
+        if z_cm is None:
             return self.data[:, 1]
+        else:
+            result = interpolate.splev(
+                x=z_cm,  # points at which the interpolation should be performed
+                tck=self._dedz_bspline  # Bspline object
+            )
+            return result
 
-    # data section - fwhm1 axis getter
-    @property
-    def fwhm1(self):
-        if self.data is None:
-            return self.data
-        elif self.data.shape[1] >= 3:
+    def fwhm1(self, z_cm):
+        """
+        Evaluate FWHM1 from DDD set
+        If z_cm is provided then perform B-spline interpolation to get intermediate values
+        If z_cm is None, return full table of FWHM1 from DDD file
+        :param z_cm:
+        :return:
+        """
+        if self.data.shape[1] < 3:
+            return None
+        if z_cm is None:
             return self.data[:, 2]
-        return None
+        else:
+            result = interpolate.splev(
+                x=z_cm,  # points at which the interpolation should be performed
+                tck=self._fwhm1_bspline  # Bspline object
+            )
+            return result
 
-    # data section - factor axis getter
-    @property
-    def factor(self):
-        if self.data is None:
-            return self.data
-        elif self.data.shape[1] >= 4:
+    def factor(self, z_cm):
+        """
+        Evaluate factor from DDD set
+        If z_cm is provided then perform B-spline interpolation to get intermediate values
+        If z_cm is None, return full table of factor from DDD file
+        :param z_cm:
+        :return:
+        """
+        if self.data.shape[1] < 4:
+            return None
+        if z_cm is None:
             return self.data[:, 3]
-        return None
+        else:
+            result = interpolate.splev(
+                x=z_cm,  # points at which the interpolation should be performed
+                tck=self._factor_bspline  # Bspline object
+            )
+            return result
 
-    # data section - fwhm2 axis getter
-    @property
-    def fwhm2(self):
-        if self.data is None:
-            return self.data
-        elif self.data.shape[1] >= 5:
+    def fwhm2(self, z_cm):
+        """
+        Evaluate FWHM2 from DDD set
+        If z_cm is provided then perform B-spline interpolation to get intermediate values
+        If z_cm is None, return full table of FWHM2 from DDD file
+        :param z_cm:
+        :return:
+        """
+        if self.data.shape[1] < 5:
+            return None
+        if z_cm is None:
             return self.data[:, 4]
+        else:
+            result = interpolate.splev(
+                x=z_cm,  # points at which the interpolation should be performed
+                tck=self._fwhm2_bspline  # Bspline object
+            )
+            return result
 
     # validate energy
     @property
@@ -182,6 +244,64 @@ class DDDFile:
             if d < 0.0:
                 raise Exception("Density should be a positive number")
         self._density = d
+
+    def update_bspline(self):
+        """
+        Calculate B-spline representation of dE/dz, fwhm1, factor and FWHM2
+        :return:
+        """
+        self._dedz_bspline = self._get_bspline(self.de_dz)
+        self._fwhm1_bspline = self._get_bspline(self.fwhm1)
+        self._factor_bspline = self._get_bspline(self.factor)
+        self._fwhm2_bspline = self._get_bspline(self.fwhm2)
+
+    def _get_bspline(self, y_data):
+        """
+        Calculate 1-D B-spline on a dataset with X coordinates being self.z and Y coordinates provided as param
+        :param y_data:
+        :return:
+        """
+        result = None
+        if y_data is not None:
+            result = self._bspline = interpolate.splrep(
+                x=self.z,
+                y=y_data,
+                s=0,  # no smoothing is performed, spline will pass through all points
+            )
+        return result
+
+
+class GaussianModel:
+    """
+    TODO
+    """
+
+    fwhm_to_sigma = np.sqrt(8.0 * np.log(2))
+
+    @classmethod
+    def single_gauss_MeV_g(cls, r_cm, amp_MeV_cm_g, sigma_cm):
+        """
+        TODO
+        :param r_cm:
+        :param amp_MeV_cm_g:
+        :param sigma_cm:
+        :return:
+        """
+        return amp_MeV_cm_g / (2.0 * np.pi * sigma_cm) * np.exp(-r_cm ** 2 / (2.0 * sigma_cm ** 2))
+
+    @classmethod
+    def double_gauss_MeV_g(cls, r_cm, amp_MeV_cm_g, sigma1_cm, weight, sigma2_cm):
+        """
+        TODO
+        :param r_cm:
+        :param amp_MeV_cm_g:
+        :param sigma1_cm:
+        :param weight:
+        :param sigma2_cm:
+        :return:
+        """
+        return weight * cls.single_gauss_MeV_g(r_cm, amp_MeV_cm_g, sigma1_cm) + \
+            (1.0 - weight) * cls.single_gauss_MeV_g(r_cm, amp_MeV_cm_g, sigma2_cm)
 
 
 class DDDFileReader:
@@ -295,11 +415,9 @@ class DDDFileReader:
         metadata_dict['energy'] = float(metadata_dict['energy'])
         metadata_dict['density'] = float(metadata_dict['density'])
 
-        ddd = DDDFile()
+        ddd = DDDFile(data=data)
         for tag, value in metadata_dict.items():
             setattr(ddd, tag, value)
-
-        ddd.data = data
 
         return ddd
 
