@@ -704,8 +704,9 @@ class Voi:
             s = Slice(cube=self.cube)
             s.add_contour(Contour(points1, cube=self.cube))
 
+        # DEBUG temporarily left in, will be removed before merging.
         for point in s.contour[0].contour:
-            print("NB: ", point[0], point[1], point[2])
+            logger.debug("NB logger: {:.2f} {:.2f} {:.2f}".format(point[0], point[1], point[2]))
         return s
 
     def define_colors(self):
@@ -796,9 +797,9 @@ class Voi:
         This is needed for displaying Saggital and Coronal view.
         """
         # slice_in_frame is only given by VDX, and these are also the only frames which need to be sorted
-        # it seems. DICOM apparently have proper structure already. This function is thus not called from
-        # DICOM Conour import.
-        # May have to be imporved, if different situation apears and sagittal and coronal conours appear messy.
+        # it seems. DICOM apparently have proper structure already. Nonetheless, this function is also
+        # applied to DICOM contours.
+
         if hasattr(self.slices[0], "slice_in_frame"):
             self.slices = sorted(self.slices, key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
@@ -942,6 +943,7 @@ class Voi:
                 else:
                     sl.contour[-1].contour_closed = False
                 self.slices.append(sl)
+        self._sort_slices()
 
     def to_voxel_string(self):
         """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
@@ -1071,7 +1073,7 @@ class Slice:
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
                     self.cube))
         # add the slice position to slice_in_frame which is needed later for sorting.
-        # self.slice_in_frame = self.contour[-1].contour[2]
+        self.slice_in_frame = self.contour[-1].contour[0][2]
 
     def get_position(self):
         """
