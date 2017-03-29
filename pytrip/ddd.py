@@ -23,6 +23,10 @@ import time
 import os
 from glob import glob
 from numbers import Number
+try:
+    from UserDict import UserDict  # python 2
+except ImportError:
+    from collections import UserDict  # python 3
 
 import glob
 import logging
@@ -32,7 +36,61 @@ from pytrip.res.interpolate import RegularInterpolator
 logger = logging.getLogger(__name__)
 
 
-class DDD:
+class DDD(UserDict):  # UserDict allows us to use DDD objects as pure dictionaries with our own new methods
+    """
+    Represents set of DDD files.
+    Internally it is a dictionary with keys being energies and values being DDDFile objects.
+    """
+
+    def dose(self, energy, r, z):
+        pass
+
+    def read(self, path):
+        """
+        Read DDD data from path (single file, directory or glob expression)
+        :param path:
+        :return:
+        """
+        if os.path.isfile(path):  # read a single file
+            ddd = DDDFileReader(path)
+            self[ddd.energy] = ddd
+        elif os.path.isdir(path):  # single directory
+            glob_expression = os.path.join(path, "*.ddd")
+            self._read_from_glob_expression(glob_expression)
+        else:  # treat as glob expression (i.e. "/home/test/trip/a_*.ddd") by default
+            self._read_from_glob_expression(path)
+
+    def write(self, directory, prefix="file_"):
+        """
+        Save DDD data to a directory
+        :param directory: place to save DDD filess
+        :param prefix: optional prefix, by default "file_"
+        :return:
+        """
+        suffix = ".ddd"
+        for energy, ddd in self.items():
+            path = os.path.join(directory, "{:s}{:g}{:s}".format(prefix, energy, suffix))
+            ddd.write(path)
+
+    def energies(self):
+        """
+        List of initial energies related to DDD files loaded
+        :return:
+        """
+        return self.keys()
+
+    def _read_from_glob_expression(self, glob_expr):
+        for item in glob(glob_expr):
+            ddd = DDDFileReader.read(item)
+            if ddd.energy in self.keys():
+                raise Exception("DDD file with energy {:g} already present in collection".format(ddd.energy))
+            self.data[ddd.energy] = ddd
+
+
+class DDDFile:
+    """
+    Represents a single DDD file
+    """
     def __init__(self, projectile=None, energy=None, data=None):
         # default members
         self.filetype = 'ddd'
@@ -46,6 +104,9 @@ class DDD:
         self.projectile = projectile
         self.energy = energy
         self.data = data
+
+    def dose(self, r, z):
+        pass
 
     def read(self, filename):
         ddd = DDDFileReader.read(filename)
@@ -66,7 +127,7 @@ class DDD:
 
     # data section - dose axis getter
     @property
-    def dose(self):
+    def de_dz(self):
         if self.data is None:
             return self.data
         else:
@@ -123,38 +184,9 @@ class DDD:
         self._density = d
 
 
-class DDDCollection:
-    def __init__(self):
-        self.members = {}
-
-    def read(self, path):
-        if os.path.isfile(path):  # single file
-            ddd = DDDFileReader(path)
-            self.members[ddd.energy] = ddd
-        elif os.path.isdir(path):  # single directory
-            glob_expression = os.path.join(path, "*.ddd")
-            self._read_from_glob_expression(glob_expression)
-        else:  # treat as glob expression by default
-            self._read_from_glob_expression(path)
-
-    def _read_from_glob_expression(self, glob_expr):
-        for item in glob(glob_expr):
-            ddd = DDDFileReader.read(item)
-            if ddd.energy in self.members:
-                raise Exception("DDD file with energy {:g} already present in collection".format(ddd.energy))
-            self.members[ddd.energy] = ddd
-
-    def write(self, directory):
-        prefix = "file_"
-        suffix = ".ddd"
-        for energy, ddd in self.members.items():
-            path = os.path.join(directory, "{:s}{:g}{:s}".format(prefix, energy, suffix))
-            ddd.write(path)
-
-
 class DDDFileReader:
     # list of allowed tags in DDD file, extracted from members of DDD class
-    _ddd_class_members = vars(DDD()).keys()
+    allowed_tags = ('filetype', 'fileversion', 'filedate', 'material', 'composition', 'density', 'projectile', 'energy')
 
     @staticmethod
     def _is_number(s):
@@ -204,7 +236,7 @@ class DDDFileReader:
                         raise Exception("Empty tag found in {:s}, line no: {:d}".format(filename, line_no))
 
                     # check if tag is allowed
-                    if tag not in cls._ddd_class_members and tag != 'ddd':
+                    if tag not in cls.allowed_tags and tag != 'ddd':
                         raise Exception("Incompatible tag {:s} found in {:s}, line no: {:d}".format(
                             tag,
                             filename,
@@ -221,7 +253,7 @@ class DDDFileReader:
                     value = line[len(first_item):].rstrip().lstrip()
 
                     # put tag and value in the dictionary
-                    if tag in cls._ddd_class_members:
+                    if tag in cls.allowed_tags:
                         metadata_dict[tag] = value
                     else:
                         metadata_dict[tag] = line_no
@@ -263,7 +295,7 @@ class DDDFileReader:
         metadata_dict['energy'] = float(metadata_dict['energy'])
         metadata_dict['density'] = float(metadata_dict['density'])
 
-        ddd = DDD()
+        ddd = DDDFile()
         for tag, value in metadata_dict.items():
             setattr(ddd, tag, value)
 
