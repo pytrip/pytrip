@@ -703,6 +703,9 @@ class Voi:
             points1.append(points1[0])
             s = Slice(cube=self.cube)
             s.add_contour(Contour(points1, cube=self.cube))
+
+        for point in s.contour[0].contour:
+            print("NB: ", point[0], point[1], point[2])
         return s
 
     def define_colors(self):
@@ -788,6 +791,17 @@ class Voi:
 
         return roi_contours
 
+    def _sort_slices(self):
+        """ Sorts all slices stored in self for increasing z.
+        This is needed for displaying Saggital and Coronal view.
+        """
+        # slice_in_frame is only given by VDX, and these are also the only frames which need to be sorted
+        # it seems. DICOM apparently have proper structure already. This function is thus not called from
+        # DICOM Conour import.
+        # May have to be imporved, if different situation apears and sagittal and coronal conours appear messy.
+        if hasattr(self.slices[0], "slice_in_frame"):
+            self.slices = sorted(self.slices, key=lambda _slice: _slice.slice_in_frame, reverse=True)
+
     def read_vdx_old(self, content, i):
         """ Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
         VDX format 1.2.
@@ -824,7 +838,7 @@ class Voi:
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
 
-        # TODO: prior returns, sort slices
+        self._sort_slices()
         return i - 1
 
     def read_vdx(self, content, i):
@@ -861,7 +875,7 @@ class Voi:
                 break
             i += 1
 
-        # TODO: prior returns, sort slices
+        self._sort_slices()
         return i - 1
 
     def get_roi_type_number(self, type_name):
@@ -1056,6 +1070,8 @@ class Slice:
         self.contour.append(
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
                     self.cube))
+        # add the slice position to slice_in_frame which is needed later for sorting.
+        # self.slice_in_frame = self.contour[-1].contour[2]
 
     def get_position(self):
         """
