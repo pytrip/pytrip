@@ -705,9 +705,10 @@ class Voi:
             s.add_contour(Contour(points1, cube=self.cube))
 
         # DEBUG temporarily left in, will be removed before merging.
-        for point in s.contour[0].contour:
-            logger.debug("NB logger: {:.2f} {:.2f} {:.2f}".format(point[0], point[1], point[2]))
-        return s
+        if s is not None:
+            for point in s.contour[0].contour:
+                logger.debug("NB logger: {:.2f} {:.2f} {:.2f}".format(point[0], point[1], point[2]))
+            return s
 
     def define_colors(self):
         """ Creates a list of default colours [R,G,B] in self.colours.
