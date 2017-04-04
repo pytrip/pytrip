@@ -798,7 +798,7 @@ class Voi:
         # applied to DICOM contours.
 
         if hasattr(self.slices[0], "slice_in_frame"):
-            self.slices = sorted(self.slices, key=lambda _slice: _slice.slice_in_frame, reverse=True)
+            self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
     def read_vdx_old(self, content, i):
         """ Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
