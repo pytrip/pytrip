@@ -939,7 +939,7 @@ class Voi:
                 sl.add_dicom_contour(contour)
                 # TODO: check on con.ContourGeometricType = 'CLOSED_PLANAR'
                 # so far we simply assume all contours from DICOM are closed.
-                if sl.contour[-1].number_of_points > 3:
+                if sl.contour[-1].number_of_points() > 3:
                     sl.contour[-1].contour_closed = True
                 else:
                     sl.contour[-1].contour_closed = False
