@@ -907,6 +907,11 @@ class Cube(object):
             logger.warning("Only a single slice found. Setting slice_distance to slice_thickness.")
             self.slice_distance = self.slice_thickness
 
+        if self.slice_thickness > self.slice_distance:
+            # TODO: this is probably valid dicom format, however let's print a warning for now
+            # as it may indicate some problem with the input dicom, as it is rather unusual.
+            logger.warning("Overlapping slices found: slice thickness is larger than the slice distance.")
+
         self.set_byteorder()
         self._set_format_str()
         self.header_set = True
