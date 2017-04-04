@@ -394,7 +394,7 @@ class Cube(object):
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
                 output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
-                                                                       self.slice_distance, 0)  # 0 gantry tilt
+                                                                       self.slice_thickness, 0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
