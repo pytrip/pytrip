@@ -61,6 +61,7 @@ class Cube(object):
             self.slice_dimension = cube.slice_dimension
             self.pixel_size = cube.pixel_size
             self.slice_distance = cube.slice_distance
+            self.slice_thickness = cube.slice_thickness
             self.slice_number = cube.slice_number
             self.xoffset = cube.xoffset  # self.xoffset are in mm, synced with DICOM contours
             self.dimx = cube.dimx
@@ -98,8 +99,9 @@ class Cube(object):
             self.patient_name = ""
             self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')  # create a new patient ID if absent
             self.slice_dimension = ""  # eg. 256 meaning 256x256 pixels.
-            self.pixel_size = ""  # size in mm
-            self.slice_distance = ""  # thickness of slice
+            self.pixel_size = ""  # size in [mm]
+            self.slice_distance = ""  # distance between slices in [mm]
+            self.slice_thickness = ""  # thickness of slice (usually equal to slice_distance) in [mm]
             self.slice_number = ""  # number of slices in file.
             self.xoffset = 0.0
             self.dimx = ""  # number of pixels along x (e.g. 256)
@@ -203,11 +205,17 @@ class Cube(object):
         The z position is always following the slice positions.
 
         :params [int] indices: tuple or list of integer indices (i,j,k) or [i,j,k]
-        :returns: list of positions,including offsets, as a list of floats [x,y,z]
+        :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
                (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               indices[2] * self.slice_distance + self.zoffset]
+               self.slice_pos[indices[2]]]
+        logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(indices[0],
+                                                                                         indices[1],
+                                                                                         indices[2],
+                                                                                         pos[0],
+                                                                                         pos[1],
+                                                                                         pos[2]))
         return pos
 
     def slice_to_z(self, slice_number):
@@ -280,6 +288,7 @@ class Cube(object):
         self.slice_number = dimz
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
+        self.slice_thickness = slice_distance  # use distance for thickness as default
         self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * value
         self.slice_dimension = dimx
         self.num_bytes = 2
@@ -385,7 +394,7 @@ class Cube(object):
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
                 output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
-                                                                       self.slice_distance, 0)  # 0 gantry tilt
+                                                                       self.slice_thickness, 0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
@@ -673,6 +682,7 @@ class Cube(object):
                 self.pixel_size = float(content[i].split()[1])
             if re.match("slice_distance", content[i]) is not None:
                 self.slice_distance = float(content[i].split()[1])
+                self.slice_thickness = float(content[i].split()[1])  # TRiP format only. See #342
             if re.match("slice_number", content[i]) is not None:
                 self.slice_number = int(content[i].split()[1])
             if re.match("xoffset", content[i]) is not None:
@@ -875,7 +885,8 @@ class Cube(object):
         self.patient_name = ds.PatientsName
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
-        self.slice_distance = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
+        self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
+        # slice_distance != SliceThickness. One may have overlapping slices. See #342
         self.slice_number = len(dcm["images"])
         self.xoffset = float(ds.ImagePositionPatient[0])
         self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
@@ -885,6 +896,22 @@ class Cube(object):
         self.dimz = len(dcm["images"])
         self.z_table = True
         self.set_z_table(dcm)
+
+        # Fix for bug #342
+        # TODO: slice_distance should probably be a list of distances,
+        # but for now we will just use the distance between the first two slices.
+        if len(self.slice_pos) > 1:  # set_z_table() must be called before
+            self.slice_distance = abs(self.slice_pos[1] - self.slice_pos[0])
+            logger.debug("Slice distance set to {:.2f}".format(self.slice_distance))
+        else:
+            logger.warning("Only a single slice found. Setting slice_distance to slice_thickness.")
+            self.slice_distance = self.slice_thickness
+
+        if self.slice_thickness > self.slice_distance:
+            # TODO: this is probably valid dicom format, however let's print a warning for now
+            # as it may indicate some problem with the input dicom, as it is rather unusual.
+            logger.warning("Overlapping slices found: slice thickness is larger than the slice distance.")
+
         self.set_byteorder()
         self._set_format_str()
         self.header_set = True
