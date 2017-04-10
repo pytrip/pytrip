@@ -117,11 +117,15 @@ class Plan(pytripObj):
         self.want_rst = False
         self.want_tlet = False
         
-        self.window = []
+        self.window = []  # window [xmin,xmax,ymin,ymax,zmin,zmax] in CTcoords [mm] for limited dose output.
         self.target_dose = 2.0  # target dose in Gray
         self.target_dose_percent = 100.0  # target dose in percent
         self.target_dose_cube = None  # pass a DosCube() here, for incube() optimization.
 
+        self.target_tissue_type = ""  # target tissue type, for biological optimization
+        self.res_tissue_type = ""  # residual tissue types
+        self.incube = ""  # path to DosCube cube for incube optimizations. Important for LET-painting.
+        
     def Init(self, parent=None):
         """ Initialize from GUI. Parent is added to self.
         """

@@ -28,17 +28,18 @@ logger = logging.getLogger(__name__)
 
 class Field(pytripObj):
     """ One or more Field() object, which then can be added to a Plan() object.
+    :params str name: basename of field without file extension (output will be suffixed with .rst)
     """
     def __init__(self, name=""):
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this field
-        self.name = name
+        self.name = name  # basename of field without file extension (output will be suffixed with .rst)
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
         self.fwhm = 4.0  # in [mm]
         self.rasterstep = [2, 2]
         self.doseextension = 1.2
         self.contourextension = 0.6
-        self.rasterfile_path = None
+        self.rasterfile_path = ""
 
         self.zsteps = 1.0  # in [mm]
         self.projectile = 'C'
