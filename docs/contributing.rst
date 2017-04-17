@@ -103,10 +103,11 @@ Now code can be run by typing::
 
 6. When you're done making changes, check that your changes comply with PEP8 code quality standards (flake8 tests) and test against other Python versions with tox::
 
-    $ flake8 pytrip tests
+    $ pep8 --max-line-length=120 pytrip tests
+    $ flake8 --max-line-length=120 pytrip tests
     $ tox
 
-   To get flake8 and tox, just pip install them.
+   To get pep8, flake8 and tox, just pip install them.
 
 7. Commit your changes and push your branch to GitHub::
 
@@ -180,3 +181,34 @@ To run only a single test type::
 
 .. _`bugs`: https://github.com/pytrip/pytrip/issues
 .. _`features`: https://github.com/pytrip/pytrip/issues
+
+
+Nomenclature
+------------
+
+1. Classes: CamelTyped. Example: ``class CtxCube()``
+2. Methods and functions: lowercase , typically containing a verb and separated by underscore. Example: ``def save_cube()``
+    * avoid ``get_*`` and ``set_*`` functions as this is not pythonic.
+3. Attributes and variables: lowercase and typically consisting of one or more nouns separated by underscore. Example: ``self.target_dose``
+4. Functions, class methods, attributes etc which are not supposed to be accessed by users should be prefixed with underscore i.e. ``_foobar``
+5. Directories, paths and filenames should be named following this scheme:
+
+* **Filenames**
+    * ``funk.dat`` : filename
+    * ``funk`` : basename
+* **Directories**
+    * ``/home/bassler/foobar`` : absolute directory ``abs_dir``
+    * ``./foobar`` : relative directory ``rel_dir``
+    * or just ``dir`` if both may be applicable.
+* **Paths**
+    * /home/bassler/foobar/funk.dat : absolute ``abs_path``
+    * ``foobar/funk.dat`` : (relative) path ``rel_path``
+    * prefix ``path`` with ``root_`` if it is without file extension.
+    * ``/home/bassler/foobar/funk`` : root path ``root_path``
+    * ``./foobar/funk`` : root path ``root_path``
+    * or just ``path`` if any may be applicable.
+
+* More details on attribute name **prefixes**:
+    * ``abs_`` -> absolute path to file or directory, starting with ``/`` or ``C:\`` (see ``os.path.abspath``)
+    * ``root_`` -> root part of path (may be absolute or relative, see ``os.path.splitext``)
+    * ``rel_`` -> relative path (see ``os.path.relpath``)
