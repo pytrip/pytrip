@@ -28,23 +28,30 @@ logger = logging.getLogger(__name__)
 
 class Field():
     """ One or more Field() object, which then can be added to a Plan() object.
-    :params str name: basename of field without file extension (output will be suffixed with .rst)
+    :params str basename: basename of field without file extension (input or output will be suffixed with
+    proper file extension)
     """
-    def __init__(self, name=""):
+    def __init__(self, basename=""):
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this field
-        self.name = name  # basename of field without file extension (output will be suffixed with .rst)
+        # basename of the field (i.e. without file extension).
+        # Any input/output process will be suffixed with .rst
+        self.basename = basename
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
         self.fwhm = 4.0  # in [mm]
         self.rasterstep = [2, 2]
         self.doseextension = 1.2
         self.contourextension = 0.6
-        self.rasterfile_path = ""
 
         self.zsteps = 1.0  # in [mm]
-        self.projectile = 'C'
-        self.projectile_a = None  # Number of nucleons in projectile. If None, default will be used.
-        self.target = []
+        self.projectile = 'C'  # see also self._projectile_defaults
+        self.projectile_a = '12'  # Number of nucleons in projectile. If None, default will be used.
+
+        # isocenter holds the [x,y,z] coordinates of the isocenter/target in [mm].
+        # This is used for the field / target() option of the TRiP98
+        # It can be used to override the automatically calculated isocenter from TRiP98.
+        self.isocenter = []
+
         self.selected = False
 
         # list of projectile name - charge and most common isotope.
@@ -56,28 +63,24 @@ class Field():
                                      "Ne": (10, 20),
                                      "Ar": (16, 40)}
 
-    def set_isocenter(self, target):
+    def set_isocenter_from_string(self, isocenter_str):
         """ Override the automatically determined isocenter from TRiP98.
-        :params [float, float, float] target: [x,y,z] coordinated of the isocenter/target in [mm]
-        """
-        self.target = target
-
-    def set_isocenter_from_string(self, target):
-        """ Override the automatically determined isocenter from TRiP98.
-        :params str target: x,y,z coordinates of the isocenter/target in [mm] in a comma delimted string.
+        :params str isocenter_str: x,y,z coordinates of the isocenter/target in [mm] in a comma delimted string.
+        such as "123.33,158.4,143.5".
+        If and empty string is provided, then the isocenter is unset, and TRiP98 will calculate it itself.
 
         Following the target() option in the TRiP98 field command, one can specify
         the isocenter of the target. If not used, TRiP98 will determine the isocenter
         from the target Voi provided.
-        This function is similar to Field.set_isocenter(), but takes a string as input argument.
+
         """
-        if len(target) is 0:
-            self.target = []
+        if len(isocenter_str) is 0:
+            self.isocenter = []
             return
-        target = target.split(",")
-        if len(target) is 3:
+        _target = isocenter_str.split(",")
+        if len(_target) is 3:
             try:
-                self.target = [float(target[0]), float(target[1]), float(target[2])]
+                self.isocenter = [float(_target[0]), float(_target[1]), float(_target[2])]
                 return
             except Exception:
-                logger.error("Expected a 'X,Y,Z' formatted string for Field().target")
+                logger.error("Expected a 'X,Y,Z' formatted string for Field().set_isocenter_from_string")
