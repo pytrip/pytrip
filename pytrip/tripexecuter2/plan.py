@@ -34,19 +34,21 @@ class Plan():
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
         if it has been calculated.
-        :params str name: TRiP98 qualified plan name. E.g. "test000001"
+        :params str basename: TRiP98 qualified plan name. E.g. "test000001"
         :params str comment:" any string for documentation purposes.
         """
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
-        self.name = name
+        self.basename = basename
         self.comment = comment
 
         self.fields = []  # list of Field() objects
-        self.vois = []  # list of Voi() objects
+        self.voi_target = None  # put target Voi() here. (Not needed if self.target_dose_cube is set (incube))
+        self.vois_oar = []  # list of Voi() objects which are considered as OARs
+
         self.dosecubes = []  # list of DosCube() objects (i.e. results)
         self.letcubes = []  # list of LETCubes()
-
+        
         # remote planning
         self.remote = False  # remote or local execution
         self.servername = ""
@@ -54,8 +56,8 @@ class Plan():
         self.password = ""
 
         # directories and file paths.
-        self.working_dir = "$HOME/tmp"
-        self.ddd_dir = ""
+        self.working_dir = ""  # directory where all input files are stored, and where all output files will be put.
+        self.ddd_dir = "$TRIP98/DATA/DDD/12C/RF3MM/12C.*"
         self.spc_dir = ""
         self.sis_path = ""
         self.hlut_path = "$TRIP98/DATA/19990211.hlut"
@@ -97,9 +99,9 @@ class Plan():
         # Scancap parameters:
         # Thickness of ripple filter (0.0 for none)
         # will only used for the TRiP98 Scancap command.
-        self.rifi = 0.0  # rifi thickness in mm
-        self.bolus = 0.0  # amount of bolus to be applied in mm
-        self.offh2o = 0.0  # Offset of exit-window and ionchambers
+        self.rifi = 0.0  # rifi thickness in [mm]
+        self.bolus = 0.0  # amount of bolus to be applied in [mm]
+        self.offh2o = 0.0  # Offset of exit-window and ionchambers in [mm]
         self.minparticles = 5000  # smallest amount of particle which will go into a raster spot
         self.scanpath = "none"
         self._scanpaths = {"none:": "No path, output as is",
@@ -108,14 +110,14 @@ class Plan():
                            "mk": "M. Kraemer, conservative"}
 
         self.random_seed1 = 1000  # Only needed for biological optimization.
-        # TODO: TRiP may accept a second seed depending on PRNG. Not implemented here.
+        # TODO: TRiP may accept a second "seed2" depending on PRNG. Not implemented here.
 
         # results requested from optimization
         self.want_phys_dose = True
         self.want_bio_dose = False
         self.want_dlet = False
         self.want_rst = False
-        self.want_tlet = False
+        self.want_tlet = False  # TODO: not implemented.
 
         self.window = []  # window [xmin,xmax,ymin,ymax,zmin,zmax] in CTcoords [mm] for limited dose output.
         self.target_dose = 2.0  # target dose in Gray

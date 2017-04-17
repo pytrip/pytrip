@@ -39,10 +39,16 @@ class Field():
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
         self.fwhm = 4.0  # in [mm]
-        self.rasterstep = [2, 2]
-        self.doseextension = 1.2
-        self.contourextension = 0.6
+        self.raster_step = [2, 2]  # spot width in [mm]
+        self.dose_extension = 1.2  # see TRiP98 field / doseext() documentation
+        self.contour_extension = 0.6  # see TRiP98 field / contourext() documentation
 
+        # the field / command in TRiP98 may take an external rst file as an input, and will then
+        # instead of optimization do a foward calculation based on this file.
+        # The filename will be constructed from the basename given for this field.
+        # However, we need to tell, that we provide the rst.
+        self.use_raster_file = False
+        
         self.zsteps = 1.0  # in [mm]
         self.projectile = 'C'  # see also self._projectile_defaults
         self.projectile_a = '12'  # Number of nucleons in projectile. If None, default will be used.
