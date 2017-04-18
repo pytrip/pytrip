@@ -20,8 +20,11 @@
 This module provides the DDD class for handling depth-dose curve kernels for TRiP98.
 """
 import glob
+import logging
 import numpy as np
-from scipy import interpolate
+from pytrip.res.interpolate import RegularInterpolator
+
+logger = logging.getLogger(__name__)
 
 
 class DDD:
@@ -34,16 +37,21 @@ class DDD:
         """ TODO: documentation
         """
         e = self.get_nearest_energy(energy)
-        return interpolate.splev(points, self.ddd_data[e])
+        return self.ddd_data[e](points)
 
     def get_dist(self, energy):
         """ TODO: documentation
         """
-        return interpolate.splev(energy, self.max_dist)
+        return self.max_dist(energy)
 
     def get_ddd_by_energy(self, energy, points):
         """ TODO: documentation
         """
+        try:
+            from scipy import interpolate
+        except ImportError as e:
+            logger.error("Please install scipy for you platform to be able to use spline-based interpolation")
+            raise e
         ev_point = np.array([points, [energy] * len(points)])
         return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
 
@@ -73,8 +81,8 @@ class DDD:
             depth = d_upper[0, :] + x_offset
             ddd = d_upper[1, :] * y_offset
             xi = np.linspace(0, depth[-1], n)
-            spl = interpolate.splrep(depth, ddd)
-            data.extend(interpolate.splev(xi, spl))
+            spl = RegularInterpolator(x=depth, y=ddd)
+            data.extend(spl(xi))
             dist.extend(xi)
             energy.extend([e] * n)
 
@@ -130,7 +138,7 @@ class DDD:
             max_dist.append([energy, x_data[-1]])
 
         max_dist = np.array(sorted(max_dist, key=lambda x: x[0]))
-        self.max_dist = interpolate.splrep(max_dist[:, 0], max_dist[:, 1], s=0)
+        self.max_dist = RegularInterpolator(x=max_dist[:, 0], y=max_dist[:, 1])
         ddd_list = []
         for key, value in ddd.items():
             points[0].extend(value[0])
