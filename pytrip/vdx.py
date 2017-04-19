@@ -520,7 +520,10 @@ def create_sphere(cube, name, center, radius):
             r = (radius**2 - (z - center[2])**2)**0.5
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
+            if r > 0:
+                points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
+            else:
+                points = [[center[0], center[1], z]]
             if len(points) > 0:
                 c = Contour(points, cube)
                 c.contour_closed = True  # TODO: Probably the last point is double here
@@ -726,12 +729,16 @@ class Voi:
         self.concat_contour()
         tot_volume = 0.0
         center_pos = np.array([0.0, 0.0, 0.0])
-        for key in self.slices:
-            center, area = self.slices[key].calculate_center()
+        for _slice in self.slices:
+            center, area = _slice.calculate_center()
             tot_volume += area
             center_pos += area * center
-        self.center_pos = center_pos / tot_volume
-        return center_pos / tot_volume
+        if tot_volume > 0:
+            self.center_pos = center_pos / tot_volume
+            return center_pos / tot_volume
+        else:
+            self.center_pos = center_pos
+            return center_pos
 
     def get_color(self, i=None):
         """
@@ -1084,7 +1091,10 @@ class Slice:
             center, area = contour.calculate_center()
             tot_area += area
             center_pos += area * center
-        return center_pos / tot_area, tot_area
+        if tot_area > 0:
+            return center_pos / tot_area, tot_area
+        else:
+            return center_pos, tot_area
 
     def read_vdx(self, content, i):
         """ Reads a single Slice from Voxelplan .vdx data from 'content'.
@@ -1278,11 +1288,16 @@ class Contour:
             paths = np.array((dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5)
         total_path = sum(paths)
 
-        center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
-                           sum(points[0:len(points) - 1:, 1] * paths) / total_path,
-                           points[0, 2]])
+        if total_path > 0:
+            center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
+                               sum(points[0:len(points) - 1:, 1] * paths) / total_path,
+                               points[0, 2]])
+        else:
+            center = np.array([sum(points[0:len(points) - 1, 0]),
+                               sum(points[0:len(points) - 1:, 1]),
+                               points[0, 2]])
 
-        return center, area
+        return center,area
 
     def get_min_max(self):
         """
