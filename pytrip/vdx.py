@@ -1297,7 +1297,7 @@ class Contour:
                                sum(points[0:len(points) - 1:, 1]),
                                points[0, 2]])
 
-        return center,area
+        return center, area
 
     def get_min_max(self):
         """
