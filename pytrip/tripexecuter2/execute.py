@@ -76,12 +76,12 @@ class Execute(object):
         Executes the Plan() object using TRiP98.
         """
         logger.debug("Execute TRiP98...")
-        self._callback = _callback
-        plan.make_exec()
-
+        self._callback = _callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directories where all will be run.
         plan.save_exec(plan._exec_path)
 
+
+    
         ##self._run_trip(plan)
         ##self._finish(plan)
 
@@ -113,7 +113,24 @@ class Execute(object):
         plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
-    
+
+        _flist = [os.path.join(plan._working_dir, plan.basename + ".ctx"),
+                  os.path.join(plan._working_dir, plan.basename + ".hed"),
+                  os.path.join(plan._working_dir, plan.basename + ".vdx")]
+        
+        if plan.incube_basename:
+            _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
+            _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".hed"))
+            
+        for _field in plan.fields:
+            if _field.use_raster_file:
+                _flist.append(os.path.join(plan._working_dir, _field.basename + ".rst"))
+
+        for _fn in _flist:
+            logger.debug("Copy {:s} to {:s}".format(_fn, plan._temp_dir))
+            shutil.copy(_fn, plan._temp_dir)
+            
+                
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
         """

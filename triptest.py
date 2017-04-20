@@ -25,8 +25,8 @@ print(v.get_voi_names())
 
 plan = pte.Plan(basename=patient_name)
 
-plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM"
-plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM"
+plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
 plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
 plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
 plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"

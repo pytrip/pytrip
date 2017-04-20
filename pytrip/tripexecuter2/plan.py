@@ -365,17 +365,17 @@ class Plan():
         output.append("hlut * /delete")
         output.append("ddd  * /delete")
         output.append("dedx * /delete")
-        output.append('dedx {:s} / read'.format(self.dedx_path))
-        output.append('hlut {:s} / read'.format(self.hlut_path))
+        output.append('dedx "{:s}" / read'.format(self.dedx_path))
+        output.append('hlut "{:s}" / read'.format(self.hlut_path))
 
         # ddd, spc, and sis:
-        output.append('ddd {:s} / read'.format(self.ddd_dir))
+        output.append('ddd "{:s}" / read'.format(self.ddd_dir))
 
         if self.spc_dir:  # False for None and empty string.
-            output.append('spc {:s} / read'.format(self.spc_dir))
+            output.append('spc "{:s}" / read'.format(self.spc_dir))
 
         if self.sis_path:
-            output.append('sis {:s} / read'.format(self.sis_path))
+            output.append('sis "{:s}" / read'.format(self.sis_path))
         else:
             ## TODO: check on projectile, and adapt parameters accordingy
             output.append("makesis 12C / focus(4,6,8,10) intensity(1E4,1E5,1E6) position(2 TO 40 BY 0.1)")
@@ -392,17 +392,17 @@ class Plan():
         return output
 
     def _make_exec_input(self):
+        """ Add CT and target VOI to exec file.
         """
-        """
-        output = []
 
+        _name = self.voi_target.name.replace(" ", "_")
+
+        output = []
         output.append("ct \"{:s}\" / read".format(self.basename))
         output.append("voi \"{:s}\" / read select({:s})".format(self.basename,
-                                                               self.voi_target.name))
-        output.append("voi {:s} / maxdosefraction({:.3f})".format(self.voi_target.name,
-                                                                self.target_dose_percent * 0.01))
-                                                              
-                
+                                                                _name))
+        output.append("voi {:s} / maxdosefraction({:.3f})".format(_name,
+                                                                  self.target_dose_percent * 0.01))
         return output
 
     def _make_exec_fields(self):
@@ -423,7 +423,7 @@ class Plan():
                 # or, there is a precalculated raster scan file which will be used instead:
                 line = "field {:d} / read file({:s})".format(i + 1, _field.rasterfile_path)
 
-            line += " fwhm {:.3f}".format(_field.fwhm)
+            line += " fwhm({:.3f})".format(_field.fwhm)
 
             line += " raster({:.2f},{:.2f})".format(_field.raster_step[0],
                                                     _field.raster_step[1])
