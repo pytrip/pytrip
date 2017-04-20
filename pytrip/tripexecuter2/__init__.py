@@ -20,10 +20,10 @@
 The tripexecuter module provides functions for executing TRiP98 locally or remotely.
 """
 
-from pytrip.tripexecuter.field import Field
-from pytrip.tripexecuter.execute import Execute
-from pytrip.tripexecuter.plan import Plan
-from pytrip.tripexecuter.rbehandler import RBEHandler, RBE
+from pytrip.tripexecuter2.field import Field
+from pytrip.tripexecuter2.execute import Execute
+from pytrip.tripexecuter2.plan import Plan
+from pytrip.tripexecuter2.rbehandler import RBEHandler, RBE
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,

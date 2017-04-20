@@ -23,7 +23,7 @@ plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM"
 plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
 plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
 plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
-plan.working_dir = "/home/bassler/Projects/CTdata/TST000/"
+plan.working_dir = "/home/bassler/test/"  # working dir must exist.
 
 # add the target voi to the plan
 plan.voi_target = v.get_voi_by_name('CTV')
@@ -41,7 +41,6 @@ field.fwhm = 4.0  # spot size in [mm]
 field.projectile = 'C'
 
 print(field)
-
 plan.fields.append(field)
 
 # flags for what output should be generated
@@ -50,3 +49,8 @@ plan.want_bio_dose = False
 plan.want_dlet = True
 plan.want_rst = False
 
+print(plan)
+
+te = pte.Execute(c)
+te._run_trip = False
+te.execute(plan)
