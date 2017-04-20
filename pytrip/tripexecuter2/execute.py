@@ -61,10 +61,6 @@ class Execute(object):
         self.rsakey_local_path = "~/.ssh/id_rsa"
         self._runtrip = True  # set this to False for a dry run without TRiP98 (for testing purposes)
 
-        # local_base_dir is where a temporary subdir will be created, for the TRiP98 package.
-        # It is needed no matter whether it is local or remote execution.
-        self.local_base_dir = "./"
-
         # remote directory where a new temporary directory will be created, the package extracted and executed.
         self.remote_base_dir = "./"
 
@@ -77,12 +73,10 @@ class Execute(object):
         """
         logger.debug("Execute TRiP98...")
         self._callback = _callback  # TODO: check if GUI really needs this.
-        self._pre_execute(plan)  # prepare directories where all will be run.
-        plan.save_exec(plan._exec_path)
-
-
-    
-        ##self._run_trip(plan)
+        self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
+        plan.save_exec(plan._exec_path)  # add the .exec as well
+        self._run_trip(plan) # run TRiP
+        
         ##self._finish(plan)
 
     def _pre_execute(self, plan):
@@ -143,15 +137,18 @@ class Execute(object):
         for l in self.listeners:
             l.write(txt)
 
-    def _run_trip(self):
+    def _run_trip(self, plan, _dir = ""):
         """ Method for executing the attached exec.
+        :params str dir: overrides dir where the package is assumed to be
         """
-        if self.plan.remote:
-            self._run_trip_remote()
+        if not _dir:
+            _dir = plan._temp_dir
+        if plan.remote:
+            self._run_trip_remote(plan, _dir)
         else:
-            self._run_trip_local()
+            self._run_trip_local(plan, _dir)
 
-    def _run_trip_remote(basedir = "."):
+    def _run_trip_remote(self, plan, basedir = "."):
         """ Method for executing the attached plan remotely.
         :params str basedir: place where PyTRiP will mess around. Do not keep things here which should not be deleted.
         """
@@ -228,18 +225,18 @@ class Execute(object):
         self._copy_back_from_server()
         self._extract_tarball()
 
-    def _run_trip_local(basedir = "."):
+    def _run_trip_local(self, plan,_run_dir):
         """
         Runs TRiP98 on local computer.
         """
         logger.info("Run TRiP98 in LOCAL mode.")
 
-        _outfile = self.plan._temp_dir
+        _outfile = os.path.join(_run_dir, "out.txt")
         logger.debug("Write stdout and stderr to {:s}".format(_outfile))
         fp_stdout = open((_outfile), "w")
         fp_stderr = open((_outfile), "w")
 
-        os.chdir(basedir)
+        os.chdir(_run_dir)
 
         if not self._runtrip:  # for testing
             norun = "echo "
@@ -249,9 +246,9 @@ class Execute(object):
         # start local process running TRiP98
         p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
-        # fill standard input with configuration file conent
+        # fill standard input with configuration file content
         # wait until process is finished and get standard output and error streams
-        stdout, stderr = p.communicate(self.trip_exec.encode("ascii"))
+        stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
 
         if stdout is not None:
             logger.debug("Local answer stdout:" + stdout.decode("ascii"))
