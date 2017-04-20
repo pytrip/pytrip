@@ -30,6 +30,33 @@ logger = logging.getLogger(__name__)
 
 
 class Plan():
+    """ Class of handling plans.
+    """
+
+    _opt_principles = {"H2Obased": "Very simplified single field optimization",
+                       "CTbased": "Full optimization, multiple fields"}
+
+    _opt_methods = {"phys": "Physical dose only",
+                    "bio": "Biological optimization"}
+
+    _opt_algs = {"cl": "classic",
+                 "cg": "conjugate graients (default)",
+                 "gr": "plain gradients",
+                 "bf": "Bortfeld's algorithm",
+                 "fr": "Fletcher-Reeves algorithm"}
+
+    _bio_algs = {"cl": "classic (default)",
+                 "ld": "lowdose (faster)"}
+
+    _dose_algs = {"cl": "classic (default)",
+                  "ap": "allpoints",
+                  "ms": "multiple scatter"}
+
+    _scanpaths = {"none": "No path, output as is",
+                  "uw": "U. Weber, efficient",
+                  "uw2": "very efficient, works also for non-grid points",
+                  "mk": "M. Kraemer, conservative"}
+
     def __init__(self, basename="", comment=""):
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
@@ -76,26 +103,6 @@ class Plan():
         self.eps = 1e-3
         self.geps = 1e-4
 
-        # algorithms for dose optimizations
-        self._opt_principles = {"H2Obased": "Very simplified single field optimization",
-                                "CTbased": "Full optimization, multiple fields"}
-
-        self._opt_methods = {"phys": "Physical dose only",
-                             "bio": "Biological optimization"}
-
-        self._opt_algs = {"cl": "classic",
-                          "cg": "conjugate graients (default)",
-                          "gr": "plain gradients",
-                          "bf": "Bortfeld's algorithm",
-                          "fr": "Fletcher-Reeves algorithm"}
-
-        self._bio_algs = {"cl": "classic (default)",
-                          "ld": "lowdose (faster)"}
-
-        self._dose_algs = {"cl": "classic (default)",
-                           "ap": "allpoints",
-                           "ms": "multiple scatter"}
-
         # Scancap parameters:
         # Thickness of ripple filter (0.0 for none)
         # will only used for the TRiP98 Scancap command.
@@ -104,10 +111,6 @@ class Plan():
         self.offh2o = 0.0  # Offset of exit-window and ionchambers in [mm]
         self.minparticles = 5000  # smallest amount of particle which will go into a raster spot
         self.scanpath = "none"
-        self._scanpaths = {"none": "No path, output as is",
-                           "uw": "U. Weber, efficient",
-                           "uw2": "very efficient, works also for non-grid points",
-                           "mk": "M. Kraemer, conservative"}
 
         self.random_seed1 = 1000  # Only needed for biological optimization.
         # TODO: TRiP may accept a second "seed2" depending on PRNG. Not implemented here.

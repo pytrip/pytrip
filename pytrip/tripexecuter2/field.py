@@ -31,12 +31,22 @@ class Field():
     :params str basename: basename of field without file extension (input or output will be suffixed with
     proper file extension)
     """
+
+    # list of projectile name - charge and most common isotope.
+    _projectile_defaults = {"H": (1, 1),
+                            "He": (2, 4),
+                            "Li": (3, 7),
+                            "C": (6, 12),
+                            "O": (8, 16),
+                            "Ne": (10, 20),
+                            "Ar": (16, 40)}
+
     def __init__(self, basename=""):
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this field
         # basename of the field (i.e. without file extension).
         # Any input/output process will be suffixed with .rst
         self.basename = basename
-        self.number = 1  # Field number. First field must be 1.
+        self.number = 1  # Field number. First field must be 1
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
         self.fwhm = 4.0  # in [mm]
@@ -60,15 +70,6 @@ class Field():
         self.isocenter = []
 
         self.selected = False
-
-        # list of projectile name - charge and most common isotope.
-        self._projectile_defaults = {"H": (1, 1),
-                                     "He": (2, 4),
-                                     "Li": (3, 7),
-                                     "C": (6, 12),
-                                     "O": (8, 16),
-                                     "Ne": (10, 20),
-                                     "Ar": (16, 40)}
 
     def __str__(self):
         """ Pretty print all attributes.
