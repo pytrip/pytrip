@@ -2,9 +2,18 @@ import pytrip as pt
 import pytrip.tripexecuter2 as pte
 
 import os
+import logging
 
-ctx_path = "../shieldhit/res/TST000/TST000000.ctx"
-vdx_path = "../shieldhit/res/TST000/TST000000.vdx"
+
+logger = logging.getLogger(__name__)
+
+logging.basicConfig(level=logging.DEBUG)
+
+wdir = "/home/bassler/test"
+patient_name = "TST000000"
+
+ctx_path = os.path.join(wdir, patient_name + ".ctx")
+vdx_path = os.path.join(wdir, patient_name + ".vdx")
 
 c = pt.CtxCube()
 c.read(ctx_path)
@@ -13,8 +22,6 @@ v = pt.VdxCube(c)
 v.read(vdx_path)
 
 print(v.get_voi_names())
-
-patient_name = "TST000000"
 
 plan = pte.Plan(basename=patient_name)
 
@@ -51,6 +58,7 @@ plan.want_rst = False
 
 print(plan)
 
+print(plan.make_exec())
 te = pte.Execute(c)
-te._run_trip = False
+#te._run_trip = False
 te.execute(plan)
