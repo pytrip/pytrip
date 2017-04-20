@@ -22,9 +22,7 @@ TODO: documentation here.
 import os
 import shutil
 import tarfile
-import copy
 
-import numpy as np
 from subprocess import Popen, PIPE
 
 try:
@@ -35,6 +33,7 @@ except:
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
 from pytrip.vdx import VdxCube
+from pytrip.ctx import CtxCube
 ##import pytriplib
 import uuid
 import logging
@@ -76,9 +75,8 @@ class Execute():
         self._callback = _callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
         plan.save_exec(plan._exec_path)  # add the .exec as well
-        self._run_trip(plan) # run TRiP
-        
-        ##self._finish(plan)
+        self._run_trip(plan)  # run TRiP
+        self._finish(plan)
 
     def _pre_execute(self, plan):
         """
@@ -86,7 +84,7 @@ class Execute():
         Sets:
         _temp_dir where all will be executed
         _exec_path generates full path to the file name.exec file will be stored
-        
+
         """
         # local plan name will not contain any spaces, and consists of a base name only, with no suffix.
         plan._basename = plan.basename.replace(" ", "_")
@@ -110,11 +108,11 @@ class Execute():
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
 
         _flist = []
-        
+
         if plan.incube_basename:
             _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
             _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".hed"))
-            
+
         for _field in plan.fields:
             if _field.use_raster_file:
                 _flist.append(os.path.join(plan._working_dir, _field.basename + ".rst"))
@@ -138,7 +136,7 @@ class Execute():
         for l in self.listeners:
             l.write(txt)
 
-    def _run_trip(self, plan, _dir = ""):
+    def _run_trip(self, plan, _dir=""):
         """ Method for executing the attached exec.
         :params str dir: overrides dir where the package is assumed to be
         """
@@ -149,7 +147,7 @@ class Execute():
         else:
             self._run_trip_local(plan, _dir)
 
-    def _run_trip_local(self, plan,_run_dir):
+    def _run_trip_local(self, plan, _run_dir):
         """
         Runs TRiP98 on local computer.
         """
@@ -187,8 +185,8 @@ class Execute():
 
         fp_stdout.close()
         fp_stderr.close()
-            
-    def _run_trip_remote(self, plan, basedir = "."):
+
+    def _run_trip_remote(self, plan, basedir="."):
         """ Method for executing the attached plan remotely.
         :params str basedir: place where PyTRiP will mess around. Do not keep things here which should not be deleted.
         """
@@ -265,12 +263,37 @@ class Execute():
         self._copy_back_from_server()
         self._extract_tarball()
 
-    def _finish(self):
-        # return requested results, copy them back in to plan.working_dir
-        
-        pass
+    def _finish(self, plan):
+        """ return requested results, copy them back in to plan.working_dir
+        """
 
-    def _compress_files(_source_dir, _target_path = None):
+        for _fn in plan._out_files:
+            _path = os.path.join(plan._temp_dir, _fn)
+            logger.debug("copy {:s} to {:s}".format(_path, plan.working_dir))
+            shutil.copy(_path, plan.working_dir)
+
+        for _fn in plan._out_files:
+            _path = os.path.join(plan._temp_dir, _fn)
+            if ".phys.dos" in _fn:
+                _d = DosCube()
+                _d.read(_path)
+                plan.dosecubes.append(_d)
+
+            if ".bio.dos" in _fn:
+                _d = CtxCube()
+                _d.read(_path)
+                plan.dosecubes.append(_d)
+
+            if ".dosemlet.dos" in _fn:
+                _l = LETCube()
+                _l.read(_path)
+                plan.letcubes.append(_l)
+
+            if ".rst" in _fn:
+                print("NB:", _path)
+                # os.path.basename(_fn.=
+
+    def _compress_files(_source_dir, _target_path=None):
         """
         Builds the tar.gz from what is found in _source_dir.
         Resulting file will be stored in "source_dir/.." if not specified otherwise
@@ -354,15 +377,15 @@ class Execute():
         sftp.close()
         transport.close()
 
-    def _extract_tarball():
+    def _extract_tarball(self, plan):
         """ Extracts a tarball with the name self.path + ".tar.gz"
         into self.working_dir
         """
-        output_folder = self.path
+        output_folder = plan.path
         if os.path.exists(output_folder):
             shutil.rmtree(output_folder)
         with tarfile.open(self.path + ".tar.gz", "r:gz") as tar:
-            tar.extractall(self.working_dir)
+            tar.extractall(plan.working_dir)
 
     def _clean_up(self):
         """ Remove tarball and the extracted directory

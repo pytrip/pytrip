@@ -62,3 +62,6 @@ plan.want_rst = False
 te = pte.Execute(c, v)
 #te._run_trip = False
 te.execute(plan)
+
+# dos = plan.dos
+# dos

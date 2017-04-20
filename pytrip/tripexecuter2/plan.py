@@ -73,6 +73,7 @@ class Plan():
         self.voi_target = None  # put target Voi() here. (Not needed if self.target_dose_cube is set (incube))
         self.vois_oar = []  # list of Voi() objects which are considered as OARs
 
+        # results
         self.dosecubes = []  # list of DosCube() objects (i.e. results)
         self.letcubes = []  # list of LETCubes()
 
@@ -250,14 +251,14 @@ class Plan():
         self.save_exec(images, path + ".exec")
         self.save_data(images, path + ".exec")
 
-    def save_exec(self, exec_path = None):
+    def save_exec(self, exec_path=None):
         """ Generates (overwriting) self._trip_exec, and saves it to exec_path.
         """
 
         # _trip_exec is marked, private, users should not touch it.
         # Here it will be overwritten no matter what.
         self.make_exec()
-        
+
         if exec_path is None:
             exec_path = os.path.join(self._temp_dir, self.basename, "*.exec")
 
@@ -507,8 +508,10 @@ class Plan():
     def _make_exec_output(self, basename, fields):
         """
         Generate TRiP98 exec commands for producing various output.
-        :params str basename" basename for output files (i.e. no suffix) and no trailing dot
-        :params last
+        :params str basename: basename for output files (i.e. no suffix) and no trailing dot
+        :params fields:
+
+        :returns: output string
         """
         output = []
         window = self.window
@@ -518,8 +521,12 @@ class Plan():
                                                                                      window[2], window[3],  # Ymin/max
                                                                                      window[4], window[5])  # Zmin/max
 
+        self._out_files = []  # list of files generated which will be returned
+
         if self.want_phys_dose:
             line = 'dose "{:s}."'.format(basename)
+            self._out_files.append(basename + ".phys.dos")
+            self._out_files.append(basename + ".phys.hed")
             line += ' /calculate  alg({:s})'.format(self.dose_alg)
             line += window_str
             line += ' field(*) write'
@@ -527,6 +534,8 @@ class Plan():
 
         if self.want_bio_dose:
             line = 'dose "{:s}."'.format(basename)
+            self._out_files.append(basename + ".bio.dos")
+            self._out_files.append(basename + ".bio.hed")
             line += ' /calculate  bioalgorithm({:s})'.format(self.bio_alg)
             line += window_str
             line += ' biological norbe field(*) write'
@@ -534,6 +543,8 @@ class Plan():
 
         if self.want_dlet:
             line = 'dose "{:s}."'.format(basename)
+            self._out_files.append(basename + ".dosemlet.dos")
+            self._out_files.append(basename + ".dosemlet.hed")
             line += ' /calculate  alg({:s})'.format(self.dose_alg)
             line += window_str
             line += ' field(*) dosemeanlet write'
@@ -543,6 +554,9 @@ class Plan():
             for i, field in enumerate(fields):
                     output.append('field {:d} / write file({%s}.rst) reverseorder '.format(i + 1, field.name))
                     field.rasterfile_path = os.path.join(self.path, field.name)  # but without suffix? TODO: check
+                    self._out_files.append(field.rasterfile_path + ".rst")
+
+        # TODO: add various .gd files
         return output
 
     def _make_exec_inp_data(self, projectile=None):
