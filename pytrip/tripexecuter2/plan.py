@@ -130,7 +130,7 @@ class Plan():
         self.res_tissue_type = ""  # residual tissue types
         self.incube_basename = ""  # To enable incube optimization, set the basename of the cube to be loaded by TRiP
 
-        self.trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
+        self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
 
     def __str__(self):
         return(self._print())
@@ -250,11 +250,19 @@ class Plan():
         self.save_exec(images, path + ".exec")
         self.save_data(images, path + ".exec")
 
-    def save_exec(self, images, path):
-        from pytrip.tripexecuter2.execute import Execute
-        t = Execute(images)
-        t.set_plan(self)
-        t.save_exec(path)
+    def save_exec(self, exec_path = None):
+        """ Generates (overwriting) self._trip_exec, and saves it to exec_path.
+        """
+
+        # _trip_exec is marked, private, users should not touch it.
+        # Here it will be overwritten no matter what.
+        self.make_exec()
+        
+        if exec_path is None:
+            exec_path = os.path.join(self._temp_dir, self.basename, "*.exec")
+
+        with open(exec_path, "w") as f:
+            f.write(self._trip_exec)
 
     def save_data(self, images, path):
         from pytrip.tripexecuter2.execute import Execute
@@ -300,7 +308,7 @@ class Plan():
 
     def make_exec(self, no_output=False):
         """
-        Generates the .exec script from the plan and stores it into self.trip_exec.
+        Generates the .exec script from the plan and stores it into self._trip_exec.
         """
 
         logger.info("Generating the trip_exec script...")
@@ -331,7 +339,7 @@ class Plan():
 
         output.extend(["exit"])
         out = "\n".join(output) + "\n"
-        self.trip_exec = out
+        self._trip_exec = out
         return(out)
 
     def _make_exec_header(self):

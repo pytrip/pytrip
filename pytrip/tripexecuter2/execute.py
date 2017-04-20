@@ -77,9 +77,11 @@ class Execute(object):
         """
         logger.debug("Execute TRiP98...")
         self._callback = _callback
-        self.make_exec(plan)
-        ##self._pre_execute(plan)  # prepare directories where all will be run.
-        ##self.save_exec(plan._exec_path)
+        plan.make_exec()
+
+        self._pre_execute(plan)  # prepare directories where all will be run.
+        plan.save_exec(plan._exec_path)
+
         ##self._run_trip(plan)
         ##self._finish(plan)
 
@@ -99,18 +101,19 @@ class Execute(object):
         plan._working_dir = os.path.expandvars(plan.working_dir)
 
         # we will not run in working dir, but in an isolated sub directory which will be
-        # uniquely created for this purpose.
+        # uniquely created for this purpose, located after the working dir
         # the directory where the package is prepare (and TRiP98 will be executed if locally)
-        # is stored in self.plan._temp_dir
+        # is stored in plan._temp_dir
 
         if not hasattr(plan, "_temp_dir"):
             import tempfile
             plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=plan._working_dir)
 
-        plan._temp_dir = os.path.join(self.working_dir, plan._temp_dir)
+        plan._temp_dir = os.path.join(plan._working_dir, plan._temp_dir)
         plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
-        os.makedirs(plan._temp_dir)
+        logger.debug("Create temporary working directory {:s}".format(plan._temp_dir))
+        # os.makedirs(plan._temp_dir)
     
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
