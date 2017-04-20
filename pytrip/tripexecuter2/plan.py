@@ -133,7 +133,7 @@ class Plan():
         self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
 
     def __str__(self):
-        return(self._print())
+        return self._print()
 
     def _print(self):
         """ Pretty print all attributes
@@ -240,7 +240,7 @@ class Plan():
             out += "|      Zmin / Zmax              : {:.2f}\n".format(self.window[4], self.window[5])
         else:
             out += "|   Cube output window          : (none set)\n"
-        return(out)
+        return out
 
     def save_plan(self, images, path):
         """ Saves the complete plan to path.
@@ -319,9 +319,10 @@ class Plan():
 
         output = []
 
-        output.extend(self._make_exec_header())
-        output.extend(self._make_exec_fields())
-        output.extend(self._make_exec_oars())
+        output.extend(self._make_exec_header())  # directories and scancap
+        output.extend(self._make_exec_input())  # input data, CT and VDX
+        output.extend(self._make_exec_fields())  # setup all fields
+        output.extend(self._make_exec_oars())  # define OARs
 
         # for incube optimization
         if self.incube_basename:
@@ -340,7 +341,7 @@ class Plan():
         output.extend(["exit"])
         out = "\n".join(output) + "\n"
         self._trip_exec = out
-        return(out)
+        return out
 
     def _make_exec_header(self):
         """
@@ -390,6 +391,20 @@ class Plan():
         output.append("random {:d}".format(self.random_seed1))
         return output
 
+    def _make_exec_input(self):
+        """
+        """
+        output = []
+
+        output.append("ct \"{:s}\" / read".format(self.basename))
+        output.append("voi \"{:s}\" / read select({:s})".format(self.basename,
+                                                               self.voi_target.name))
+        output.append("voi {:s} / maxdosefraction({:.3f})".format(self.voi_target.name,
+                                                                self.target_dose_percent * 0.01))
+                                                              
+                
+        return output
+
     def _make_exec_fields(self):
         """ Generate .exec command string for one or more fields.
         if Plan().optimize is False, then it is expected there will
@@ -410,8 +425,8 @@ class Plan():
 
             line += " fwhm {:.3f}".format(_field.fwhm)
 
-            line += " raster({:.2f},{:.2f}) ".format(_field.raster_step[0],
-                                                     _field.raster_step[1])
+            line += " raster({:.2f},{:.2f})".format(_field.raster_step[0],
+                                                    _field.raster_step[1])
             ## TODO: convert if Dicom angles were given
             ## gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
             line += " couch({:.1f})".format(_field.couch)

@@ -112,8 +112,7 @@ class Execute(object):
         plan._temp_dir = os.path.join(plan._working_dir, plan._temp_dir)
         plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
-        logger.debug("Create temporary working directory {:s}".format(plan._temp_dir))
-        # os.makedirs(plan._temp_dir)
+        logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
     
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
