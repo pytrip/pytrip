@@ -36,6 +36,7 @@ class Field():
         # basename of the field (i.e. without file extension).
         # Any input/output process will be suffixed with .rst
         self.basename = basename
+        self.number = 1  # Field number. First field must be 1.
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
         self.fwhm = 4.0  # in [mm]
@@ -48,7 +49,7 @@ class Field():
         # The filename will be constructed from the basename given for this field.
         # However, we need to tell, that we provide the rst.
         self.use_raster_file = False
-        
+
         self.zsteps = 1.0  # in [mm]
         self.projectile = 'C'  # see also self._projectile_defaults
         self.projectile_a = '12'  # Number of nucleons in projectile. If None, default will be used.
@@ -68,6 +69,35 @@ class Field():
                                      "O": (8, 16),
                                      "Ne": (10, 20),
                                      "Ar": (16, 40)}
+
+    def __str__(self):
+        """ Pretty print all attributes.
+        """
+        out = "\n"
+        out += "   Field {:d} '{:s}'\n".format(self.number, self.basename)
+        out += "----------------------------------------------------------------------------\n"
+        out += "|  UUID                         : {:s}\n".format(self.__uuid__)
+        out += "|  Projectile                   : {:s}-{:s}\n".format(self.projectile,
+                                                                      self.projectile_a)
+        out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
+        out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
+        out += "|\n"
+        out += "|  Spot size (FWHM              : {:.2f} mm\n".format(self.fwhm)
+        out += "|  Raster step size (x,y)       : {:.2f}, {:.2f} mm\n".format(self.raster_step[0],
+                                                                              self.raster_step[1])
+        out += "|  Z-steps                      : {:.2f} mm\n".format(self.zsteps)
+        out += "|\n"
+        out += "|  Dose extension               : {:.2f}\n".format(self.dose_extension)
+        out += "|  Contour extension            : {:.2f}\n".format(self.contour_extension)
+        out += "|  Use external .rst file       : {:s}\n".format(str(self.use_raster_file))
+        if self.isocenter:
+            out += "|  Isocenter (x,y,z)            : {:.2f} {:.2f} {:.2f} mm\n".format(self.isocenter[0],
+                                                                                        self.isocenter[1],
+                                                                                        self.isocenter[2])
+        else:
+            out += "|  Isocenter (x,y,z)            : (not set)\n"
+        out += "----------------------------------------------------------------------------\n"
+        return(out)
 
     def set_isocenter_from_string(self, isocenter_str):
         """ Override the automatically determined isocenter from TRiP98.
