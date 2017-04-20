@@ -209,9 +209,8 @@ class TestVdx(unittest.TestCase):
         vc = v.get_voi_cube()
         self.assertIsNotNone(vc)
 
-        # TODO check why not working
-        # center_pos = v.calculate_center()
-        # self.assertEqual( center_pos[0], 0)
+        center_pos = v.calculate_center()
+        self.assertAlmostEqual(center_pos[0], 10.0)
 
     def test_create_voi_2(self):
         logger.info("Testing cube from path " + self.cube000)
