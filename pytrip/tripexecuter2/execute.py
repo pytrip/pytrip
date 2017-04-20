@@ -76,279 +76,42 @@ class Execute(object):
         Executes the Plan() object using TRiP98.
         """
         logger.debug("Execute TRiP98...")
-        self.plan = plan
         self._callback = _callback
-        self._pre_execute()
-        self._make_trip_exec()
-        self.save_exec(self.plan._exec_path)
-        self._run_trip()
-        self._finish()
+        self.make_exec(plan)
+        ##self._pre_execute(plan)  # prepare directories where all will be run.
+        ##self.save_exec(plan._exec_path)
+        ##self._run_trip(plan)
+        ##self._finish(plan)
 
-    def _pre_execute(self):
+    def _pre_execute(self, plan):
         """
         Prepare a temporary working directory where TRiP will be executed.
+        Sets:
+        _temp_dir where all will be executed
+        _exec_path generates full path to the file name.exec file will be stored
+        
         """
         # local plan name will not contain any spaces, and consists of a base name only, with no suffix.
-        self.plan._basename = self.plan.basename.replace(" ", "_")
+        plan._basename = plan.basename.replace(" ", "_")
 
         # do not save working dir to self, this we may run multiple plans in the same Execute object.
         # instead we will save it to the plan.
-        self.plan._working_dir = os.path.expandvars(self.plan.working_dir)
+        plan._working_dir = os.path.expandvars(plan.working_dir)
 
         # we will not run in working dir, but in an isolated sub directory which will be
         # uniquely created for this purpose.
         # the directory where the package is prepare (and TRiP98 will be executed if locally)
         # is stored in self.plan._temp_dir
 
-        if not hasattr(self.plan, "_temp_dir"):
+        if not hasattr(plan, "_temp_dir"):
             import tempfile
-            self.plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=self.plan._working_dir)
+            plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=plan._working_dir)
 
-        self.plan._temp_dir = os.path.join(self.working_dir, self.plan._temp_dir)
-        self.plan._exec_path = os.path.join(self.plan._temp_dir, self.plan.basename + ".exec")
+        plan._temp_dir = os.path.join(self.working_dir, plan._temp_dir)
+        plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
-        os.makedirs(self.plan._temp_dir)
-
-    def make_trip_exec(self, no_output=False):
-        """
-        Generates the .exec script and stores it into self.trip_exec.
-        """
-
-        logger.info("Generating the trip_exec script...")
-
-        voi_target = self.plan.voi_target
-        vois_oar = self.plan.vois_oar
-        fields = self.plan.fields
-        projectile = fields[0].projectile
-
-        output = []
-
-        output.extend(self._make_exec_header())
-        output.extend(self._make_exec_fields(fields))
-        output.extend(self._make_exec_oar(vois_oar))
-
-        dosecube = None
-
-        # for incube optimization
-        ## TODO: still broken
-        if self.plan.target_dose_cube():
-            _incube = self.plan.target_dose_cube
-            output.extend(self._make_exec_plan(incube="target_dose"))
-        else:
-            output.extend(self._make_exec_plan())
-
-        # optimization is optional
-        if self.plan.optimize:
-            output.extend(self._make_exec_opt())
-
-        # attach the wanted output:
-        output.extend(self._make_exec_output(self._plan_basename, fields))
-
-        output.extend("exit")
-        out = "\n".join(output) + "\n"
-        self.trip_exec = out
-
-    def _make_exec_header(self):
-        """ Prepare sis, hlut, ddd, dedx, and scancap commands.
-        # TODO: scancap could go out into a new method.
-        # TODO: check input params
-        :returns: an array of lines, one line per command.
-        """
-
-        # We can only check if dir exists, if this is supposed to run locally.
-
-        output = []
-        output.append("time / on")
-        output.append("sis  * /delete")
-        output.append("hlut * /delete")
-        output.append("ddd  * /delete")
-        output.append("dedx * /delete")
-        output.append('dedx {:s} / read'.format(self.plan.dedx_path))
-        output.append('hlut {:s} / read'.format(self.plan.hlut_path))
-
-        # ddd, spc, and sis:
-        output.append('ddd {:s} / read'.format(self.plan.ddd_dir))
-
-        if self.plan.spc_dir: # False for None and empty string.
-            output.append('spc {:s} / read'.format(self.plan.spc_dir))
-
-        if self.plan.sis_path:
-            output.append('sis {:s} / read'.format(self.plan.sis_path))
-        else:
-            ## TODO: check on projectile, and adapt parameters accordingy
-            output.append("makesis 12C / focus(4,6,8,10) intensity(1E4,1E5,1E6) position(2 TO 40 BY 0.1)")
-
-        # Scancap:
-        opt = "scancap / offh2o({:.3f})".format(self.plan.offh2o)
-        opt += " rifi({:.3f})".format(self.plan.rifi)
-        opt += " bolus({:.3f})".format(self.plan.bolus)
-        opt += " minparticles({:d})".format(self.plan.minparticles)
-        opt += " path({:s})".format(self.plan.scanpath)
-        output.append(opt)
-
-        output.append("random {:d}".format(self.plan.random_seed1))
-        return output
-
-    def _make_exec_fields(self, fields):
-        """ Generate .exec command string for one or more fields.
-        if Plan().optimize is False, then it is expected there will
-        be a path to a rasterscan file in field.rst_path
-
-        :returns: an array of lines, one line per field in fields.
-        """
-        output = []
-        for i, _field in enumerate(fields):
-            if self.plan.optimize:
-                # this is a new optimization:
-                line = "field {:d} / new".format(i + 1)
-            else:
-                # or, there is a precalculated raster scan file which will be used instead:
-                field = "field {:d} / read file({:s})".format(i + 1, _field.rasterfile_path)
-
-            line += " fwhm {:.3f}".format(_field.fwhm)
-
-            line += " raster({%.2f},{%.2f}) ".format(_field.rasterstep[0],
-                                                     _field.rasterstep[1])
-            ##TODO: convert if Dicom angles were given
-            ##gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
-            line += " couch({.1f})".format(_field.couch)
-            line += " gantry({.1f})".format(_ganry.couch)
-
-            # set isocenter if specified in field
-            _tar = _field.target
-            if len(_tar) is not 0:
-                line += " target({%.1f},{%.1f},{%.1f}) ".format(_tar[0], _tar[1], _tar[2])
-
-            # set dose extention:
-            # TODO: check number of decimals which make sense
-            # TODO: zeros allowed?
-            line += " doseext({.4f})".format(_field.doseextension)
-            line += " contourext({.2f})".format(_field.contourextension)
-            line += " zsteps({.3f})".format(_field.zsteps)
-            line += ' proj({:s})'.format(_field.projectile)
-            output.append(line)
-        return output
-
-    def _make_exec_oars(self, vois):
-        """ Generates the list of TRiP commands specifying the organs at risk.
-        :params [str] oar_list: list of VOIs which are organs at risk (OARs)
-        """
-        output = []
-        for oar in oar_list:
-            _out = "voi " + oar.name.replace(" ", "_")
-            _out += " / maxdosefraction({.3f}) oarset".format(oar.max_dose_fraction)
-            output.append(_out)
-        return output
-
-    def _make_exec_plan(self, incube=""):
-        """ Generates the plan command in TRiP98
-        """
-        output = []
-        plan = "plan / dose({:.2f}) ".format(self.plan.target_dose)
-        if self.plan.target_tissue_type:
-            plan += "target({:s}) ".format(self.plan.target_tissue_type)
-        if self.plan.res_tissue_type:
-            plan += "residual({:s}) ".format(self.plan.res_tissue_type)
-        if not incube == "":
-            plan += "incube({:s})".format(self.plan.incube)
-        output.append(plan)
-        return output
-
-    def _make_exec_opt(self):
-        """ Generates the optimizer command for TRiP based on Plan() loaded into self.
-        :returns: an array of lines, but only holding a single line containing the entire command.
-        """
-        # example output:
-        # opt / field(*) ctbased bio dosealg(ap) optalg(cg) bioalg(ld) geps(1E-4) eps(1e-3) iter(500)
-        #
-
-        opt = "opt / field(*)"
-
-        if self.plan.opt_principle not in self.plan._opt_principles:
-            logger.error("Unknown optimization principle {:s}".format(self.plan.opt_principle))
-        opt += " {:s}".format(self.plan.opt_principle)  # ctbased or H2Obased
-
-        if self.plan.opt_method not in self.plan._opt_methods:
-            logger.error("Unknown optimization method {:s}".format(self.plan.opt_method))
-        opt += " {:s}".format(self.plan.opt_method)  # "phys" or "bio"
-
-        if self.plan.dose_alg not in self.plan._dose_algs:
-            logger.error("Unknown optimization dose algorithm{:s}".format(self.plan.dose_alg))
-        opt += " dosealg({:s})".format(self.plan.dose_alg)  # "ap",..
-
-        if self.plan.opt_alg not in self.plan._opt_algs:
-            logger.error("Unknown optimization method {:s}".format(self.plan.opt_alg))
-        opt += " optalg({:s})".format(self.plan.opt_alg)  # "cl"...
-
-        # TODO: sanity check numbers
-        opt += " geps({:f})".format(self.plan.geps)
-        opt += " eps({:f})".format(self.plan.eps)
-        return [opt]
-
-    def _make_exec_output(self, basename, fields):
-        """
-        Generate TRiP98 exec commands for producing various output.
-        :params str basename" basename for output files (i.e. no suffix) and no trailing dot
-        :params last
-        """
-        output = []
-        window = self.plan.window
-        window_str = ""
-        if len(window) is 6:
-            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f} ".format(window[0], window[1],  # Xmin/max
-                                                                                     window[2], window[3],  # Ymin/max
-                                                                                     window[4], window[5])  # Zmin/max
-
-        if self.plan.want_phys_dose:
-            line = 'dose "{:s}."'.format(basename)
-            line += ' /calculate  alg({:s})'.format(self.plan.dose_alg)
-            line += window_str
-            line += ' field(*) write'
-            output.append(line)
-
-        if self.plan.want_bio_dose:
-            line = 'dose "{:s}."'.format(basename)
-            line += ' /calculate  bioalgorithm({:s})'.format(self.plan.bio_alg)
-            line += window_str
-            line += ' biological norbe field(*) write'
-            output.append(line)
-
-        if self.plan.want_dlet:
-            line = 'dose "{:s}."'.format(basename)
-            line += ' /calculate  alg({:s})'.format(self.plan.dose_alg)
-            line += window_str
-            line += ' field(*) dosemeanlet write'
-            output.append(line)
-
-        if self.plan.want_rst and self.plan.optimize:
-            for i, field in enumerate(fields):
-                    output.append('field {:d} / write file({%s}.rst) reverseorder '.format(i + 1, field.name))
-                    field.rasterfile_path = os.path.join(self.path, field.name)  # but without suffix? TODO: check
-        return output
-
-    def _make_exec_inp_data(self, projectile=None):
-        """ Prepare CTX, VOI loading and RBE base data
-
-        :returns: an array of lines, one line per command.
-        """
-        output = []
-
-        output.append("ct {:s} / read".format(self._plan_name))  # loads CTX
-        output.append("voi {:s} / read".format(self._plan_name))  # loads VDX
-        output.append("voi * /list")  # display all loaded VOIs. Helps for debugging.
-
-        ## TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
-        ## TODO: check rbe.get_rbe_by_name method
-        if self.plan.target_tissue_type:  # if not None or empty string:
-            rbe = self.rbe.get_rbe_by_name(self.plan.target_tissue_type)
-            output.append("rbe '{:s}' / read".format(rbe.path))
-
-        if self.plan.res_tissue_type:
-            rbe = self.rbe.get_rbe_by_name(self.plan.target_tissue_type)
-            output.append("rbe '{:s}' / read".format(rbe.path))
-
-        return output
-
+        os.makedirs(plan._temp_dir)
+    
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
         """

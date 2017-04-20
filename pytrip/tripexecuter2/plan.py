@@ -125,11 +125,12 @@ class Plan():
         self.window = []  # window [xmin,xmax,ymin,ymax,zmin,zmax] in CTcoords [mm] for limited dose output.
         self.target_dose = 2.0  # target dose in Gray
         self.target_dose_percent = 100.0  # target dose in percent
-        self.target_dose_cube = None  # pass a DosCube() here, for incube() optimization.
 
         self.target_tissue_type = ""  # target tissue type, for biological optimization
         self.res_tissue_type = ""  # residual tissue types
-        self.incube = False  # enable or disable incube optimizations
+        self.incube_basename = ""  # To enable incube optimization, set the basename of the cube to be loaded by TRiP
+
+        self.trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
 
     def __str__(self):
         return(self._print())
@@ -214,11 +215,10 @@ class Plan():
         out += "| Optimization target\n"
         out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
         out += "|   100.0 % target dose set to  : {:.2f} [Gy]\n".format(self.target_dose)
-        out += "|   Incube optimization         : {:s}\n".format(str(self.incube))
-        if self.target_dose_cube:
-            out += "|   Target dose cube name       : '{:s}'\n".format(self.target_dose_cube.name)
+        if self.incube_basename:
+            out += "|   Incube optimization         : {:s}\n".format(self.incube_basename + '.dos')
         else:
-            out += "|   Target dose cube name       : (none set)\n"
+            out += "|   Incube optimization         : (none set)\n"
 
         out += "|\n"
         out += "| Biological parameters\n"
@@ -297,3 +297,250 @@ class Plan():
     def destroy(self):
         self.vois.destroy()
         self.fields.destroy()
+
+    def make_exec(self, no_output=False):
+        """
+        Generates the .exec script from the plan and stores it into self.trip_exec.
+        """
+
+        logger.info("Generating the trip_exec script...")
+
+        # All plans must be the same projectile
+        # TODO: throw some error if this is not the case
+        # projectile = self.fields[0].projectile
+
+        output = []
+
+        output.extend(self._make_exec_header())
+        output.extend(self._make_exec_fields())
+        output.extend(self._make_exec_oars())
+
+        # for incube optimization
+        if self.incube_basename:
+            logger.info("Incube optimization selected by {:s}.dos".format(self.incube_basename))
+            output.extend(self._make_exec_plan(incube=self.incube_basename))
+        else:
+            output.extend(self._make_exec_plan())
+
+        # optimization is optional, alternatively do a forward calculation based on .rst file, or do nothing.
+        if self.optimize:
+            output.extend(self._make_exec_opt())
+
+        # attach the wanted output:
+        output.extend(self._make_exec_output(self.basename, self.fields))
+
+        output.extend(["exit"])
+        out = "\n".join(output) + "\n"
+        self.trip_exec = out
+        return(out)
+
+    def _make_exec_header(self):
+        """
+        Add some intro header and timestamp.
+        Prepare sis, hlut, ddd, dedx, and scancap commands.
+        # TODO: scancap could go out into a new method.
+        # TODO: check input params
+        :returns: an array of lines, one line per command.
+        """
+
+        import datetime
+
+        output = []
+        output.append("* {:s} created by PyTRiP98 on the {:s}".format(self.basename + ".exec",
+                                                                      str(datetime.datetime.now())))
+        # TODO: add user and host
+        # We can only check if dir exists, if this is supposed to run locally.
+        # TODO: add UUID of plan inro header?
+        output.append("time / on")
+        output.append("sis  * /delete")
+        output.append("hlut * /delete")
+        output.append("ddd  * /delete")
+        output.append("dedx * /delete")
+        output.append('dedx {:s} / read'.format(self.dedx_path))
+        output.append('hlut {:s} / read'.format(self.hlut_path))
+
+        # ddd, spc, and sis:
+        output.append('ddd {:s} / read'.format(self.ddd_dir))
+
+        if self.spc_dir:  # False for None and empty string.
+            output.append('spc {:s} / read'.format(self.spc_dir))
+
+        if self.sis_path:
+            output.append('sis {:s} / read'.format(self.sis_path))
+        else:
+            ## TODO: check on projectile, and adapt parameters accordingy
+            output.append("makesis 12C / focus(4,6,8,10) intensity(1E4,1E5,1E6) position(2 TO 40 BY 0.1)")
+
+        # Scancap:
+        opt = "scancap / offh2o({:.3f})".format(self.offh2o)
+        opt += " rifi({:.3f})".format(self.rifi)
+        opt += " bolus({:.3f})".format(self.bolus)
+        opt += " minparticles({:d})".format(self.minparticles)
+        opt += " path({:s})".format(self.scanpath)
+        output.append(opt)
+
+        output.append("random {:d}".format(self.random_seed1))
+        return output
+
+    def _make_exec_fields(self):
+        """ Generate .exec command string for one or more fields.
+        if Plan().optimize is False, then it is expected there will
+        be a path to a rasterscan file in field.rst_path
+
+        :returns: an array of lines, one line per field in fields.
+        """
+        fields = self.fields
+
+        output = []
+        for i, _field in enumerate(fields):
+            if self.optimize:
+                # this is a new optimization:
+                line = "field {:d} / new".format(i + 1)
+            else:
+                # or, there is a precalculated raster scan file which will be used instead:
+                line = "field {:d} / read file({:s})".format(i + 1, _field.rasterfile_path)
+
+            line += " fwhm {:.3f}".format(_field.fwhm)
+
+            line += " raster({:.2f},{:.2f}) ".format(_field.raster_step[0],
+                                                     _field.raster_step[1])
+            ## TODO: convert if Dicom angles were given
+            ## gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
+            line += " couch({:.1f})".format(_field.couch)
+            line += " gantry({:.1f})".format(_field.gantry)
+
+            # set isocenter if specified in field
+            _ic = _field.isocenter
+            if len(_ic) is not 0:
+                line += " target({:.1f},{:.1f},{:.1f}) ".format(_ic[0], _ic[1], _ic[2])
+
+            # set dose extention:
+            # TODO: check number of decimals which make sense
+            # TODO: zeros allowed?
+            line += " doseext({:.4f})".format(_field.dose_extension)
+            line += " contourext({:.2f})".format(_field.contour_extension)
+            line += " zsteps({:.3f})".format(_field.zsteps)
+            line += ' proj({:s})'.format(_field.projectile)  # TODO: check if 'C' or better '12C"
+            output.append(line)
+        return output
+
+    def _make_exec_oars(self):
+        """ Generates the list of TRiP commands specifying the organs at risk.
+        :params [str] oar_list: list of VOIs which are organs at risk (OARs)
+        """
+
+        output = []
+        for oar in self.vois_oar:
+            _out = "voi " + oar.name.replace(" ", "_")
+            _out += " / maxdosefraction({.3f}) oarset".format(oar.max_dose_fraction)
+            output.append(_out)
+        return output
+
+    def _make_exec_plan(self, incube=""):
+        """ Generates the plan command in TRiP98
+        """
+        output = []
+        plan = "plan / dose({:.2f}) ".format(self.target_dose)
+        if self.target_tissue_type:
+            plan += "target({:s}) ".format(self.target_tissue_type)
+        if self.res_tissue_type:
+            plan += "residual({:s}) ".format(self.res_tissue_type)
+        if not incube == "":
+            plan += "incube({:s})".format(self.incube_basename)
+        output.append(plan)
+        return output
+
+    def _make_exec_opt(self):
+        """ Generates the optimizer command for TRiP based on Plan() loaded into self.
+        :returns: an array of lines, but only holding a single line containing the entire command.
+        """
+        # example output:
+        # opt / field(*) ctbased bio dosealg(ap) optalg(cg) bioalg(ld) geps(1E-4) eps(1e-3) iter(500)
+        #
+
+        opt = "opt / field(*)"
+
+        if self.opt_principle not in self._opt_principles:
+            logger.error("Unknown optimization principle {:s}".format(self.plan.opt_principle))
+        opt += " {:s}".format(self.opt_principle)  # ctbased or H2Obased
+
+        if self.opt_method not in self._opt_methods:
+            logger.error("Unknown optimization method {:s}".format(self.plan.opt_method))
+        opt += " {:s}".format(self.opt_method)  # "phys" or "bio"
+
+        if self.dose_alg not in self._dose_algs:
+            logger.error("Unknown optimization dose algorithm{:s}".format(self.plan.dose_alg))
+        opt += " dosealg({:s})".format(self.dose_alg)  # "ap",..
+
+        if self.opt_alg not in self._opt_algs:
+            logger.error("Unknown optimization method {:s}".format(self.plan.opt_alg))
+        opt += " optalg({:s})".format(self.opt_alg)  # "cl"...
+
+        # TODO: sanity check numbers
+        opt += " geps({:.2e})".format(self.geps)
+        opt += " eps({:.2e})".format(self.eps)
+        return [opt]
+
+    def _make_exec_output(self, basename, fields):
+        """
+        Generate TRiP98 exec commands for producing various output.
+        :params str basename" basename for output files (i.e. no suffix) and no trailing dot
+        :params last
+        """
+        output = []
+        window = self.window
+        window_str = ""
+        if len(window) is 6:
+            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f} ".format(window[0], window[1],  # Xmin/max
+                                                                                     window[2], window[3],  # Ymin/max
+                                                                                     window[4], window[5])  # Zmin/max
+
+        if self.want_phys_dose:
+            line = 'dose "{:s}."'.format(basename)
+            line += ' /calculate  alg({:s})'.format(self.dose_alg)
+            line += window_str
+            line += ' field(*) write'
+            output.append(line)
+
+        if self.want_bio_dose:
+            line = 'dose "{:s}."'.format(basename)
+            line += ' /calculate  bioalgorithm({:s})'.format(self.bio_alg)
+            line += window_str
+            line += ' biological norbe field(*) write'
+            output.append(line)
+
+        if self.want_dlet:
+            line = 'dose "{:s}."'.format(basename)
+            line += ' /calculate  alg({:s})'.format(self.dose_alg)
+            line += window_str
+            line += ' field(*) dosemeanlet write'
+            output.append(line)
+
+        if self.want_rst and self.optimize:
+            for i, field in enumerate(fields):
+                    output.append('field {:d} / write file({%s}.rst) reverseorder '.format(i + 1, field.name))
+                    field.rasterfile_path = os.path.join(self.path, field.name)  # but without suffix? TODO: check
+        return output
+
+    def _make_exec_inp_data(self, projectile=None):
+        """ Prepare CTX, VOI loading and RBE base data
+
+        :returns: an array of lines, one line per command.
+        """
+        output = []
+
+        output.append("ct {:s} / read".format(self._plan_name))  # loads CTX
+        output.append("voi {:s} / read".format(self._plan_name))  # loads VDX
+        output.append("voi * /list")  # display all loaded VOIs. Helps for debugging.
+
+        ## TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
+        ## TODO: check rbe.get_rbe_by_name method
+        if self.target_tissue_type:  # if not None or empty string:
+            rbe = self.rbe.get_rbe_by_name(self.target_tissue_type)
+            output.append("rbe '{:s}' / read".format(rbe.path))
+
+        if self.res_tissue_type:
+            rbe = self.rbe.get_rbe_by_name(self.target_tissue_type)
+            output.append("rbe '{:s}' / read".format(rbe.path))
+
+        return output
