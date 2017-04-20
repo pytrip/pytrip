@@ -132,6 +132,9 @@ class Plan():
         self.incube = False  # enable or disable incube optimizations
 
     def __str__(self):
+        return(self._print())
+
+    def _print(self):
         """ Pretty print all attributes
         """
         out = "\n"

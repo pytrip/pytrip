@@ -72,6 +72,9 @@ class Field():
         self.selected = False
 
     def __str__(self):
+        return(self._print())
+
+    def _print(self):
         """ Pretty print all attributes.
         """
         out = "\n"
