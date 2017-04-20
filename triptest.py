@@ -59,6 +59,6 @@ plan.want_rst = False
 #print(plan)
 #
 #print(plan.make_exec())
-te = pte.Execute(c)
+te = pte.Execute(c, v)
 #te._run_trip = False
 te.execute(plan)

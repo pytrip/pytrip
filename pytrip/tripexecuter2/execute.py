@@ -42,8 +42,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-class Execute(object):
-    def __init__(self, ctx):
+class Execute():
+    def __init__(self, ctx, vdx):
         """ Initialize the Execute class.
         :params CtxCube() ctx: the CT images as a regular pytrip.CtxCube() object.
         If the CtxCube() obejcts are constant, this object can be used to execute multiple
@@ -53,6 +53,7 @@ class Execute(object):
         logger.debug("Initializing TripExecuter()")
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this execute object
         self.ctx = ctx
+        self.vdx = vdx
         ##self.rbe = rbe  # maybe move this to plan level?
         self.listeners = []
         self.trip_bin_path = "TRiP98"  # where TRiP98 is installed, if not accessible in /usr/local/bin or similar
@@ -108,9 +109,7 @@ class Execute(object):
 
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
 
-        _flist = [os.path.join(plan._working_dir, plan.basename + ".ctx"),
-                  os.path.join(plan._working_dir, plan.basename + ".hed"),
-                  os.path.join(plan._working_dir, plan.basename + ".vdx")]
+        _flist = []
         
         if plan.incube_basename:
             _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
@@ -123,8 +122,10 @@ class Execute(object):
         for _fn in _flist:
             logger.debug("Copy {:s} to {:s}".format(_fn, plan._temp_dir))
             shutil.copy(_fn, plan._temp_dir)
-            
-                
+
+        self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
+        self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
+
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
         """
@@ -279,7 +280,7 @@ class Execute(object):
 
         """
 
-        if _target_path = None:
+        if _target_path is None:
             _dir = os.path.dirname(_source_dir)
             # _basedir, _basename = os.path.split(_dir)
             _target_path = _dir + ".tar.gz"
