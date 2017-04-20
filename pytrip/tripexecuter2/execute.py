@@ -148,13 +148,52 @@ class Execute(object):
         else:
             self._run_trip_local(plan, _dir)
 
+    def _run_trip_local(self, plan,_run_dir):
+        """
+        Runs TRiP98 on local computer.
+        """
+        logger.info("Run TRiP98 in LOCAL mode.")
+
+        _outfile = os.path.join(_run_dir, "out.txt")
+        logger.debug("Write stdout and stderr to {:s}".format(_outfile))
+        fp_stdout = open((_outfile), "w")
+        fp_stderr = open((_outfile), "w")
+
+        os.chdir(_run_dir)
+
+        if not self._runtrip:  # for testing
+            norun = "echo "
+        else:
+            norun = ""
+
+        # start local process running TRiP98
+        p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+
+        # fill standard input with configuration file content
+        # wait until process is finished and get standard output and error streams
+        stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
+
+        if stdout is not None:
+            logger.debug("Local answer stdout:" + stdout.decode("ascii"))
+            fp_stdout.write(stdout.decode("ascii"))
+            self.log(stdout.decode("ascii"))
+
+        if stderr is not None:
+            logger.debug("Local answer stderr:" + stderr.decode("ascii"))
+            fp_stderr.write(stderr.decode("ascii"))
+
+        os.chdir('..')
+
+        fp_stdout.close()
+        fp_stderr.close()
+            
     def _run_trip_remote(self, plan, basedir = "."):
         """ Method for executing the attached plan remotely.
         :params str basedir: place where PyTRiP will mess around. Do not keep things here which should not be deleted.
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
-        self._compress_files()
+        self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
         self._copy_files_to_server()
 
         ssh = paramiko.SSHClient()
@@ -225,62 +264,30 @@ class Execute(object):
         self._copy_back_from_server()
         self._extract_tarball()
 
-    def _run_trip_local(self, plan,_run_dir):
-        """
-        Runs TRiP98 on local computer.
-        """
-        logger.info("Run TRiP98 in LOCAL mode.")
-
-        _outfile = os.path.join(_run_dir, "out.txt")
-        logger.debug("Write stdout and stderr to {:s}".format(_outfile))
-        fp_stdout = open((_outfile), "w")
-        fp_stderr = open((_outfile), "w")
-
-        os.chdir(_run_dir)
-
-        if not self._runtrip:  # for testing
-            norun = "echo "
-        else:
-            norun = ""
-
-        # start local process running TRiP98
-        p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
-
-        # fill standard input with configuration file content
-        # wait until process is finished and get standard output and error streams
-        stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
-
-        if stdout is not None:
-            logger.debug("Local answer stdout:" + stdout.decode("ascii"))
-            fp_stdout.write(stdout.decode("ascii"))
-            self.log(stdout.decode("ascii"))
-        if stderr is not None:
-            logger.debug("Local answer stderr:" + stderr.decode("ascii"))
-            fp_stderr.write(stderr.decode("ascii"))
-
-        os.chdir('..')
-
-        fp_stdout.close()
-        fp_stderr.close()
-
     def _finish(self):
+        # return requested results, copy them back in to plan.working_dir
+        
         pass
 
-    def _compress_files(_source_dir, _target_file):
+    def _compress_files(_source_dir, _target_path = None):
         """
         Builds the tar.gz from what is found in _source_dir.
-        Note, that the compression happens at the root of _source_dir, ie. the root directory is not
-        included into the tar.gz file.
+        Resulting file will be stored in "source_dir/.." if not specified otherwise
 
-        :params str _source_dir: path to dir with the files to be compresse.
-        :params str _target_file: path to file
+        :params str _source_dir: path to dir with the files to be compressed.
+        :params str _target_file: path to file, if None, then the resulting tarball will be <_source_dir>.tar.gz
 
         """
 
-        logger.debug("Compressing files in " + _source_dir)
+        if _target_path = None:
+            _dir = os.path.dirname(_source_dir)
+            # _basedir, _basename = os.path.split(_dir)
+            _target_path = _dir + ".tar.gz"
 
-        with tarfile.open(os.path.join(self.working_dir, self.folder_name + ".tar.gz"), "w:gz") as tar:
-            tar.add(self.path, arcname=self.folder_name)
+        logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_path))
+
+        with tarfile.open(os.path.join(_target_path), "w:gz") as tar:
+            tar.add(_source_dir, arcname=_target_path)
 
     def set_plan(self, plan):
         self.plan = plan

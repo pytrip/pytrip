@@ -56,9 +56,9 @@ plan.want_bio_dose = False
 plan.want_dlet = True
 plan.want_rst = False
 
-print(plan)
-
-print(plan.make_exec())
+#print(plan)
+#
+#print(plan.make_exec())
 te = pte.Execute(c)
 #te._run_trip = False
 te.execute(plan)
