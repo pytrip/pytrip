@@ -77,12 +77,6 @@ class Plan():
         self.dosecubes = []  # list of DosCube() objects (i.e. results)
         self.letcubes = []  # list of LETCubes()
 
-        # remote planning
-        self.remote = False  # remote or local execution
-        self.servername = ""
-        self.username = ""
-        self.password = ""
-
         # directories and file paths.
         self.working_dir = ""  # directory where all input files are stored, and where all output files will be put.
         self.ddd_dir = "$TRIP98/DATA/DDD/12C/RF3MM/12C.*"
@@ -170,13 +164,6 @@ class Plan():
                 out += "|   |                              : {:s}\n".format(_letcube.name)
         else:
             out += "|  LET cubes                    : (none set)\n"
-
-        out += "|\n"
-        out += "| Remote access\n"
-        out += "|   Remote execution            : {:s}\n".format(str(self.remote))
-        out += "|   Server                      : '{:s}'\n".format(self.servername)
-        out += "|   Username                    : '{:s}'\n".format(self.username)
-        out += "|   Password                    : '{:s}'\n".format("*" * len(self.password))
 
         out += "|\n"
         out += "| Directories\n"

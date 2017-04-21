@@ -59,13 +59,31 @@ class Execute():
         self.logfile_stdout = "trip98.stdout"
         self.logfile_stderr = "trip98.stderr"
         self.rsakey_local_path = "~/.ssh/id_rsa"
-        self._runtrip = True  # set this to False for a dry run without TRiP98 (for testing purposes)
+        self._norun = False  # set this to False for a dry run without TRiP98 (for testing purposes)
 
+        # remote planning
         # remote directory where a new temporary directory will be created, the package extracted and executed.
+        self.remote = False  # remote or local execution
+        self.servername = ""
+        self.username = ""
+        self.password = ""
         self.remote_base_dir = "./"
 
-        ##def delete_workdir(self):
-        ##shutil.rmtree(self.path)
+    def __str__(self):
+        return self._print()
+        
+    def _print(self):
+        """ Pretty print current attributes.
+        """
+        out = ""
+        out += "|\n"
+        out += "| Remote access\n"
+        out += "|   Remote execution            : {:s}\n".format(str(self.remote))
+        out += "|   Server                      : '{:s}'\n".format(self.servername)
+        out += "|   Username                    : '{:s}'\n".format(self.username)
+        out += "|   Password                    : '{:s}'\n".format("*" * len(self.password))
+
+        return out
 
     def execute(self, plan, _callback=None):
         """
@@ -138,11 +156,11 @@ class Execute():
 
     def _run_trip(self, plan, _dir=""):
         """ Method for executing the attached exec.
-        :params str dir: overrides dir where the package is assumed to be
+        :params str dir: overrides dir where the TRiP package is assumed to be
         """
         if not _dir:
             _dir = plan._temp_dir
-        if plan.remote:
+        if self.remote:
             self._run_trip_remote(plan, _dir)
         else:
             self._run_trip_local(plan, _dir)
@@ -160,7 +178,7 @@ class Execute():
 
         os.chdir(_run_dir)
 
-        if not self._runtrip:  # for testing
+        if self._norun:  # for testing
             norun = "echo "
         else:
             norun = ""
@@ -186,52 +204,30 @@ class Execute():
         fp_stdout.close()
         fp_stderr.close()
 
-    def _run_trip_remote(self, plan, basedir="."):
+    def _run_trip_remote(self, plan, _run_dir=None):
         """ Method for executing the attached plan remotely.
-        :params str basedir: place where PyTRiP will mess around. Do not keep things here which should not be deleted.
+        :params Plan plan: plan object
+        :params str run_dir:  
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
-        self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
-        self._copy_files_to_server()
+        print("temp_dir: {:s}".format(plan._temp_dir))
 
-        ssh = paramiko.SSHClient()
-        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
+        self._copy_files_to_server(tar_path)
 
-        # If no password is supplied, try to look for a private key
-        if self.plan.get_password() is "" or None:
-            rsa_keypath = os.path.expanduser(self.rsakey_local_path)
-            if not os.path.isfile(rsa_keypath):
-                # login with provided username + empty password
-                try:
-                    ssh.connect(self.plan.server, username=self.plan.username, password="")
-                except:
-                    logger.error("Cannot connect to " + self.plan.server)
-                    logger.error("Check username, password or key in " + self.rsakey_local_path)
-                    raise
-            else:
-                # login with provided username + private key
-                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
-                try:
-                    ssh.connect(self.plan.server, username=self.plan.username, pkey=rsa_key)
-                except:
-                    logger.error("Cannot connect to " + self.plan.server)
-                    logger.error("Check username and your key in " + self.rsakey_local_path)
-                    raise
-        else:
-            # login with provided username + password
-            ssh.connect(self.plan.server, username=self.plan.username, password=self.plan.password)
+        ssh = self._get_ssh_client()
 
-        if not self._runtrip:
+        if self._norun:
             norun = "echo "
         else:
             norun = ""
 
         ##TODO: some remote temp-dir creation mechanism is needed here.
 
-        tgz_filename = "{:s}.tar.gz".format(self.plan.basename)
+        tgz_filename = "{:s}.tar.gz".format(plan.basename)
         remote_tgz_path = os.path.join(basedir, tgz_filename)  # remote place where temp.tar.gz is stored
-        remote_run_dir = os.path.join(basedir, self.plan.basename)  # remote run dir
+        remote_run_dir = os.path.join(basedir, plan.basename)  # remote run dir
 
         commands = ["cd " + basedir + ";" + "tar -zxvf " + remote_tgz_path,
                     "cd " + remote_run_dir + ";" + norun + "bash -lc '" + self.trip_bin_path + " < plan.exec '",
@@ -293,29 +289,37 @@ class Execute():
                 print("NB:", _path)
                 # os.path.basename(_fn.=
 
-    def _compress_files(_source_dir, _target_path=None):
+    @staticmethod
+    def _compress_files(_source_dir):
         """
         Builds the tar.gz from what is found in _source_dir.
         Resulting file will be stored in "source_dir/.." if not specified otherwise
 
         :params str _source_dir: path to dir with the files to be compressed.
-        :params str _target_file: path to file, if None, then the resulting tarball will be <_source_dir>.tar.gz
-
+        :returns: full path to tar.gz file.
         """
 
-        if _target_path is None:
-            _dir = os.path.dirname(_source_dir)
-            # _basedir, _basename = os.path.split(_dir)
-            _target_path = _dir + ".tar.gz"
+        # _source_dir may be of either "/foo/bar" or "/foo/bar/". We only need "bar",
+        # but dirname() will return foo in the first case and bar in the second,
+        # fix this by adding an extra seperator, in that case all will be stripped.
+        # add an extra trailing slash, if there are multiple 
+        _dir = os.path.dirname(_source_dir + os.sep)
+        _pardir, _basedir = os.path.split(_dir)
+        _target_filename = _basedir + ".tar.gz"
 
-        logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_path))
+        _cwd = os.getcwd()
+        os.chdir(_pardir)
 
-        with tarfile.open(os.path.join(_target_path), "w:gz") as tar:
-            tar.add(_source_dir, arcname=_target_path)
+        # _basedir, _basename = os.path.split(_dir)
 
-    def set_plan(self, plan):
-        self.plan = plan
-        self.plan_name = self.plan.get_name().replace(" ", "_")
+        logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_filename))
+
+        with tarfile.open(_target_filename, "w:gz") as tar:
+            tar.add(_source_dir, arcname=_basedir)
+
+        os.chdir(_cwd)
+
+        return os.path.join(_pardir, _target_filename)
 
     def save_exec(self, path):
         """
@@ -344,21 +348,18 @@ class Execute():
                 voxelplan_voi.type = '0'
         structures.write_trip(out_path + ".vdx")
 
-    def get_transport(self):
-        transport = paramiko.Transport((self.plan.get_server(), 22))
-        transport.connect(username=self.plan.get_username(), password=self.plan.get_password())
-        return transport
-
-    def _copy_files_to_server(self):
+    def _copy_files_to_server(self, path):
         """
         Copies the generated tar.gz file to the remote server.
         """
-        logger.debug("Copy tar.gz to server:" + self.path + ".tar.gz -> " +
-                     os.path.join(self.remote_dir, "temp.tar.gz"))
-        transport = self.get_transport()
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        sftp.put(localpath=self.path + ".tar.gz",
-                 remotepath=os.path.join(self.remote_dir, 'temp.tar.gz'))
+        _to_uri = self.servername + ":" + self.remote_base_dir
+
+        _dir, _filename = os.path.split(path)
+        
+        logger.debug("Copy {:s} to {:s}".format(path, _to_uri))
+
+        sftp, transport = self._get_sftp_client()
+        sftp.put(localpath=path, remotepath=os.path.join(self.remote_base_dir, _filename))
         sftp.close()
         transport.close()
 
@@ -394,3 +395,74 @@ class Execute():
         if os.path.exists(f):
             os.remove(f)
         shutil.rmtree(self.path)
+
+        
+    def _get_ssh_client(self):
+        """ returns an open ssh client
+        """
+        
+        ssh = paramiko.SSHClient()
+        ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        # If no password is supplied, try to look for a private key
+        if self.password is "" or None:
+            rsa_keypath = os.path.expanduser(self.rsakey_local_path)
+            if not os.path.isfile(rsa_keypath):
+                # login with provided username + empty password
+                try:
+                    ssh.connect(self.servername, username=self.username, password="")
+                except:
+                    logger.error("Cannot connect to " + self.servername)
+                    logger.error("Check username, password or key in " + self.rsakey_local_path)
+                    raise
+            else:
+                # login with provided username + private key
+                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
+                try:
+                    ssh.connect(self.servername, username=self.username, pkey=rsa_key)
+                except:
+                    logger.error("Cannot connect to " + self.servername)
+                    logger.error("Check username and your key in " + self.rsakey_local_path)
+                    raise
+        else:
+            # login with provided username + password
+            ssh.connect(self.servername, username=self.username, password=self.password)
+
+        return ssh
+
+    def _get_sftp_client(self):
+        """ returns a sftp client object and the corresponding transport socket.
+        Both must be closed after use.
+        """
+        transport = paramiko.Transport((self.servername, 22))
+        # transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+
+        # If no password is supplied, try to look for a private key
+        if self.password is "" or None:
+            rsa_keypath = os.path.expanduser(self.rsakey_local_path)
+            if not os.path.isfile(rsa_keypath):
+                # login with provided username + empty password
+                try:
+                    transport.connect(username=self.username, password="")
+                except:
+                    logger.error("Cannot connect to " + self.servername)
+                    logger.error("Check username, password or key in " + self.rsakey_local_path)
+                    raise
+            else:
+                # login with provided username + private key
+                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
+                print(dir(rsa_key))
+                print(type(rsa_key))
+                try:
+                    transport.connect(username=self.username, pkey=rsa_key)
+                except:
+                    logger.error("Cannot connect to " + self.servername)
+                    logger.error("Check username and your key in " + self.rsakey_local_path)
+                    raise
+        else:
+            # login with provided username + password
+            transport.connect(username=self.username, password=self.password)
+
+        sftp = paramiko.SFTPClient.from_transport(transport)
+
+        return sftp, transport
