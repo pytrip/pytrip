@@ -56,10 +56,8 @@ plan.want_bio_dose = False
 plan.want_dlet = True
 plan.want_rst = False
 
-
-
-#print(plan)
-#print(plan.make_exec())
+# print(plan)
+# print(plan.make_exec())
 
 t = pte.Execute(c, v)
 t.remote = True
@@ -67,8 +65,9 @@ t.servername = "titan.phys.au.dk"
 t.username = "bassler"
 t.remote_base_dir = "/home/bassler/test"
 t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"  # TODO: some issue with .bashrc in remote mode
-#t._norun = True  # disable TRiP execution for now
+# t._norun = True  # disable TRiP execution for now
 t.execute(plan)
 
+# results can be found in plan.dosecubes[] and plan.letcubes[], but they are also saved to working_dir
 # d = plan.dosecubes[0]  # results stores here
 # l = plan.letcubes[0]

@@ -66,7 +66,7 @@ class Plan():
         """
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
-        self.basename = basename
+        self.basename = basename.replace(" ", "_")  # TODO: also for Ctx and Vdx, issue when loading DICOMs.
         self.comment = comment
 
         self.fields = []  # list of Field() objects
@@ -365,7 +365,7 @@ class Plan():
         if self.sis_path:
             output.append('sis "{:s}" / read'.format(self.sis_path))
         else:
-            ## TODO: check on projectile, and adapt parameters accordingy
+            # TODO: check on projectile, and adapt parameters accordingy
             output.append("makesis 12C / focus(4,6,8,10) intensity(1E4,1E5,1E6) position(2 TO 40 BY 0.1)")
 
         # Scancap:
@@ -415,8 +415,8 @@ class Plan():
 
             line += " raster({:.2f},{:.2f})".format(_field.raster_step[0],
                                                     _field.raster_step[1])
-            ## TODO: convert if Dicom angles were given
-            ## gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
+            # TODO: convert if Dicom angles were given
+            # gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
             line += " couch({:.1f})".format(_field.couch)
             line += " gantry({:.1f})".format(_field.gantry)
 
@@ -557,8 +557,8 @@ class Plan():
         output.append("voi {:s} / read".format(self._plan_name))  # loads VDX
         output.append("voi * /list")  # display all loaded VOIs. Helps for debugging.
 
-        ## TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
-        ## TODO: check rbe.get_rbe_by_name method
+        # TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
+        # TODO: check rbe.get_rbe_by_name method
         if self.target_tissue_type:  # if not None or empty string:
             rbe = self.rbe.get_rbe_by_name(self.target_tissue_type)
             output.append("rbe '{:s}' / read".format(rbe.path))

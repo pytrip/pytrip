@@ -43,10 +43,10 @@ class RBEHandler:
 
     def load_rbe(self, i=0):
         """ Loads a single RBE file and stroed it into self.
-        If file does not exist, then assume a directory with multiple RBE files, which 
+        If file does not exist, then assume a directory with multiple RBE files, which
         then are loaded individually.
         TODO: refactor me, please.
-        """ 
+        """
         if os.path.exists(self.datafile):
             with open(self.datafile, "r") as fp:
                 reader = csv.reader(fp, delimiter='\t')
@@ -59,7 +59,7 @@ class RBEHandler:
 
     def _load_rbe_dir(self):
         """ Used by load_rbe() if not a single file is present, to discover next files.
-        """ 
+        """
         if not hasattr(self, "rbe_dir") or self.rbe_dir is None:
             return
         path = os.path.expandvars(self.rbe_dir)

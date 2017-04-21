@@ -17,7 +17,8 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+This file contains the Execute() class which can execute a Plan() object locally or on a remote server
+whith a complete TRiP98 installtions.
 """
 import os
 import shutil
@@ -25,41 +26,47 @@ import tarfile
 
 from subprocess import Popen, PIPE
 
-try:
-    import paramiko
-except:
-    pass
-
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
-from pytrip.vdx import VdxCube
 from pytrip.ctx import CtxCube
-##import pytriplib
+
 import uuid
 import logging
 
 logger = logging.getLogger(__name__)
+
+try:
+    import paramiko
+except:
+    logger.warning("Paramiko package not installed, only local TRiP access possible")
 
 
 class Execute():
     def __init__(self, ctx, vdx):
         """ Initialize the Execute class.
         :params CtxCube() ctx: the CT images as a regular pytrip.CtxCube() object.
-        If the CtxCube() obejcts are constant, this object can be used to execute multiple
+        :params VdxCube() ctx: the contours as a regular pytrip.VdxCube() object.
+
+        If the Ctx and Vdx obejcts are constant, this object can be used to execute multiple
         plans in parallel.
         """
 
         logger.debug("Initializing TripExecuter()")
+
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this execute object
         self.ctx = ctx
         self.vdx = vdx
-        ##self.rbe = rbe  # maybe move this to plan level?
         self.listeners = []
+
+        # TODO: this should be only the TRiP98 command, and not the full path
+        # however some issue when running remote, so lets leave this for now
         self.trip_bin_path = "TRiP98"  # where TRiP98 is installed, if not accessible in /usr/local/bin or similar
-        self.logfile_stdout = "trip98.stdout"
-        self.logfile_stderr = "trip98.stderr"
-        self.rsakey_local_path = "~/.ssh/id_rsa"
+
+        self.logfile_prefix_stdout = "trip98.stdout."  # will be suffixed by plan.basename
+        self.logfile_prefix_stderr = "trip98.stderr."  # will be suffixed by plan.basename
+
         self._norun = False  # set this to False for a dry run without TRiP98 (for testing purposes)
+        self._cleanup = True  # delete any temporary dirs created (currently this is only the package dir)
 
         # remote planning
         # remote directory where a new temporary directory will be created, the package extracted and executed.
@@ -68,14 +75,26 @@ class Execute():
         self.username = ""
         self.password = ""
         self.remote_base_dir = "./"
+        self.rsakey_local_path = "~/.ssh/id_rsa"
 
     def __str__(self):
         return self._print()
-        
+
     def _print(self):
         """ Pretty print current attributes.
         """
         out = ""
+
+        out += "|\n"
+        out += "| Genral configuration\n"
+        out += "|   CtxCube.basename            : '{:s}'\n".format(self.ctx.basename)
+        out += "|   VdxCube.basename            : '{:s}'\n".format(self.vdx.basename)
+        out += "|   STDOUT prefix               : '{:s}'\n".format(self.logfile_prefiz_stdout)
+        out += "|   STDERR prefix               : '{:s}'\n".format(self.logfile_prefix_stderr)
+        out += "|   TRiP98 command              : '{:s}'\n".format(self.trip_bin_path)
+        out += "|   Dummy run                   : {:s}\n".format(str(self._norun))
+        out += "|   Clenaup                     : {:s}\n".format(str(self._cleanup))
+
         out += "|\n"
         out += "| Remote access\n"
         out += "|   Remote execution            : {:s}\n".format(str(self.remote))
@@ -102,30 +121,30 @@ class Execute():
         Sets:
         _temp_dir where all will be executed
         _exec_path generates full path to the file name.exec file will be stored
-
         """
-        # local plan name will not contain any spaces, and consists of a base name only, with no suffix.
-        plan._basename = plan.basename.replace(" ", "_")
 
-        # do not save working dir to self, this we may run multiple plans in the same Execute object.
-        # instead we will save it to the plan.
+        # attach working dir to plan, but expanded for environment variables
         plan._working_dir = os.path.expandvars(plan.working_dir)
 
-        # we will not run in working dir, but in an isolated sub directory which will be
-        # uniquely created for this purpose, located after the working dir
-        # the directory where the package is prepare (and TRiP98 will be executed if locally)
-        # is stored in plan._temp_dir
+        # We will not run TRiP98 in working dir, but in an isolated subdirectory which will be
+        # uniquely created for this purpose, located after the working dir.
+        # This contents of this subdir will be termed "the package", as it is a clean environment.
+        # The name of the subdir will be stored in plan._temp_dir
+        # It may be safely deleted afterwards, once the resulting files are copied back to the plan.working_dir
 
         if not hasattr(plan, "_temp_dir"):
             import tempfile
             plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=plan._working_dir)
 
-        plan._temp_dir = os.path.join(plan._working_dir, plan._temp_dir)
-        plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
+        plan._temp_dir = os.path.join(plan._working_dir,
+                                      plan._temp_dir)
+
+        plan._exec_path = os.path.join(plan._temp_dir,
+                                       plan.basename + ".exec")
 
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
 
-        _flist = []
+        _flist = []  # list of files which must be copied to the package.
 
         if plan.incube_basename:
             _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
@@ -135,10 +154,13 @@ class Execute():
             if _field.use_raster_file:
                 _flist.append(os.path.join(plan._working_dir, _field.basename + ".rst"))
 
+        # once the file list _flist is complete, copy it to the package location
         for _fn in _flist:
             logger.debug("Copy {:s} to {:s}".format(_fn, plan._temp_dir))
             shutil.copy(_fn, plan._temp_dir)
 
+        # Ctx and Vdx files are not copied, but written from the objects passed to Execute() during __init__.
+        # This gives the user better control over what Ctx and Vdx should be based for the planning.
         self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
         self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
 
@@ -148,7 +170,7 @@ class Execute():
         self.listeners.append(listener)
 
     def log(self, txt):
-        """
+        """ Writes txt to all listeners, stripping any newlines.
         """
         txt = txt.replace("\n", "")
         for l in self.listeners:
@@ -156,7 +178,8 @@ class Execute():
 
     def _run_trip(self, plan, _dir=""):
         """ Method for executing the attached exec.
-        :params str dir: overrides dir where the TRiP package is assumed to be
+        :params str dir: overrides dir where the TRiP package is assumed to be, otherwise
+        the package location is taken from plan._temp_dir
         """
         if not _dir:
             _dir = plan._temp_dir
@@ -168,14 +191,21 @@ class Execute():
     def _run_trip_local(self, plan, _run_dir):
         """
         Runs TRiP98 on local computer.
+        :params Plan plan : plan object to be executed
+        :params str _run_dir: directory where a clean trip package is located, i.e. where TRiP98 will be run.
         """
         logger.info("Run TRiP98 in LOCAL mode.")
 
-        _outfile = os.path.join(_run_dir, "out.txt")
-        logger.debug("Write stdout and stderr to {:s}".format(_outfile))
-        fp_stdout = open((_outfile), "w")
-        fp_stderr = open((_outfile), "w")
+        # stdout and stderr are always written locally
+        _stdout_path = os.path.join(plan._working_dir, self.logfile_prefix_stdout + plan.basename)
+        _stderr_path = os.path.join(plan._working_dir, self.logfile_prefix_stderr + plan.basename)
+        logger.debug("Write stdout to {:s}".format(_stdout_path))
+        logger.debug("Write stderr to {:s}".format(_stderr_path))
 
+        fp_stdout = open((_stdout_path), "w")
+        fp_stderr = open((_stderr_path), "w")
+
+        _pwd = os.getcwd()
         os.chdir(_run_dir)
 
         if self._norun:  # for testing
@@ -199,7 +229,7 @@ class Execute():
             logger.debug("Local answer stderr:" + stderr.decode("ascii"))
             fp_stderr.write(stderr.decode("ascii"))
 
-        os.chdir('..')
+        os.chdir(_pwd)
 
         fp_stdout.close()
         fp_stderr.close()
@@ -207,37 +237,44 @@ class Execute():
     def _run_trip_remote(self, plan, _run_dir=None):
         """ Method for executing the attached plan remotely.
         :params Plan plan: plan object
-        :params str run_dir:  
+        :params str _run_dir: TODO: not used
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
-        print("temp_dir: {:s}".format(plan._temp_dir))
-
         tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
-        self._copy_file_to_server(tar_path)
 
-        ssh = self._get_ssh_client()
+        # prepare relvant dirs and paths
+        _, tgz_filename = os.path.split(tar_path)
+        remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
+        local_tgz_path = os.path.join(plan._working_dir, tgz_filename)
+        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.rstrip(".tar.gz"))  # TODO: os.path.splitext
+        remote_exec_fn = plan.basename + ".exec"
+        remote_rel_run_dir = tgz_filename.rstrip(".tar.gz")  # TODO: os.path.splitext
+
+        # stdout and stderr are always written locally
+        _stdout_path = os.path.join(plan._working_dir, self.logfile_prefix_stdout + plan.basename)
+        _stderr_path = os.path.join(plan._working_dir, self.logfile_prefix_stderr + plan.basename)
+        logger.debug("Write stdout to {:s}".format(_stdout_path))
+        logger.debug("Write stderr to {:s}".format(_stderr_path))
+
+        # cp tarball to server
+        self._copy_file_to_server(tar_path, remote_tgz_path)
 
         if self._norun:
             norun = "echo "
         else:
             norun = ""
 
-        _, tgz_filename = os.path.split(tar_path)
-        remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
-        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.rstrip(".tar.gz"))  # TODO: os.path.splitext
-        remote_exec_fn = plan.basename + ".exec"
-
         commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
                     "cd " + remote_run_dir + ";" + norun + "bash -lc " + self.trip_bin_path + " < " + remote_exec_fn,
-                    "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_run_dir,
+                    "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
                     "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
-        # local dirs where stdout/err will be written to
-        logger.debug("Write stdout and stderr to {:s}".format(plan._temp_dir))
-        fp_stdout = open(os.path.join(plan._temp_dir, self.logfile_stdout), "w")
-        fp_stderr = open(os.path.join(plan._temp_dir, self.logfile_stderr), "w")
+        fp_stdout = open((_stdout_path), "w")
+        fp_stderr = open((_stderr_path), "w")
 
+        # execute the list of commands on the remote server
+        ssh = self._get_ssh_client()
         for _cmd in commands:
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
@@ -253,19 +290,22 @@ class Execute():
         fp_stdout.close()
         fp_stderr.close()
 
-        exit()
-
-        self._copy_back_from_server()
-        self._extract_tarball()
+        self._copy_file_from_server(remote_tgz_path, local_tgz_path)
+        self._extract_tarball(remote_tgz_path, plan._working_dir)
 
     def _finish(self, plan):
-        """ return requested results, copy them back in to plan.working_dir
+        """ return requested results, copy them back in to plan._working_dir
         """
 
         for _fn in plan._out_files:
             _path = os.path.join(plan._temp_dir, _fn)
-            logger.debug("copy {:s} to {:s}".format(_path, plan.working_dir))
-            shutil.copy(_path, plan.working_dir)
+
+            # only copy files back, if we achtually have been running TRiP
+            if self._norun:
+                logger.debug("dummy run: would now copy {:s} to {:s}".format(_path, plan._working_dir))
+            else:
+                shutil.copy(_path, plan._working_dir)
+                logger.debug("copy {:s} to {:s}".format(_path, plan._working_dir))
 
         for _fn in plan._out_files:
             _path = os.path.join(plan._temp_dir, _fn)
@@ -285,8 +325,13 @@ class Execute():
                 plan.letcubes.append(_l)
 
             if ".rst" in _fn:
-                print("NB:", _path)
-                # os.path.basename(_fn.=
+                logger.warning("attaching fields to class not implemented yet {:s}", _path)
+                # TODO
+                # need to access the RstClass here for each rst file. This will then need to be attached
+                # to the proper field in the list of fields.
+
+        if self._cleanup:
+            shutil.rmtree(plan._temp_dir)
 
     @staticmethod
     def _compress_files(_source_dir):
@@ -296,12 +341,17 @@ class Execute():
 
         :params str _source_dir: path to dir with the files to be compressed.
         :returns: full path to tar.gz file.
+
+        :example:
+        _compress_files("/home/bassler/test/foobar")
+        will compress the contents of /foobar into foobar.tar.gz, including the foobar root dir
+        and returns "/home/bassler/test/foobar.tar.gz"
         """
 
         # _source_dir may be of either "/foo/bar" or "/foo/bar/". We only need "bar",
         # but dirname() will return foo in the first case and bar in the second,
         # fix this by adding an extra seperator, in that case all will be stripped.
-        # add an extra trailing slash, if there are multiple 
+        # add an extra trailing slash, if there are multiple
         _dir = os.path.dirname(_source_dir + os.sep)
         _pardir, _basedir = os.path.split(_dir)
         _target_filename = _basedir + ".tar.gz"
@@ -309,98 +359,76 @@ class Execute():
         _cwd = os.getcwd()
         os.chdir(_pardir)
 
-        # _basedir, _basename = os.path.split(_dir)
-
         logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_filename))
 
         with tarfile.open(_target_filename, "w:gz") as tar:
-            tar.add(_source_dir, arcname=_basedir)
+            tar.add(_basedir, arcname=_basedir)
 
         os.chdir(_cwd)
 
         return os.path.join(_pardir, _target_filename)
 
-    def save_exec(self, path):
-        """
-        Writes the .exec script to disk.
-        """
-        with open(path, "wb+") as fp:
-            fp.write(self.trip_exec)
+    @staticmethod
+    def _extract_tarball(tgz_path, basedir):
+        """ Extracts a tarball at path into self.working_dir
+        :params tgz_path: full path to tar.gz file
+        :params basedir: where extracted files (including the tgz root dir) will be stored
+        :returns: a string where the files were extracted including the tgz root dir
 
-    def save_data(self, path):
-        """ Saves the attached CTX and VDX files to proper place
-        :params path: full path to filenames, but without suffix.
-        ##TODO: we need a term for a full path without suffix.
-        """
-        out_path = path
-        ctx = self.images
-        ctx.patient_name = self.plan_name
-        ctx.write(os.path.join(out_path + ".ctx"))
-        structures = VdxCube(ctx)
-        structures.version = "2.0"
-        for voi in self.plan.get_vois():
-            voxelplan_voi = voi.get_voi().get_voi_data()
-            structures.add_voi(voxelplan_voi)
-            if voi.is_target():
-                voxelplan_voi.type = '1'
-            else:
-                voxelplan_voi.type = '0'
-        structures.write_trip(out_path + ".vdx")
+        i.e. _extract_tarball("foobar.tar.gz", "/home/bassler/test")
+        will return "/home/bassler/test/foobar"
 
-    def _copy_file_to_server(self, path):
+        """
+
+        logger.debug("Extract {:s} to {:s}".format(tgz_path, basedir))
+
+        _basedir, _tarfile = os.path.split(tgz_path)
+        _outdirname = _tarfile.rstrip(".tar.gz")  # TODO: os.path.splitext()
+        _outdir = os.path.join(_basedir, _outdirname)
+
+        if os.path.exists(_outdir):
+            shutil.rmtree(_outdir)
+
+        _cwd = os.getcwd()
+        os.chdir(basedir)
+        with tarfile.open(tgz_path, "r:gz") as tar:
+            tar.extractall("./")
+
+        os.chdir(_cwd)
+        return _outdir
+
+    def _copy_file_to_server(self, _from, _to):
         """
         Copies the generated tar.gz file to the remote server.
-        :params path: full path to tarball.
+        :params _from: full path to file
+        :params _to: full path to location on server
         """
-        _to_uri = self.servername + ":" + self.remote_base_dir
 
-        _dir, _filename = os.path.split(path)
-        
-        logger.debug("Copy {:s} to {:s}".format(path, _to_uri))
+        _to_uri = self.servername + ":" + _to
+        logger.debug("Copy {:s} to {:s}".format(_from, _to_uri))
 
         sftp, transport = self._get_sftp_client()
-        sftp.put(localpath=path, remotepath=os.path.join(self.remote_base_dir, _filename))
+        sftp.put(localpath=_from, remotepath=_to)
         sftp.close()
         transport.close()
 
-    ##def _run_ssh_command(self, cmd):
-    ##    ssh = paramiko.SSHClient()
-    ##    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ##    ssh.connect(self.plan.get_server(), username=self.plan.get_username(), password=self.plan.get_password())
-    ##    self.parent.write_to_log("Run Trip\n")
-    ##    stdin, stdout, stderr = ssh.exec_command(cmd)
-    ##    ssh.close()
+    def _copy_file_from_server(self, _from, _to):
+        """ Copies a single file from a server
+        :param _from: full path on remote server
+        :param _to: fill path on local computer
+        """
+        _from_uri = self.servername + ":" + _from
+        logger.debug("Copy {:s} to {:s}".format(_from_uri, _to))
 
-    def _copy_back_from_server(self):
-        transport = self.get_transport()
-        sftp = paramiko.SFTPClient.from_transport(transport)
-        sftp.get(os.path.join(self.remote_dir, 'temp.tar.gz'), self.path + ".tar.gz")
+        sftp, transport = self._get_sftp_client()
+        sftp.get(_from, _to)
         sftp.close()
         transport.close()
 
-    def _extract_tarball(self, plan):
-        """ Extracts a tarball with the name self.path + ".tar.gz"
-        into self.working_dir
-        """
-        output_folder = plan.path
-        if os.path.exists(output_folder):
-            shutil.rmtree(output_folder)
-        with tarfile.open(self.path + ".tar.gz", "r:gz") as tar:
-            tar.extractall(plan.working_dir)
-
-    def _clean_up(self):
-        """ Remove tarball and the extracted directory
-        """
-        f = "%s" % (self.path + ".tar.gz")
-        if os.path.exists(f):
-            os.remove(f)
-        shutil.rmtree(self.path)
-
-        
     def _get_ssh_client(self):
         """ returns an open ssh client
         """
-        
+
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 

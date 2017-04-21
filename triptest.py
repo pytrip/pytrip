@@ -56,12 +56,11 @@ plan.want_bio_dose = False
 plan.want_dlet = True
 plan.want_rst = False
 
-#print(plan)
+# print(plan)
 #
-#print(plan.make_exec())
+# print(plan.make_exec())
 te = pte.Execute(c, v)
-#te._run_trip = False
+# te._run_trip = False
 te.execute(plan)
 
-# dos = plan.dos
-# dos
+# results can be found in plan.dosecubes[] and plan.letcubes[], but they are also saved to working_dir
