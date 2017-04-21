@@ -214,7 +214,7 @@ class Execute():
         print("temp_dir: {:s}".format(plan._temp_dir))
 
         tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
-        self._copy_files_to_server(tar_path)
+        self._copy_file_to_server(tar_path)
 
         ssh = self._get_ssh_client()
 
@@ -225,26 +225,27 @@ class Execute():
 
         ##TODO: some remote temp-dir creation mechanism is needed here.
 
-        tgz_filename = "{:s}.tar.gz".format(plan.basename)
-        remote_tgz_path = os.path.join(basedir, tgz_filename)  # remote place where temp.tar.gz is stored
-        remote_run_dir = os.path.join(basedir, plan.basename)  # remote run dir
+        _, tgz_filename = os.path.split(tar_path)
+        remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)  # remote place where temp.tar.gz is stored
+        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.strip(".tar.gz"))
+        remote_exec_fn = plan.basename + ".exec"
 
-        commands = ["cd " + basedir + ";" + "tar -zxvf " + remote_tgz_path,
-                    "cd " + remote_run_dir + ";" + norun + "bash -lc '" + self.trip_bin_path + " < plan.exec '",
-                    "cd " + basedir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_run_dir,
-                    "cd " + basedir + ";" + "rm -r " + remote_run_dir]
+        commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
+                    "cd " + remote_run_dir,
+                    norun + "bash -lc '" + self.trip_bin_path + " < " + remote_exec_fn,
+                    "cd " + self.remote_base_dir,
+                    "tar -zcvf " + remote_tgz_path + " " + remote_run_dir,
+                    "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
         # local dirs where stdout/err will be written to
-        ## TODO: pass _outfile in by argument.
-        _outfile = self.plan._temp_dir
-        logger.debug("Write stdout and stderr to {:s}".format(_outfile))
-        fp_stdout = open((_outfile), "w")
-        fp_stderr = open((_outfile), "w")
+        logger.debug("Write stdout and stderr to {:s}".format(plan._temp_dir))
+        fp_stdout = open(os.path.join(plan._temp_dir, self.logfile_stdout), "w")
+        fp_stderr = open(os.path.join(plan._temp_dir, self.logfile_stderr), "w")
 
-        for cmd in commands:
-            logger.debug("Execute on remote server: {:s}".format(cmd))
-            self.log(cmd)
-            stdin, stdout, stderr = ssh.exec_command(cmd)
+        for _cmd in commands:
+            logger.debug("Execute on remote server: {:s}".format(_cmd))
+            self.log(_cmd)
+            stdin, stdout, stderr = ssh.exec_command(_cmd)
             answer_stdout = stdout.read()
             answer_stderr = stderr.read()
             logger.debug("Remote answer stdout: {:s}".format(answer_stdout))
@@ -255,6 +256,8 @@ class Execute():
         ssh.close()
         fp_stdout.close()
         fp_stderr.close()
+
+        exit()
 
         self._copy_back_from_server()
         self._extract_tarball()
@@ -348,9 +351,10 @@ class Execute():
                 voxelplan_voi.type = '0'
         structures.write_trip(out_path + ".vdx")
 
-    def _copy_files_to_server(self, path):
+    def _copy_file_to_server(self, path):
         """
         Copies the generated tar.gz file to the remote server.
+        :params path: full path to tarball.
         """
         _to_uri = self.servername + ":" + self.remote_base_dir
 
