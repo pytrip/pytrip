@@ -223,18 +223,14 @@ class Execute():
         else:
             norun = ""
 
-        ##TODO: some remote temp-dir creation mechanism is needed here.
-
         _, tgz_filename = os.path.split(tar_path)
-        remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)  # remote place where temp.tar.gz is stored
-        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.strip(".tar.gz"))
+        remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
+        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.rstrip(".tar.gz"))  # TODO: os.path.splitext
         remote_exec_fn = plan.basename + ".exec"
 
         commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
-                    "cd " + remote_run_dir,
-                    norun + "bash -lc '" + self.trip_bin_path + " < " + remote_exec_fn,
-                    "cd " + self.remote_base_dir,
-                    "tar -zcvf " + remote_tgz_path + " " + remote_run_dir,
+                    "cd " + remote_run_dir + ";" + norun + "bash -lc " + self.trip_bin_path + " < " + remote_exec_fn,
+                    "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_run_dir,
                     "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
         # local dirs where stdout/err will be written to

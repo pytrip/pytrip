@@ -66,7 +66,8 @@ t.remote = True
 t.servername = "titan.phys.au.dk"
 t.username = "bassler"
 t.remote_base_dir = "/home/bassler/test"
-t._norun = True  # disable TRiP execution for now
+t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"  # TODO: some issue with .bashrc in remote mode
+#t._norun = True  # disable TRiP execution for now
 t.execute(plan)
 
 # d = plan.dosecubes[0]  # results stores here
