@@ -25,7 +25,7 @@ It is not required that X data should form regular (evenly spaced) grid.
 X and Y columns of length 1 also form 1-D data (single data point).
 
 2-D dataset is represented by two columns of numbers: X and Y.
-and 2-dimensional matrix Z. 
+and 2-dimensional matrix Z.
 Number of columns in Z matrix should be equal to length of X array,
 while number of rows to length of Y array.
 Lengths of X and Y data may differ. One or both of X and Y columns may
@@ -66,12 +66,12 @@ class RegularInterpolator(object):
      RegularInterpolator objects are so-called callables and can be called in same way as plain functions
      on interpolated values.
      Example:
-         
+
          >>> interp_func_1d = RegularInterpolator(x=exp_data_x, y=exp_data_y, kind='linear')
          >>> interp_func_2d = RegularInterpolator(x=exp_data_x, y=exp_data_y, z=exp_data_z, kind='linear')
 
     2. Calling interpolation function to get intermediate values on interpolated values.
-    
+
         >>> interpolated_y = interp_func_1d(x=intermediate_x)
         >>> interpolated_z = interp_func_2d(x=intermediate_x, y=intermediate_y)
     """
@@ -81,19 +81,19 @@ class RegularInterpolator(object):
         Initialisation responsible also for finding coefficients of interpolation function.
         If z is None then we assume that dataset if 1-D and is made by X and Y columns.
         In case z is not None, then we interpret the data as 2-D.
-        
-        :param x: array_like 
+
+        :param x: array_like
         The 1-d array of data-points x-coordinates, must be in strictly ascending order.
-        
-        :param y: array_like 
-        The 1-d array of data-points y-coordinates. 
+
+        :param y: array_like
+        The 1-d array of data-points y-coordinates.
         If y is from 1-D data points (z is None) then it should be of the same length (shape) as x.
         Otherwise (2-D data points, z is not None) then it must be in strictly ascending order.
-        
-        :param z: array_like 
+
+        :param z: array_like
         None in case of 1-D dataset.
         Otherwise the 2-d array of data-points z-coordinates, of shape (x.size, y.size).
-        
+
         :param kind: interpolation algorithm: 'linear' or 'spline' (default).
         """
 
@@ -108,9 +108,17 @@ class RegularInterpolator(object):
         else:
             # 2-D data, but one of the coordinates is single-element, reducing to 1-D interpolation
             if len(x) == 1:  # data with shape 1 x N
-                self._executor = self.__get_1d_executor(x=y, y=z, kind=kind)
+                executor_1d = self.__get_1d_executor(x=y, y=z, kind=kind)
+
+                def applicator(x, y):
+                    return executor_1d(y)
+                self._executor = applicator
             elif len(y) == 1:  # data with shape N x 1
-                self._executor = self.__get_1d_executor(x=x, y=z, kind=kind)
+                executor_1d = self.__get_1d_executor(x=x, y=z, kind=kind)
+
+                def applicator(x, y):
+                    return executor_1d(x)
+                self._executor = applicator
             else:
                 # 3-rd degree spline interpolation, passing through all points
                 self._executor = self.__get_2d_executor(x, y, z, kind)
@@ -118,11 +126,11 @@ class RegularInterpolator(object):
     def __call__(self, x, y=None):
         """
         Call interpolation function on intermediate values.
-        
+
         :param x: array_like or single value
         Input x-coordinate(s).
         :param y: array_like or single value
-        Input y-coordinate(s) (in case of 2-D dataset). 
+        Input y-coordinate(s) (in case of 2-D dataset).
         :return: array_like or single value
         Interpolated value
         """
@@ -149,8 +157,18 @@ class RegularInterpolator(object):
             raise Exception("1-D interpolation: X and Y should have the same shape")
         # 1-element data set, return fixed value
         if len(y) == 1:
+            # define constant
             def fun_const(t):
-                return y[0]
+                """
+                Helper function
+                :param t: array-like or scalar
+                :return: array of constant values if t is an array of constant scalar if t is a scalar
+                """
+                try:
+                    result = np.ones_like(t) * y[0]  # t is an array
+                except TypeError:
+                    result = y[0]  # t is a scalar
+                return result
             result = fun_const
         # 2-element data set, use linear interpolation from numpy
         elif len(y) == 2:
