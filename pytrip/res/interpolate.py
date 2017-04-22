@@ -110,13 +110,13 @@ class RegularInterpolator(object):
             if len(x) == 1:  # data with shape 1 x N
                 executor_1d = self.__get_1d_function(x=y, y=z, kind=kind)
 
-                def applicator(x, y):
+                def applicator(x, y, *args, **kwargs):
                     return executor_1d(y)
                 self._interp_function = applicator
             elif len(y) == 1:  # data with shape N x 1
                 executor_1d = self.__get_1d_function(x=x, y=z, kind=kind)
 
-                def applicator(x, y):
+                def applicator(x, y, *args, **kwargs):
                     return executor_1d(x)
                 self._interp_function = applicator
             else:
@@ -137,7 +137,7 @@ class RegularInterpolator(object):
         if y is None:
             return self._interp_function(x)
         else:
-            return self._interp_function(x, y)
+            return self._interp_function(x, y, grid=False)
 
     @classmethod
     def eval(cls, x, y=None, xp=None, yp=None, zp=None, kind='linear'):
@@ -213,7 +213,10 @@ class RegularInterpolator(object):
                 except ImportError as e:
                     logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
                     raise e
-                result = InterpolatedUnivariateSpline(x, y, k=3)
+                k = 3
+                if len(y) == 3: # fall back to 2-nd degree spline if only 3 points are present
+                    k = 2
+                result = InterpolatedUnivariateSpline(x, y, k=k)
             elif kind == 'linear':
                 result = fun_interp
             else:
@@ -235,13 +238,26 @@ class RegularInterpolator(object):
         except ImportError as e:
             logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
             raise e
-        if kind == 'linear' or (len(x) == 2 and len(y) == 2):
-            kx, ky = 1, 1
-        elif len(x) == 2 and len(y) > 2:
-            kx, ky = 1, 3
-        elif len(x) > 2 and len(y) == 2:
-            kx, ky = 3, 1
+        if len(x) == 2:  # fall-back to linear interpolation
+            kx = 1
+        elif len(x) == 3:  # fall-back to 2nd degree spline
+            kx = 2
         else:
-            kx, ky = 3, 3
-        result = RectBivariateSpline(x, y, z, kx=kx, ky=ky, s=0)
+            kx = 3
+        if len(y) == 2:  # fall-back to linear interpolation
+            ky = 1
+        elif len(y) == 3:  # fall-back to 2nd degree spline
+            ky = 2
+        else:
+            ky = 3
+        if kind == 'linear':
+            kx, ky = 1, 1
+        x_array, y_array, z_array = x, y, z
+        if not isinstance(x, np.ndarray):
+            x_array = np.asarray(x)
+        if not isinstance(y, np.ndarray):
+            y_array = np.asarray(y)
+        if not isinstance(z, np.ndarray):
+            z_array = np.asarray(z)
+        result = RectBivariateSpline(x_array, y_array, z_array, kx=kx, ky=ky, s=0)
         return result

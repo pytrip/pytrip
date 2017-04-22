@@ -33,23 +33,23 @@ class TestInterpolate(unittest.TestCase):
         """Single data point
         """
         for kind in ('linear', 'spline'):
-            interp_1d = RegularInterpolator(x=(1., ), y=(2., ), kind=kind)
+            interp_1d = RegularInterpolator(x=(1.,), y=(2.,), kind=kind)
             self.assertEqual(interp_1d(1), 2)
-            self.assertEqual(RegularInterpolator.eval(x=1, xp=(1., ), yp=(2., ), kind=kind), 2)
+            self.assertEqual(RegularInterpolator.eval(x=1, xp=(1.,), yp=(2.,), kind=kind), 2)
 
             self.assertEqual(interp_1d(5), 2)  # value outside domain
-            self.assertEqual(RegularInterpolator.eval(x=5, xp=(1., ), yp=(2., ), kind=kind), 2)
+            self.assertEqual(RegularInterpolator.eval(x=5, xp=(1.,), yp=(2.,), kind=kind), 2)
 
             assert_allclose(interp_1d(x=(1, 1, 1)), (2, 2, 2))
             assert_allclose(interp_1d(x=(0, 1, 2)), (2, 2, 2))  # some values outside domain
             assert_allclose(interp_1d(np.array((1, 1, 1))), (2, 2, 2))  # numpy array
             assert_allclose(interp_1d(()), ())  # empty table
 
-            interp_2d = RegularInterpolator(x=(1., ), y=(2., ), z=(3., ), kind=kind)
+            interp_2d = RegularInterpolator(x=(1.,), y=(2.,), z=(3.,), kind=kind)
             self.assertEqual(interp_2d(1, 2), 3)
             self.assertEqual(interp_2d(5, 0), 3)  # value outside domain
             assert_allclose(interp_2d((1, 1, 1), (2, 2, 2)), (3, 3, 3))
-            test_y = RegularInterpolator.eval(x=(1, 1, 1), y=(2, 2, 2), xp=(1., ), yp=(2., ), zp=(3., ), kind=kind)
+            test_y = RegularInterpolator.eval(x=(1, 1, 1), y=(2, 2, 2), xp=(1.,), yp=(2.,), zp=(3.,), kind=kind)
             assert_allclose(test_y, (3, 3, 3))
             assert_allclose(interp_2d((0, 1, 2), (0, 1, 2)), (3, 3, 3))  # some values outside domain
             assert_allclose(interp_2d(np.array((1, 1, 1)), np.array((2, 2, 2))), (3, 3, 3))  # numpy array
@@ -85,6 +85,12 @@ class TestInterpolate(unittest.TestCase):
             interp_1d = RegularInterpolator(x=(1., 3., 4., 5., 10.), y=(2.0, 2.0, 2.0, 2.0, 2.0), kind=kind)
             assert_allclose(interp_1d(np.linspace(-1, 10, 100)), np.ones(100) * 2.0)
 
+            interp_1d = RegularInterpolator(x=(1., 3., 4., 5.), y=(2.0, 2.0, 2.0, 2.0), kind=kind)
+            assert_allclose(interp_1d(np.linspace(-1, 10, 100)), np.ones(100) * 2.0)
+
+            interp_1d = RegularInterpolator(x=(1., 3., 4.), y=(2.0, 2.0, 2.0), kind=kind)
+            assert_allclose(interp_1d(np.linspace(-1, 10, 100)), np.ones(100) * 2.0)
+
         logger.info("Testing some random data")
         data_x = (1., 3., 4., 5., 10.)
         data_y = (0.0, 10.0, 5.0, 0.0, -5.0)
@@ -108,6 +114,111 @@ class TestInterpolate(unittest.TestCase):
         assert_allclose(interp_1d(data_x), data_y, atol=1e-12)
         test_x = np.linspace(start=data_x[0], stop=data_x[-1], num=100)
         assert_allclose(interp_1d(test_x), test_x, atol=1e-12)
+
+    def test_2d_2x2el(self):
+        """
+        Should fallback to linear interpolation
+        """
+        for kind in ('linear', 'spline'):
+            interp_2d = RegularInterpolator(x=(1., 3.), y=(-2.0, 2.0), z=((2, 2), (3, 3)), kind=kind)
+            self.assertEqual(interp_2d(1, -2), 2)
+            self.assertEqual(interp_2d(1, 0), 2)
+            self.assertEqual(interp_2d(1, 2), 2)
+
+            self.assertEqual(interp_2d(3, -2), 3)
+            self.assertEqual(interp_2d(3, 0), 3)
+            self.assertEqual(interp_2d(3, 2), 3)
+
+            self.assertEqual(interp_2d(2, -2), 2.5)
+            self.assertEqual(interp_2d(2, 0), 2.5)
+            self.assertEqual(interp_2d(2, 2), 2.5)
+
+    def test_2d_2xnel(self):
+        """
+        Should partially fallback to linear interpolation
+        """
+        for kind in ('linear', 'spline'):
+            interp_2d = RegularInterpolator(x=(1., 3., 10.), y=(-2.0, 2.0), z=((2, 2), (3, 3), (4, 4)), kind=kind)
+            assert_allclose(interp_2d(1, -2), 2)
+            assert_allclose(interp_2d(1, 0), 2)
+            assert_allclose(interp_2d(1, 2), 2)
+
+            assert_allclose(interp_2d(3, -2), 3)
+            assert_allclose(interp_2d(3, 0), 3)
+            assert_allclose(interp_2d(3, 2), 3)
+            assert_allclose(interp_2d(x=(3, 3, 3), y=(-2, 0, 2)), (3, 3, 3))
+
+            assert_allclose(interp_2d(2, -2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 0), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
+            assert_allclose(RegularInterpolator.eval(x=2,
+                                                     y=2,
+                                                     xp=(1., 3., 10.),
+                                                     yp=(-2.0, 2.0),
+                                                     zp=((2, 2), (3, 3), (4, 4)),
+                                                     kind=kind),
+                            2.5,
+                            atol=0.1)
+
+            interp_2d = RegularInterpolator(x=(1., 3.), y=(-2.0, 2.0, 10.0), z=((2, 2, 2), (3, 3, 3)), kind=kind)
+            assert_allclose(interp_2d(1, -2), 2)
+            assert_allclose(interp_2d(1, 0), 2)
+            assert_allclose(interp_2d(1, 2), 2)
+            assert_allclose(interp_2d(1, 10), 2)
+
+            assert_allclose(interp_2d(3, -2), 3)
+            assert_allclose(interp_2d(3, 0), 3)
+            assert_allclose(interp_2d(3, 2), 3)
+            assert_allclose(interp_2d(3, 10), 3)
+
+            assert_allclose(interp_2d(2, -2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 0), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 10), 2.5, atol=0.1)
+
+    def test_2d_nxnel(self):
+        for kind in ('linear', 'spline'):
+            interp_2d = RegularInterpolator(x=(1., 3., 10.),
+                                            y=(-2.0, 0.0, 2.0),
+                                            z=((2, 2, 2), (3, 3, 3), (4, 4, 4)),
+                                            kind=kind)
+
+            assert_allclose(interp_2d(1, -2), 2)
+            assert_allclose(interp_2d(1, 0), 2)
+            assert_allclose(interp_2d(1, 2), 2)
+
+            assert_allclose(interp_2d(3, -2), 3)
+            assert_allclose(interp_2d(3, 0), 3)
+            assert_allclose(interp_2d(3, 2), 3)
+            assert_allclose(interp_2d(x=(3, 3, 3), y=(-2, 0, 2)), (3, 3, 3))
+
+            assert_allclose(interp_2d(2, -2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 0), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
+            assert_allclose(RegularInterpolator.eval(x=2,
+                                                     y=2,
+                                                     xp=(1., 3., 10.),
+                                                     yp=(-2.0, 2.0),
+                                                     zp=((2, 2), (3, 3), (4, 4)),
+                                                     kind=kind),
+                            2.5,
+                            atol=0.1)
+
+            interp_2d = RegularInterpolator(x=(1., 3.), y=(-2.0, 2.0, 10.0), z=((2, 2, 2), (3, 3, 3)), kind=kind)
+            assert_allclose(interp_2d(1, -2), 2)
+            assert_allclose(interp_2d(1, 0), 2)
+            assert_allclose(interp_2d(1, 2), 2)
+            assert_allclose(interp_2d(1, 10), 2)
+
+            assert_allclose(interp_2d(3, -2), 3)
+            assert_allclose(interp_2d(3, 0), 3)
+            assert_allclose(interp_2d(3, 2), 3)
+            assert_allclose(interp_2d(3, 10), 3)
+
+            assert_allclose(interp_2d(2, -2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 0), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
+            assert_allclose(interp_2d(2, 10), 2.5, atol=0.1)
 
 
 if __name__ == '__main__':
