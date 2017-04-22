@@ -98,30 +98,30 @@ class RegularInterpolator(object):
         """
 
         # internal executor object
-        self._executor = None
+        self._interp_function = None
 
         # 1-D interpolation
         if z is None:
-            self._executor = self.__get_1d_executor(x, y, kind)
+            self._interp_function = self.__get_1d_function(x, y, kind)
 
         # 2-D interpolation
         else:
             # 2-D data, but one of the coordinates is single-element, reducing to 1-D interpolation
             if len(x) == 1:  # data with shape 1 x N
-                executor_1d = self.__get_1d_executor(x=y, y=z, kind=kind)
+                executor_1d = self.__get_1d_function(x=y, y=z, kind=kind)
 
                 def applicator(x, y):
                     return executor_1d(y)
-                self._executor = applicator
+                self._interp_function = applicator
             elif len(y) == 1:  # data with shape N x 1
-                executor_1d = self.__get_1d_executor(x=x, y=z, kind=kind)
+                executor_1d = self.__get_1d_function(x=x, y=z, kind=kind)
 
                 def applicator(x, y):
                     return executor_1d(x)
-                self._executor = applicator
+                self._interp_function = applicator
             else:
                 # 3-rd degree spline interpolation, passing through all points
-                self._executor = self.__get_2d_executor(x, y, z, kind)
+                self._interp_function = self.__get_2d_function(x, y, z, kind)
 
     def __call__(self, x, y=None):
         """
@@ -135,12 +135,44 @@ class RegularInterpolator(object):
         Interpolated value
         """
         if y is None:
-            return self._executor(x)
+            return self._interp_function(x)
         else:
-            return self._executor(x, y)
+            return self._interp_function(x, y)
+
+    @classmethod
+    def eval(cls, x, y=None, xp=None, yp=None, zp=None, kind='linear'):
+        """
+        Perform interpolation in a single step. Find interpolation function,
+         based on data points (xp, yp and zp) and then execute it on interpolated values (x and y). 
+        :param x: array_like or single value
+        Input x-coordinate(s).
+        
+        :param y: array_like or single value
+        Input y-coordinate(s) (in case of 2-D dataset).
+        
+        :param xp: array_like
+        The 1-d array of data-points x-coordinates, must be in strictly ascending order.
+
+        :param yp: array_like
+        The 1-d array of data-points y-coordinates.
+        If y is from 1-D data points (z is None) then it should be of the same length (shape) as x.
+        Otherwise (2-D data points, z is not None) then it must be in strictly ascending order.
+
+        :param zp: array_like
+        None in case of 1-D dataset.
+        Otherwise the 2-d array of data-points z-coordinates, of shape (x.size, y.size).
+
+        :param kind: interpolation algorithm: 'linear' or 'spline' (default).
+        :return: 
+        """
+        if xp is None or yp is None:
+            logger.error("Provide valid training data points")
+            raise Exception("Invalid training data points")
+        interpolating_class = cls(xp, yp, zp, kind)  # find interpolating function
+        return interpolating_class(x,y)  # call interpolating function
 
     @staticmethod
-    def __get_1d_executor(x, y, kind):
+    def __get_1d_function(x, y, kind):
         """
         Train 1-D interpolator
         :param x: x-coordinates of data points
@@ -189,7 +221,7 @@ class RegularInterpolator(object):
         return result
 
     @staticmethod
-    def __get_2d_executor(x, y, z, kind):
+    def __get_2d_function(x, y, z, kind):
         """
         Train 2-D interpolator
         :param x: x-coordinates of data points
