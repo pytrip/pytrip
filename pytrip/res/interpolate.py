@@ -179,7 +179,7 @@ class RegularInterpolator(object):
                 try:
                     from scipy.interpolate import InterpolatedUnivariateSpline
                 except ImportError as e:
-                    logger.error("Please install scipy for you platform to be able to use spline-based interpolation")
+                    logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
                     raise e
                 result = InterpolatedUnivariateSpline(x, y, k=3)
             elif kind == 'linear':
@@ -201,7 +201,7 @@ class RegularInterpolator(object):
         try:
             from scipy.interpolate import RectBivariateSpline
         except ImportError as e:
-            logger.error("Please install scipy for you platform to be able to use spline-based interpolation")
+            logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
             raise e
         if kind == 'linear' or (len(x) == 2 and len(y) == 2):
             kx, ky = 1, 1
