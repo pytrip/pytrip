@@ -41,8 +41,9 @@ is performed using `interp` method from `numpy` package.
 Spline interpolation on all datasets is performed using `InterpolatedUnivariateSpline` (for 1-D data)
 and `RectBivariateSpline` (for 2-D data) from `scipy` package.
 
-Cubic spline interpolation requires at least 3 data points. In case number of data points is lower,
-interpolator implemented in this package will fall back to linear interpolation.
+Cubic spline interpolation requires at least 4 data points. In case number of data points is lower,
+interpolator implemented in this package will fall back to quadratic spline (for 3 data points)
+or to linear interpolation (2 or less data points).
 This is different behaviour from what is implemented in `scipy` package where exception is thrown is such situation.
 
 Note: scipy package is not imported her as default as its installation is problematic for some group of users
@@ -60,7 +61,7 @@ logger = logging.getLogger(__name__)
 class RegularInterpolator(object):
     """
     RegularInterpolator is a helper class to easy interpolation of single- and double-variable function.
-    To use it two steps are needed:
+    To use it usually two steps are needed:
      1. construction of the object, providing training data (data points) and interpolation type (linear or spline).
      During this step coefficient of interpolating function will be calculated and stored in the object.
      RegularInterpolator objects are so-called callables and can be called in same way as plain functions
@@ -68,12 +69,19 @@ class RegularInterpolator(object):
      Example:
 
          >>> interp_func_1d = RegularInterpolator(x=exp_data_x, y=exp_data_y, kind='linear')
-         >>> interp_func_2d = RegularInterpolator(x=exp_data_x, y=exp_data_y, z=exp_data_z, kind='linear')
+         >>> interp_func_2d = RegularInterpolator(x=exp_data_x, y=exp_data_y, z=exp_data_z, kind='spline')
 
-    2. Calling interpolation function to get intermediate values on interpolated values.
+    2. Calling interpolation function to get intermediate values (single number or array) on interpolated ones.
 
         >>> interpolated_y = interp_func_1d(x=intermediate_x)
         >>> interpolated_z = interp_func_2d(x=intermediate_x, y=intermediate_y)
+
+    Interpolation in single step is also possible (although less efficient than two-step method):
+
+        >>> interpolated_y = RegularInterpolator.eval(x=intermediate_x, xp=exp_data_x, yp=exp_data_y, kind='linear')
+        >>> interpolated_z = RegularInterpolator(x=intermediate_x, y=intermediate_y, \
+        xp=exp_data_x, yp=exp_data_y, zp=exp_data_z, kind='spline')
+
     """
 
     def __init__(self, x, y, z=None, kind='spline'):
@@ -143,13 +151,13 @@ class RegularInterpolator(object):
     def eval(cls, x, y=None, xp=None, yp=None, zp=None, kind='linear'):
         """
         Perform interpolation in a single step. Find interpolation function,
-         based on data points (xp, yp and zp) and then execute it on interpolated values (x and y). 
+         based on data points (xp, yp and zp) and then execute it on interpolated values (x and y).
         :param x: array_like or single value
         Input x-coordinate(s).
-        
+
         :param y: array_like or single value
         Input y-coordinate(s) (in case of 2-D dataset).
-        
+
         :param xp: array_like
         The 1-d array of data-points x-coordinates, must be in strictly ascending order.
 
@@ -163,13 +171,14 @@ class RegularInterpolator(object):
         Otherwise the 2-d array of data-points z-coordinates, of shape (x.size, y.size).
 
         :param kind: interpolation algorithm: 'linear' or 'spline' (default).
-        :return: 
+        :return: array_like or single value
+        Interpolated value
         """
         if xp is None or yp is None:
             logger.error("Provide valid training data points")
             raise Exception("Invalid training data points")
         interpolating_class = cls(xp, yp, zp, kind)  # find interpolating function
-        return interpolating_class(x,y)  # call interpolating function
+        return interpolating_class(x, y)  # call interpolating function
 
     @staticmethod
     def __get_1d_function(x, y, kind):
@@ -214,7 +223,7 @@ class RegularInterpolator(object):
                     logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
                     raise e
                 k = 3
-                if len(y) == 3: # fall back to 2-nd degree spline if only 3 points are present
+                if len(y) == 3:  # fall back to 2-nd degree spline if only 3 points are present
                     k = 2
                 result = InterpolatedUnivariateSpline(x, y, k=k)
             elif kind == 'linear':
