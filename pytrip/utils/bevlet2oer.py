@@ -26,7 +26,7 @@ import argparse
 import logging
 
 import numpy as np
-from scipy import interpolate
+from pytrip.res.interpolate import RegularInterpolator
 
 import pytrip as pt
 
@@ -42,20 +42,20 @@ class ReadGd(object):  # TODO: rename me
         :params str dat_filename: optional full path to output file name.
         """
 
-        if os.path.isfile(gd_filename) is False:
+        if not os.path.isfile(gd_filename):
             raise IOError("Could not find file " + gd_filename)
 
         if _dataset > 2:
             print("DOS: Error- only 0,1,2 OER set available. Got:", _dataset)
         from pkg_resources import resource_string
 
-        model_files = ['OER_furusawa_V79_C12.dat', 'OER_furusawa_HSG_C12.dat', 'OER_barendsen.dat']
+        model_files = ('OER_furusawa_V79_C12.dat', 'OER_furusawa_HSG_C12.dat', 'OER_barendsen.dat')
         model_data = resource_string('pytrip', os.path.join('data', model_files[_dataset]))
 
         lines = model_data.decode('ascii').split('\n')
         x = np.asarray([float(line.split()[0]) for line in lines if line])
         y = np.asarray([float(line.split()[1]) for line in lines if line])
-        us = interpolate.UnivariateSpline(x, y, s=0.0)
+        us = RegularInterpolator(x, y, kind='linear')
 
         with open(gd_filename, 'r') as gd_file:
             gd_lines = gd_file.readlines()
@@ -69,7 +69,7 @@ class ReadGd(object):  # TODO: rename me
             out_fd = sys.stdout
 
         for line in gd_lines:
-            if not (line[0].isdigit()):
+            if not line[0].isdigit():
                 tmp_string = "#" + line
                 if not first:
                     ignore_rest = True
@@ -96,7 +96,7 @@ def main(args=sys.argv[1:]):
     parser.add_argument("gd_file", help="location of .bevlet file", type=str)
     parser.add_argument("dat_file", help="location of OER .dat to write", type=str, nargs='?')
     parser.add_argument('-m', '--model', help="OER model (0 - furusawa_V79_C12, 1 - furusawa_HSG_C12, 2 - barendsen)",
-                        type=int, choices=[0, 1, 2], default=2)
+                        type=int, choices=(0, 1, 2), default=2)
     parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     args = parser.parse_args(args)

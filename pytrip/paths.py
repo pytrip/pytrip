@@ -27,10 +27,10 @@ from multiprocessing import Process, Queue
 from functools import cmp_to_key
 
 import numpy as np
-from scipy import interpolate
 
 from pytrip.cube import Cube
 from pytrip.res.point import get_basis_from_angles
+from pytrip.res.interpolate import RegularInterpolator
 import pytriplib
 
 
@@ -269,13 +269,13 @@ class DensityCube(Cube):
         ctxdata = ctxdata.reshape(self.dimx * self.dimy * self.dimz)
         gc.collect()
 
-        cube = interpolate.splev(ctxdata, self.hlut_data)
-        # ~ cube = self.hlut_data(ctxdata)
+        cube = self.hlut_data(ctxdata)
         cube = cube.astype(np.float32)
         self.cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
 
     def import_hlut(self):
-        """ Imports the Hounsfield lookup table and stores it into self.hlut_data
+        """ Imports the Hounsfield lookup table and stores it into self.hlut_data object
+        self.hlut_data is trained linear interpolator, it can be later called to get interpolated values
         """
         fp = open(self.hlut_file, "r")
         lines = fp.read()
@@ -288,4 +288,4 @@ class DensityCube(Cube):
             if len(a):
                 x_data.append(float(a[0]))
                 y_data.append(float(a[3]))
-        self.hlut_data = interpolate.splrep(np.array(x_data), np.array(y_data), k=1)
+        self.hlut_data = RegularInterpolator(np.array(x_data), np.array(y_data), kind='linear')
