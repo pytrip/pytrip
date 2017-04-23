@@ -50,7 +50,7 @@ class DDD:
         try:
             from scipy import interpolate
         except ImportError as e:
-            logger.error("Please install scipy for you platform to be able to use spline-based interpolation")
+            logger.error("Please install scipy to be able to use spline-based interpolation")
             raise e
         ev_point = np.array([points, [energy] * len(points)])
         return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
