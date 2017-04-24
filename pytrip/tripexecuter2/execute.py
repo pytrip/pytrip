@@ -309,18 +309,21 @@ class Execute():
             _path = os.path.join(plan._temp_dir, _fn)
             if ".phys.dos" in _fn:
                 _d = DosCube()
-                _d.read(_path)
-                plan.dosecubes.append(_d)
+                if not self._norun:
+                    _d.read(_path)
+                    plan.dosecubes.append(_d)
 
             if ".bio.dos" in _fn:
                 _d = CtxCube()
-                _d.read(_path)
-                plan.dosecubes.append(_d)
+                if not self._norun:
+                    _d.read(_path)
+                    plan.dosecubes.append(_d)
 
             if ".dosemlet.dos" in _fn:
                 _l = LETCube()
-                _l.read(_path)
-                plan.letcubes.append(_l)
+                if not self._norun:
+                    _l.read(_path)
+                    plan.letcubes.append(_l)
 
             if ".rst" in _fn:
                 logger.warning("attaching fields to class not implemented yet {:s}", _path)
