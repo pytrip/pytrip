@@ -116,10 +116,11 @@ test_script:
   - cd dist
   - python -c "import os; import pip; pip.main(['install', os.listdir('.')[0]]);"
   - cd ..
+# exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
+  - ps: $exclude_tests = If ($platform -eq "x86") {"test_converters.py"} Else {""}
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
 # exit in case of failure of a single test
-#  - ps: Get-ChildItem -Path tests\ -Recurse -Include test*.py -Exclude test_converters.py | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
-  - ps: Get-ChildItem -Path tests\ -Recurse -Include test*.py | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
+  - ps: Get-ChildItem -Path tests\ -Recurse -Include test*.py -Exclude $exclude_tests | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
 # deploy package
   - bash appveyor\deploy_package.sh
 
