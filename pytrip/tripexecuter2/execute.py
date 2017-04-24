@@ -208,13 +208,11 @@ class Execute():
         _pwd = os.getcwd()
         os.chdir(_run_dir)
 
-        if self._norun:  # for testing
-            norun = "echo "
-        else:
-            norun = ""
-
         # start local process running TRiP98
-        p = Popen([norun + self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+        if self._norun:  # for testing, just echo the command which would be executed
+            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+        else:
+            p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
         # fill standard input with configuration file content
         # wait until process is finished and get standard output and error streams
