@@ -19,18 +19,19 @@
 """
 This module provides the DDD class for handling depth-dose curve kernels for TRiP98.
 """
-import time
+import logging
 import os
+import time
 from glob import glob
 from numbers import Number
+
 try:
     from UserDict import UserDict  # python 2
 except ImportError:
     from collections import UserDict  # python 3
 
-import glob
-import logging
 import numpy as np
+
 from pytrip.res.interpolate import RegularInterpolator
 
 logger = logging.getLogger(__name__)
@@ -106,10 +107,10 @@ class DDDFile:
         self.data = data
 
         # B-spline representation of 1-D curve
-        self._dedz_bspline = self._get_bspline(self.de_dz)
-        self._fwhm1_bspline = self._get_bspline(self.fwhm1)  # may be None if FWHM1 data missing
-        self._factor_bspline = self._get_bspline(self.factor)  # may be None if factor data missing
-        self._fwhm2_bspline = self._get_bspline(self.fwhm2)  # may be None if FWHM2 data missing
+        self._dedz_interp_fun = self.__interp_fun(self.de_dz)
+        self._fwhm1_interp_fun = self.__interp_fun(self.fwhm1)  # may be None if FWHM1 data missing
+        self._factor_interp_fun = self.__interp_fun(self.factor)  # may be None if factor data missing
+        self._fwhm2_interp_fun = self.__interp_fun(self.fwhm2)  # may be None if FWHM2 data missing
 
     def dose(self, r_cm, z_cm):
         if self.data.shape[1] < 3:  # no information about FWHM in the files
@@ -158,10 +159,7 @@ class DDDFile:
         if z_cm is None:
             return self.data[:, 1]
         else:
-            result = interpolate.splev(
-                x=z_cm,  # points at which the interpolation should be performed
-                tck=self._dedz_bspline  # Bspline object
-            )
+            result = self._dedz_interp_fun(x=z_cm)
             return result
 
     def fwhm1(self, z_cm):
@@ -177,10 +175,7 @@ class DDDFile:
         if z_cm is None:
             return self.data[:, 2]
         else:
-            result = interpolate.splev(
-                x=z_cm,  # points at which the interpolation should be performed
-                tck=self._fwhm1_bspline  # Bspline object
-            )
+            result = self._fwhm1_interp_fun(x=z_cm)
             return result
 
     def factor(self, z_cm):
@@ -196,10 +191,7 @@ class DDDFile:
         if z_cm is None:
             return self.data[:, 3]
         else:
-            result = interpolate.splev(
-                x=z_cm,  # points at which the interpolation should be performed
-                tck=self._factor_bspline  # Bspline object
-            )
+            result = self._factor_interp_fun(x=z_cm)
             return result
 
     def fwhm2(self, z_cm):
@@ -215,10 +207,7 @@ class DDDFile:
         if z_cm is None:
             return self.data[:, 4]
         else:
-            result = interpolate.splev(
-                x=z_cm,  # points at which the interpolation should be performed
-                tck=self._fwhm2_bspline  # Bspline object
-            )
+            result = self._fwhm2_interp_fun(x=z_cm)
             return result
 
     # validate energy
@@ -250,12 +239,12 @@ class DDDFile:
         Calculate B-spline representation of dE/dz, fwhm1, factor and FWHM2
         :return:
         """
-        self._dedz_bspline = self._get_bspline(self.de_dz)
-        self._fwhm1_bspline = self._get_bspline(self.fwhm1)
-        self._factor_bspline = self._get_bspline(self.factor)
-        self._fwhm2_bspline = self._get_bspline(self.fwhm2)
+        self._dedz_interp_fun = self.__interp_fun(self.de_dz)
+        self._fwhm1_interp_fun = self.__interp_fun(self.fwhm1)
+        self._factor_interp_fun = self.__interp_fun(self.factor)
+        self._fwhm2_interp_fun = self.__interp_fun(self.fwhm2)
 
-    def _get_bspline(self, y_data):
+    def __interp_fun(self, y_data):
         """
         Calculate 1-D B-spline on a dataset with X coordinates being self.z and Y coordinates provided as param
         :param y_data:
@@ -263,10 +252,10 @@ class DDDFile:
         """
         result = None
         if y_data is not None:
-            result = self._bspline = interpolate.splrep(
+            result = RegularInterpolator(
                 x=self.z,
                 y=y_data,
-                s=0,  # no smoothing is performed, spline will pass through all points
+                kind='spline'
             )
         return result
 
@@ -275,6 +264,9 @@ class GaussianModel:
     """
     TODO
     """
+
+    def __init__(self):
+        pass
 
     fwhm_to_sigma = np.sqrt(8.0 * np.log(2))
 
@@ -306,6 +298,9 @@ class GaussianModel:
 
 class DDDFileReader:
     # list of allowed tags in DDD file, extracted from members of DDD class
+    def __init__(self):
+        pass
+
     allowed_tags = ('filetype', 'fileversion', 'filedate', 'material', 'composition', 'density', 'projectile', 'energy')
 
     @staticmethod
@@ -423,6 +418,9 @@ class DDDFileReader:
 
 
 class DDDFileWriter:
+    def __init__(self):
+        pass
+
     _ddd_header_template = """!filetype    ddd
 !fileversion   {fileversion:s}
 !filedate      {filedate:s}
