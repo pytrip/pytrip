@@ -19,83 +19,90 @@
 """
 This example demonstrates how to load a CT cube in Voxelplan format, and the associated contours.
 Then a plan is prepared and optimized using TRiP98.
-The resulting dose plan is then stored in <some_dir>.
 """
 
 import pytrip as pt
-import pytrip.tripexecuter as pte
+import pytrip.tripexecuter2 as pte
 
-# first define some paths and other important parameters
+import os
+
+# Fist we specify the directory where all our files are:
+wdir = "/home/bassler/test"
+
+# In TRiP, the patient "TST000" would typically carry the filename "TST000000"
 patient_name = "TST000000"
-ctx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.ctx"
-vdx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.vdx"
-voi_name = "GTV"
-working_directory = "/home/bassler/Projects/CTdata/TST000/"
 
-ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM"
-spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM"
-sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
-hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
-dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
+# so we can construc the paths to the CTX and VDX files like this:
+ctx_path = os.path.join(wdir, patient_name + ".ctx")
+vdx_path = os.path.join(wdir, patient_name + ".vdx")
 
-my_couch_angle = 90.0
-my_gantry_angle = 10.0
-my_target_voi = "GTV"  # the name must exist in the .vdx file
-my_projectile = "C"  # carbon ion
+# Next we load the CT cube:
+c = pt.CtxCube()
+c.read(ctx_path)
 
-# load CT cube
-my_ctx = pt.CtxCube()
-my_ctx.read(ctx_path)
+# And load the contours
+v = pt.VdxCube(c)
+v.read(vdx_path)
 
-# load VOIs
-my_vdx = pt.VdxCube(my_ctx)  # my_vdx is the object which will hold all volumes of interest and the meta information
-my_vdx.read(vdx_path)  # load the .vdx file
-print(my_vdx.get_voi_names())  # show us all VOIs found in the .vdx file
+# we may print all contours found in the Vdx file, if we want to
+print(v.get_voi_names())
 
-# next pick a the proper VOI (from the VdxCube object) which we want to plan on
-target_voi_temp = my_vdx.get_voi_by_name(my_target_voi)
+#Ok, we have the Contours and the CT cube ready. Next we must prepare a plan.
+# We may choose any basename for the patient. All output files will be named using
+# this basename.
+plan = pte.Plan(basename=patient_name)
 
-# for technical reasons the voi must be cast into a new Voi object
-# we are working on a cleaner Voi class implementation to avoid it
-target_voi = pte.Voi("GTV_VOI", target_voi_temp)
+# We need to specify where the kernel files can be found. The location may depend on the ion we
+# wnat to treat with. This example is for carbon ions:
+plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
+plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
+plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
+plan.working_dir = "/home/bassler/test/"  # working dir must exist.
 
-# Next, setup a plan. We may initialize it with a new name.
-# The name must be identical to the base name of the file, else we will have crash
-my_plan = pte.TripPlan(name=patient_name)
+# Set the plan target to the voi called "CTV" 
+plan.voi_target = v.get_voi_by_name('CTV')
 
-# set working directory, output will go there
-my_plan.set_working_dir(working_directory)
-my_plan.set_ddd_folder(ddd_dir)
-my_plan.set_spc_folder(spc_dir)
-my_plan.set_dedx_file(dedx_path)
-my_plan.set_hlut_file(hlut_path)
-my_plan.set_sis_file(sis_path)
+# some optional parameters (if not set, they will all be zero by default)
+plan.rifi = 3.0  # 3 mm ripple filter. (This is only for documentaiton, it will not affect the dose optimization.)
+plan.bolus = 0.0  # No bolus is applied here. Set this to some value, if you are to optimize very shallow tumours.
+plan.offh2o = 1.873  # Some offset mimicing the monitoring ionization chambers and exit window of the beam nozzle.
 
-# To enable remote access to trip, uncomment and eddit the following:
-# my_plan.set_remote_state(True)
-# my_plan.set_server("titan.phys.au.dk")  # location of remote TRiP98 installation. Needs SSH access.
-# my_plan.set_username("xxxxxxxxx")
-# my_plan.set_password("xxxxxxxxx")  # to login using SSH-keys, leave this commented out.
+# Next we need to specify at least one field, and add that field to the plan.
+field = pte.Field()
+field.basename = patient_name  # This name will be used for output filenames, if any field specific output is saved.
+field.gantry = 10.0  # degrees
+field.couch = 90.0  # degrees
+field.fwhm = 4.0  # spot size in [mm]
+field.projectile = 'C'
 
-# add target VOI to the plan
-my_plan.add_voi(target_voi)
-my_plan.get_vois()[0].target = True  # make TRiP98 aware of that this VOI is the target.
+print(field)  # We can print all parameters of this field, for checking.
+plan.fields.append(field)  # attach field to plan. You may attach multiple fields.
 
-# Finally we need to add a field to the plan
-# add default field, carbon ions
-my_field = pte.Field("Field 1")
-my_field.set_projectile(my_projectile)  # set the projectile
-my_field.set_couch(my_couch_angle)
-my_field.set_gantry(my_gantry_angle)
+# Next, set the flags for what output should be generated, when the plan has completed.
+plan.want_phys_dose = True  # We want a physical dose cube, "TST000000.dos"
+plan.want_bio_dose = False  # No biological cube (Dose * RBE)
+plan.want_dlet = True  # We want to have the dose-averaged LET cube
+plan.want_rst = False  # Print the raster scan files (.rst) for all fields.
 
-my_plan.add_field(my_field)
+# print(plan)  # this will print all plan parameters
 
-# the next line is needed to correctly set offset between VOI and CT
-ct_images = pt.CTImages(my_ctx)
+te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vdx cube.
 
-# run TRiP98 optimisation
-my_trip = pte.TripExecuter(ct_images.get_modified_images(my_plan))
-# TRiP98 will then run the plan and generate the requested dose plan.
-# The dose plan is stored in the working directory, and must then be loaded by the user for further processing.
-# for local execution, we assume TRiP98 binary is present in PATH env. variable
-my_trip.execute(my_plan)
+# in the case that TRiP98 is not installed locally, you may have to enable remote execution:
+# t.remote = True
+# t.servername = "titan.phys.au.dk"
+# t.username = "bassler"
+## t.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys.
+# t.remote_base_dir = "/home/bassler/test"
+# t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"  # we must specify the path to the TRiP98 binary, when running remotely.
+
+# te._norun = True  # set this to True, if we do not want to execute TRiP98, but just test if all works so far.
+te.execute(plan)  # this will run TRiP
+
+# requested results can be found in
+# plan.dosecubes[]
+# and
+# plan.letcubes[]
+# and they are also saved to working_dir
