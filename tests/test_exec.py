@@ -19,10 +19,7 @@
 """
 TODO: documentation here.
 """
-import gzip
-import hashlib
 import os
-import tempfile
 import unittest
 import logging
 
@@ -42,7 +39,7 @@ class TestLocalExec(unittest.TestCase):
 
         self.ctx_path = os.path.join(testdir, self.patient_name + '.ctx')
         self.vdx_path = os.path.join(testdir, self.patient_name + '.vdx')
-       
+
     def test_exec(self):
         logger.info("Test norun TRiP98 execution")
 
@@ -58,7 +55,7 @@ class TestLocalExec(unittest.TestCase):
 
         plan = pte.Plan(basename=self.patient_name)
         self.assertIsNotNone(plan)
-        
+
         plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
         plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
         plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
@@ -96,6 +93,7 @@ class TestLocalExec(unittest.TestCase):
         t.execute(plan)
 
         # No results will be generated since, TRiP98 is not installed in test environment.
+
 
 if __name__ == '__main__':
     unittest.main()

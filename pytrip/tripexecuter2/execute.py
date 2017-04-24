@@ -21,17 +21,16 @@ This file contains the Execute() class which can execute a Plan() object locally
 whith a complete TRiP98 installtions.
 """
 import os
+import uuid
 import shutil
 import tarfile
+import logging
 
 from subprocess import Popen, PIPE
 
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
 from pytrip.ctx import CtxCube
-
-import uuid
-import logging
 
 logger = logging.getLogger(__name__)
 
