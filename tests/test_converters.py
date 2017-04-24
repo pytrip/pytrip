@@ -36,7 +36,7 @@ import pytrip.utils.gd2agr
 import pytrip.utils.bevlet2oer
 import pytrip.utils.rst_plot
 
-from tests.test_base import get_files
+from tests.base import get_files
 
 logger = logging.getLogger(__name__)
 

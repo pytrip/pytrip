@@ -29,14 +29,14 @@ import numpy as np
 from pytrip.dos import DosCube
 from pytrip.vdx import create_sphere
 import pytriplib
-import tests.test_base
+import tests.base
 
 logger = logging.getLogger(__name__)
 
 
 class TestDos(unittest.TestCase):
     def setUp(self):
-        testdir = tests.test_base.get_files()
+        testdir = tests.base.get_files()
         self.cube000 = os.path.join(testdir, "tst003001.dos")
         logger.info("Testing cube from path " + self.cube000)
 

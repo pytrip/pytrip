@@ -19,23 +19,23 @@
 """
 TODO: documentation here.
 """
-import os
-import unittest
-import tempfile
 import logging
+import os
+import tempfile
+import unittest
 
 import pytrip as pt
-
 from pytrip.error import InputError
 from pytrip.vdx import create_cube, create_voi_from_cube, create_cylinder, create_sphere
-import tests.test_base
+
+import tests.base
 
 logger = logging.getLogger(__name__)
 
 
 class TestVdx(unittest.TestCase):
     def setUp(self):
-        testdir = tests.test_base.get_files()
+        testdir = tests.base.get_files()
         self.cube000 = os.path.join(testdir, "tst003000")
         self.vdx = os.path.join(testdir, "tst003000.vdx")
         logger.info("Cube path " + self.cube000)

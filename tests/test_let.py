@@ -27,14 +27,14 @@ import unittest
 from pytrip.vdx import create_sphere
 from pytrip.let import LETCube
 
-import tests.test_base
+import tests.base
 
 logger = logging.getLogger(__name__)
 
 
 class TestLet(unittest.TestCase):
     def setUp(self):
-        testdir = tests.test_base.get_files()
+        testdir = tests.base.get_files()
         self.let001 = os.path.join(testdir, "tst003001.dosemlet.dos")
         self.vdx000 = os.path.join(testdir, "tst003000.vdx")
 
