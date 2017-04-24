@@ -72,7 +72,7 @@ class Field():
         self.selected = False
 
     def __str__(self):
-        return(self._print())
+        return self._print()
 
     def _print(self):
         """ Pretty print all attributes.
@@ -101,7 +101,7 @@ class Field():
         else:
             out += "|  Isocenter (x,y,z)            : (not set)\n"
         out += "----------------------------------------------------------------------------\n"
-        return(out)
+        return out
 
     def set_isocenter_from_string(self, isocenter_str):
         """ Override the automatically determined isocenter from TRiP98.
