@@ -33,6 +33,8 @@ logger = logging.getLogger(__name__)
 
 class TestLocalExec(unittest.TestCase):
     def setUp(self):
+        """ Prepare test environment.
+        """
         testdir = tests.test_base.get_files()
 
         self.patient_name = "tst003000"
@@ -41,6 +43,8 @@ class TestLocalExec(unittest.TestCase):
         self.vdx_path = os.path.join(testdir, self.patient_name + '.vdx')
 
     def test_exec(self):
+        """ Prepare and execute a dry-run test using the Executer.
+        """
         logger.info("Test norun TRiP98 execution")
 
         logger.debug("Load CtxCube {:s}".format(self.ctx_path))

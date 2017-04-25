@@ -153,14 +153,14 @@ class Plan():
 
         if self.dosecubes:
             out += "+---Dose cubes:\n"
-            for _dosecube in self.dosecube:
+            for _dosecube in self.dosecubes:
                 out += "|   |                              : {:s}\n".format(_dosecube.name)
         else:
             out += "|  Dose cubes                   : (none set)\n"
 
         if self.letcubes:
             out += "+---LET cubes:\n"
-            for _letcube in self.letcube:
+            for _letcube in self.letcubes:
                 out += "|   |                              : {:s}\n".format(_letcube.name)
         else:
             out += "|  LET cubes                    : (none set)\n"
@@ -253,6 +253,9 @@ class Plan():
             f.write(self._trip_exec)
 
     def save_data(self, images, path):
+        """ Save this plan, including associated data.
+        TODO: may have to be implemented in a better way.
+        """
         from pytrip.tripexecuter2.execute import Execute
         t = Execute(images)
         t.set_plan(self)
@@ -266,17 +269,18 @@ class Plan():
     def load_let(self, path):
         """ Load and append a new LET cube from path to self.letcubes.
         """
-        if hasattr(self, "letcube"):
-            if self.letcube is not None:
-                self.remove_let(self.letcube)
 
         from pt import LETCube
         let = LETCube()
         let.read(os.path.splitext(path)[0] + ".dos")
 
+        # TODO: check if cube is already loaded, if so, dont load.
+        # UUID for LET cubes would be useful then?
         self.letcubes.append(let)
 
     def clean_voi_caches(self):
+        """ TODO: document me
+        """
         for voi in self.vois:
             voi.clean_cache()
 
@@ -291,6 +295,8 @@ class Plan():
         self.doscubes.append(dos)
 
     def destroy(self):
+        """ Destructor for Vois and Fields in this class.
+        """
         self.vois.destroy()
         self.fields.destroy()
 

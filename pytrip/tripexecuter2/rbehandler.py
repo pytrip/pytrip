@@ -72,13 +72,16 @@ class RBEHandler:
                         while not stop:
                             line = fp.readline()
                             if line.find("!celltype") > -1:
-                                fp_out.write("%s\t%s\n" % (line.split()[1], os.path.join(path, item)))
+                                fp_out.write("{:s}\t{:s}\n".format((line.split()[1],
+                                                                    os.path.join(path, item))))
                                 stop = True
                             if not line:
                                 stop = True
 
 
 class RBE:
+    """ TODO: still needs implementation.
+    """
     def __init__(self, name="", path=""):
         """
         TODO: where does the data go?

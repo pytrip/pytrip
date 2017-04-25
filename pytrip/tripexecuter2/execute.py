@@ -41,6 +41,8 @@ except:
 
 
 class Execute():
+    """ Execute class for running trip using attached Ctx, Vdx and Plan objects.
+    """
     def __init__(self, ctx, vdx):
         """ Initialize the Execute class.
         :params CtxCube() ctx: the CT images as a regular pytrip.CtxCube() object.
