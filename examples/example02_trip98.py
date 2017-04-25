@@ -47,7 +47,7 @@ v.read(vdx_path)
 # we may print all contours found in the Vdx file, if we want to
 print(v.get_voi_names())
 
-#Ok, we have the Contours and the CT cube ready. Next we must prepare a plan.
+# Ok, we have the Contours and the CT cube ready. Next we must prepare a plan.
 # We may choose any basename for the patient. All output files will be named using
 # this basename.
 plan = pte.Plan(basename=patient_name)
@@ -61,7 +61,7 @@ plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
 plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
 plan.working_dir = "/home/bassler/test/"  # working dir must exist.
 
-# Set the plan target to the voi called "CTV" 
+# Set the plan target to the voi called "CTV"
 plan.voi_target = v.get_voi_by_name('CTV')
 
 # some optional parameters (if not set, they will all be zero by default)
@@ -94,9 +94,10 @@ te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vd
 # t.remote = True
 # t.servername = "titan.phys.au.dk"
 # t.username = "bassler"
-## t.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys.
+# t.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys!
 # t.remote_base_dir = "/home/bassler/test"
-# t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"  # we must specify the path to the TRiP98 binary, when running remotely.
+# we must specify the path to the TRiP98 binary, when running remotely.
+# t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
 
 # te._norun = True  # set this to True, if we do not want to execute TRiP98, but just test if all works so far.
 te.execute(plan)  # this will run TRiP
