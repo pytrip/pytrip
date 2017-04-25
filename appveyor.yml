@@ -119,7 +119,7 @@ test_script:
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
 # exit in case of failure of a single test
 # exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
-  - ps: $exclude_tests = If ($platform -eq "x86") {"test_converters.py"} Else {""} ; Get-ChildItem -Path tests\ -Recurse -Include test*.py -Exclude $exclude_tests | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
+  - ps: $exclude_tests = If ($env:platform -eq "x86") {"test_converters.py"} Else {""} ; Get-ChildItem -Path tests\ -Recurse -Include test*.py -Exclude $exclude_tests | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
 # deploy package
   - bash appveyor\deploy_package.sh
 
