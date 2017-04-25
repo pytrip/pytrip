@@ -103,11 +103,18 @@ class Execute():
 
         return out
 
-    def execute(self, plan, _callback=None):
+    def execute(self, plan, run=True, _callback=None):
         """
         Executes the Plan() object using TRiP98.
         """
-        logger.debug("Execute TRiP98...")
+
+        if run:
+            logger.debug("Execute TRiP98...")
+            self._norun = False
+        else:
+            logger.debug("Execute TRiP98 (dry-run)...")
+            self._norun = True
+
         self._callback = _callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
         plan.save_exec(plan._exec_path)  # add the .exec as well

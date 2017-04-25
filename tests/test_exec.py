@@ -89,8 +89,7 @@ class TestLocalExec(unittest.TestCase):
 
         t = pte.Execute(c, v)
         self.assertIsNotNone(t)
-        t._norun = True  # disable TRiP execution for now
-        t.execute(plan)
+        t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
 
         # No results will be generated since, TRiP98 is not installed in test environment.
 

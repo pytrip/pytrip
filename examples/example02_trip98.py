@@ -99,8 +99,9 @@ te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vd
 # we must specify the path to the TRiP98 binary, when running remotely.
 # t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
 
-# te._norun = True  # set this to True, if we do not want to execute TRiP98, but just test if all works so far.
 te.execute(plan)  # this will run TRiP
+# te.execute(plan, False)  # set to False, if TRiP98 should not be executed. Good for testing.
+
 
 # requested results can be found in
 # plan.dosecubes[]
