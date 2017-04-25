@@ -102,7 +102,6 @@ te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vd
 te.execute(plan)  # this will run TRiP
 # te.execute(plan, False)  # set to False, if TRiP98 should not be executed. Good for testing.
 
-
 # requested results can be found in
 # plan.dosecubes[]
 # and
