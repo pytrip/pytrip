@@ -198,7 +198,7 @@ class VdxCube:
 
         :param str path: Full path including file extension.
         """
-        self.basename =  os.path.basename(path).split(".")[0]
+        self.basename = os.path.basename(path).split(".")[0]
         fp = open(path, "r")
         content = fp.read().split('\n')
         fp.close()

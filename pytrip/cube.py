@@ -730,7 +730,7 @@ class Cube(object):
 
         :param str path: Path to filename to be read, file extention may be given but is not neccesary.
         """
-        self.basename =  os.path.basename(path).split(".")[0]
+        self.basename = os.path.basename(path).split(".")[0]
         self.read_trip_data_file(path)
 
     def read_trip_header_file(self, path):  # TODO: could be made private? #126
