@@ -56,12 +56,12 @@ class TestLocalExec(unittest.TestCase):
         plan = pte.Plan(basename=self.patient_name)
         self.assertIsNotNone(plan)
 
-        plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-        plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-        plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
-        plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
-        plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
-        plan.working_dir = "/home/bassler/test/"  # working dir must exist.
+        plan.ddd_dir = "~/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+        plan.spc_dir = "~/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+        plan.sis_path = "~/TRiP98/base/DATA/SIS/12C.sis"
+        plan.hlut_path = "~/TRiP98/base/DATA/HLUT/19990218.hlut"
+        plan.dedx_path = "~/TRiP98/base/DATA/DEDX/20040607.dedx"
+        plan.working_dir = "."  # working dir must exist.
 
         # add the target voi to the plan
         plan.voi_target = v.get_voi_by_name('target')
