@@ -117,11 +117,11 @@ def rbe_mcnamara(dose, let, abx):
 
 def _rbe_apx(dose, apx, bpx, abx):
     """
-    :params dose: proton dose
-    :params apx: alpha_p / alpha_x
-    :params bpx: beta_p / beta_x
-    :params abx: alpha_x / beta_x
+    :params dose: proton dose      [Gy]
+    :params apx: alpha_p / alpha_x [dimensionless] RBE_max = ap/ax when (dose -> 0 Gy)
+    :params bpx: beta_p / beta_x   [dimensionless] RBE_min = sqrt(bp/bx) when (dose -> inf Gy)
+    :params abx: alpha_x / beta_x  [Gy^-1]
     """
 
-    rbe = np.sqrt(abx*abx + 4*apx*abx*dose + 4*bpx*dose*dose - abx) / (2 * dose)
-    return rbe
+    _rbe = (np.sqrt(abx*abx + 4*abx*apx*dose + 4*bpx * dose*dose) - abx) / (2 * dose)
+    return _rbe
