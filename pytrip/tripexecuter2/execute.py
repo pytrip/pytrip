@@ -43,20 +43,33 @@ except:
 class Execute():
     """ Execute class for running trip using attached Ctx, Vdx and Plan objects.
     """
-    def __init__(self, ctx, vdx):
+    def __init__(self, ctx, vdx, ctx_path="", vdx_path=""):
         """ Initialize the Execute class.
         :params CtxCube() ctx: the CT images as a regular pytrip.CtxCube() object.
         :params VdxCube() ctx: the contours as a regular pytrip.VdxCube() object.
 
         If the Ctx and Vdx obejcts are constant, this object can be used to execute multiple
         plans in parallel.
+
+        pytrip will write the Ctx and Vdx cube to a temporary directory where all will
+        be dealt with. However, as it is right now, PyTRiP98 has sometimes trouble
+        to convert to something which is readable TRiP98.
+        For this case, we provide these optional hooks, where paths to Ctx and Vdx files can be
+        specified, these will then be copied directly without any internal conversion.
+        :params str ctx_path: optional source of .ctx cube, will override ctx.write()
+        :params str vdx_path: optional source of .vdx cube, will override vdx.write()
         """
 
         logger.debug("Initializing TripExecuter()")
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this execute object
+
         self.ctx = ctx
+        self._ctx_path = ctx_path
+
         self.vdx = vdx
+        self._vdx_path = vdx_path
+
         self.listeners = []
 
         # TODO: this should be only the TRiP98 command, and not the full path
@@ -132,6 +145,9 @@ class Execute():
         """
 
         # attach working dir to plan, but expanded for environment variables
+        if not plan.working_dir:
+            logger.warning("No working directory was specified for plan. Setting it to ./")
+            plan.working_dir = "./"
         plan._working_dir = os.path.expandvars(plan.working_dir)
 
         # We will not run TRiP98 in working dir, but in an isolated subdirectory which will be
@@ -169,8 +185,21 @@ class Execute():
 
         # Ctx and Vdx files are not copied, but written from the objects passed to Execute() during __init__.
         # This gives the user better control over what Ctx and Vdx should be based for the planning.
-        self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
-        self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
+        # Copying can though be forced by specifying .ctx and .vdx path durin self.__init__
+        # This is neccessary as long as PyTRiP has trouble to produce TRiP98 readable files reliably.
+        if self._ctx_path:
+            _ctx_base, _ = os.path.splitext(self._ctx_path)
+            logger.info("Copying {:s} to tmp dir, instead of writing from Ctx object.".format(self._ctx_path))
+            shutil.copy(self._ctx_path, plan._temp_dir)  # copy .ctx
+            shutil.copy(_ctx_base + ".hed", plan._temp_dir)  # copy.hed
+        else:
+            self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
+
+        if self._vdx_path:
+            logger.info("Copying {:s} to tmp dir, instead of writing from Vdx object.".format(self._vdx_path))
+            shutil.copy(self._vdx_path, plan._temp_dir)
+        else:
+            self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
 
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
@@ -308,10 +337,10 @@ class Execute():
 
             # only copy files back, if we achtually have been running TRiP
             if self._norun:
-                logger.debug("dummy run: would now copy {:s} to {:s}".format(_path, plan._working_dir))
+                logger.info("dummy run: would now copy {:s} to {:s}".format(_path, plan._working_dir))
             else:
+                logger.info("copy {:s} to {:s}".format(_path, plan._working_dir))
                 shutil.copy(_path, plan._working_dir)
-                logger.debug("copy {:s} to {:s}".format(_path, plan._working_dir))
 
         for _fn in plan._out_files:
             _path = os.path.join(plan._temp_dir, _fn)

@@ -32,6 +32,14 @@ logger = logging.getLogger(__name__)
 class Plan():
     """ Class of handling plans.
     """
+    # list of projectile name - charge and most common isotope.
+    _projectile_defaults = {"H": (1, 1),
+                            "He": (2, 4),
+                            "Li": (3, 7),
+                            "C": (6, 12),
+                            "O": (8, 16),
+                            "Ne": (10, 20),
+                            "Ar": (16, 40)}
 
     _opt_principles = {"H2Obased": "Very simplified single field optimization",
                        "CTbased": "Full optimization, multiple fields"}
@@ -85,6 +93,8 @@ class Plan():
         self.hlut_path = "$TRIP98/DATA/19990211.hlut"
         self.dedx_path = "$TRIP98/DATA/DEDX/20040607.dedx"
 
+        self.projectile = "C"  # these are needed by makesis possibly
+        self.projectile_a = 12  # these are needed by makesis possibly
         self.res_tissue_type = ""
         self.target_tissue_type = ""
         self.active = False
@@ -97,6 +107,7 @@ class Plan():
         self.bio_alg = "cl"
         self.eps = 1e-3
         self.geps = 1e-4
+        self.sis = None  # placeholder for sis parameters
 
         # Scancap parameters:
         # Thickness of ripple filter (0.0 for none)
@@ -126,6 +137,7 @@ class Plan():
         self.incube_basename = ""  # To enable incube optimization, set the basename of the cube to be loaded by TRiP
 
         self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
+        self._make_sis = ""  # placeholder for generate sistable command
 
     def __str__(self):
         return self._print()
@@ -173,6 +185,10 @@ class Plan():
         out += "|   SIS path                    : {:s}\n".format(self.sis_path)
         out += "|   HLUT path                   : {:s}\n".format(self.hlut_path)
         out += "|   dE/dx path                  : {:s}\n".format(self.dedx_path)
+
+        out += "|\n"
+        out += "| Sis table generation\n"
+        out += "|   {:s}\n".format(self._make_sis)
 
         out += "|\n"
         out += "| Optimization parameters\n"
@@ -371,8 +387,10 @@ class Plan():
         if self.sis_path:
             output.append('sis "{:s}" / read'.format(self.sis_path))
         else:
-            # TODO: check on projectile, and adapt parameters accordingy
-            output.append("makesis 12C / focus(4,6,8,10) intensity(1E4,1E5,1E6) position(2 TO 40 BY 0.1)")
+            if not self._make_sis:
+                logger.error("No SIS table loaded or generated.")
+                raise
+            output.append(self._make_sis)
 
         # Scancap:
         opt = "scancap / offh2o({:.3f})".format(self.offh2o)
@@ -393,10 +411,10 @@ class Plan():
 
         output = []
         output.append("ct \"{:s}\" / read".format(self.basename))
-        output.append("voi \"{:s}\" / read select({:s})".format(self.basename,
-                                                                _name))
-        output.append("voi {:s} / maxdosefraction({:.3f})".format(_name,
-                                                                  self.target_dose_percent * 0.01))
+        output.append("voi \"{:s}\" / read select(\"{:s}\")".format(self.basename,
+                                                                    _name))
+        output.append("voi \"{:s}\" / maxdosefraction({:.3f})".format(_name,
+                                                                      self.target_dose_percent * 0.01))
         return output
 
     def _make_exec_fields(self):
@@ -574,3 +592,30 @@ class Plan():
             output.append("rbe '{:s}' / read".format(rbe.path))
 
         return output
+
+    def make_sis(self, projectile, focus=(), intensity=(), position=(), path="", write=False):
+        """
+        Creates a SIS table based on path, focus, intensity and position.
+        example:
+        plan.make_sis("1H", "4", "1E6,1E7,1E8", (2, 20, 0.1))
+        results in:
+        makesis 1H / focus(4) intensity(1E6,1E7,1E8) position(2 TO 20 BY 0.1)
+
+        :params str projectile" such as "12C" or "1H"
+        :params str focus: comma-delimited list of FWHM focus positions in [mm], such as "2,4,6,8"
+        :params str intensities: tuple/list of intensities, such as "1E6,1E7,1E8"
+        :params float position: tuple describing min/max/step range, i.e. (5,40,0.1) for 5 to 40 cm in 1 mm steps.
+        :params path: write path
+        :params write: Set to True, if the generated sis file should be written to path when executed.
+        """
+
+        self._make_sis = "makesis {:s} /".format(projectile)
+        if focus:
+            self._make_sis += " focus({:s})".format(focus)
+        if intensity:
+            self._make_sis += " intensity({:s})".format(intensity)
+        if position:
+            self._make_sis += " position({:.2f} TO {:.2f} BY {:.2f})".format(position[0], position[1], position[2])
+
+        if write:
+            self._make_sis += "sis \n{:s} / write".format(path)

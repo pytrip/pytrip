@@ -82,7 +82,7 @@ class Field():
         out += "----------------------------------------------------------------------------\n"
         out += "|  UUID                         : {:s}\n".format(self.__uuid__)
         out += "|  Projectile                   : {:s}-{:s}\n".format(self.projectile,
-                                                                      self.projectile_a)
+                                                                      str(self.projectile_a))
         out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
         out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
         out += "|\n"
