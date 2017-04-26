@@ -236,6 +236,13 @@ class Execute():
         """
         logger.info("Run TRiP98 in LOCAL mode.")
 
+        trip, ver = self.test_local_trip()
+        if trip is None:
+            logger.error("Could not find TRiP98 using path \"{:s}\"".format(self.trip_bin_path))
+            raise EnvironmentError
+        else:
+            logger.info("Found {:s} version {:s}".format(trip, ver))
+
         # stdout and stderr are always written locally
         _stdout_path = os.path.join(plan._working_dir, self.logfile_prefix_stdout + plan.basename)
         _stderr_path = os.path.join(plan._working_dir, self.logfile_prefix_stderr + plan.basename)
@@ -547,6 +554,24 @@ class Execute():
         sftp = paramiko.SFTPClient.from_transport(transport)
 
         return sftp, transport
+
+    def test_local_trip(self):
+        """ Test if TRiP98 can be reached locally.
+        :returns tripname, tripver: Name of TRiP98 installation and its version.
+        :returns: None, None if not installed
+        """
+
+        p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+        stdout, stderr = p.communicate("exit".encode('ascii'))
+
+        _out = stdout.decode('utf-8')
+
+        if "This is TRiP98" in _out:
+            tripname = _out.split(" ")[3][:-1]
+            tripver = _out.split(" ")[5].split("(")[0]
+            return tripname, tripver
+        else:
+            return None, None
 
     def test_remote_trip(self):
         """ Test if TRiP98 can be reached remotely.
