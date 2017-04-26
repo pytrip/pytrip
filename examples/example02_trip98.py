@@ -20,11 +20,14 @@
 This example demonstrates how to load a CT cube in Voxelplan format, and the associated contours.
 Then a plan is prepared and optimized using TRiP98.
 """
+import os
+import logging
 
 import pytrip as pt
 import pytrip.tripexecuter2 as pte
 
-import os
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)  # give some output on what is going on.
 
 # Fist we specify the directory where all our files are:
 wdir = "/home/bassler/test"
@@ -91,13 +94,15 @@ plan.want_rst = False  # Print the raster scan files (.rst) for all fields.
 te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vdx cube.
 
 # in the case that TRiP98 is not installed locally, you may have to enable remote execution:
-# t.remote = True
-# t.servername = "titan.phys.au.dk"
-# t.username = "bassler"
-# t.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys!
-# t.remote_base_dir = "/home/bassler/test"
-# we must specify the path to the TRiP98 binary, when running remotely.
-# t.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
+# te.remote = True
+# te.servername = "titan.phys.au.dk"
+# te.username = "bassler"
+# te.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys!
+# te.remote_base_dir = "/home/bassler/test"
+# depending on the remote .bashrc_profile setup, it may be needed to specify the full path
+# for the remote TRiP installation. On some systems the $PATH is set, so this line can be omitted,
+# or shortened to just "TRiP98"
+# te.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
 
 te.execute(plan)  # this will run TRiP
 # te.execute(plan, False)  # set to False, if TRiP98 should not be executed. Good for testing.

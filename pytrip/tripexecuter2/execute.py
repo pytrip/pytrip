@@ -303,18 +303,29 @@ class Execute():
         else:
             norun = ""
 
-        # The TRiP98 command must be encapsulated in a bash -lc "TRiP98 < fff.exec" so the $PATH vars etc are set.
-        _tripcmd = self.trip_bin_path + " < " + remote_exec_fn
+        # The TRiP98 command must be encapsulated in a bash -l -c "TRiP98 < fff.exec"
+        # then .bashrc_profile is checked. (However, not .bashrc)
+        _tripcmd = "bash -l -c \"" + self.trip_bin_path + " < " + remote_exec_fn + "\""
 
         commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
-                    "cd " + remote_run_dir + ";" + norun + "bash -l -c \"" + _tripcmd + "\"",
+                    "cd " + remote_run_dir + ";" + norun + _tripcmd,
                     "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
                     "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
         fp_stdout = open((_stdout_path), "w")
         fp_stderr = open((_stderr_path), "w")
 
-        # execute the list of commands on the remote server
+        # test if TRiP is installed
+        logger.debug("Test if TRiP98 can be reached remotely...")
+        trip, ver = self.test_remote_trip()
+        if trip is None:
+            logger.error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername,
+                                                                                    self.trip_bin_path))
+            raise EnvironmentError
+        else:
+            logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
+
+        # open ssh channel and run commands
         ssh = self._get_ssh_client()
         for _cmd in commands:
             logger.debug("Execute on remote server: {:s}".format(_cmd))
@@ -536,3 +547,26 @@ class Execute():
         sftp = paramiko.SFTPClient.from_transport(transport)
 
         return sftp, transport
+
+    def test_remote_trip(self):
+        """ Test if TRiP98 can be reached remotely.
+        :returns tripname, tripver: Name of TRiP98 installation and its version.
+        :returns: None, None if not installed
+        """
+
+        # execute the list of commands on the remote server
+        _tripcmd_test = "bash -l -c \"" + "cat exit | " + self.trip_bin_path + "\""
+
+        # test if TRiP98 can be reached
+
+        ssh = self._get_ssh_client()
+        stdin, stdout, stderr = ssh.exec_command(_tripcmd_test)
+        _out = stdout.read().decode('utf-8')
+        ssh.close()
+
+        if "This is TRiP98" in _out:
+            tripname = _out.split(" ")[3][:-1]
+            tripver = _out.split(" ")[5].split("(")[0]
+            return tripname, tripver
+        else:
+            return None, None
