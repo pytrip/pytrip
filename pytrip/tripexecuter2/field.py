@@ -80,7 +80,7 @@ class Field():
         out = "\n"
         out += "   Field {:d} '{:s}'\n".format(self.number, self.basename)
         out += "----------------------------------------------------------------------------\n"
-        out += "|  UUID                         : {:s}\n".format(self.__uuid__)
+        out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
         out += "|  Projectile                   : {:s}-{:s}\n".format(self.projectile,
                                                                       str(self.projectile_a))
         out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)

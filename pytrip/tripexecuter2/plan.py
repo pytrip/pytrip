@@ -148,7 +148,7 @@ class Plan():
         out = "\n"
         out += "   Plan '{:s}'\n".format(self.basename)
         out += "----------------------------------------------------------------------------\n"
-        out += "|  UUID                         : {:s}\n".format(self.__uuid__)
+        out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
         out += "|  Target VOI                   : {:s}\n".format(self.voi_target.name)
         if self.vois_oar:
             for _oar in self.vois_oar:
