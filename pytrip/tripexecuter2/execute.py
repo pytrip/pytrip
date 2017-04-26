@@ -303,8 +303,11 @@ class Execute():
         else:
             norun = ""
 
+        # The TRiP98 command must be encapsulated in a bash -lc "TRiP98 < fff.exec" so the $PATH vars etc are set.
+        _tripcmd = self.trip_bin_path + " < " + remote_exec_fn
+
         commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
-                    "cd " + remote_run_dir + ";" + norun + "bash -lc " + self.trip_bin_path + " < " + remote_exec_fn,
+                    "cd " + remote_run_dir + ";" + norun + "bash -l -c \"" + _tripcmd + "\"",
                     "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
                     "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
@@ -317,10 +320,10 @@ class Execute():
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
             stdin, stdout, stderr = ssh.exec_command(_cmd)
-            answer_stdout = stdout.read()
-            answer_stderr = stderr.read()
-            logger.debug("Remote answer stdout: {:s}".format(answer_stdout))
-            logger.debug("Remote answer stderr: {:s}".format(answer_stderr))
+            answer_stdout = stdout.read().decode('utf-8')
+            answer_stderr = stderr.read().decode('utf-8')
+            logger.info("Remote answer stdout:\n{:s}".format(answer_stdout))
+            logger.info("Remote answer stderr:\n{:s}".format(answer_stderr))
             fp_stdout.write(answer_stdout)
             fp_stderr.write(answer_stderr)
             self.log(answer_stdout)
@@ -520,8 +523,6 @@ class Execute():
             else:
                 # login with provided username + private key
                 rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
-                print(dir(rsa_key))
-                print(type(rsa_key))
                 try:
                     transport.connect(username=self.username, pkey=rsa_key)
                 except:
