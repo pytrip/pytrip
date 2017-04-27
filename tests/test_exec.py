@@ -35,7 +35,7 @@ class TestLocalExec(unittest.TestCase):
     def setUp(self):
         """ Prepare test environment.
         """
-        testdir = tests.test_base.get_files()
+        testdir = tests.base.get_files()
 
         self.patient_name = "tst003000"
 
