@@ -43,8 +43,7 @@ def tcp_voi(sf, voi=None, ncells=1.0, fractions=1):
     tcp = 0
 
     if voi is None:
-        # make a new mask which is true in all pixel values
-        mask = np.ones(sf.shape, dtype=bool)
+        mask = None
     else:
         # mark ony those values as true, which are within the VOI
         voi_cube = voi.get_voi_cube()

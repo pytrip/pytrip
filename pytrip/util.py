@@ -20,6 +20,8 @@
 Module with auxilliary functions (mostly internal use).
 """
 
+import numpy as np
+
 
 def get_class_name(item):
     """
@@ -45,7 +47,7 @@ def evaluator(funct, name='funct'):
     return f
 
 
-def volume_histogram(cube, voi=None):
+def volume_histogram(cube, voi=None, bins=256):
     """
     Generic volume histogram calculator, useful for DVH and LVH or similar.
 
@@ -58,18 +60,18 @@ def volume_histogram(cube, voi=None):
     Providing voi will slow down this function a lot, so if in a loop, it is recommended to do masking
     i.e. only provide Dos.cube[mask] instead.
     """
-    import numpy as np
 
     if voi is None:
-        mask = np.ones(cube.shape, dtype=bool)
+        mask = None
     else:
         vcube = voi.get_voi_cube()
-        mask = (vcube == 1000)
+        mask = (vcube.cube == 1000)
 
     _xrange = (0.0, cube.max()*1.1)
-    _hist, x = np.histogram(cube[mask], bins=256, range=_xrange)
+    _hist, x = np.histogram(cube[mask], bins=bins, range=_xrange)
     _fhist = np.flip(_hist, axis=0)  # reverse historgram, so first element is for highest dose
     _fhist = np.cumsum(_fhist)
     _hist = np.flip(_fhist, axis=0)  # flip back again to normal representation
     y = 100.0 * _hist / _hist[0]
+
     return x[:-1], y  # TODO: think about what a proper representation would be
