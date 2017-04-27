@@ -68,8 +68,8 @@ def volume_histogram(cube, voi=None):
 
     _xrange = (0.0, cube.max()*1.1)
     _hist, x = np.histogram(cube[mask], bins=256, range=_xrange)
-    _fhist = np.fliplr([_hist])[0]  # reverse historgram, so first element is for highest dose
+    _fhist = np.flip(_hist, axis=0)  # reverse historgram, so first element is for highest dose
     _fhist = np.cumsum(_fhist)
-    _hist = np.fliplr([_fhist])[0]  # flip back again to normal
+    _hist = np.flip(_fhist, axis=0)  # flip back again to normal representation
     y = 100.0 * _hist / _hist[0]
     return x[:-1], y  # TODO: think about what a proper representation would be
