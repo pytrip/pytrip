@@ -54,3 +54,16 @@ def rbe_from_sf(sf_ion, dose_ion, alpha_x, beta_x):
     if rbe < 0:
         logger.warning("negative rbe encountered")
     return rbe
+
+
+def lq(dose_x, alpha_x, beta_x):
+    """
+    Linear-quadratic survival model. (LQ-model)
+
+    Returns surviving fraction for a given dose, alpha and beta for X-rays.
+
+    :params float dose: x-ray physical dose in [Gy] (cube or scalar)
+    :params float alpha_x: alpha value for x-rays [Gy^-1] (cube or scalar)
+    :params float beta_x: beta value for x-rays [Gy^-2] (cube or scalar)
+    """
+    return np.exp(-alpha_x * dose_x - beta_x * dose_x * dose_x)
