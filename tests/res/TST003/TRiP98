@@ -1,0 +1,4 @@
+#!/bin/bash
+# simulated TRiP98
+echo "--- This is TRiP98-64, Version 1310(compiled May 27 2014 19:45:59), (C) M.Kraemer@gsi.de ---"
+echo "    @ grgalt(Linux #1 SMP Debian 4.9.18-1 (2017-03-30) 4.9.0-2-amd64)."

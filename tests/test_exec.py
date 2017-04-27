@@ -41,6 +41,7 @@ class TestLocalExec(unittest.TestCase):
 
         self.ctx_path = os.path.join(testdir, self.patient_name + '.ctx')
         self.vdx_path = os.path.join(testdir, self.patient_name + '.vdx')
+        self.trip_path = os.path.join(testdir, "TRiP98")
 
     def test_exec(self):
         """ Prepare and execute a dry-run test using the Executer.
@@ -93,6 +94,8 @@ class TestLocalExec(unittest.TestCase):
 
         t = pte.Execute(c, v)
         self.assertIsNotNone(t)
+        t.trip_bin_path = self.trip_path
+        print(self.trip_path)
         t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
 
         # No results will be generated since, TRiP98 is not installed in test environment.
