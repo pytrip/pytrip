@@ -43,3 +43,33 @@ def evaluator(funct, name='funct'):
 
     f.__name__ = name
     return f
+
+
+def volume_histogram(cube, voi=None):
+    """
+    Generic volume histogram calculator, useful for DVH and LVH or similar.
+
+    :params cube: a data cube of any shape, e.g. Dos.cube
+    :params voi: optional voi where histogramming will happen.
+    :returns [x],[y]: coordinates ready for plotting. Dose (or LET) along x, Normalized volume along y in %.
+
+    If VOI is not given, it will calculate the histogram for the entire dose cube.
+
+    Providing voi will slow down this function a lot, so if in a loop, it is recommended to do masking
+    i.e. only provide Dos.cube[mask] instead.
+    """
+    import numpy as np
+
+    if voi is None:
+        mask = np.ones(cube.shape, dtype=bool)
+    else:
+        vcube = voi.get_voi_cube()
+        mask = (vcube == 1000)
+
+    _xrange = (0.0, cube.max()*1.1)
+    _hist, x = np.histogram(cube[mask], bins=256, range=_xrange)
+    _fhist = np.fliplr([_hist])[0]  # reverse historgram, so first element is for highest dose
+    _fhist = np.cumsum(_fhist)
+    _hist = np.fliplr([_fhist])[0]  # flip back again to normal
+    y = 100.0 * _hist / _hist[0]
+    return x[:-1], y  # TODO: think about what a proper representation would be
