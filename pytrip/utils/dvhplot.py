@@ -45,7 +45,7 @@ def main(args=sys.argv[1:]):
     parser.add_argument("-d", "--dose", type=float, dest='dose', metavar='dose',
                         help="Taget dose in [Gy]", default=-1.0)
     parser.add_argument("-o", "--output", type=str, dest='output', metavar='filename',
-                        help="Don't open GUI, save to filename instead.", default=-1.0)
+                        help="Don't open GUI, save to filename instead.", default=None)
     parser.add_argument("-l", "--legend", dest='legend', default=False, action='store_true',
                         help="Print legend box")
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
@@ -93,7 +93,7 @@ def main(args=sys.argv[1:]):
         plt.xlabel("")  # unknown data cube
 
     for roi in rois:
-        print(roi)
+        logger.info("Processing ROI '{:s}'...".format(roi))
         voi = v.get_voi_by_name(roi)
         x, y = volume_histogram(d.cube, voi)
         if d.type == 'DOS':
