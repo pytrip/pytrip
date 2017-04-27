@@ -26,7 +26,7 @@ import logging
 import pytrip as pt
 import pytrip.tripexecuter2 as pte
 
-import tests.test_base
+import tests.base
 
 logger = logging.getLogger(__name__)
 
