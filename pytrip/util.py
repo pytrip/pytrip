@@ -72,6 +72,8 @@ def volume_histogram(cube, voi=None, bins=256):
     _fhist = np.flip(_hist, axis=0)  # reverse historgram, so first element is for highest dose
     _fhist = np.cumsum(_fhist)
     _hist = np.flip(_fhist, axis=0)  # flip back again to normal representation
-    y = 100.0 * _hist / _hist[0]
 
-    return x[:-1], y  # TODO: think about what a proper representation would be
+    y = 100.0 * _hist / _hist[0]  # volume histograms always plot the right edge of bin, since V(D < x_pos).
+    y = np.insert(y, 0, 100.0, axis=0)  # but the leading bin edge is always at V = 100.0%
+
+    return x, y
