@@ -18,7 +18,7 @@
 #
 """
 This file contains the Execute() class which can execute a Plan() object locally or on a remote server
-whith a complete TRiP98 installtions.
+with a complete TRiP98 installations.
 """
 import os
 import uuid
@@ -188,8 +188,8 @@ class Execute():
 
         # Ctx and Vdx files are not copied, but written from the objects passed to Execute() during __init__.
         # This gives the user better control over what Ctx and Vdx should be based for the planning.
-        # Copying can though be forced by specifying .ctx and .vdx path durin self.__init__
-        # This is neccessary as long as PyTRiP has trouble to produce TRiP98 readable files reliably.
+        # Copying can though be forced by specifying .ctx and .vdx path during self.__init__
+        # This is necessary as long as PyTRiP has trouble to produce TRiP98 readable files reliably.
         if self._ctx_path:
             _ctx_base, _ = os.path.splitext(self._ctx_path)
             logger.info("Copying {:s} to tmp dir, instead of writing from Ctx object.".format(self._ctx_path))
@@ -249,8 +249,8 @@ class Execute():
         logger.debug("Write stdout to {:s}".format(_stdout_path))
         logger.debug("Write stderr to {:s}".format(_stderr_path))
 
-        fp_stdout = open((_stdout_path), "w")
-        fp_stderr = open((_stderr_path), "w")
+        fp_stdout = open(_stdout_path, "w")
+        fp_stderr = open(_stderr_path, "w")
 
         _pwd = os.getcwd()
         os.chdir(_run_dir)
@@ -288,7 +288,7 @@ class Execute():
 
         tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
 
-        # prepare relvant dirs and paths
+        # prepare relevant dirs and paths
         _, tgz_filename = os.path.split(tar_path)
         remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
         local_tgz_path = os.path.join(plan._working_dir, tgz_filename)
@@ -319,9 +319,6 @@ class Execute():
                     "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
                     "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
 
-        fp_stdout = open((_stdout_path), "w")
-        fp_stderr = open((_stderr_path), "w")
-
         # test if TRiP is installed
         logger.debug("Test if TRiP98 can be reached remotely...")
         trip, ver = self.test_remote_trip()
@@ -331,6 +328,9 @@ class Execute():
             raise EnvironmentError
         else:
             logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
+
+        fp_stdout = open(_stdout_path, "w")
+        fp_stderr = open(_stderr_path, "w")
 
         # open ssh channel and run commands
         ssh = self._get_ssh_client()
@@ -345,9 +345,9 @@ class Execute():
             fp_stdout.write(answer_stdout)
             fp_stderr.write(answer_stderr)
             self.log(answer_stdout)
-        ssh.close()
         fp_stdout.close()
         fp_stderr.close()
+        ssh.close()
 
         self._copy_file_from_server(remote_tgz_path, local_tgz_path)
         self._extract_tarball(remote_tgz_path, plan._working_dir)

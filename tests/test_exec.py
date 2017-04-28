@@ -96,7 +96,8 @@ class TestLocalExec(unittest.TestCase):
         self.assertIsNotNone(t)
         t.trip_bin_path = self.trip_path
         print(self.trip_path)
-        t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
+        if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
+            t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
 
         # No results will be generated since, TRiP98 is not installed in test environment.
 
