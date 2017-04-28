@@ -27,6 +27,7 @@ import argparse
 import pytrip as pt
 from pytrip.util import volume_histogram
 
+import matplotlib
 
 logger = logging.getLogger(__name__)
 
@@ -34,13 +35,6 @@ logger = logging.getLogger(__name__)
 def main(args=sys.argv[1:]):
     """ Main function for dvhplot.py
     """
-
-    # there are some cases when this script is run on systems without DISPLAY variable being set
-    # in such case matplotlib backend has to be explicitly specified
-    # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib.pyplot as plt
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -71,6 +65,14 @@ def main(args=sys.argv[1:]):
     dose = parsed_args.dose
     legend = parsed_args.legend
     outfile = parsed_args.output
+
+    # there are some cases when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # despite the fact interleaving imports with code lines is discouraged, we do it here
+    # as it depends on the users options
+    if outfile:
+        matplotlib.use('Agg')
+    import matplotlib.pyplot as plt
 
     d = pt.DosCube()
     d.read(path_cube)
