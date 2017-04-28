@@ -54,15 +54,13 @@ def load_data_cube(filename):
     #
     # looping over classes is used in case support for other cubes needs to be added and to avoid code duplication
     for cube_cls in (pt.LETCube, pt.DosCube):
-        data_header, _ = cube_cls.parse_path(filename)  # parse input file path
+        data_header = cube_cls.header_file_name(filename)  # parse input file path
         logger.debug("Checking if {:s} fits with {:s} class".format(filename, cube_cls.__name__))
         if data_header is not None:  # parsing successful
             logger.debug("Extracted data header {:s}".format(data_header))
 
             # extracting basename
-            # we are not using python splitext function, as LET cube has double extension: .dosemlet.dos
-            basename_end_index = data_header.rfind(cube_cls.header_file_extension)
-            basename_cube = data_header[:basename_end_index]
+            basename_cube, _, _ = cube_cls.parse_path(filename)
 
             d = cube_cls()  # creating cube object, reading file will be done later
             break  # escaping from the loop
@@ -77,7 +75,7 @@ def load_data_cube(filename):
         dmin = d.cube.min()
         logger.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
     else:
-        logger.warn("Filename " + filename + " is neither valid DOS nor LET cube")
+        logger.warning("Filename " + filename + " is neither valid DOS nor LET cube")
 
     return d, basename_cube
 
@@ -90,17 +88,17 @@ def load_ct_cube(filename):
     """
 
     if not filename:
-        logger.warn("Empty CT cube filename")
+        logger.warning("Empty CT cube filename")
         return None, None
 
     logger.info("Reading " + filename)
-    ctx_header, _ = pt.CtxCube.parse_path(filename)
+    ctx_header = pt.CtxCube.header_file_name(filename)
 
     if ctx_header is None:
-        logger.warn("Path " + filename + " doesn't seem to point to proper CT cube")
+        logger.warning("Path " + filename + " doesn't seem to point to proper CT cube")
         return None, None
 
-    basename_cube = os.path.splitext(ctx_header)[0]
+    basename_cube, _, _ = pt.CtxCube.parse_path(filename)
     c = pt.CtxCube()
     c.read(filename)
     logger.info("CT cube shape" + str(c.cube.shape))

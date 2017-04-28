@@ -50,7 +50,7 @@ def main(args=sys.argv[1:]):
 
     output_dir = parsed_args.outputdir
 
-    _, data_file_name = pt.CtxCube.parse_path(parsed_args.ctx_data)
+    data_file_name = pt.CtxCube.data_file_name(parsed_args.ctx_data)
     data_file_path = pt.CtxCube.discover_file(data_file_name)
 
     if not os.path.exists(data_file_path):

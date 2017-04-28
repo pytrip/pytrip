@@ -270,9 +270,8 @@ class DosCube(Cube):
         :param str path: Path, any file extentions will be ignored.
         """
 
-        header_file, dos_file = self.parse_path(path_name=path)
-        self._write_trip_header(header_file)
-        self._write_trip_data(dos_file)
+        self._write_trip_header(self.header_file_name(path))
+        self._write_trip_data(self.data_file_name(path))
 
     def write_dicom(self, directory):
         """ Write Dose-data to disk, in Dicom format.

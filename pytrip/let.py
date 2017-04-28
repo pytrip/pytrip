@@ -46,9 +46,8 @@ class LETCube(Cube):
 
         """
 
-        header_file, let_file = self.parse_path(path_name=path)
-        self._write_trip_header(header_file)
-        self._write_trip_data(let_file)
+        self._write_trip_header(self.header_file_name(path))
+        self._write_trip_data(self.data_file_name(path))
 
     def get_max(self):
         """ Returns the largest value in the LETCube.

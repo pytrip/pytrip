@@ -559,43 +559,43 @@ class Cube(object):
     def parse_path(cls, path_name):
         """
         Parse path_name which can have form of: bare name (i.e. TST001), plain file (TST001.hed or TST001.ctx),
-        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates plain file names of
+        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates basename and extensions for 
         header and data file. Extension of data file is extracted from the class from which this method was called
         (.ctx for CtxCube, .dos for DosCube, .dosemlet.dos for LetCube). In case of non-parseable data None is returned.
 
         >>> from pytrip import CtxCube
         >>> CtxCube.parse_path("frodo.hed")
-        ('frodo.hed', 'frodo.ctx')
+        ('frodo', 'hed', 'ctx')
         >>> CtxCube.parse_path("baggins.ctx")
-        ('baggins.hed', 'baggins.ctx')
+        ('baggins', 'hed', 'ctx')
         >>> CtxCube.parse_path("mordor")
-        ('mordor.hed', 'mordor.ctx')
+        ('mordor', 'hed', 'ctx')
         >>> CtxCube.parse_path("legolas.hed.gz")
-        ('legolas.hed', 'legolas.ctx')
+        ('legolas', 'hed', 'ctx')
         >>> CtxCube.parse_path("gimli.son.of.gloin.ctx.gz")
-        ('gimli.son.of.gloin.hed', 'gimli.son.of.gloin.ctx')
+        ('gimli.son.of.gloin', 'hed', 'ctx')
         >>> CtxCube.parse_path("bilbo.dos")
-        (None, None)
+        (None, 'hed', 'ctx)
         >>> pt.CtxCube.parse_path("/home/pytrip/patient.ctx")
-        ('/home/pytrip/patient.hed', '/home/pytrip/patient.ctx')
+        ('/home/pytrip/patient', 'hed', 'ctx')
         >>> from pytrip import DosCube
         >>> DosCube.parse_path("bilbo.dos")
-        ('bilbo.hed', 'bilbo.dos')
+        ('bilbo', 'hed', 'dos')
         >>> DosCube.parse_path("baggins.ctx")
-        (None, None)
+        (None, 'hed', 'dos')
         >>> from pytrip import LETCube
         >>> LETCube.parse_path("aragorn.dosemlet.dos")
-        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.dos')
+        ('aragorn' , 'dosemlet.hed', 'dosemlet.dos')
         >>> LETCube.parse_path("aragorn.dosemlet")
-        (None, None)
+        (None, 'dosemlet.hed', 'dosemlet.dos')
         >>> LETCube.parse_path("aragorn")
-        ('aragorn.dosemlet.hed', 'aragorn.dosemlet.dos')
+        ('aragorn', 'dosemlet.hed', 'dosemlet.dos')
         >>> LETCube.parse_path("aragorn.ctx")
-        (None, None)
+        (None, 'dosemlet.hed', 'dosemlet.dos')
 
         :param path_name: path to header file, data file or basename path (path to file without extension).
         Path can be absolute or relative. It can also lead to gzipped files.
-        :return: pair of filenames for header and data
+        :return: triple of basename, header file extension and data file extension
         """
 
         logger.info("Parsing " + path_name)
@@ -605,8 +605,8 @@ class Cube(object):
 
         # checking if current class has data extension attribute, to compare with data file extension
         if 'data_file_extension' in cls.__dict__:
-            class_data_file_extension = cls.data_file_extension.lower()
-            logger.debug("class data filename extension: " + class_data_file_extension)
+            class_data_file_bare_extension = cls.data_file_extension.lower()[1:]  # without dot
+            logger.debug("class data filename extension: " + class_data_file_bare_extension)
         else:  # class without extension, we assume in such case file is given without extension
             error_msg = "Class " + str(cls) + " doesn't have data_file_extension field"
             logger.error(error_msg)
@@ -614,8 +614,8 @@ class Cube(object):
 
         # checking if current class has header extension attribute, to compare with header file extension
         if 'header_file_extension' in cls.__dict__:
-            class_header_file_extension = cls.header_file_extension.lower()
-            logger.debug("class data filename extension: " + class_header_file_extension)
+            class_header_file_bare_extension = cls.header_file_extension.lower()[1:]  # without dot
+            logger.debug("class data filename extension: " + class_header_file_bare_extension)
         else:  # class without extension, we assume in such case file is given without extension
             error_msg = "Class " + str(cls) + " doesn't have header_file_extension field"
             logger.error(error_msg)
@@ -638,29 +638,42 @@ class Cube(object):
         # 4. file with unknown extensions (i.e. blabla.mp3)
         # Options 1-3 can be parsed, option 4 will give us empty result
 
-        if uncompressed_path_name.endswith(class_header_file_extension):  # path to header file
+        if uncompressed_path_name.endswith(class_header_file_bare_extension):  # path to header file
             logger.debug("header file ")
-            header_file = uncompressed_path_name
-            basename_end_index = uncompressed_path_name.rfind(class_header_file_extension)
+            basename_end_index = uncompressed_path_name.rfind(class_header_file_bare_extension)
             basename = uncompressed_path_name[:basename_end_index]
-            cube_filename = basename + class_data_file_extension
-        elif uncompressed_path_name.endswith(class_data_file_extension):  # cube file
+            if basename[-1] == '.':
+                basename = basename[:-1]
+        elif uncompressed_path_name.endswith(class_data_file_bare_extension):  # cube file
             logger.debug("cube file ")
-            basename_end_index = uncompressed_path_name.rfind(class_data_file_extension)
+            basename_end_index = uncompressed_path_name.rfind(class_data_file_bare_extension)
             basename = uncompressed_path_name[:basename_end_index]
-            header_file = basename + class_header_file_extension
-            cube_filename = uncompressed_path_name
+            if basename[-1] == '.':
+                basename = basename[:-1]
         elif not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
             logger.debug("file without extension ")
-            header_file = uncompressed_path_name + class_header_file_extension
-            cube_filename = uncompressed_path_name + class_data_file_extension
             basename = uncompressed_path_name
-        else:   # a problem (i.e. uknown exception)
+        else:   # a problem (i.e. unknown exception)
             logger.debug("a problem (unknown extension?) with path " + path_name)
-            header_file, cube_filename = None, None
             basename = None
 
-        return basename, class_header_file_extension, class_data_file_extension
+        return basename, class_header_file_bare_extension, class_data_file_bare_extension
+
+    @classmethod
+    def header_file_name(cls, path_name):
+        basename, header_file_bare_extension, _ = cls.parse_path(path_name)
+        if basename is not None:
+            return basename + '.' + header_file_bare_extension
+        else:
+            return None
+
+    @classmethod
+    def data_file_name(cls, path_name):
+        basename, _, data_file_bare_extension = cls.parse_path(path_name)
+        if basename is not None:
+            return basename + '.' + data_file_bare_extension
+        else:
+            return None
 
     def _parse_trip_header(self, content):
         """ Parses content which was read from a trip header.
@@ -721,7 +734,7 @@ class Cube(object):
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
-        # Here we convert to an acutual offset in mm, which is stored in self
+        # Here we convert to an actual offset in mm, which is stored in self
         self.xoffset *= self.pixel_size
         self.yoffset *= self.pixel_size
         self.zoffset *= self.slice_distance
@@ -769,11 +782,13 @@ class Cube(object):
 
         # extract header name (blabla.hed) from path
         # we get blabla.hed even if path equals to blabla.hed.gz, see docs in Cube.parse_path function
-        basename, header_file_ext, _ = self.parse_path(path)
-        header_file_name = basename + header_file_ext
+        header_file_name = self.header_file_name(path)
 
         # figure out which file exists on disc: *.hed or *.hed.gz and get its path
         header_file_path = self.discover_file(header_file_name)
+        if header_file_path is None:
+            basename, header_file_ext, _ = self.parse_path(path)
+            header_file_path = self.discover_file(basename + header_file_ext)  # try without dots
 
         # sanity check
         if header_file_path is not None:
@@ -808,13 +823,15 @@ class Cube(object):
         :param multiply_by_2: The data read will automatically be multiplied with a factor of 2.
         """
         # extract header and data file name from path
-        basename, header_file_ext, data_file_ext = self.parse_path(path)
-        header_file_name = basename + header_file_ext
-        data_file_name = basename + data_file_ext
+        header_file_name = self.header_file_name(path)
+        data_file_name = self.data_file_name(path)
 
         # fill header data if self.header is empty
         if self.header_set is False:
             header_file_path = self.discover_file(header_file_name)
+            if header_file_path is None:
+                basename, header_file_ext, _ = self.parse_path(path)
+                header_file_path = self.discover_file(basename + header_file_ext)  # try without dots
 
             # sanity check
             if header_file_path is not None:
@@ -834,7 +851,8 @@ class Cube(object):
         # figure out path to data file on disk, might be gzipped or not
         data_file_path = self.discover_file(data_file_name)
         if data_file_path is None:
-            data_file_path = self.discover_file(basename + data_file_ext[1:])  # try without dots
+            basename, _, data_file_ext = self.parse_path(path)
+            data_file_path = self.discover_file(basename + data_file_ext)  # try without dots
 
         # load data from data file (gzipped or not)
         logger.info("Opening file: " + path)

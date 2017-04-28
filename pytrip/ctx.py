@@ -149,9 +149,8 @@ class CtxCube(Cube):
         :param str path: path to header file, data file or basename (without extension)
         """
 
-        header_file, ctx_file = self.parse_path(path_name=path)
-        self._write_trip_header(header_file)
-        self._write_trip_data(ctx_file)
+        self._write_trip_header(self.header_file_name(path))
+        self._write_trip_data(self.data_file_name(path))
 
     def write_dicom(self, directory):
         """ Write CT-data to disk, in Dicom format.
