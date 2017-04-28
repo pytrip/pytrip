@@ -628,7 +628,7 @@ class Cube(object):
         # strip .gz from path (if present)
         uncompressed_path_name = path_name
         if is_path_gzipped:
-            uncompressed_path_name = os.path.splitext(path_name)[0]
+            uncompressed_path_name = path_name[:len(".gz")]
         logger.debug("uncompressed filename: " + uncompressed_path_name)
 
         # we have several options:
@@ -638,25 +638,29 @@ class Cube(object):
         # 4. file with unknown extensions (i.e. blabla.mp3)
         # Options 1-3 can be parsed, option 4 will give us empty result
 
-        if uncompressed_path_name.endswith(class_header_file_extension):  # header file
+        if uncompressed_path_name.endswith(class_header_file_extension):  # path to header file
             logger.debug("header file ")
             header_file = uncompressed_path_name
             basename_end_index = uncompressed_path_name.rfind(class_header_file_extension)
-            cube_filename = uncompressed_path_name[:basename_end_index] + class_data_file_extension
+            basename = uncompressed_path_name[:basename_end_index]
+            cube_filename = basename + class_data_file_extension
         elif uncompressed_path_name.endswith(class_data_file_extension):  # cube file
             logger.debug("cube file ")
             basename_end_index = uncompressed_path_name.rfind(class_data_file_extension)
-            header_file = uncompressed_path_name[:basename_end_index] + class_header_file_extension
+            basename = uncompressed_path_name[:basename_end_index]
+            header_file = basename + class_header_file_extension
             cube_filename = uncompressed_path_name
         elif not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
             logger.debug("file without extension ")
             header_file = uncompressed_path_name + class_header_file_extension
             cube_filename = uncompressed_path_name + class_data_file_extension
+            basename = uncompressed_path_name
         else:   # a problem (i.e. uknown exception)
             logger.debug("a problem (unknown extension?) with path " + path_name)
             header_file, cube_filename = None, None
+            basename = None
 
-        return header_file, cube_filename
+        return basename, class_header_file_extension, class_data_file_extension
 
     def _parse_trip_header(self, content):
         """ Parses content which was read from a trip header.
@@ -765,7 +769,8 @@ class Cube(object):
 
         # extract header name (blabla.hed) from path
         # we get blabla.hed even if path equals to blabla.hed.gz, see docs in Cube.parse_path function
-        header_file_name, _ = self.parse_path(path)
+        basename, header_file_ext, _ = self.parse_path(path)
+        header_file_name = basename + header_file_ext
 
         # figure out which file exists on disc: *.hed or *.hed.gz and get its path
         header_file_path = self.discover_file(header_file_name)
@@ -803,7 +808,9 @@ class Cube(object):
         :param multiply_by_2: The data read will automatically be multiplied with a factor of 2.
         """
         # extract header and data file name from path
-        header_file_name, data_file_name = self.parse_path(path)
+        basename, header_file_ext, data_file_ext = self.parse_path(path)
+        header_file_name = basename + header_file_ext
+        data_file_name = basename + data_file_ext
 
         # fill header data if self.header is empty
         if self.header_set is False:
@@ -826,6 +833,8 @@ class Cube(object):
 
         # figure out path to data file on disk, might be gzipped or not
         data_file_path = self.discover_file(data_file_name)
+        if data_file_path is None:
+            data_file_path = self.discover_file(basename + data_file_ext[1:])  # try without dots
 
         # load data from data file (gzipped or not)
         logger.info("Opening file: " + path)
