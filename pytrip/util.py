@@ -20,6 +20,8 @@
 Module with auxilliary functions (mostly internal use).
 """
 
+import numpy as np
+
 
 def get_class_name(item):
     """
@@ -43,3 +45,35 @@ def evaluator(funct, name='funct'):
 
     f.__name__ = name
     return f
+
+
+def volume_histogram(cube, voi=None, bins=256):
+    """
+    Generic volume histogram calculator, useful for DVH and LVH or similar.
+
+    :params cube: a data cube of any shape, e.g. Dos.cube
+    :params voi: optional voi where histogramming will happen.
+    :returns [x],[y]: coordinates ready for plotting. Dose (or LET) along x, Normalized volume along y in %.
+
+    If VOI is not given, it will calculate the histogram for the entire dose cube.
+
+    Providing voi will slow down this function a lot, so if in a loop, it is recommended to do masking
+    i.e. only provide Dos.cube[mask] instead.
+    """
+
+    if voi is None:
+        mask = None
+    else:
+        vcube = voi.get_voi_cube()
+        mask = (vcube.cube == 1000)
+
+    _xrange = (0.0, cube.max()*1.1)
+    _hist, x = np.histogram(cube[mask], bins=bins, range=_xrange)
+    _fhist = _hist[::-1]  # reverse historgram, so first element is for highest dose
+    _fhist = np.cumsum(_fhist)
+    _hist = _fhist[::-1]  # flip back again to normal representation
+
+    y = 100.0 * _hist / _hist[0]  # volume histograms always plot the right edge of bin, since V(D < x_pos).
+    y = np.insert(y, 0, 100.0, axis=0)  # but the leading bin edge is always at V = 100.0%
+
+    return x, y

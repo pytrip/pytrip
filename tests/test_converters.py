@@ -34,7 +34,6 @@ import pytrip.utils.rst2sobp
 import pytrip.utils.gd2dat
 import pytrip.utils.gd2agr
 import pytrip.utils.bevlet2oer
-import pytrip.utils.rst_plot
 
 from tests.base import get_files
 
@@ -161,35 +160,6 @@ class TestBevLet2Oer(unittest.TestCase):
         # check if destination file is not empty
         self.assertTrue(os.path.exists(outfile))
         self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
-
-
-class TestRstPlot(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.rst_file = os.path.join(testdir, "tst003001.rst")
-
-    def test_check(self):
-        self.assertRaises(SystemExit, pytrip.utils.rst_plot.main, [])
-
-    def test_version(self):
-        try:
-            pytrip.utils.rst_plot.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp(suffix='.png')
-
-        # convert CT cube to DICOM
-        pytrip.utils.rst_plot.main([self.rst_file, outfile])
-
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-        self.assertEqual(imghdr.what(outfile), 'png')
 
         os.close(fd)  # Windows needs it
         os.remove(outfile)  # we need only temp filename, not the file

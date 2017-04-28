@@ -14,10 +14,10 @@ environment:
 
   matrix:
 #    # http://www.appveyor.com/docs/installed-software#python
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python27"
-      PYTHON_VERSION: "2.7"
-      MINICONDAPATH: "C:\\Miniconda"
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python27"
+#      PYTHON_VERSION: "2.7"
+#      MINICONDAPATH: "C:\\Miniconda"
 
     - platform: x64
       PYTHON_ROOT: "C:\\Python27-x64"
@@ -47,11 +47,11 @@ environment:
 #      MINICONDAPATH: "C:\\Miniconda3-x64"
 
 # Python3.5 needs VS 14.0 (2015)
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python35"
-      PYTHON_VERSION: "3.5"
-      MINICONDAPATH: "C:\\Miniconda35"
-      os: Visual Studio 2015
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python35"
+#      PYTHON_VERSION: "3.5"
+#      MINICONDAPATH: "C:\\Miniconda35"
+#      os: Visual Studio 2015
 
     - platform: x64
       PYTHON_ROOT: "C:\\Python35-x64"
@@ -60,11 +60,12 @@ environment:
       os: Visual Studio 2015
 
 # Python3.6 needs VS 14.0 (2015)
-    - platform: x86
-      PYTHON_ROOT: "C:\\Python36"
-      PYTHON_VERSION: "3.6"
-      MINICONDAPATH: "C:\\Miniconda36"
-      os: Visual Studio 2015
+# memory problems on 32-bit Windows more and more visible https://github.com/pytrip/pytrip/issues/320, disabling
+#    - platform: x86
+#      PYTHON_ROOT: "C:\\Python36"
+#      PYTHON_VERSION: "3.6"
+#      MINICONDAPATH: "C:\\Miniconda36"
+#      os: Visual Studio 2015
 
     - platform: x64
       PYTHON_ROOT: "C:\\Python36-x64"

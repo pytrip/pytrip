@@ -28,6 +28,7 @@ import numpy as np
 
 from pytrip.dos import DosCube
 from pytrip.vdx import create_sphere
+from pytrip.util import volume_histogram
 import pytriplib
 import tests.base
 
@@ -70,6 +71,23 @@ class TestDos(unittest.TestCase):
         self.assertEqual(dvh.shape[0], 1500)
         self.assertEqual(min_dose, 0.0)
         self.assertEqual(max_dose, 0.001)
+
+    def test_dvh_simple(self):
+        c = DosCube()
+        c.read(self.cube000)
+        v = create_sphere(c, name="sph", center=[10, 10, 10], radius=8)
+        self.assertIsNotNone(v)
+
+        logger.info("Calculating DVH simple")
+        x, y = volume_histogram(c.cube, v)
+        self.assertIsNotNone(x)
+        self.assertIsNotNone(y)
+
+        logger.info("Calculating DVH simple for entire cube")
+        x, y = volume_histogram(c.cube)
+        self.assertIsNotNone(x)
+        self.assertIsNotNone(y)
+        # TODO: add some quantitative tests
 
     def test_dicom_plan(self):
         c = DosCube()
