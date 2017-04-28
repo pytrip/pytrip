@@ -50,7 +50,7 @@ class TestCtx(unittest.TestCase):
         c = CtxCube()
         c.read(path)
 
-        _, data_file = CtxCube.parse_path(self.cube000)
+        data_file = CtxCube.data_file_name(self.cube000)
         data_file_path = CtxCube.discover_file(data_file)
 
         if data_file_path.endswith(".gz"):
@@ -107,8 +107,8 @@ class TestCtx(unittest.TestCase):
         # loop over all names
         for name in testing_names:
             logger.info("Parsing " + name)
-            header_filename, cube_filename = CtxCube.parse_path(name)
-
+            header_filename = CtxCube.header_file_name(name)
+            cube_filename = CtxCube.data_file_name(name)
             self.assertIsNotNone(header_filename)
             self.assertIsNotNone(cube_filename)
 
@@ -128,7 +128,8 @@ class TestCtx(unittest.TestCase):
         # loop over all names
         for name in testing_names:
             logger.info("Parsing " + name)
-            dos_header_filename, dos_cube_filename = DosCube.parse_path(name)
+            dos_header_filename = DosCube.header_file_name(name)
+            dos_cube_filename = DosCube.data_file_name(name)
 
             self.assertIsNotNone(dos_header_filename)
             self.assertIsNotNone(dos_cube_filename)
