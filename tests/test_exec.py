@@ -32,6 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class TestLocalExec(unittest.TestCase):
+    """ Tests for pytrip.tripexecuter
+    """
     def setUp(self):
         """ Prepare test environment.
         """
