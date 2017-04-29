@@ -19,23 +19,13 @@
 """
 The tripexecuter module provides functions for executing TRiP98 locally or remotely.
 """
-# do not check this file for PEP8 compatibility
-# flake8 complains about "E402 module level import not at top of file"
-# flake8: noqa
 
-from pytrip.tripexecuter.dosecube import DoseCube
 from pytrip.tripexecuter.field import Field
-from pytrip.tripexecuter.fieldcollection import FieldCollection
-from pytrip.tripexecuter.tripexecuter import TripExecuter
-from pytrip.tripexecuter.tripplan import TripPlan
-from pytrip.tripexecuter.tripplancollection import TripPlanCollection
-from pytrip.tripexecuter.tripvoi import TripVoi
-from pytrip.tripexecuter.voi import Voi
-from pytrip.tripexecuter.voicollection import VoiCollection
+from pytrip.tripexecuter.execute import Execute
+from pytrip.tripexecuter.plan import Plan
 from pytrip.tripexecuter.rbehandler import RBEHandler, RBE
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
 # it is taken to be the list of module names that should be imported when from package import * is encountered.
-__all__ = ['DoseCube', 'Field', 'FieldCollection', 'TripExecuter', 'TripPlan', 'TripPlanCollection', 'TripVoi', 'Voi',
-           'VoiCollection', 'RBEHandler', 'RBE']
+__all__ = ['Field', 'Execute', 'Plan', 'RBEHandler', 'RBE']

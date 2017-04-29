@@ -24,7 +24,7 @@ import unittest
 import logging
 
 import pytrip as pt
-import pytrip.tripexecuter2 as pte
+import pytrip.tripexecuter as pte
 
 import tests.base
 

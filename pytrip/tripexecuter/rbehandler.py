@@ -24,6 +24,8 @@ import csv
 
 
 class RBEHandler:
+    """ Class for managing .rbe files.
+    """
     def __init__(self, datafile=""):
         self.datafile = datafile
 
@@ -40,19 +42,27 @@ class RBEHandler:
         return []
 
     def load_rbe(self, i=0):
+        """ Loads a single RBE file and stroed it into self.
+        If file does not exist, then assume a directory with multiple RBE files, which
+        then are loaded individually.
+        TODO: refactor me, please.
+        """
         if os.path.exists(self.datafile):
             with open(self.datafile, "r") as fp:
                 reader = csv.reader(fp, delimiter='\t')
-                self.rbe = [RBE(x[0], x[1]) for x in reader]
+                self.rbe = [RBE(x[0], x[1]) for x in reader]  # RBE class holds name and path to RBE file.
+                # TODO: above line looks broken, where does the data go?
         else:
             if i is 0:
-                self.load_rbe_folder()
+                self._load_rbe_dir()
                 self.load_rbe(1)
 
-    def load_rbe_folder(self):
-        if not hasattr(self, "rbe_folder") or self.rbe_folder is None:
+    def _load_rbe_dir(self):
+        """ Used by load_rbe() if not a single file is present, to discover next files.
+        """
+        if not hasattr(self, "rbe_dir") or self.rbe_dir is None:
             return
-        path = os.path.expandvars(self.rbe_folder)
+        path = os.path.expandvars(self.rbe_dir)
         folder = os.listdir(path)
         with open(self.datafile, "w+") as fp_out:
             for item in folder:
@@ -62,19 +72,19 @@ class RBEHandler:
                         while not stop:
                             line = fp.readline()
                             if line.find("!celltype") > -1:
-                                fp_out.write("%s\t%s\n" % (line.split()[1], os.path.join(path, item)))
+                                fp_out.write("{:s}\t{:s}\n".format((line.split()[1],
+                                                                    os.path.join(path, item))))
                                 stop = True
                             if not line:
                                 stop = True
 
 
 class RBE:
+    """ TODO: still needs implementation.
+    """
     def __init__(self, name="", path=""):
+        """
+        TODO: where does the data go?
+        """
         self.name = name
         self.path = path
-
-    def get_name(self):
-        return self.name
-
-    def get_path(self):
-        return self.path

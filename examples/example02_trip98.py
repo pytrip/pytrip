@@ -24,7 +24,7 @@ import os
 import logging
 
 import pytrip as pt
-import pytrip.tripexecuter2 as pte
+import pytrip.tripexecuter as pte
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  # give some output on what is going on.

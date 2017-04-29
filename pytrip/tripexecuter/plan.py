@@ -272,7 +272,7 @@ class Plan():
         """ Save this plan, including associated data.
         TODO: may have to be implemented in a better way.
         """
-        from pytrip.tripexecuter2.execute import Execute
+        from pytrip.tripexecuter.execute import Execute
         t = Execute(images)
         t.set_plan(self)
         t.save_data(path)
