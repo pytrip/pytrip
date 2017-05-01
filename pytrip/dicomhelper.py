@@ -29,8 +29,8 @@ def compare_dicom_key(dcm):
     return float(dcm.ImagePositionPatient[2])
 
 
-def read_dicom_folder(path):
-    """ Reads a folder with dicom files.
+def read_dicom_dir(dicom_dir):
+    """ Reads a directory with dicom files.
     Identifies each dicom file with .dcm suffix and returns a dict containing a dicom object.
     Dicom object may be "CT", "RTSTRUCT", "RTDOSE" or "RTPLAN".
     Corresponding keys for lookup are "images", "rtss", "rtdose" or "rtplan" repsectively.
@@ -39,23 +39,23 @@ def read_dicom_folder(path):
 
     :returns: A dict containing dicom objects and corresponding keys 'images','rtss','rtdose' or 'rtplan'.
     """
-    if not os.path.isdir(path):
-        raise IOError("Folder does not exist")
+    if not os.path.isdir(dicom_dir):
+        raise IOError("Directory {:s} does not exist".format(dicom_dir))
 
     # list of allowed dicom file extentions names
     # all in lower case
     dicom_suffix = ('.dcm', '.ima', '.v2')
 
     data = {}
-    folder = os.listdir(path)
-    for item in folder:
+    _files = os.listdir(dicom_dir)
+    for item in _files:
         if os.path.splitext(item)[1].lower() in dicom_suffix:
-            dcm = dicom.read_file(os.path.join(path, item), force=True)
+            dcm = dicom.read_file(os.path.join(dicom_dir, item), force=True)
             # TODO figureout what was it about (see below)
             # if dicom.__version__ >= "0.9.5":
-            # dcm = dicom.read_file(os.path.join(path, item), force=True)
+            # dcm = dicom.read_file(os.path.join(dicom_dir, item), force=True)
             # else:
-            #     dcm = dicom.read_file(os.path.join(path, item))
+            #     dcm = dicom.read_file(os.path.join(dicom_dir, item))
             if dcm.Modality == "CT":
                 if "images" not in data:
                     data["images"] = []

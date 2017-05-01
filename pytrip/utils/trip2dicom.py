@@ -48,7 +48,7 @@ def main(args=sys.argv[1:]):
     else:
         logging.basicConfig()
 
-    output_folder = parsed_args.outputdir
+    output_dir = parsed_args.outputdir
 
     _, data_file_name = pt.CtxCube.parse_path(parsed_args.ctx_data)
     data_file_path = pt.CtxCube.discover_file(data_file_name)
@@ -61,9 +61,9 @@ def main(args=sys.argv[1:]):
     c = pt.CtxCube()
     c.read(data_file_name)
 
-    if not os.path.exists(output_folder):
-        os.makedirs(output_folder)
-    c.write_dicom(output_folder)
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    c.write_dicom(output_dir)
 
     ctx_basename = os.path.splitext(data_file_path)[0]
     ctx_path = ctx_basename + ".vdx"
@@ -71,7 +71,7 @@ def main(args=sys.argv[1:]):
         logger.info("Convert VDX structures...")
         v = pt.VdxCube(cube=c)
         v.read(ctx_path)
-        v.write_dicom(output_folder)
+        v.write_dicom(output_dir)
     else:
         logger.info("No VDX data found for conversion.")
 

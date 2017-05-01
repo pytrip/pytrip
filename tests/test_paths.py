@@ -55,7 +55,7 @@ if __name__ == '__main__':
 # import threading
 # #import matplotlib.pyplot as plt
 
-# dcm = dh.read_dicom_folder(
+# dcm = dh.read_dicom_dir(
 # "../../../DicomData/Til Jacob T anonymiseret/Anonym2")
 # c = CtxCube()
 # c.read_dicom(dcm)
@@ -76,7 +76,7 @@ if __name__ == '__main__':
 # numpy.save("../plotdata",grid)
 # exit()
 
-# dcm = dh.read_dicom_folder(
+# dcm = dh.read_dicom_dir(
 # "../../../DicomData/Til Jacob T anonymiseret/Anonymiseret")
 # c = CtxCube()
 # c.read_dicom(dcm)
