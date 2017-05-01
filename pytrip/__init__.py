@@ -31,14 +31,13 @@ from pytrip.vdx import VdxCube, Voi
 from pytrip.paths import DensityCube
 from pytrip.raster import Rst
 from pytrip.let import LETCube
-from pytrip.ctimage import CTImages
 from pytrip.dicomhelper import read_dicom_folder
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
 # it is taken to be the list of module names that should be imported when from package import * is encountered.
 __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res',
-           'Rst', 'CTImages']
+           'Rst']
 
 # if an application using pytrip doesn't configure any logging level, then an error will occur
 # to prevent it, we add null logging handler, as suggested by Python documentation:
