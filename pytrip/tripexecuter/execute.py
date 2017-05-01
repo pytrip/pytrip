@@ -92,6 +92,8 @@ class Execute():
         self.rsakey_local_path = "~/.ssh/id_rsa"
 
     def __str__(self):
+        """ str output handler
+        """
         return self._print()
 
     def _print(self):

@@ -42,6 +42,9 @@ class Field():
                             "Ar": (16, 40)}
 
     def __init__(self, basename=""):
+        """ Create an instance of the Field class.
+        :params str basename" The name of this field, will be used as basename for .rst files.
+        """
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this field
         # basename of the field (i.e. without file extension).
         # Any input/output process will be suffixed with .rst
@@ -72,6 +75,8 @@ class Field():
         self.selected = False
 
     def __str__(self):
+        """ str output handler
+        """
         return self._print()
 
     def _print(self):

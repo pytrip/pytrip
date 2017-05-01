@@ -140,6 +140,8 @@ class Plan():
         self._make_sis = ""  # placeholder for generate sistable command
 
     def __str__(self):
+        """ string out handler
+        """
         return self._print()
 
     def _print(self):
