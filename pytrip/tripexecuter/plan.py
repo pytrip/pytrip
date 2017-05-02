@@ -564,8 +564,7 @@ class Plan(object):
         if self.want_rst and self.optimize:
             for i, field in enumerate(fields):
                     output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
-                    field.rasterfile_path = os.path.join(self.basename, field.basename)  # but without suffix? TODO: check
-                    self._out_files.append(field.rasterfile_path + ".rst")
+                    self._out_files.append(field.basename + ".rst")
 
         # TODO: add various .gd files
         return output
