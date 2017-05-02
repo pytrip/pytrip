@@ -40,7 +40,7 @@ except:
     logger.warning("Paramiko package not installed, only local TRiP access possible")
 
 
-class Execute():
+class Execute(object):
     """ Execute class for running trip using attached Ctx, Vdx and Plan objects.
     """
     def __init__(self, ctx, vdx, ctx_path="", vdx_path=""):
@@ -110,7 +110,7 @@ class Execute():
         out += "|   STDERR prefix               : '{:s}'\n".format(self.logfile_prefix_stderr)
         out += "|   TRiP98 command              : '{:s}'\n".format(self.trip_bin_path)
         out += "|   Dummy run                   : {:s}\n".format(str(self._norun))
-        out += "|   Clenaup                     : {:s}\n".format(str(self._cleanup))
+        out += "|   Cleanup                     : {:s}\n".format(str(self._cleanup))
 
         out += "|\n"
         out += "| Remote access\n"

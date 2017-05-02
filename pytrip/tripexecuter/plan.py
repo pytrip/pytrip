@@ -34,7 +34,7 @@ from pytrip.tripexecuter.execute import Execute
 logger = logging.getLogger(__name__)
 
 
-class Plan():
+class Plan(object):
     """ Class of handling plans.
     """
     # list of projectile name - charge and most common isotope.
