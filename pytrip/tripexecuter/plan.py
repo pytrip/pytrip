@@ -22,9 +22,14 @@ A Plan() may hold one or multiple Field() objects. When a Plan() is proper setup
 with methods in Execute().
 """
 
+import datetime
 import os
 import uuid
 import logging
+
+from pytrip.dos import DosCube
+from pytrip.let import LETCube
+from pytrip.tripexecuter.execute import Execute
 
 logger = logging.getLogger(__name__)
 
@@ -272,21 +277,19 @@ class Plan():
         """ Save this plan, including associated data.
         TODO: may have to be implemented in a better way.
         """
-        from pytrip.tripexecuter.execute import Execute
         t = Execute(images)
         t.set_plan(self)
         t.save_data(path)
         for dos in self.dosecubes:
-            dos.write(path + "." + dos.get_type() + ".dos")
+            dos.write(path + "." + dos.get_type() + DosCube.data_file_extension)
 
         for let in self.letcubes:
-            let.write(path + "." + dos.get_type() + ".dos")
+            let.write(path + "." + dos.get_type() + DosCube.data_file_extension)
 
     def load_let(self, path):
         """ Load and append a new LET cube from path to self.letcubes.
         """
 
-        from pt import LETCube
         let = LETCube()
         let.read(os.path.splitext(path)[0] + ".dos")
 
@@ -303,9 +306,8 @@ class Plan():
     def load_dose(self, path, _type, target_dose=0.0):
         """ Load and append a new DOS cube from path to self.doscubes.
         """
-        from pt import DosCube
         dos = DosCube()
-        dos.read(os.path.splitext(path)[0] + ".dos")
+        dos.read(os.path.splitext(path)[0] + DosCube.data_file_extension)
         dos._type = _type
         dos.set_dose(target_dose)
         self.doscubes.append(dos)
@@ -361,8 +363,6 @@ class Plan():
         # TODO: check input params
         :returns: an array of lines, one line per command.
         """
-
-        import datetime
 
         output = []
         output.append("* {:s} created by PyTRiP98 on the {:s}".format(self.basename + ".exec",
@@ -563,8 +563,8 @@ class Plan():
 
         if self.want_rst and self.optimize:
             for i, field in enumerate(fields):
-                    output.append('field {:d} / write file({%s}.rst) reverseorder '.format(i + 1, field.name))
-                    field.rasterfile_path = os.path.join(self.path, field.name)  # but without suffix? TODO: check
+                    output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
+                    field.rasterfile_path = os.path.join(self.basename, field.basename)  # but without suffix? TODO: check
                     self._out_files.append(field.rasterfile_path + ".rst")
 
         # TODO: add various .gd files

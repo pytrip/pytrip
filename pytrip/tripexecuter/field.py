@@ -20,13 +20,13 @@
 Field() objects here, which can be passed to a Plan() object.
 """
 
-import uuid
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
 
-class Field():
+class Field(object):
     """ One or more Field() object, which then can be added to a Plan() object.
     :params str basename: basename of field without file extension (input or output will be suffixed with
     proper file extension)
@@ -55,7 +55,7 @@ class Field():
         self.contour_extension = 0.6  # see TRiP98 field / contourext() documentation
 
         # the field / command in TRiP98 may take an external rst file as an input, and will then
-        # instead of optimization do a foward calculation based on this file.
+        # instead of optimization do a forward calculation based on this file.
         # The filename will be constructed from the basename given for this field.
         # However, we need to tell, that we provide the rst.
         self.use_raster_file = False
