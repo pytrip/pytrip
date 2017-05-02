@@ -356,38 +356,38 @@ class Execute(object):
         """ return requested results, copy them back in to plan._working_dir
         """
 
-        for _fn in plan._out_files:
-            _path = os.path.join(plan._temp_dir, _fn)
+        for _file_name in plan._out_files:
+            _path = os.path.join(plan._temp_dir, _file_name)
 
-            # only copy files back, if we achtually have been running TRiP
+            # only copy files back, if we actually have been running TRiP
             if self._norun:
                 logger.info("dummy run: would now copy {:s} to {:s}".format(_path, plan._working_dir))
             else:
                 logger.info("copy {:s} to {:s}".format(_path, plan._working_dir))
                 shutil.copy(_path, plan._working_dir)
 
-        for _fn in plan._out_files:
-            _path = os.path.join(plan._temp_dir, _fn)
-            if ".phys.dos" in _fn:
-                _d = DosCube()
+        for _file_name in plan._out_files:
+            _path = os.path.join(plan._temp_dir, _file_name)
+            if ".phys.dos" in _file_name:
+                _ctx_cube = DosCube()
                 if not self._norun:
-                    _d.read(_path)
-                    plan.dosecubes.append(_d)
+                    _ctx_cube.read(_path)
+                    plan.dosecubes.append(_ctx_cube)
 
-            if ".bio.dos" in _fn:
-                _d = CtxCube()
+            if ".bio.dos" in _file_name:
+                _ctx_cube = CtxCube()
                 if not self._norun:
-                    _d.read(_path)
-                    plan.dosecubes.append(_d)
+                    _ctx_cube.read(_path)
+                    plan.dosecubes.append(_ctx_cube)
 
-            if ".dosemlet.dos" in _fn:
-                _l = LETCube()
+            if ".dosemlet.dos" in _file_name:
+                _let_cube = LETCube()
                 if not self._norun:
-                    _l.read(_path)
-                    plan.letcubes.append(_l)
+                    _let_cube.read(_path)
+                    plan.letcubes.append(_let_cube)
 
-            if ".rst" in _fn:
-                logger.warning("attaching fields to class not implemented yet {:s}", _path)
+            if ".rst" in _file_name:
+                logger.warning("attaching fields to class not implemented yet {:s}".format(_path))
                 # TODO
                 # need to access the RstClass here for each rst file. This will then need to be attached
                 # to the proper field in the list of fields.
