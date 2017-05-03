@@ -49,6 +49,9 @@ class DosCube(Cube):
     header_file_extension = ".hed"
 
     def __init__(self, cube=None):
+        """ Creates a DosCube instance.
+        If cube is provided, then UIDs are inherited from cube.
+        """
         super(DosCube, self).__init__(cube)
         self.type = "DOS"
         self.target_dose = 0.0

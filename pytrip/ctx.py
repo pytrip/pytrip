@@ -23,11 +23,14 @@ It is used for handling CT-data, both Voxelplan and Dicom.
 import os
 import datetime
 import copy
+import logging
 
 import numpy as np
 
 from pytrip.error import InputError
 from pytrip.cube import Cube
+
+logger = logging.getLogger(__name__)
 
 
 class CtxCube(Cube):
@@ -38,6 +41,8 @@ class CtxCube(Cube):
     header_file_extension = ".hed"
 
     def __init__(self, cube=None):
+        """ Creates an instance of a CtxCube.
+        """
         super(CtxCube, self).__init__(cube)
         self.type = "CTX"
 
