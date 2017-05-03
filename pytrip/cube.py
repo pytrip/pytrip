@@ -313,7 +313,7 @@ class Cube(object):
         # unique for each CT slice
         self._ct_sop_instance_uid = UID.generate_uid(prefix=None)
 
-    def set_values_inside_voi(self, voi, value):
+    def set_voxels_inside_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
 
         Voxels within the structure are filled it with 'value'.
@@ -337,7 +337,7 @@ class Cube(object):
                         if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] = value
 
-    def add_to_values_inside_voi(self, voi, value=0):
+    def add_to_voxels_inside_voi(self, voi, value=0):
         """ Add 'value' to all voxels within the given Voi
 
         'value' is added to each voxel value within the given volume of interest.
@@ -931,7 +931,7 @@ class Cube(object):
         self._dicom_study_instance_uid = ds.StudyInstanceUID
         self._ct_dicom_series_instance_uid = ds.SeriesInstanceUID
 
-    def _set_z_table(self, dcm):
+    def _set_z_table_from_dicom(self, dcm):
         """ Creates the slice position lookup table based on a given Dicom object.
         The table is attached to self.
 
