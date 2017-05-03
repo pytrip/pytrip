@@ -578,7 +578,7 @@ class Voi:
             # caching the cube. E.g. the method might be called twice with different arguments.
             return self.voi_cube
         self.voi_cube = DosCube(self.cube)
-        self.voi_cube.load_from_structure(self, 1000)
+        self.voi_cube.set_all_values_by_voi(self, 1000)
         return self.voi_cube
 
     def add_slice(self, slice):

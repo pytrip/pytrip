@@ -49,7 +49,7 @@ class CtxCube(Cube):
         if "images" not in dcm:
             raise InputError("Data doesn't contain ct data")
         if not self.header_set:
-            self.read_dicom_header(dcm)
+            self._set_header_from_dicom(dcm)
 
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=np.int16)
         intersect = float(dcm["images"][0].RescaleIntercept)
@@ -145,8 +145,8 @@ class CtxCube(Cube):
         """
 
         header_file, ctx_file = self.parse_path(path_name=path)
-        self.write_trip_header(header_file)
-        self.write_trip_data(ctx_file)
+        self._write_trip_header(header_file)
+        self._write_trip_data(ctx_file)
 
     def write_dicom(self, directory):
         """ Write CT-data to disk, in Dicom format.
