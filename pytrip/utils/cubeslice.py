@@ -243,9 +243,9 @@ def main(args=sys.argv[1:]):
     ax.set_xlim(xmin_lowest, xmax_highest)
     ax.set_ylim(ymin_lowest, ymax_highest)
 
-    minorLocator = MultipleLocator(cube.pixel_size)
-    ax.xaxis.set_minor_locator(minorLocator)
-    ax.yaxis.set_minor_locator(minorLocator)
+    _minor_locator = MultipleLocator(cube.pixel_size)
+    ax.xaxis.set_minor_locator(_minor_locator)
+    ax.yaxis.set_minor_locator(_minor_locator)
 
     text_slice = ax.text(0.0, 1.01, "", size=8, transform=ax.transAxes)
 

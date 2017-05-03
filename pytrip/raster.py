@@ -57,12 +57,6 @@ class Rst:
         """
         return self.machines
 
-    def _calculate_total_energy(self):  # TODO: not implemented
-        """
-        Calculates the total energy budget.
-        """
-        return
-
     def read_from_dicom(self, path):  # TODO: not implemented
         """ Load a Dicom file from 'path'
 
@@ -233,14 +227,14 @@ class SubMachine:
         offset[:, 1] = offset[:, 1] + 2 * int(sigma / self.stepsize[1])  # y
 
         # For each position, modify the spot intensity to be a sum of the offsets.
-        for i in range(len(offset)):
-            o = offset[i]
+        for i, _offset in enumerate(offset):
+            o = _offset
             outgrid[o[0]:o[0] + size[0], o[1]:o[1] + size[1]] += gauss[i] * grid
 
         # store new grid in l which will be returned
         _l = []
-        for i in range(len(outgrid)):
-            for j in range(len(outgrid[0])):  # run along y indices
+        for i, _ in enumerate(outgrid):
+            for j, _ in enumerate(outgrid[0]):  # run along y indices
                 # only append to result grid _l, if we have a reasonable number of particles in this spot.
                 if outgrid[i, j] > 2000:  # spot threshold is 2000 particles
                     _l.append([(i - zero2[0]) * self.stepsize[0],
