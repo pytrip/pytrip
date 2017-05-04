@@ -49,6 +49,9 @@ class DosCube(Cube):
     header_file_extension = ".hed"
 
     def __init__(self, cube=None):
+        """ Creates a DosCube instance.
+        If cube is provided, then UIDs are inherited from cube.
+        """
         super(DosCube, self).__init__(cube)
         self.type = "DOS"
         self.target_dose = 0.0
@@ -71,7 +74,7 @@ class DosCube(Cube):
         if "rtdose" not in dcm:
             raise InputError("Data doesn't contain dose infomation")
         if self.header_set is False:
-            self.read_dicom_header(dcm)
+            self._set_header_from_dicom(dcm)
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx))
         for i, item in enumerate(dcm["rtdose"].pixel_array):
             self.cube[i][:][:] = item
@@ -268,8 +271,8 @@ class DosCube(Cube):
         """
 
         header_file, dos_file = self.parse_path(path_name=path)
-        self.write_trip_header(header_file)
-        self.write_trip_data(dos_file)
+        self._write_trip_header(header_file)
+        self._write_trip_data(dos_file)
 
     def write_dicom(self, directory):
         """ Write Dose-data to disk, in Dicom format.

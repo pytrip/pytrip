@@ -23,10 +23,13 @@ from math import log, sqrt, pi
 from functools import cmp_to_key
 
 import numpy as np
+import logging
 
 from pytrip.res.point import angles_from_trip, max_list, min_list
 from pytrip.res.point import get_basis_from_angles
 import pytriplib
+
+logger = logging.getLogger(__name__)
 
 
 def compare_raster_point(a, b):
@@ -67,7 +70,7 @@ class Field:
             return self.raster_matrix
         size = None
         for sub in self.rst.get_submachines():
-            tmp = sub.get_raster_min_max()
+            tmp = sub.raster_min_max()
             if size is None:
                 size = tmp
             else:
@@ -132,7 +135,7 @@ class SubField:
     def get_size(self):
         beamsize = self.get_max_dist()
         depth = self.ddd.get_dist(self.submachine.energy)
-        lateral = self.submachine.get_raster_min_max()
+        lateral = self.submachine.raster_min_max()
         lateral[0] -= beamsize
         lateral[1] += beamsize
         lateral[2] -= beamsize

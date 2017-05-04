@@ -40,7 +40,7 @@ class TestLet(unittest.TestCase):
 
     def test_read(self):
         l = LETCube()
-        l.read_trip_data_file(self.let001)
+        l.read(self.let001)
 
         v = create_sphere(l, name="sph", center=[10, 10, 10], radius=8)
         self.assertIsNotNone(v)

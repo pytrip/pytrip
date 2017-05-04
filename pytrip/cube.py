@@ -123,6 +123,8 @@ class Cube(object):
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
 
     def __add__(self, other):
+        """ Overload + operator
+        """
         c = type(self)(self)
         if Cube in other.__class__.__bases__:
             c.cube = other.cube + self.cube
@@ -131,6 +133,8 @@ class Cube(object):
         return c
 
     def __sub__(self, other):
+        """ Overload - operator
+        """
         c = type(self)(self)
         if Cube in other.__class__.__bases__:
             c.cube = self.cube - other.cube
@@ -139,6 +143,8 @@ class Cube(object):
         return c
 
     def __mul__(self, other):
+        """ Overload * operator
+        """
         c = type(self)(self)
         if Cube in other.__class__.__bases__:
             c.cube = other.cube * self.cube
@@ -148,6 +154,8 @@ class Cube(object):
         return c
 
     def __div__(self, other):
+        """ Overload / operator
+        """
         c = type(self)(self)
         if Cube in other.__class__.__bases__:
             c.cube = self.cube / other.cube
@@ -241,7 +249,7 @@ class Cube(object):
         y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
         xv, yv = np.meshgrid(x, y)
 
-    def load_from_structure(self, voi, preset=0, data_type=np.int16):
+    def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
         """ Attaches/overwrites Cube.data based on a given Voi.
 
         Voxels within the structure are filled it with 'preset' value.
@@ -305,7 +313,7 @@ class Cube(object):
         # unique for each CT slice
         self._ct_sop_instance_uid = UID.generate_uid(prefix=None)
 
-    def override_cube_values(self, voi, value):
+    def mask_by_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
 
         Voxels within the structure are filled it with 'value'.
@@ -329,7 +337,7 @@ class Cube(object):
                         if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] = value
 
-    def set_offset_cube_values(self, voi, value=0):
+    def mask_by_voi_add(self, voi, value=0):
         """ Add 'value' to all voxels within the given Voi
 
         'value' is added to each voxel value within the given volume of interest.
@@ -353,7 +361,7 @@ class Cube(object):
                         if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] += value
 
-    def write_trip_header(self, path):
+    def _write_trip_header(self, path):
         """ Write a TRiP98 formatted header file, based on the available meta data.
 
         :param path: fully qualified path, including file extension (.hed)
@@ -650,7 +658,9 @@ class Cube(object):
 
         return header_file, cube_filename
 
-    def read_trip_header(self, content):
+    def _parse_trip_header(self, content):
+        """ Parses content which was read from a trip header.
+        """
         i = 0
         self.header_set = True
         content = content.split('\n')
@@ -731,9 +741,9 @@ class Cube(object):
         :param str path: Path to filename to be read, file extention may be given but is not neccesary.
         """
         self.basename = os.path.basename(path).split(".")[0]
-        self.read_trip_data_file(path)
+        self._read_trip_data_file(path)
 
-    def read_trip_header_file(self, path):  # TODO: could be made private? #126
+    def _read_trip_header_file(self, path):  # TODO: could be made private? #126
         """ Reads a header file, accepts also if suffix is missing, or if file
         is .gz compressed. User can thus specify:
         tst001
@@ -776,14 +786,14 @@ class Cube(object):
         fp.close()
 
         # fill self with data
-        self.read_trip_header(content)
+        self._parse_trip_header(content)
         self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def read_trip_data_file(self, path, multiply_by_2=False):  # TODO: could be made private? #126
+    def _read_trip_data_file(self, path, multiply_by_2=False):  # TODO: could be made private? #126
         """Read TRiP98 formatted data.
 
-        Accepts path in similar way as read_trip_header_file().
+        Accepts path in similar way as _read_trip_header_file().
         If header file was not previously loaded, it will be attepted first.
 
         Due to an issue in VIRTUOS, sometimes DosCube data have been reduced with a factor of 2.
@@ -802,7 +812,7 @@ class Cube(object):
             # sanity check
             if header_file_path is not None:
                 logger.info("Reading header file" + header_file_path)
-                self.read_trip_header_file(header_file_path)
+                self._read_trip_header_file(header_file_path)
             else:
                 raise IOError("Could not find file " + path)
 
@@ -870,7 +880,7 @@ class Cube(object):
             self.data_type = "double"
             self.num_bytes = 8
 
-    def read_dicom_header(self, dcm):
+    def _set_header_from_dicom(self, dcm):
         """ Creates the header metadata for this Cube class, based on a given Dicom object.
 
         :param Dicom dcm: Dicom object which will be used for generating the header data.
@@ -896,12 +906,12 @@ class Cube(object):
         self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
         self.dimz = len(dcm["images"])
         self.z_table = True
-        self.set_z_table(dcm)
+        self._set_z_table_from_dicom(dcm)
 
         # Fix for bug #342
         # TODO: slice_distance should probably be a list of distances,
         # but for now we will just use the distance between the first two slices.
-        if len(self.slice_pos) > 1:  # set_z_table() must be called before
+        if len(self.slice_pos) > 1:  # _set_z_table_from_dicom() must be called before
             self.slice_distance = abs(self.slice_pos[1] - self.slice_pos[0])
             logger.debug("Slice distance set to {:.2f}".format(self.slice_distance))
         else:
@@ -914,14 +924,14 @@ class Cube(object):
             logger.warning("Overlapping slices found: slice thickness is larger than the slice distance.")
 
         self.set_byteorder()
-        self._set_format_str()
+        self._set_format_str_from_dicom()
         self.header_set = True
 
         # unique for whole structure set
         self._dicom_study_instance_uid = ds.StudyInstanceUID
         self._ct_dicom_series_instance_uid = ds.SeriesInstanceUID
 
-    def set_z_table(self, dcm):
+    def _set_z_table_from_dicom(self, dcm):
         """ Creates the slice position lookup table based on a given Dicom object.
         The table is attached to self.
 
@@ -934,7 +944,7 @@ class Cube(object):
         for i, dcm_image in enumerate(dcm["images"]):
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
-    def write_trip_data(self, path):
+    def _write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
 
         Type is specified by self.pydata_type and self.byte_order attributes.
