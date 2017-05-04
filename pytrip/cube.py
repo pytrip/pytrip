@@ -249,7 +249,7 @@ class Cube(object):
         y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
         xv, yv = np.meshgrid(x, y)
 
-    def set_all_voxels_by_voi(self, voi, preset=0, data_type=np.int16):
+    def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
         """ Attaches/overwrites Cube.data based on a given Voi.
 
         Voxels within the structure are filled it with 'preset' value.
@@ -313,7 +313,7 @@ class Cube(object):
         # unique for each CT slice
         self._ct_sop_instance_uid = UID.generate_uid(prefix=None)
 
-    def set_voxels_inside_voi(self, voi, value):
+    def mask_by_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
 
         Voxels within the structure are filled it with 'value'.
@@ -337,7 +337,7 @@ class Cube(object):
                         if k % 2 == 1:  # voxel is inside structure, if odd number of intersections.
                             self.cube[i_z][i_y][i_x] = value
 
-    def add_to_voxels_inside_voi(self, voi, value=0):
+    def mask_by_voi_add(self, voi, value=0):
         """ Add 'value' to all voxels within the given Voi
 
         'value' is added to each voxel value within the given volume of interest.
