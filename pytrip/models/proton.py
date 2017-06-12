@@ -122,6 +122,10 @@ def _rbe_apx(dose, apx, sbpx, abx):
     """
 
     _rbe = 1.0 / (2.0 * dose)
-    _rbe[_rbe == np.inf] = 0
+    if hasattr(_rbe, '__iter__'):
+        _rbe[_rbe == np.inf] = 0
+    else:
+        if _rbe == np.inf:
+            return 0.0
     _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*sbpx*sbpx * dose*dose) - abx)
     return _rbe
