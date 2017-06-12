@@ -123,7 +123,9 @@ def _rbe_apx(dose, apx, bpx, abx):
     :params abx: alpha_x / beta_x  [Gy^-1]
     """
 
+    # note that in Carabe model equation (1) is (sqrt(bpx))**2
+    
     _rbe = 1.0 / (2.0 * dose)
     _rbe[_rbe == np.inf] = 0
-    _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*bpx*bpx * dose*dose) - abx)
+    _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*bpx * dose*dose) - abx)
     return _rbe
