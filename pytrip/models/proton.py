@@ -123,5 +123,7 @@ def _rbe_apx(dose, apx, bpx, abx):
     :params abx: alpha_x / beta_x  [Gy^-1]
     """
 
-    _rbe = (np.sqrt(abx*abx + 4*abx*apx*dose + 4*bpx * dose*dose) - abx) / (2 * dose)
+    _rbe = 1.0 / (2.0 * dose)
+    _rbe[_rbe == np.inf] = 0
+    _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*bpx*bpx * dose*dose) - abx)
     return _rbe
