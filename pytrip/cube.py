@@ -559,7 +559,7 @@ class Cube(object):
     def parse_path(cls, path_name):
         """
         Parse path_name which can have form of: bare name (i.e. TST001), plain file (TST001.hed or TST001.ctx),
-        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates basename and extensions for 
+        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates basename and extensions for
         header and data file. Extension of data file is extracted from the class from which this method was called
         (.ctx for CtxCube, .dos for DosCube, .dosemlet.dos for LetCube). In case of non-parseable data None is returned.
 

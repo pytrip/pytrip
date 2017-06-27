@@ -19,9 +19,10 @@
 """
 This module provides the LETCube for handling LET data.
 """
-import numpy as np
 from pytrip.cube import Cube
 import pytriplib
+
+import numpy as np
 
 
 class LETCube(Cube):
@@ -29,7 +30,7 @@ class LETCube(Cube):
 
     It is similar to DosCubes and CtxCubes, but is intended to hold LET data.
     The object has build-in methods to read and write the LET data cubes,
-    calculate the LET-volume historgrams, and write these to disk.
+    calculate the LET-volume histograms, and write these to disk.
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 

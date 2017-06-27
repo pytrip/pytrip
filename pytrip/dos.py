@@ -72,7 +72,7 @@ class DosCube(Cube):
         :param Dicom dcm: a Dicom object
         """
         if "rtdose" not in dcm:
-            raise InputError("Data doesn't contain dose infomation")
+            raise InputError("Data doesn't contain dose information")
         if self.header_set is False:
             self._set_header_from_dicom(dcm)
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx))

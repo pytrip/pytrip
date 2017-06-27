@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-Module with auxilliary functions (mostly internal use).
+Module with auxiliary functions (mostly internal use).
 """
 
 import numpy as np
@@ -28,6 +28,26 @@ def get_class_name(item):
     :returns: name of class of 'item' object.
     """
     return item.__class__.__name__
+
+
+class FileLocator(object):
+    def __init__(self, user_path, trip_type):
+        self.user_path = user_path
+        self.trip_type = trip_type
+        self.data_file_extension = self.trip_type.data_file_extension
+        self.header_file_extension = self.trip_type.header_file_extension
+
+    @property
+    def exists(self):
+        pass
+
+    @property
+    def data(self):
+        pass
+
+    @property
+    def header(self):
+        pass
 
 
 def evaluator(funct, name='funct'):
@@ -69,7 +89,7 @@ def volume_histogram(cube, voi=None, bins=256):
 
     _xrange = (0.0, cube.max()*1.1)
     _hist, x = np.histogram(cube[mask], bins=bins, range=_xrange)
-    _fhist = _hist[::-1]  # reverse historgram, so first element is for highest dose
+    _fhist = _hist[::-1]  # reverse histogram, so first element is for highest dose
     _fhist = np.cumsum(_fhist)
     _hist = _fhist[::-1]  # flip back again to normal representation
 
