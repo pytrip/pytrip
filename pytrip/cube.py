@@ -429,11 +429,11 @@ class Cube(object):
             raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
     def _set_format_str(self):
-        """Set format string accoring to byte_order.
+        """Set format string according to byte_order.
         """
-        if (self.byte_order == "vms"):
+        if self.byte_order == "vms":
             self.format_str = "<"
-        elif (self.byte_order == "aix"):
+        elif self.byte_order == "aix":
             self.format_str = ">"
         self._set_number_of_bytes()
 
