@@ -396,9 +396,9 @@ class Cube(object):
         output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
         output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
+        output_str += "xoffset {:d}\n".format(int(round(self.xoffset/self.pixel_size)))
         output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
+        output_str += "yoffset {:d}\n".format(int(round(self.yoffset/self.pixel_size)))
         output_str += "dimy {:d}\n".format(self.dimy)
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
@@ -542,29 +542,19 @@ class Cube(object):
 
     def merge_zero(self, cube):
         self.cube[self.cube == 0] = cube.cube[self.cube == 0]
-    #
-    # @classmethod
-    # def header_file_name(cls, path_name):
-    #
-    #     basename, header_file_bare_extension, _ = cls.parse_path(path_name)
-    #     if basename is not None:
-    #         return basename + '.' + header_file_bare_extension
-    #     else:
-    #         return None
-    #
-    # @classmethod
-    # def data_file_name(cls, path_name):
-    #     basename, _, data_file_bare_extension = cls.parse_path(path_name)
-    #     if basename is not None:
-    #         return basename + '.' + data_file_bare_extension
-    #     else:
-    #         return None
+
+    @classmethod
+    def header_file_name(cls, path_name):
+        return TRiP98FilePath(path_name, cls).header
+
+    @classmethod
+    def data_file_name(cls, path_name):
+        return TRiP98FilePath(path_name, cls).datafile
 
     def write(self, path):
         """Write the Cube and its header to a file with the filename 'path'.
 
         :param str path: path to header file, data file or basename (without extension)
-
         """
 
         import sys
@@ -572,8 +562,8 @@ class Cube(object):
         path_string = isinstance(path, (str, bytes) if not PY2 else basestring)  # NOQA: F821
 
         if path_string:
-            header_path = TRiP98FilePath(path, self).header
-            datafile_path = TRiP98FilePath(path, self).datafile
+            header_path = self.header_file_name(path)
+            datafile_path = self.data_file_name(path)
 
         elif len(path) == 2:
             header_path, datafile_path = path

@@ -99,14 +99,6 @@ def load_ct_cube(filename):
         return None, None
 
     logger.info("Reading " + filename)
-    # ctx_header = pt.CtxCube.header_file_name(filename)
-    #
-    # if ctx_header is None:
-    #     logger.warning("Path " + filename + " doesn't seem to point to proper CT cube")
-    #     return None, None
-    #
-    # basename_cube, _, _ = pt.CtxCube.parse_path(filename)
-    #
     c = pt.CtxCube()
     c.read(filename)
     logger.info("CT cube shape" + str(c.cube.shape))
