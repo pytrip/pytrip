@@ -25,6 +25,7 @@ import re
 import sys
 import logging
 import datetime
+
 import numpy as np
 
 try:
@@ -36,6 +37,7 @@ except:
     _dicom_loaded = False
 
 from pytrip.error import InputError, ModuleNotLoadedError
+from pytrip.util import TRiP98FilePath, TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
 
@@ -45,6 +47,11 @@ class Cube(object):
     Otherwise, this cube class may be used for storing different kinds of data, such as number of cells,
     oxygenation level, surviving fraction, etc.
     """
+
+    header_file_extension = '.hed'
+    data_file_extension = None
+    allowed_suffix = tuple()
+
     def __init__(self, cube=None):
         if cube is not None:
             self.header_set = cube.header_set
@@ -71,6 +78,7 @@ class Cube(object):
             self.dimz = cube.dimz
             self.z_table = cube.z_table
             self.slice_pos = cube.slice_pos
+            self.basename = cube.basename
             self._set_format_str()
             self._set_number_of_bytes()
 
@@ -110,6 +118,7 @@ class Cube(object):
             self.zoffset = 0.0
             self.dimz = ""
             self.slice_pos = []
+            self.basename = ""
 
             # UIDs unique for whole structure set
             # generation of UID is done here in init, the reason why we are not generating them in create_dicom
@@ -387,9 +396,9 @@ class Cube(object):
         output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
         output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset/self.pixel_size)))
+        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
         output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset/self.pixel_size)))
+        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
         output_str += "dimy {:d}\n".format(self.dimy)
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
@@ -533,147 +542,57 @@ class Cube(object):
 
     def merge_zero(self, cube):
         self.cube[self.cube == 0] = cube.cube[self.cube == 0]
+    #
+    # @classmethod
+    # def header_file_name(cls, path_name):
+    #
+    #     basename, header_file_bare_extension, _ = cls.parse_path(path_name)
+    #     if basename is not None:
+    #         return basename + '.' + header_file_bare_extension
+    #     else:
+    #         return None
+    #
+    # @classmethod
+    # def data_file_name(cls, path_name):
+    #     basename, _, data_file_bare_extension = cls.parse_path(path_name)
+    #     if basename is not None:
+    #         return basename + '.' + data_file_bare_extension
+    #     else:
+    #         return None
 
-    @staticmethod
-    def discover_file(file_name):
-        """
-        Checks if file_name exists in the filesystem. If yes, gives back its path.
-        If not, checks if gzipped file with same name exists.
-        If gzipped file exists, gives back it path, otherwise returns None.
+    def write(self, path):
+        """Write the Cube and its header to a file with the filename 'path'.
 
-        :param file_name: File name or path
-        :return: file_name, file_name + ".gz" or None
+        :param str path: path to header file, data file or basename (without extension)
+
         """
-        gzip_file_name = file_name + ".gz"
-        if os.path.exists(file_name):
-            logger.debug("File " + file_name + " exists")
-            return file_name
-        elif os.path.exists(gzip_file_name):
-            logger.debug("File " + gzip_file_name + " exists")
-            return gzip_file_name
+
+        import sys
+        PY2 = sys.version_info.major == 2
+        path_string = isinstance(path, (str, bytes) if not PY2 else basestring)  # NOQA: F821
+
+        if path_string:
+            header_path = TRiP98FilePath(path, self).header
+            datafile_path = TRiP98FilePath(path, self).datafile
+
+        elif len(path) == 2:
+            header_path, datafile_path = path
+
+            # security checks for header file
+            # first check - validity of the path
+            if not TRiP98FilePath(header_path, self).is_valid_header_path():
+                logger.warning("Loading {:s} which doesn't look like valid header path".format(header_path))
+
+            # security checks for datafile path
+            # first check - validity of the path
+            if not TRiP98FilePath(datafile_path, self).is_valid_datafile_path():
+                logger.warning("Loading {:s} which doesn't look like valid datafile path".format(datafile_path))
         else:
-            logger.error("Both " + file_name + " and " + gzip_file_name + " do not exists")
-            return None
+            raise Exception("More than two arguments provided as path variable to Cube.read method")
 
-    @classmethod
-    def parse_path(cls, path_name):
-        """
-        Parse path_name which can have form of: bare name (i.e. TST001), plain file (TST001.hed or TST001.ctx),
-        gzipped file (TST001.hed.gz or TST001.ctx.gz) or some other name. Calculates basename and extensions for
-        header and data file. Extension of data file is extracted from the class from which this method was called
-        (.ctx for CtxCube, .dos for DosCube, .dosemlet.dos for LetCube). In case of non-parseable data None is returned.
-
-        >>> from pytrip import CtxCube
-        >>> CtxCube.parse_path("frodo.hed")
-        ('frodo', 'hed', 'ctx')
-        >>> CtxCube.parse_path("baggins.ctx")
-        ('baggins', 'hed', 'ctx')
-        >>> CtxCube.parse_path("mordor")
-        ('mordor', 'hed', 'ctx')
-        >>> CtxCube.parse_path("legolas.hed.gz")
-        ('legolas', 'hed', 'ctx')
-        >>> CtxCube.parse_path("gimli.son.of.gloin.ctx.gz")
-        ('gimli.son.of.gloin', 'hed', 'ctx')
-        >>> CtxCube.parse_path("bilbo.dos")
-        (None, 'hed', 'ctx)
-        >>> pt.CtxCube.parse_path("/home/pytrip/patient.ctx")
-        ('/home/pytrip/patient', 'hed', 'ctx')
-        >>> from pytrip import DosCube
-        >>> DosCube.parse_path("bilbo.dos")
-        ('bilbo', 'hed', 'dos')
-        >>> DosCube.parse_path("baggins.ctx")
-        (None, 'hed', 'dos')
-        >>> from pytrip import LETCube
-        >>> LETCube.parse_path("aragorn.dosemlet.dos")
-        ('aragorn' , 'dosemlet.hed', 'dosemlet.dos')
-        >>> LETCube.parse_path("aragorn.dosemlet")
-        (None, 'dosemlet.hed', 'dosemlet.dos')
-        >>> LETCube.parse_path("aragorn")
-        ('aragorn', 'dosemlet.hed', 'dosemlet.dos')
-        >>> LETCube.parse_path("aragorn.ctx")
-        (None, 'dosemlet.hed', 'dosemlet.dos')
-
-        :param path_name: path to header file, data file or basename path (path to file without extension).
-        Path can be absolute or relative. It can also lead to gzipped files.
-        :return: triple of basename, header file extension and data file extension
-        """
-
-        logger.info("Parsing " + path_name)
-
-        # this method is intended to be used by subclasess of Cube (i.e. DosCube, LETCube, CtxCube)
-        # let us ensure first if these subclassess define file extensions corresponding to header and data files
-
-        # checking if current class has data extension attribute, to compare with data file extension
-        if 'data_file_extension' in cls.__dict__:
-            class_data_file_bare_extension = cls.data_file_extension.lower()[1:]  # without dot
-            logger.debug("class data filename extension: " + class_data_file_bare_extension)
-        else:  # class without extension, we assume in such case file is given without extension
-            error_msg = "Class " + str(cls) + " doesn't have data_file_extension field"
-            logger.error(error_msg)
-            raise NotImplementedError(error_msg)
-
-        # checking if current class has header extension attribute, to compare with header file extension
-        if 'header_file_extension' in cls.__dict__:
-            class_header_file_bare_extension = cls.header_file_extension.lower()[1:]  # without dot
-            logger.debug("class data filename extension: " + class_header_file_bare_extension)
-        else:  # class without extension, we assume in such case file is given without extension
-            error_msg = "Class " + str(cls) + " doesn't have header_file_extension field"
-            logger.error(error_msg)
-            raise NotImplementedError(error_msg)
-
-        #  path can end with .gz or not (be it archive or not). Let us check it
-        is_path_gzipped = path_name.endswith(".gz")
-        logger.debug("is file gzipped ? " + str(is_path_gzipped))
-
-        # strip .gz from path (if present)
-        uncompressed_path_name = path_name
-        if is_path_gzipped:
-            uncompressed_path_name = path_name[:len(".gz")]
-        logger.debug("uncompressed filename: " + uncompressed_path_name)
-
-        # we have several options:
-        # 1. file with header extension (i.e. blabla.hed or blabla.dosemlet.hed)
-        # 2. file with data extension (i.e. blabla.ctx, blabla.dos., blabla.dosemlet.dos)
-        # 3. file without extension (i.e. blabla)
-        # 4. file with unknown extensions (i.e. blabla.mp3)
-        # Options 1-3 can be parsed, option 4 will give us empty result
-
-        if uncompressed_path_name.endswith(class_header_file_bare_extension):  # path to header file
-            logger.debug("header file ")
-            basename_end_index = uncompressed_path_name.rfind(class_header_file_bare_extension)
-            basename = uncompressed_path_name[:basename_end_index]
-            if basename[-1] == '.':
-                basename = basename[:-1]
-        elif uncompressed_path_name.endswith(class_data_file_bare_extension):  # cube file
-            logger.debug("cube file ")
-            basename_end_index = uncompressed_path_name.rfind(class_data_file_bare_extension)
-            basename = uncompressed_path_name[:basename_end_index]
-            if basename[-1] == '.':
-                basename = basename[:-1]
-        elif not os.path.splitext(uncompressed_path_name)[1]:  # file without extension
-            logger.debug("file without extension ")
-            basename = uncompressed_path_name
-        else:   # a problem (i.e. unknown exception)
-            logger.debug("a problem (unknown extension?) with path " + path_name)
-            basename = None
-
-        return basename, class_header_file_bare_extension, class_data_file_bare_extension
-
-    @classmethod
-    def header_file_name(cls, path_name):
-        basename, header_file_bare_extension, _ = cls.parse_path(path_name)
-        if basename is not None:
-            return basename + '.' + header_file_bare_extension
-        else:
-            return None
-
-    @classmethod
-    def data_file_name(cls, path_name):
-        basename, _, data_file_bare_extension = cls.parse_path(path_name)
-        if basename is not None:
-            return basename + '.' + data_file_bare_extension
-        else:
-            return None
+        # finally write files
+        self._write_trip_header(header_path)
+        self._write_trip_data(datafile_path)
 
     def _parse_trip_header(self, content):
         """ Parses content which was read from a trip header.
@@ -745,22 +664,89 @@ class Cube(object):
         # Note:
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
-        if has_ztable is False:
-            self.slice_pos = [float(j) for j in range(self.slice_number)]
-            for i in range(self.slice_number):
-                self.slice_pos[i] = self.zoffset + i * self.slice_distance
+        if not has_ztable:
+            self.slice_pos = [self.zoffset + i * self.slice_distance for i in range(self.slice_number)]
         self._set_format_str()
         self._set_number_of_bytes()
 
     def read(self, path):
-        """ Reads both TRiP98 data and its associated header into the Cube object.
-
-        :param str path: Path to filename to be read, file extention may be given but is not neccesary.
         """
-        self.basename = os.path.basename(path).split(".")[0]
-        self._read_trip_data_file(path)
+        Reads both TRiP98 data and its associated header into the Cube object.
+        :param path: string or sequence of strings (length 2)
 
-    def _read_trip_header_file(self, path):  # TODO: could be made private? #126
+        if a single string is provided, it may be path to header file or datafile
+        it can also be a name stripped of extension
+
+        if pair of strings is provided, it is understoop as pair of header file path
+        and data file path
+
+        :return:
+        """
+
+        # let us check if path is a string in a way python 2 and 3 will like it
+        # based on https://stackoverflow.com/questions/4843173/how-to-check-if-type-of-a-variable-is-string
+        import sys
+        PY2 = sys.version_info.major == 2
+        path_string = isinstance(path, (str, bytes) if not PY2 else basestring)  # NOQA: F821
+
+        if path_string:
+            self.basename = os.path.basename(TRiP98FilePath(path, self).basename)
+
+            path_locator = TRiP98FileLocator(path, self)
+
+            header_path = path_locator.header
+            if not header_path:
+                raise Exception("Loading {:s} failed, file not found".format(header_path))
+
+            datafile_path = path_locator.datafile
+            if not datafile_path:
+                raise Exception("Loading {:s} failed, file not found".format(datafile_path))
+
+            # finally read files
+            self._read_trip_header_file(header_path=header_path)
+            self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
+
+        elif len(path) == 2:
+            header_path, datafile_path = path
+
+            # security checks for header file
+            # first check - validity of the path
+            if not TRiP98FilePath(header_path, self).is_valid_header_path():
+                logger.warning("Loading {:s} which doesn't look like valid header path".format(header_path))
+
+            # second check - if file exists
+            if not os.path.exists(header_path):
+                header_path_locator = TRiP98FileLocator(header_path, self)
+                if header_path_locator.header is not None:
+                    logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(header_path_locator.header,
+                                                                                          header_path))
+                raise Exception("Loading {:s} failed, file not found".format(header_path))
+
+            # security checks for datafile path
+            # first check - validity of the path
+            if not TRiP98FilePath(datafile_path, self).is_valid_datafile_path():
+                logger.warning("Loading {:s} which doesn't look like valid datafile path".format(datafile_path))
+
+            # second check - if file exists
+            if not os.path.exists(datafile_path):
+                datafile_path_locator = TRiP98FileLocator(datafile_path, self)
+                if datafile_path_locator.datafile is not None:
+                    logger.warning(
+                        "Did you meant to load {:s}, instead of {:s} ?".format(datafile_path_locator.datafile,
+                                                                               datafile_path))
+                raise Exception("Loading {:s} failed, file not found".format(datafile_path))
+
+            # finally read files
+            self._read_trip_header_file(header_path=header_path)
+            self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
+
+            self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
+            # i.e. read( ("1.hed", "2.dos"), what about basename then ?
+
+        else:
+            raise Exception("More than two arguments provided as path variable to Cube.read method")
+
+    def _read_trip_header_file(self, header_path):  # TODO: could be made private? #126
         """ Reads a header file, accepts also if suffix is missing, or if file
         is .gz compressed. User can thus specify:
         tst001
@@ -780,28 +766,18 @@ class Cube(object):
         be loaded, even if a .hed is available.
         """
 
-        # extract header name (blabla.hed) from path
-        # we get blabla.hed even if path equals to blabla.hed.gz, see docs in Cube.parse_path function
-        header_file_name = self.header_file_name(path)
-
-        # figure out which file exists on disc: *.hed or *.hed.gz and get its path
-        header_file_path = self.discover_file(header_file_name)
-        if header_file_path is None:
-            basename, header_file_ext, _ = self.parse_path(path)
-            header_file_path = self.discover_file(basename + header_file_ext)  # try without dots
-
         # sanity check
-        if header_file_path is not None:
-            logger.info("Reading header file" + header_file_path)
+        if header_path is not None:
+            logger.info("Reading header file" + header_path)
         else:
-            raise IOError("Could not find file " + path)
+            raise IOError("Could not find file " + header_path)
 
         # load plain of gzipped file
-        if header_file_path.endswith(".gz"):
+        if header_path.endswith(".gz"):
             import gzip
-            fp = gzip.open(header_file_path, "rt")
+            fp = gzip.open(header_path, "rt")
         else:
-            fp = open(header_file_path, "rt")
+            fp = open(header_path, "rt")
         content = fp.read()
         fp.close()
 
@@ -810,59 +786,41 @@ class Cube(object):
         self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def _read_trip_data_file(self, path, multiply_by_2=False):  # TODO: could be made private? #126
+    def _read_trip_data_file(self, datafile_path, header_path,
+                             multiply_by_2=False):  # TODO: could be made private? #126
         """Read TRiP98 formatted data.
 
         Accepts path in similar way as _read_trip_header_file().
-        If header file was not previously loaded, it will be attepted first.
+        If header file was not previously loaded, it will be attempted first.
 
         Due to an issue in VIRTUOS, sometimes DosCube data have been reduced with a factor of 2.
         Setting multiply_by_2 to True, will restore the true values, in this case.
 
-        :param path: Path to TRiP formatted data.
+        :param datafile_path: Path to TRiP formatted data.
         :param multiply_by_2: The data read will automatically be multiplied with a factor of 2.
         """
-        # extract header and data file name from path
-        header_file_name = self.header_file_name(path)
-        data_file_name = self.data_file_name(path)
 
         # fill header data if self.header is empty
-        if self.header_set is False:
-            header_file_path = self.discover_file(header_file_name)
-            if header_file_path is None:
-                basename, header_file_ext, _ = self.parse_path(path)
-                header_file_path = self.discover_file(basename + header_file_ext)  # try without dots
-
-            # sanity check
-            if header_file_path is not None:
-                logger.info("Reading header file" + header_file_path)
-                self._read_trip_header_file(header_file_path)
-            else:
-                raise IOError("Could not find file " + path)
+        if not self.header_set:
+            self._read_trip_header_file(header_path)
 
         # raise exception if reading header failed
-        if self.header_set is False:
+        if not self.header_set:
             raise InputError("Header file not loaded")
 
         # preparation
         data_dtype = np.dtype(self.format_str)
         data_count = self.dimx * self.dimy * self.dimz
 
-        # figure out path to data file on disk, might be gzipped or not
-        data_file_path = self.discover_file(data_file_name)
-        if data_file_path is None:
-            basename, _, data_file_ext = self.parse_path(path)
-            data_file_path = self.discover_file(basename + data_file_ext)  # try without dots
-
         # load data from data file (gzipped or not)
-        logger.info("Opening file: " + path)
-        if data_file_path.endswith('.gz'):
+        logger.info("Opening file: " + datafile_path)
+        if datafile_path.endswith('.gz'):
             import gzip
-            with gzip.open(data_file_path, "rb") as f:
+            with gzip.open(datafile_path, "rb") as f:
                 s = f.read(data_dtype.itemsize * data_count)
                 cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
         else:
-            cube = np.fromfile(data_file_path, dtype=data_dtype)
+            cube = np.fromfile(datafile_path, dtype=data_dtype)
 
         if self.byte_order == "aix":
             logger.info("AIX big-endian data.")
@@ -912,7 +870,7 @@ class Cube(object):
 
         :param Dicom dcm: Dicom object which will be used for generating the header data.
         """
-        if _dicom_loaded is False:
+        if not _dicom_loaded:
             raise ModuleNotLoadedError("Dicom")
         ds = dcm["images"][0]
         self.version = "1.4"
@@ -962,7 +920,7 @@ class Cube(object):
         """ Creates the slice position lookup table based on a given Dicom object.
         The table is attached to self.
 
-        :param Dicom dcm: dicom object provided by pydicom.
+        :param DICOM dcm: dicom object provided by pydicom.
         """
         # TODO: can we rely on that this will always be sorted?
         # if yes, then all references to whether this is sorted or not can be removed hereafter
@@ -976,10 +934,9 @@ class Cube(object):
 
         Type is specified by self.pydata_type and self.byte_order attributes.
 
-        :param str path: Full path including file extention.
+        :param str path: Full path including file extension.
         """
         cube = np.array(self.cube, dtype=self.pydata_type)
         if self.byte_order == "aix":
             cube = cube.byteswap()
         cube.tofile(path)
-        return

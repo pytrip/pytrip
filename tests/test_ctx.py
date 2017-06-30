@@ -26,9 +26,9 @@ import tempfile
 import unittest
 import logging
 
-from pytrip import DosCube
 from pytrip.ctx import CtxCube
 import tests.base
+from pytrip.util import TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
 
@@ -50,8 +50,7 @@ class TestCtx(unittest.TestCase):
         c = CtxCube()
         c.read(path)
 
-        data_file = CtxCube.data_file_name(self.cube000)
-        data_file_path = CtxCube.discover_file(data_file)
+        data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
 
         if data_file_path.endswith(".gz"):
             f = gzip.open(data_file_path)
@@ -92,53 +91,6 @@ class TestCtx(unittest.TestCase):
         c.read(self.cube000)
         d = c + 5
         self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
-
-    def test_filename_parsing(self):
-        bare_name = "frodo_baggins"
-        cube_ext = ".ctx"
-        header_ext = ".hed"
-        gzip_ext = ".gz"
-
-        # all possible reasonable names for input file
-        testing_names = (bare_name,
-                         bare_name + cube_ext, bare_name + cube_ext + gzip_ext,
-                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
-
-        # loop over all names
-        for name in testing_names:
-            logger.info("Parsing " + name)
-            header_filename = CtxCube.header_file_name(name)
-            cube_filename = CtxCube.data_file_name(name)
-            self.assertIsNotNone(header_filename)
-            self.assertIsNotNone(cube_filename)
-
-            logger.info("Parsing output: " + header_filename + " , " + cube_filename)
-
-            # test if got what was expected
-            self.assertEqual(header_filename, bare_name + header_ext)
-            self.assertEqual(cube_filename, bare_name + cube_ext)
-
-        dos_cube_ext = ".dos"
-
-        # all possible reasonable names for input file
-        testing_names = (bare_name,
-                         bare_name + dos_cube_ext, bare_name + dos_cube_ext + gzip_ext,
-                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
-
-        # loop over all names
-        for name in testing_names:
-            logger.info("Parsing " + name)
-            dos_header_filename = DosCube.header_file_name(name)
-            dos_cube_filename = DosCube.data_file_name(name)
-
-            self.assertIsNotNone(dos_header_filename)
-            self.assertIsNotNone(dos_cube_filename)
-
-            logger.info("Parsing output: " + dos_header_filename + " , " + dos_cube_filename)
-
-            # test if got what was expected
-            self.assertEqual(dos_header_filename, bare_name + header_ext)
-            self.assertEqual(dos_cube_filename, bare_name + dos_cube_ext)
 
 
 if __name__ == '__main__':

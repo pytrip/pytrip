@@ -27,6 +27,7 @@ import logging
 from numpy import arange, ma, NINF
 
 import pytrip as pt
+from pytrip.util import TRiP98FilePath
 
 logger = logging.getLogger(__name__)
 
@@ -51,19 +52,23 @@ def load_data_cube(filename):
     # LET cube file have extension .dosemlet.dos, DOS cube files have extension .dos
     # this means that LET cube file can be interpreted as DOS cube file
     # it is then important to check first for LET cube
-    #
-    # looping over classes is used in case support for other cubes needs to be added and to avoid code duplication
-    for cube_cls in (pt.LETCube, pt.DosCube):
-        data_header = cube_cls.header_file_name(filename)  # parse input file path
-        logger.debug("Checking if {:s} fits with {:s} class".format(filename, cube_cls.__name__))
-        if data_header is not None:  # parsing successful
-            logger.debug("Extracted data header {:s}".format(data_header))
 
-            # extracting basename
-            basename_cube, _, _ = cube_cls.parse_path(filename)
+    let_path_helper = TRiP98FilePath(filename, pt.LETCube)
+    dose_path_helper = TRiP98FilePath(filename, pt.DosCube)
 
-            d = cube_cls()  # creating cube object, reading file will be done later
-            break  # escaping from the loop
+    # check if LET cube type can be determinen by presence of suffix in a name (mlet, dosemlet)
+    if let_path_helper.suffix is not None:
+        cube_cls = let_path_helper.cube_type
+
+    # check if DOS cube type can be determinen by presence of suffix in a name (phys, bio etc...)
+    elif dose_path_helper.suffix is not None:
+        cube_cls = dose_path_helper.cube_type
+
+    # assume dose cube
+    else:
+        cube_cls = pt.DosCube
+
+    d = cube_cls()  # creating cube object, reading file will be done later
 
     if d is not None:  # parsing successful, we can proceed to reading the file
         d.read(filename)
@@ -76,6 +81,8 @@ def load_data_cube(filename):
         logger.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
     else:
         logger.warning("Filename " + filename + " is neither valid DOS nor LET cube")
+
+    basename_cube = d.basename
 
     return d, basename_cube
 
@@ -92,13 +99,14 @@ def load_ct_cube(filename):
         return None, None
 
     logger.info("Reading " + filename)
-    ctx_header = pt.CtxCube.header_file_name(filename)
-
-    if ctx_header is None:
-        logger.warning("Path " + filename + " doesn't seem to point to proper CT cube")
-        return None, None
-
-    basename_cube, _, _ = pt.CtxCube.parse_path(filename)
+    # ctx_header = pt.CtxCube.header_file_name(filename)
+    #
+    # if ctx_header is None:
+    #     logger.warning("Path " + filename + " doesn't seem to point to proper CT cube")
+    #     return None, None
+    #
+    # basename_cube, _, _ = pt.CtxCube.parse_path(filename)
+    #
     c = pt.CtxCube()
     c.read(filename)
     logger.info("CT cube shape" + str(c.cube.shape))
@@ -107,7 +115,7 @@ def load_ct_cube(filename):
     cmin = c.cube.min()
     logger.info("CT min, max values: {:d} {:d}".format(cmin, cmax))
 
-    return c, basename_cube
+    return c, c.basename
 
 
 def main(args=sys.argv[1:]):

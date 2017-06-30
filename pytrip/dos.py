@@ -42,11 +42,11 @@ logger = logging.getLogger(__name__)
 
 
 class DosCube(Cube):
-    """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos suffix.
-    This class can also handle Dicom files.
+    """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos/.DOS suffix.
+    This class can also handle DICOM files.
     """
-    data_file_extension = ".dos"
-    header_file_extension = ".hed"
+    data_file_extension = '.dos'
+    allowed_suffix = ('phys', 'bio', 'rbe', 'svv', 'alpha', 'beta')
 
     def __init__(self, cube=None):
         """ Creates a DosCube instance.
@@ -67,9 +67,9 @@ class DosCube(Cube):
         self._dose_dicom_series_instance_uid = UID.generate_uid(prefix=None)
 
     def read_dicom(self, dcm):
-        """ Imports the dose distribution from Dicom object.
+        """ Imports the dose distribution from DICOM object.
 
-        :param Dicom dcm: a Dicom object
+        :param DICOM dcm: a DICOM object
         """
         if "rtdose" not in dcm:
             raise InputError("Data doesn't contain dose information")
@@ -146,10 +146,10 @@ class DosCube(Cube):
             np.savetxt(dvh, filename)
 
     def create_dicom_plan(self):
-        """ Create a dummy Dicom RT-plan object.
+        """ Create a dummy DICOM RT-plan object.
 
         The only data which is forwarded to this object, is self.patient_name.
-        :returns: a Dicom RT-plan object.
+        :returns: a DICOM RT-plan object.
         """
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
@@ -200,15 +200,15 @@ class DosCube(Cube):
         return ds
 
     def create_dicom(self):
-        """ Creates a Dicom RT-Dose object from self.
+        """ Creates a DICOM RT-Dose object from self.
 
-        This function can be used to convert a TRiP98 Dose file to Dicom format.
+        This function can be used to convert a TRiP98 Dose file to DICOM format.
 
-        :returns: a Dicom RT-Dose object.
+        :returns: a DICOM RT-Dose object.
         """
 
         if not _dicom_loaded:
-            raise ModuleNotLoadedError("Dicom")
+            raise ModuleNotLoadedError("DICOM")
         if not self.header_set:
             raise InputError("Header not loaded")
 
@@ -261,20 +261,8 @@ class DosCube(Cube):
         ds.PixelData = pixel_array.tostring()
         return ds
 
-    def write(self, path):
-        """
-        Write Dose data to disk, in TRiP98/Voxelplan format.
-
-        This method will build and write both the .hed and .dos file.
-
-        :param str path: Path, any file extentions will be ignored.
-        """
-
-        self._write_trip_header(self.header_file_name(path))
-        self._write_trip_data(self.data_file_name(path))
-
     def write_dicom(self, directory):
-        """ Write Dose-data to disk, in Dicom format.
+        """ Write Dose-data to disk, in DICOM format.
 
         This file will save the dose cube and a plan associated with that dose.
         Function call create_dicom() and create_dicom_plan() and then save these.

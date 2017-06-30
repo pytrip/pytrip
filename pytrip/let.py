@@ -34,31 +34,21 @@ class LETCube(Cube):
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = ".dosemlet.dos"
-    header_file_extension = ".dosemlet.hed"
+    data_file_extension = '.dos'
+    allowed_suffix = ('dosemlet', 'mlet')
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
 
-    def write(self, path):
-        """Write the LETCube and its header to a file with the filename 'path'.
-
-        :param str path: path to header file, data file or basename (without extension)
-
-        """
-
-        self._write_trip_header(self.header_file_name(path))
-        self._write_trip_data(self.data_file_name(path))
-
     def get_max(self):
         """ Returns the largest value in the LETCube.
 
-        :returns: the largets value found in the in the LETCube.
+        :returns: the largest value found in the in the LETCube.
         """
         return np.amax(self.cube)
 
     def calculate_lvh(self, voi):
-        """ Calculate a LET-volume historgram.
+        """ Calculate a LET-volume histogram.
 
         :param Voi voi: The volume of interest, in the form of a Voi object.
         :returns: A tuple containing
