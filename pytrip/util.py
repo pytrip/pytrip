@@ -87,11 +87,11 @@ class TRiP98FilePath(object):
         Checks if filename corresponds to valid header filename
         (i.e. it it ends with .hed or .HED).
         >>> import pytrip as pt
-        >>> TRiP98FilePath("file.txt", pt.DosCube).is_valid_header_path()
+        >>> TRiP98FilePath("file.txt", pt.CtxCube).is_valid_header_path()
         False
         >>> TRiP98FilePath("file.txt.hed", pt.DosCube).is_valid_header_path()
         True
-        >>> TRiP98FilePath("file.HED", pt.DosCube).is_valid_header_path()
+        >>> TRiP98FilePath("file.HED", pt.CtxCube).is_valid_header_path()
         True
         >>> TRiP98FilePath("file.DOS", pt.DosCube).is_valid_header_path()
         False
@@ -114,8 +114,15 @@ class TRiP98FilePath(object):
             (self.header_file_extension.lower(),
              self.header_file_extension.upper()))
 
-    def is_valid_datafile_path(self, check_suffix=True):
+    def is_valid_datafile_path(self):
         """
+        Checks if filename corresponds to valid datafile.
+        If wanted to get information about DosCube or LETCube, it checks if file extension is .dos,
+        for CtxCubes it checks for .ctx extension.
+
+        It doesn't check if filename contains a valid suffix (dosemlet or mlet for LETCube, PHYS, etc... for DosCube.
+        Such type of check can be done using is_valid_cube_type() method.
+
         >>> import pytrip as pt
         >>> TRiP98FilePath("file.txt", pt.DosCube).is_valid_datafile_path()
         False
@@ -134,7 +141,7 @@ class TRiP98FilePath(object):
         >>> TRiP98FilePath("file.dosemlet.dos", pt.LETCube).is_valid_datafile_path()
         True
 
-        :return:
+        :return: True if filename denotes datafile, False otherwise.
         """
 
         # check if corresponding cube class has information about data file extension
@@ -375,21 +382,24 @@ class TRiP98FileLocator(object):
     def header(self):
         basename = self.trip98path.basename
         files_tried = []
+        logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
         for gzip_extension in ("", ".gz", ".GZ"):
             for header_extension in (self.trip98path.header_file_extension.lower(),
                                      self.trip98path.header_file_extension.upper()):
                 candidate_path = basename + header_extension + gzip_extension
                 if os.path.exists(candidate_path):
+                    logger.info("Found " + candidate_path)
                     return candidate_path
                 else:
                     files_tried.append(candidate_path)
-        logger.warning("Tried opening following files: " + " , ".join(files_tried))
+        logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
     @property
     def datafile(self):
         basename = self.trip98path.basename
         files_tried = []
+        logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
         for gzip_extension in ("", ".gz", ".GZ"):
             for datafile_extension in (self.trip98path.data_file_extension.lower(),
                                        self.trip98path.data_file_extension.upper()):
@@ -398,7 +408,7 @@ class TRiP98FileLocator(object):
                     return candidate_path
                 else:
                     files_tried.append(candidate_path)
-        logger.warning("Tried opening following files: " + " , ".join(files_tried))
+        logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
 

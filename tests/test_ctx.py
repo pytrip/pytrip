@@ -31,6 +31,7 @@ import tests.base
 from pytrip.util import TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class TestCtx(unittest.TestCase):
@@ -50,8 +51,10 @@ class TestCtx(unittest.TestCase):
         c = CtxCube()
         c.read(path)
 
+        # get path to the cube data file, extracting it from a partial path
         data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
 
+        # get the hashsum
         if data_file_path.endswith(".gz"):
             f = gzip.open(data_file_path)
         else:
@@ -66,24 +69,42 @@ class TestCtx(unittest.TestCase):
         logger.debug("Generated random file name " + outfile)
 
         # save cube and calculate hashsum
-        c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
-        f = open(outfile + CtxCube.data_file_extension, 'rb')
+        saved_header_path, saved_cubedata_path = c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
+
+        # check if generated files exists
+        self.assertTrue(os.path.exists(saved_header_path))
+        self.assertTrue(os.path.exists(saved_cubedata_path))
+        f = open(saved_cubedata_path, 'rb')
         generated_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
-        logger.debug("Removing " + outfile + CtxCube.data_file_extension)
-        os.remove(outfile + CtxCube.data_file_extension)
-        logger.debug("Removing " + outfile + CtxCube.header_file_extension)
-        os.remove(outfile + CtxCube.header_file_extension)
+        logger.debug("Removing " + saved_cubedata_path)
+        os.remove(saved_cubedata_path)
+        logger.debug("Removing " + saved_header_path)
+        os.remove(saved_header_path)
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
     def test_write(self):
         possible_names = [self.cube000,
                           self.cube000 + ".ctx", self.cube000 + ".hed",
+                          self.cube000 + ".CTX", self.cube000 + ".HED",
                           self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"]
 
         for name in possible_names:
             self.read_and_write_cube(name)
+
+    def test_problems_when_reading(self):
+        # check malformed filename
+        with self.assertRaises(FileNotFoundError) as e:
+            self.read_and_write_cube(self.cube000[2:-1])
+
+        # check exception without dot
+        with self.assertRaises(FileNotFoundError) as e:
+            self.read_and_write_cube(self.cube000 + "hed")
+
+        # check wrong exception (file self.cube000 + ".vdx" exists !)
+        with self.assertRaises(FileNotFoundError) as e:
+            self.read_and_write_cube(self.cube000 + ".vdx")
 
     def test_addition(self):
         # read cube

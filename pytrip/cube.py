@@ -413,11 +413,11 @@ class Cube(object):
 
             header_path = path_locator.header
             if not header_path:
-                raise Exception("Loading {:s} failed, file not found".format(path))
+                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
 
             datafile_path = path_locator.datafile
             if not datafile_path:
-                raise Exception("Loading {:s} failed, file not found".format(path))
+                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
 
             # finally read files
             self._read_trip_header_file(header_path=header_path)
@@ -437,7 +437,7 @@ class Cube(object):
                 if header_path_locator.header is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(header_path_locator.header,
                                                                                           header_path))
-                raise Exception("Loading {:s} failed, file not found".format(header_path))
+                raise FileNotFoundError("Loading {:s} failed, file not found".format(header_path))
 
             # security checks for datafile path
             # first check - validity of the path
@@ -451,7 +451,7 @@ class Cube(object):
                     logger.warning(
                         "Did you meant to load {:s}, instead of {:s} ?".format(datafile_path_locator.datafile,
                                                                                datafile_path))
-                raise Exception("Loading {:s} failed, file not found".format(datafile_path))
+                raise FileNotFoundError("Loading {:s} failed, file not found".format(datafile_path))
 
             # finally read files
             self._read_trip_header_file(header_path=header_path)
@@ -676,6 +676,8 @@ class Cube(object):
         """Write the Cube and its header to a file with the filename 'path'.
 
         :param str path: path to header file, data file or basename (without extension)
+        :returns: tuple header_path, datafile_path: paths to header file and datafiles where data was saved
+        (may be different from input path if user provided a partial basename)
         """
 
         import sys
@@ -704,6 +706,8 @@ class Cube(object):
         # finally write files
         self._write_trip_header(header_path)
         self._write_trip_data(datafile_path)
+
+        return header_path, datafile_path
 
     def _write_trip_header(self, path):
         """ Write a TRiP98 formatted header file, based on the available meta data.
