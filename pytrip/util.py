@@ -37,7 +37,11 @@ def get_class_name(item):
 
 class TRiP98FilePath(object):
     """
-    Helper class which deals with filename discovery
+    Helper class which deals with filename discovery.
+    It helps in getting stem part of the filename (i.e. patient name) from the filename which includes file extension.
+    It can also construct full filename when only stem part is provided.
+    Cube type can be specified in the class constructor by providing object of cube class (or the class itself).
+
     TRiP98 files (cubes) are named according to one of the following pattern:
 
     A) STEM pattern
@@ -46,36 +50,42 @@ class TRiP98FilePath(object):
     STEM + SUFFIX + . + EXTENSION  (data file)
 
     STEM is a core part of the path provided by user (i.e. patient name), it can end with DOT (.)
-    SUFFIX is used to distinguish between quantities saved in a cube (i.e. PHYS, BIO, RBE, SVV, MLET, DOSEMLET
+    SUFFIX is used to distinguish between quantities saved in a cube (i.e. PHYS, BIO, RBE, SVV, MLET, DOSEMLET)
 
     B) NAME pattern
 
     Here suffix is omitted and we have no information about quantity saved in a cube.
+    (i.e. we can save LET cube into the files (1.hed + 1.dos); then upon reading we will not know from the filename
+    whether it is a LET or DOS cube).
 
     NAME + . + hed (header file)
     NAME + . + EXTENSION (data file)
 
     Each of the files can also be gziped packed and end with .gz
 
-    See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html
+    See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html for more details.
 
-    In TRiP98 if user wants to write a cube to the file, an argument to the write command has to be provided.
-    If the argument ends with proper data cube extension (i.e. .dos or .DOS for dose cube) then NAME pattern is used.
-    Otherwise the argument is treated as STEM.
     """
     def __init__(self, name, cube_type):
+        """
+        Creates a helper class to deal with TRiP98 filenames.
+        It digest full or partial filename. Header and datafile extensions are extracted from cube_type
+        parameter, as each of TRiP98 cubes has a field which holds allowed extensions.
+        Each cube can store different parameter (i.e. DosCube can store RBE and dose (PHYS) data.)
+        List of allowed parameters is also encoded in the TRiP98 cube classes.
+        :param name: full filename to header or datafile (i.e. pat19998.ctx) or part of it (i.e. pat19998).
+        :param cube_type: object which identifies TRiP98 cube, i.e. object of CtxCube, DosCube or LETCube.
+        """
         self.name = name
         self.cube_type = cube_type
         self.data_file_extension = self.cube_type.data_file_extension
         self.header_file_extension = self.cube_type.header_file_extension
         self.allowed_suffix = self.cube_type.allowed_suffix
 
-    def is_valid_cube_type(self):
-        no_suffix = self.suffix is None
-        return no_suffix or (self.suffix in self.allowed_suffix)
-
     def is_valid_header_path(self):
         """
+        Checks if filename corresponds to valid header filename
+        (i.e. it it ends with .hed or .HED).
         >>> import pytrip as pt
         >>> TRiP98FilePath("file.txt", pt.DosCube).is_valid_header_path()
         False
@@ -89,10 +99,13 @@ class TRiP98FilePath(object):
         True
         >>> TRiP98FilePath("file.hed", pt.LETCube).is_valid_header_path()
         True
+        >>> TRiP98FilePath("file", pt.LETCube).is_valid_header_path()
+        False
 
-        :return:
+        :return: True if filename denotes header, False otherwise.
         """
 
+        # if by some wild chance subclass of pt.Cube doesn't specify header file extension, we return False
         if not self.header_file_extension:
             return False
 
@@ -101,41 +114,7 @@ class TRiP98FilePath(object):
             (self.header_file_extension.lower(),
              self.header_file_extension.upper()))
 
-    def _has_valid_datafile_extension(self):
-        """
-        >>> import pytrip as pt
-        >>> TRiP98FilePath("file.txt", pt.DosCube)._has_valid_datafile_extension()
-        False
-        >>> TRiP98FilePath("file.txt.hed", pt.DosCube)._has_valid_datafile_extension()
-        False
-        >>> TRiP98FilePath("file.dos", pt.DosCube)._has_valid_datafile_extension()
-        True
-        >>> TRiP98FilePath("file.DOS", pt.DosCube)._has_valid_datafile_extension()
-        True
-        >>> TRiP98FilePath("file.dos", pt.Cube)._has_valid_datafile_extension()
-        False
-        >>> TRiP98FilePath("file.dos", pt.LETCube)._has_valid_datafile_extension()
-        True
-        >>> TRiP98FilePath("file.dosemlet.dos", pt.DosCube)._has_valid_datafile_extension()
-        True
-        >>> TRiP98FilePath("file.dosemlet.dos", pt.LETCube)._has_valid_datafile_extension()
-        True
-
-        :return:
-        """
-
-        # check if corresponding cube class has information about data file extension
-        if not self.data_file_extension:
-            return False
-
-        # check lower and uppercase extensions
-        correct_extension = self._ungzipped_filename.endswith(
-            (self.data_file_extension.lower(),
-             self.data_file_extension.upper()))
-
-        return correct_extension
-
-    def is_valid_datafile_path(self):
+    def is_valid_datafile_path(self, check_suffix=True):
         """
         >>> import pytrip as pt
         >>> TRiP98FilePath("file.txt", pt.DosCube).is_valid_datafile_path()
@@ -158,17 +137,22 @@ class TRiP98FilePath(object):
         :return:
         """
 
-        # check lower and uppercase extensions
-        correct_extension = self._has_valid_datafile_extension()
+        # check if corresponding cube class has information about data file extension
+        if not self.data_file_extension:
+            return False
 
-        # check suffix if present
-        suffix = self.suffix
-        if suffix is None:
-            compatible_suffix = True
-        else:
-            compatible_suffix = suffix in self.allowed_suffix
+        # check lower and uppercase extensions
+        correct_extension = self._ungzipped_filename.endswith((self.data_file_extension.lower(),
+                                                               self.data_file_extension.upper()))
+
+        # check if cube type can be identified using suffix part
+        compatible_suffix = self.is_valid_cube_type()
 
         return correct_extension and compatible_suffix
+
+    def is_valid_cube_type(self):
+        no_suffix = self.suffix is None
+        return no_suffix or (self.suffix in self.allowed_suffix)
 
     def _is_gzipped(self):
         """
@@ -221,12 +205,26 @@ class TRiP98FilePath(object):
         >>> TRiP98FilePath("file.txt.dos", pt.CtxCube)._filename_without_extension
         'file.txt.dos'
         """
-        if self.is_valid_header_path():
+
+        # remove .gz if present
+        _ungzipped_filename = self._ungzipped_filename
+
+        # check lower and uppercase extensions
+        # check if header extension present, if yes, drop it
+        if self.header_file_extension and _ungzipped_filename.endswith(
+            (self.header_file_extension.lower(),
+             self.header_file_extension.upper())):
             return self._ungzipped_filename[:-len(self.header_file_extension)]
-        elif self._has_valid_datafile_extension():
-            return self._ungzipped_filename[:-len(self.data_file_extension)]
+
+        # check if datafile extension present, if yes, drop it
+        elif self.data_file_extension and _ungzipped_filename.endswith(
+            (self.data_file_extension.lower(),
+             self.data_file_extension.upper())):
+            return _ungzipped_filename[:-len(self.data_file_extension)]
+
+        # no extensions found, return only unzipped filename
         else:
-            return self._ungzipped_filename
+            return _ungzipped_filename
 
     @property
     def suffix(self):
@@ -302,30 +300,6 @@ class TRiP98FilePath(object):
         :return:
         """
         return bool(self.suffix)
-
-    def _is_name_pattern(self):
-        """
-        >>> import pytrip as pt
-        >>> TRiP98FilePath("file.txt", pt.Cube)._is_name_pattern()
-        True
-        >>> TRiP98FilePath("file.txt", pt.DosCube)._is_name_pattern()
-        True
-        >>> TRiP98FilePath("filephys.txt", pt.DosCube)._is_name_pattern()
-        True
-        >>> TRiP98FilePath("filephys.dos", pt.DosCube)._is_name_pattern()
-        False
-        >>> TRiP98FilePath("filephys.hed", pt.DosCube)._is_name_pattern()
-        False
-        >>> TRiP98FilePath("filephys.hed", pt.LETCube)._is_name_pattern()
-        True
-        >>> TRiP98FilePath("filemlet.hed", pt.LETCube)._is_name_pattern()
-        False
-        >>> TRiP98FilePath("file.mlet.hed", pt.LETCube)._is_name_pattern()
-        False
-
-        :return:
-        """
-        return not self._is_stem_pattern()
 
     @property
     def datafile(self):

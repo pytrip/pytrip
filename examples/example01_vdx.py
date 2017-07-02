@@ -19,7 +19,13 @@
 """
 This example shows how to use contours to select volume of interests inside a CTX cube. The VOI is then manipulated.
 """
+
+# by default logging in PyTRiP98 is disabled, here we enable it to see it with basic INFO level
+import logging
+logging.basicConfig(level=logging.DEBUG)
+
 import pytrip as pt
+
 
 # first define some paths and other important parameters
 ctx_path = "/home/bassler/Projects/CTdata/TST000/TST000000.ctx"
