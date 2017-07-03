@@ -52,7 +52,7 @@ def rbe_carabe(dose, let, abx):
 
     :params dose: physical proton dose in [Gy]
     :params let: LETd in [keV/um] (protons only)
-    :params abx: alpha_x / beta_x [Gy^-1]
+    :params abx: alpha_x / beta_x [Gy]
 
     :returns: RBE for the given parameters
 
@@ -76,7 +76,7 @@ def rbe_wedenberg(dose, let, abx):
 
     :params dose: physical proton dose in [Gy]
     :params let: LETd in [keV/um] (protons only)
-    :params abx: alpha_x / beta_x [Gy^-1]
+    :params abx: alpha_x / beta_x [Gy]
 
     :returns: RBE for the given parameters
 
@@ -99,7 +99,7 @@ def rbe_mcnamara(dose, let, abx):
 
     :params dose: physical proton dose in [Gy]
     :params let: LETd in [keV/um] (protons only)
-    :params abx: alpha_x / beta_x [Gy^-1]
+    :params abx: alpha_x / beta_x [Gy]
 
     :returns: RBE for the given parameters
 
@@ -118,7 +118,7 @@ def _rbe_apx(dose, apx, sbpx, abx, dzero=0.0):
     :params dose: proton dose      [Gy]
     :params apx: alpha_p / alpha_x [dimensionless] RBE_max = ap/ax when (dose -> 0 Gy)
     :params sbpx: beta_p / beta_x  [dimensionless] RBE_min = sqrt(bp/bx) when (dose -> inf Gy)
-    :params abx: alpha_x / beta_x  [Gy^-1]
+    :params abx: alpha_x / beta_x  [Gy]
     :params dzero: what to return in case of dose is zero (which would cause division by zero)
     """
 
