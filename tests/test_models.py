@@ -19,15 +19,18 @@
 """
 Tests for models/*.py
 """
+import os
 import unittest
 import logging
-# import shutil
+import numpy as np
 
-# import tests.test_base
+import pytrip as pt
 from pytrip.models.proton import rbe_carabe
 from pytrip.models.proton import rbe_wedenberg
 from pytrip.models.proton import rbe_mcnamara
 from pytrip.models.rcr import sf_rcr
+
+import tests.base
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +41,11 @@ class TestProton(unittest.TestCase):
     def setUp(self):
         """ Prepare files for tests
         """
+        testdir = tests.base.get_files()
+        self.cube001 = os.path.join(testdir, "tst003001")
+        self.vdx = os.path.join(testdir, "tst003000.vdx")
+        logger.info("Cube path " + self.cube001)
+        logger.info("VDX path " + self.vdx)
         pass
 
     def test_carabe(self):
@@ -69,6 +77,24 @@ class TestProton(unittest.TestCase):
         self.assertGreater(rbe2, rbe1)
         self.assertGreater(rbe2, 1.0)
         self.assertGreater(10.0, rbe2)  # Sanity check
+
+    def test_mcnamara_cube(self):
+        """ McNamara test on real cubes.
+        """
+        d = pt.DosCube()
+        d.read(self.cube001)
+        l = pt.LETCube()
+        l.read(self.cube001)
+        v = pt.VdxCube(d)
+        logger.info("Adding VDX from path " + self.vdx)
+        v.read(self.vdx)
+
+        # increasing LET should increase RBE
+        abx = 10.0  # alpha/beta ratio for x-rays [Gy]
+        rbe1 = rbe_mcnamara(d.cube, l.cube, abx)
+        rbe2 = rbe_mcnamara(d.cube, l.cube, 2.0)
+
+        self.assertTrue(np.all(rbe2 >= rbe1))  # RBE goes up as abx goes down.
 
 
 class TestRCR(unittest.TestCase):
