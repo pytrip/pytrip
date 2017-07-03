@@ -113,19 +113,20 @@ def rbe_mcnamara(dose, let, abx):
     return rbe
 
 
-def _rbe_apx(dose, apx, sbpx, abx):
+def _rbe_apx(dose, apx, sbpx, abx, dzero=0.0):
     """
     :params dose: proton dose      [Gy]
     :params apx: alpha_p / alpha_x [dimensionless] RBE_max = ap/ax when (dose -> 0 Gy)
     :params sbpx: beta_p / beta_x  [dimensionless] RBE_min = sqrt(bp/bx) when (dose -> inf Gy)
     :params abx: alpha_x / beta_x  [Gy^-1]
+    :params dzero: what to return in case of dose is zero (which would cause division by zero)
     """
 
     _rbe = 1.0 / (2.0 * dose)
     if hasattr(_rbe, '__iter__'):
-        _rbe[_rbe == np.inf] = 0
+        _rbe[_rbe == np.inf] = dzero
     else:
         if _rbe == np.inf:
-            return 0.0
+            return dzero
     _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*sbpx*sbpx * dose*dose) - abx)
     return _rbe
