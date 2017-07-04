@@ -389,22 +389,24 @@ class Cube(object):
     def read(self, path):
         """
         Reads both TRiP98 data and its associated header into the Cube object.
+
+        Cube can be read providing a filename stripped of extension, i.e:
+        >>> import pytrip as pt
+        >>> c1 = pt.CtxCube()
+        >>> c1.read("tests/res/TST003/tst003000")
+
+        We can also read header file and data path which do not share common basename:
+        >>> c2 = pt.CtxCube()
+        >>> c2.read(("tests/res/TST003/tst003012.hed", "tests/res/TST003/tst003000.ctx.gz"))
+
         :param path: string or sequence of strings (length 2)
-
-        if a single string is provided, it may be path to header file or datafile
-        it can also be a name stripped of extension
-
-        if pair of strings is provided, it is understoop as pair of header file path
-        and data file path
-
         :return:
         """
 
         # let us check if path is a string in a way python 2 and 3 will like it
         # based on https://stackoverflow.com/questions/4843173/how-to-check-if-type-of-a-variable-is-string
-        import sys
-        PY2 = sys.version_info.major == 2
-        path_string = isinstance(path, (str, bytes) if not PY2 else basestring)  # NOQA: F821
+        running_python2 = sys.version_info.major == 2
+        path_string = isinstance(path, (str, bytes) if not running_python2 else basestring)  # NOQA: F821
 
         if path_string:
             self.basename = os.path.basename(TRiP98FilePath(path, self).basename)
@@ -464,23 +466,12 @@ class Cube(object):
             raise Exception("More than two arguments provided as path variable to Cube.read method")
 
     def _read_trip_header_file(self, header_path):  # TODO: could be made private? #126
-        """ Reads a header file, accepts also if suffix is missing, or if file
-        is .gz compressed. User can thus specify:
-        tst001
-        tst001.hed
-        tst001.hed.gz
-
-        and in any case it will attempt to load
-        tst001.hed
-        or
-        tst001.hed.gz
-
-        Note, first the un-zipped files will be attempted to read.
+        """ Reads a header file, accepts also if file is .gz compressed.
+        First the un-zipped files will be attempted to read.
         Should these not exist, then the .gz are attempted.
 
         However, if the .hed.gz file was explicitly stated,
-        then this file will also
-        be loaded, even if a .hed is available.
+        then this file will also be loaded, even if a .hed is available.
         """
 
         # sanity check
@@ -507,7 +498,6 @@ class Cube(object):
                              multiply_by_2=False):  # TODO: could be made private? #126
         """Read TRiP98 formatted data.
 
-        Accepts path in similar way as _read_trip_header_file().
         If header file was not previously loaded, it will be attempted first.
 
         Due to an issue in VIRTUOS, sometimes DosCube data have been reduced with a factor of 2.
@@ -680,9 +670,8 @@ class Cube(object):
         (may be different from input path if user provided a partial basename)
         """
 
-        import sys
-        PY2 = sys.version_info.major == 2
-        path_string = isinstance(path, (str, bytes) if not PY2 else basestring)  # NOQA: F821
+        running_python2 = sys.version_info.major == 2
+        path_string = isinstance(path, (str, bytes) if not running_python2 else basestring)  # NOQA: F821
 
         if path_string:
             header_path = self.header_file_name(path)

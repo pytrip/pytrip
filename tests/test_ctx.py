@@ -96,14 +96,17 @@ class TestCtx(unittest.TestCase):
     def test_problems_when_reading(self):
         # check malformed filename
         with self.assertRaises(FileNotFoundError) as e:
+            logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000[2:-1])
 
         # check exception without dot
         with self.assertRaises(FileNotFoundError) as e:
+            logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000 + "hed")
 
         # check wrong exception (file self.cube000 + ".vdx" exists !)
         with self.assertRaises(FileNotFoundError) as e:
+            logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000 + ".vdx")
 
     def test_addition(self):
