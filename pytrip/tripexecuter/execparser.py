@@ -155,17 +155,17 @@ class ExecParser(object):
     def _unpack_arg(_arg):
         """ Returns the interior of the paranthesis of an argument.
 
-        'arg(subarg)'     -> 'arg', 'subarg'
-        'arg("subarg")'   -> 'arg', 'subarg'
-        'arg('subarg')'   -> 'arg', 'subarg'
-        'arg'             -> 'arg', ''
-        '"arg"'           -> 'arg', ''
-        ''arg''           -> 'arg', ''
+        'arg(value)'     -> 'arg', 'value'
+        'arg("value")'   -> 'arg', 'value'
+        'arg('value')'   -> 'arg', 'value'
+        'arg'            -> 'arg', ''
+        '"arg"'          -> 'arg', ''
+        ''arg''          -> 'arg', ''
 
-        Any quotes will be stripped from the subarg.
-        Any whitespaces will be stripped from the subarg or arg.
+        Any quotes will be stripped from the value.
+        Any whitespaces will be stripped from the value or arg.
 
-        If there is no subargument given, simply the _arg is returned and an empty string for the subarg.
+        If there is no value given, simply the _arg is returned and an empty string for the value.
 
         example:
         >>> _unpack_arg("bolus(2.00)")
@@ -173,12 +173,12 @@ class ExecParser(object):
 
         """
         if "(" in _arg:
-            _subarg = _arg[_arg.find("(")+1:_arg.find(")")].strip("\"").strip("\'").strip()
+            _val = _arg[_arg.find("(")+1:_arg.find(")")].strip("\"").strip("\'").strip()
             _arg = _arg[0:_arg.find("(")].strip()
         else:
+            _val = ""
             _arg = _arg.strip("\"").strip("\'").strip()
-            _subarg = ""
-        return _arg, _subarg
+        return _arg, _val
 
     def _parse_extra_args(self, _line, _dict, _obj):
         """
