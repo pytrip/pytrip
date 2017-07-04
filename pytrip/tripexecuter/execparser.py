@@ -36,7 +36,7 @@ class ExecParser(object):
 
     # map trip commands onto method names
     _trip_commands = {"ct": "_parse_ct",
-                      # TODO: voi
+                      # TODO: "voi": "_parse_voi",
                       "field": "_parse_field",
                       "plan": "_parse_plan",
                       "opt": "_parse_opt",
@@ -52,7 +52,7 @@ class ExecParser(object):
                      "bolus": ("_update_obj", "f"),
                      "focus2stepsizefactor": ("_na", "s"),            # not implemented
                      "calbibration": ("_na", "s"),                    # not implemented
-                     "path": ("_update_obj", "s"),
+                     "path": ("_update_obj", "s", "scanpath"),
                      "rifi": ("_update_obj", "f"),
                      "couchangle": ("_na", "s"),                      # not implemented
                      "gantryangle": ("_na", "s"),                     # not implemented
@@ -60,7 +60,7 @@ class ExecParser(object):
 
     # <attribute_name> must only be added if it is different from the name of <trip_parameter>
     # generic plan arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
-    _plan_args = {"dose": ("_na", "s"),
+    _plan_args = {"dose": ("_update_obj", "f", "target_dose"),
                   "targettissue": ("_update_obj", "s", "target_tissue_type"),
                   "residualtissue": ("_update_obj", "s", "res_tissue_type"),
                   "partialbiodose": ("_na", "s"),                     # not implemented
@@ -112,7 +112,8 @@ class ExecParser(object):
                    "fwhm": ("_update_obj", "f"),                      # not implemented
                    "rastersteps": ("_update_obj", "[f,f]", "raster_step"),
                    "raster": ("_update_obj", "[f,f]", "raster_step"),
-                   "zsteps": ("_update_obj", "f"),
+                   "zsteps": ("_update_obj", "f"),                    # either "zsteps" (as in TRiP98 manual)..
+                   "zstep": ("_update_obj", "f", "zsteps"),           # .. or "zstep" (which is used)
                    "beam": ("_na", "s"),                              # not implemented
                    "weight": ("_na", "s"),                            # not implemented
                    "contourextension": ("_update_obj", "f", "contour_extension"),
@@ -200,7 +201,6 @@ class ExecParser(object):
                 # _par holds the TRiP argument/parameter name
                 # _val holds the value for the argument/parameter
 
-                print(_par, _val)
                 if not _val:
                     _val = _par
 
@@ -241,11 +241,15 @@ class ExecParser(object):
         """
         Method for parsing field data
         """
-        if "new" in line:
-            logger.debug("Setup a new field")
-            field = Field()
-            self.plan.fields.append(field)
-            self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
+        items = line.split("/")
+        _number = int(items[0].split()[1])
+        if len(items) > 1:
+            if "new" in items[1]:
+                logger.debug("Parse a new field number {:d}".format(_number))
+                field = Field()
+                field.number = _number
+                self.plan.fields.append(field)
+                self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
 
     def _parse_scancap(self, line):
         """
@@ -292,12 +296,13 @@ class ExecParser(object):
         # single string (catch all)
         else:
             value = _val
-        print("Setting", _objattr, str(value))
+        logger.debug("Setting obj.{:s}={:s}".format(_objattr, str(value)))
         setattr(_obj, _objattr, value)
 
     @staticmethod
     def _na(_obj, _arg1, _arg2, _format):
-        """ None Applicable.
+        """
+        Not Applicable - used by not implmented TRiP98 arguments/paramters
 
         This method simply prints a N/A warning and exits.
         """

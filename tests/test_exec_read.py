@@ -50,6 +50,8 @@ class TestParseExec(unittest.TestCase):
         plan = pte.Plan()
         plan.read_exec(self.exec_path)
         print(plan)
+        for field in plan.fields:
+            print(field)
 
 
 if __name__ == '__main__':
