@@ -382,7 +382,8 @@ class Plan(object):
         # TODO: add user and host
         # We can only check if dir exists, if this is supposed to run locally.
 
-        output.append("*$$$ Plan UUID {:s}".format(self.UUID))
+        if hasattr(self, "UUID"):
+            output.append("*$$$ Plan UUID {:s}".format(self.UUID))
         output.append("*")
         output.append("time / on")
         output.append("sis  * /delete")
