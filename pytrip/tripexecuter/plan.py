@@ -282,8 +282,8 @@ class Plan(object):
     def read_exec(self, exec_path):
         """ Reads an .exec file onto self.
         """
-        exec = ExecParser(self)
-        exec._parse_exec(exec_path)
+        _exec = ExecParser(self)
+        _exec._parse_exec(exec_path)
 
     def save_data(self, images, path):
         """ Save this plan, including associated data.
