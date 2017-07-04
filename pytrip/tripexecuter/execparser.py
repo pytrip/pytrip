@@ -36,88 +36,98 @@ class ExecParser(object):
 
     # map trip commands onto method names
     _trip_commands = {"ct": "_parse_ct",
+                      # TODO: voi
                       "field": "_parse_field",
                       "plan": "_parse_plan",
                       "opt": "_parse_opt",
                       "optimize": "_parse_opt",
                       "scancap": "_parse_scancap"}
 
+    # Here follows a several trip parameters/arguments which can be modified.
+    # All parameters which are not supported are mapped to the _na() method,
+    # which does nothing but displays a warning.
+
     # scancap arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
     _scancap_args = {"offh2o": ("_update_obj", "f"),
-                     "bolus": ("_na", "s"),
-                     "focus2stepsizefactor": ("_na", "s"),
-                     "calbibration": ("_na", "s"),
-                     "path": ("_na", "s"),
-                     "rifi": ("_na", "s"),
-                     "couchangle": ("_na", "s"),
-                     "gantryangle": ("_na", "s")}
+                     "bolus": ("_update_obj", "f"),
+                     "focus2stepsizefactor": ("_na", "s"),            # not implemented
+                     "calbibration": ("_na", "s"),                    # not implemented
+                     "path": ("_update_obj", "s"),
+                     "rifi": ("_update_obj", "f"),
+                     "couchangle": ("_na", "s"),                      # not implemented
+                     "gantryangle": ("_na", "s"),                     # not implemented
+                     "minparticles": ("_update_obj", "i")}
 
-    # generic plan arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
+    # <attribute_name> must only be added if it is different from the name of <trip_parameter>
+    # generic plan arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
     _plan_args = {"dose": ("_na", "s"),
-                  "targettissue": ("_na", "s"),
-                  "residualtissue": ("_na", "s"),
-                  "partialbiodose": ("_na", "s"),
-                  "incube": ("_na", "s"),
-                  "outcube": ("_na", "s"),
-                  "debug": ("_na", "s")}
+                  "targettissue": ("_update_obj", "s", "target_tissue_type"),
+                  "residualtissue": ("_update_obj", "s", "res_tissue_type"),
+                  "partialbiodose": ("_na", "s"),                     # not implemented
+                  "incube": ("_update_obj", "s", "incube_basename"),  # TODO: may need special handler for suffix
+                  "outcube": ("_na", "s"),                            # not implemented
+                  "debug": ("_na", "s")}                              # not implemented
 
-    # optimization arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
-    _opt_args = {"iter": ("_na", "s"),
-                 "graceiter": ("_na", "s"),
-                 "bio": ("_na", "s"),
-                 "phys": ("_na", "s"),
-                 "H2Obased": ("_na", "s"),
-                 "CTbased": ("_na", "s"),
-                 "singly": ("_na", "s"),
-                 "matchonly": ("_na", "s"),
-                 "dosealgorithm": ("_na", "s"),
-                 "bioalgorithm": ("_na", "s"),
-                 "optalgorithm": ("_na", "s"),
-                 "events": ("_na", "s"),
-                 "eps": ("_na", "s"),
-                 "geps": ("_na", "s"),
-                 "myfac": ("_na", "s"),
-                 "doseweightfactor": ("_na", "s"),
-                 "field": ("_na", "s"),
-                 "debug": ("_na", "s")}
+    # optimization arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
+    _opt_args = {"iter": ("_update_obj", "i", "iterations"),
+                 "graceiter": ("_na", "s"),                           # not implemented
+                 "bio": ("_update_obj", "s", "opt_method"),
+                 "phys": ("_update_obj", "s", "opt_method"),
+                 "H2Obased": ("_update_obj", "s", "opt_principle"),
+                 "CTbased": ("_update_obj", "s", "opt_principle"),
+                 "singly": ("_na", "s"),                              # not implemented
+                 "matchonly": ("_na", "s"),                           # not implemented
+                 "dosealgorithm": ("_update_obj", "s", "dose_alg"),
+                 "dosealg": ("_update_obj", "s", "dose_alg"),
+                 "bioalgorithm": ("_update_obj", "s", "bio_alg"),
+                 "bioalg": ("_update_obj", "s", "bio_alg"),
+                 "optalgorithm": ("_update_obj", "s", "opt_alg"),
+                 "optalg": ("_update_obj", "s", "opt_alg"),
+                 "events": ("_na", "s"),                              # not implemented
+                 "eps": ("_update_obj", "f"),
+                 "geps": ("_update_obj", "f"),
+                 "myfac": ("_na", "s"),                               # not implemented
+                 "doseweightfactor": ("_update_obj", "f", "target_dose_percent"),  # TODO: may check 10 % or 0.1
+                 "field": ("_na", "s"),                               # not implemented
+                 "debug": ("_na", "s")}                               # not implemented
 
-    # field specific arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
-    _field_args = {"file": ("_na", "s"),
-                   "import": ("_na", "s"),
-                   "export": ("_na", "s"),
-                   "read": ("_na", "s"),
-                   "write": ("_na", "s"),
-                   "list": ("_na", "s"),
-                   "delete": ("_na", "s"),
-                   "display": ("_na", "s"),
-                   "inspect": ("_na", "s"),
-                   "reset": ("_na", "s"),
-                   "new": ("_na", "s"),
-                   "reverseorder": ("_na", "s"),
-                   "target": ("_na", "s"),
-                   "gantry": ("_na", "s"),
-                   "couch": ("_na", "s"),
-                   "chair": ("_na", "s"),
-                   "stereotacticcoordinates": ("_na", "s"),
-                   "fwhm": ("_na", "s"),
-                   "rastersteps": ("_na", "s"),
-                   "raster": ("_na", "s"),  # abbreviated of the above # TODO: can we implement some pointer/alias?
-                   "zsteps": ("_na", "s"),
-                   "beam": ("_na", "s"),
-                   "weight": ("_na", "s"),
-                   "contourextension": ("_na", "s"),
-                   "contourext": ("_na", "s"),  # abbreviated of the above
-                   "doseextension": ("_na", "s"),
-                   "doseext": ("_na", "s"),  # abbreviated of the above
-                   "projectile": ("_na", "s"),
-                   "proj": ("_na", "s"),  # abbreviated of the above
-                   "bev": ("_na", "s"),
-                   "nolateral": ("_na", "s"),
-                   "raw": ("_na", "s"),
-                   "dosemeanlet": ("_na", "s"),
-                   "algorithm": ("_na", "s"),
-                   "bioalgorithm": ("_na", "s"),
-                   "debug": ("_na", "s")}
+    # field specific arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
+    _field_args = {"file": ("_update_obj", "s", "use_raster_file"),
+                   "import": ("_na", "s"),                            # not implemented
+                   "export": ("_na", "s"),                            # not implemented
+                   "read": ("_na", "s"),                              # not implemented
+                   "write": ("_na", "s"),                             # not implemented
+                   "list": ("_na", "s"),                              # not implemented
+                   "delete": ("_na", "s"),                            # not implemented
+                   "display": ("_na", "s"),                           # not implemented
+                   "inspect": ("_na", "s"),                           # not implemented
+                   "reset": ("_na", "s"),                             # not implemented
+                   "new": ("_na", "s"),                               # special case
+                   "reverseorder": ("_na", "s"),                      # not implemented
+                   "target": ("_na", "s"),                            # not implemented
+                   "gantry": ("_update_obj", "f"),
+                   "couch": ("_update_obj", "f"),
+                   "chair": ("_update_obj", "f"),
+                   "stereotacticcoordinates": ("_na", "s"),           # not implemented
+                   "fwhm": ("_update_obj", "f"),                      # not implemented
+                   "rastersteps": ("_update_obj", "[f,f]", "raster_step"),
+                   "raster": ("_update_obj", "[f,f]", "raster_step"),
+                   "zsteps": ("_update_obj", "f"),
+                   "beam": ("_na", "s"),                              # not implemented
+                   "weight": ("_na", "s"),                            # not implemented
+                   "contourextension": ("_update_obj", "f", "contour_extension"),
+                   "contourext": ("_update_obj", "f", "contour_extension"),
+                   "doseextension": ("_update_obj", "f", "dose_extension"),
+                   "doseext": ("_update_obj", "f", "dose_extension"),
+                   "projectile": ("_update_obj", "s"),                # TODO: needs special handling
+                   "proj": ("_na", "s"),                              # abbreviated of the above
+                   "bev": ("_na", "s"),                               # not implemented
+                   "nolateral": ("_na", "s"),                         # not implemented
+                   "raw": ("_na", "s"),                               # not implemented
+                   "dosemeanlet": ("_na", "s"),                       # not implemented
+                   "algorithm": ("_na", "s"),                         # not implemented (used for .bev files only)
+                   "bioalgorithm": ("_na", "s"),                      # not implemented (used for .bev files only)
+                   "debug": ("_na", "s")}                             # not implemented
 
     def __init__(self, plan):
         self.plan = plan
@@ -143,19 +153,30 @@ class ExecParser(object):
     @staticmethod
     def _unpack_arg(_arg):
         """ Returns the interior of the paranthesis of an argument.
+
+        'arg(subarg)'     -> 'arg', 'subarg'
+        'arg("subarg")'   -> 'arg', 'subarg'
+        'arg('subarg')'   -> 'arg', 'subarg'
+        'arg'             -> 'arg', ''
+        '"arg"'           -> 'arg', ''
+        ''arg''           -> 'arg', ''
+
         Any quotes will be stripped from the subarg.
         Any whitespaces will be stripped from the subarg or arg.
 
+        If there is no subargument given, simply the _arg is returned and an empty string for the subarg.
+
         example:
-        _arg = "bolus(2.00)"
-
-        will return
-
+        >>> _unpack_arg("bolus(2.00)")
         "bolus", "2.00"
 
         """
-        _subarg = _arg[_arg.find("(")+1:_arg.find(")")].strip("\"").strip("\'").strip()
-        _arg = _arg[0:_arg.find("(")].strip()
+        if "(" in _arg:
+            _subarg = _arg[_arg.find("(")+1:_arg.find(")")].strip("\"").strip("\'").strip()
+            _arg = _arg[0:_arg.find("(")].strip()
+        else:
+            _arg = _arg.strip("\"").strip("\'").strip()
+            _subarg = ""
         return _arg, _subarg
 
     def _parse_extra_args(self, _line, _dict, _obj):
@@ -170,21 +191,38 @@ class ExecParser(object):
         if len(items) > 1:
             _args = items[1].split()
             for _arg in _args:
+
+                # there are two kinds of arguments:
+                # Case 1) : foobar1(value)
+                # Case 2) : foobar2
+
                 _par, _val = self._unpack_arg(_arg)  # returns always string
-                # _par holds the argument/parameter name
+                # _par holds the TRiP argument/parameter name
                 # _val holds the value for the argument/parameter
+
+                print(_par, _val)
+                if not _val:
+                    _val = _par
 
                 # now lookup a proper method from the dict
                 if _par in _dict:
                     _method = _dict[_par][0]
                     _format = _dict[_par][1]
+                    # sometimes, the TRiP paramter names is not equal to the name of the attribute in _obj
+                    # in these cases, a third string is in the dict, which holds the attribute name.
+                    if len(_dict[_par]) > 2:
+                        _objattr = _dict[_par][2]
+                    else:
+                        _objattr = _par
+
                     # _method is the name of the method to be called (key in the dicts above)
                     # _obj is the target object (the base plan or a given field)
                     # _format is the format specifier how the _val should be stored in _par for the _obj class
-                    getattr(self, _method)(_obj, _par, _val, _format)
+                    getattr(self, _method)(_obj, _objattr, _val, _format)
 
     def _parse_ct(self, line):
-        """ Parses the 'ct' command arguments
+        """
+        Parses the 'ct' command arguments
         """
         items = line.split("/")
         if len(items) > 1:
@@ -204,41 +242,63 @@ class ExecParser(object):
         Method for parsing field data
         """
         if "new" in line:
+            logger.debug("Setup a new field")
             field = Field()
             self.plan.fields.append(field)
             self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
 
     def _parse_scancap(self, line):
         """
-        Generic parser
+        Parser for the scancap command.
         """
         self._parse_extra_args(line, self._scancap_args, self.plan)
 
     def _parse_opt(self, line):
         """
-        Not implemented.
+        Parser for the optimzation command.
         """
-        pass
+        self._parse_extra_args(line, self._opt_args, self.plan)
 
     @staticmethod
-    def _update_obj(_obj, _par, _val, _format):
+    def _update_obj(_obj, _objattr, _val, _format):
         """
         :params _obj: object whose paramters will be updated
         :params _par: attribute to be set in obj
         :params _val: variable which this attribute will be set to
         """
         # Add all needed type conversions here:
-        if _format == 'f':
+        if _format == 'f':  # single float
             value = float(_val)
-        elif _format == 'i':
+
+        elif _format == 'i':  # single integer
             value = int(_val)
+
+        # handle tuples of arbitray length
+        # "2,2" -> (2,2) or (2.0,2.0) depending on _format = "(i,i)" or "(f,f)"
+        elif "(" in _format:
+            if "f" in _format:  # tuple will be float
+                value = tuple(map(float, _val.split(",")))
+            elif "i" in _format:  # tuple will be int
+                value = tuple(map(int, _val.split(",")))
+
+        # handle list of arbitray length
+        # "2,2" -> [2,2] or [2.0,2.0] depending on _format = "[i,i]" or "[f,f]"
+        elif "[" in _format:
+            if "f" in _format:  # tuple will be float
+                value = list(map(float, _val.split(",")))
+            elif "i" in _format:  # tuple will be int
+                value = list(map(int, _val.split(",")))
+
+        # single string (catch all)
         else:
             value = _val
-        setattr(_obj, _par, value)
+        print("Setting", _objattr, str(value))
+        setattr(_obj, _objattr, value)
 
     @staticmethod
     def _na(_obj, _arg1, _arg2, _format):
         """ None Applicable.
+
         This method simply prints a N/A warning and exits.
         """
         logger.warning("Not implmented: '{:s}={:s} format={:s}'".format(_arg1, _arg2, _format))
