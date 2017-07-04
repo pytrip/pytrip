@@ -42,7 +42,7 @@ class ExecParser(object):
                       "optimize": "_parse_opt",
                       "scancap": "_parse_scancap"}
 
-    # scancap arguments. {<trip_parameter> : <pte.plan.attribute>}
+    # scancap arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
     _scancap_args = {"offh2o": ("_update_obj", "f"),
                      "bolus": ("_na", "s"),
                      "focus2stepsizefactor": ("_na", "s"),
@@ -52,7 +52,7 @@ class ExecParser(object):
                      "couchangle": ("_na", "s"),
                      "gantryangle": ("_na", "s")}
 
-    # generic plan arguments. {<trip_parameter> : <pte.plan.attribute>}
+    # generic plan arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
     _plan_args = {"dose": ("_na", "s"),
                   "targettissue": ("_na", "s"),
                   "residualtissue": ("_na", "s"),
@@ -61,7 +61,7 @@ class ExecParser(object):
                   "outcube": ("_na", "s"),
                   "debug": ("_na", "s")}
 
-    # generic plan arguments. {<trip_parameter> : <pte.plan.attribute>}
+    # optimization arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
     _opt_args = {"iter": ("_na", "s"),
                  "graceiter": ("_na", "s"),
                  "bio": ("_na", "s"),
@@ -81,6 +81,7 @@ class ExecParser(object):
                  "field": ("_na", "s"),
                  "debug": ("_na", "s")}
 
+    # field specific arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
     _field_args = {"file": ("_na", "s"),
                    "import": ("_na", "s"),
                    "export": ("_na", "s"),

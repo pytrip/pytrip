@@ -22,13 +22,13 @@ import os
 import unittest
 import logging
 
-import pytrip as pt
 import pytrip.tripexecuter as pte
 
 import tests.base
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
+
 
 class TestParseExec(unittest.TestCase):
     """ Tests for pytrip.tripexecuter.execparser
@@ -37,7 +37,7 @@ class TestParseExec(unittest.TestCase):
         """ Prepare test environment.
         """
         self.exec_name = "TST003001.exec"
-        
+
         testdir = tests.base.get_files()
         _exec_dir = os.path.join(testdir, "EXEC")
         self.exec_path = os.path.join(_exec_dir, self.exec_name)
@@ -51,6 +51,6 @@ class TestParseExec(unittest.TestCase):
         plan.read_exec(self.exec_path)
         print(plan)
 
+
 if __name__ == '__main__':
     unittest.main()
-
