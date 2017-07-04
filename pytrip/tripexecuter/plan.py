@@ -280,11 +280,10 @@ class Plan(object):
             f.write(self._trip_exec)
 
     def read_exec(self, exec_path):
-        """ Reads an .exec file onto self.        
+        """ Reads an .exec file onto self.
         """
         exec = ExecParser(self)
         exec._parse_exec(exec_path)
-                               
 
     def save_data(self, images, path):
         """ Save this plan, including associated data.
@@ -379,7 +378,7 @@ class Plan(object):
 
         output = []
         output.append("* {:s} created by PyTRiP98 on the {:s}".format(self.basename + ".exec",
-                                                                      str(datetime.datetime.now())))        
+                                                                      str(datetime.datetime.now())))
         # TODO: add user and host
         # We can only check if dir exists, if this is supposed to run locally.
 
