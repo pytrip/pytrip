@@ -36,7 +36,7 @@ class TestParseExec(unittest.TestCase):
     def setUp(self):
         """ Prepare test environment.
         """
-        self.exec_name = "TST003001.exec"
+        self.exec_name = "TST003101.exec"
 
         testdir = tests.base.get_files()
         _exec_dir = os.path.join(testdir, "EXEC")
