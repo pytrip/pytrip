@@ -36,7 +36,7 @@ try:
 except:
     _dicom_loaded = False
 
-from pytrip.error import InputError, ModuleNotLoadedError
+from pytrip.error import InputError, ModuleNotLoadedError, FileNotFound
 from pytrip.util import TRiP98FilePath, TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
@@ -408,6 +408,7 @@ class Cube(object):
         running_python2 = sys.version_info.major == 2
         path_string = isinstance(path, (str, bytes) if not running_python2 else basestring)  # NOQA: F821
 
+        # single argument of string type, i.e. filename without extension
         if path_string:
             self.basename = os.path.basename(TRiP98FilePath(path, self).basename)
 
@@ -417,8 +418,9 @@ class Cube(object):
             datafile_path = path_locator.datafile
 
             if not datafile_path or not header_path:
-                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
+                raise FileNotFound("Loading {:s} failed, file not found".format(path))
 
+        # tuple with path to header and datafile
         elif len(path) == 2:
             header_path, datafile_path = path
 
@@ -433,7 +435,7 @@ class Cube(object):
                 if header_path_locator.header is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(header_path_locator.header,
                                                                                           header_path))
-                raise FileNotFoundError("Loading {:s} failed, file not found".format(header_path))
+                raise FileNotFound("Loading {:s} failed, file not found".format(header_path))
 
             # security checks for datafile path
             # first check - validity of the path
@@ -447,7 +449,7 @@ class Cube(object):
                     logger.warning(
                         "Did you meant to load {:s}, instead of {:s} ?".format(datafile_path_locator.datafile,
                                                                                datafile_path))
-                raise FileNotFoundError("Loading {:s} failed, file not found".format(datafile_path))
+                raise FileNotFound("Loading {:s} failed, file not found".format(datafile_path))
 
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
