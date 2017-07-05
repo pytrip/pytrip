@@ -52,8 +52,8 @@ class Field(object):
         self.number = 1  # Field number. First field must be 1
         self.gantry = 0.0  # TRiP98 angles assumed here.
         self.couch = 0.0  # TRiP98 angles assumed here.
-        self.fwhm = 4.0  # in [mm]
-        self.raster_step = [2, 2]  # spot width in [mm]
+        self.fwhm = 4.0  # spot width in [mm]
+        self.raster_step = [2, 2]  # spot distance in [mm]
         self.dose_extension = 1.2  # see TRiP98 field / doseext() documentation
         self.contour_extension = 0.6  # see TRiP98 field / contourext() documentation
 
@@ -91,7 +91,7 @@ class Field(object):
         out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
         out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
         out += "|\n"
-        out += "|  Spot size (FWHM              : {:.2f} mm\n".format(self.fwhm)
+        out += "|  Spot size (FWHM)             : {:.2f} mm\n".format(self.fwhm)
         out += "|  Raster step size (x,y)       : {:.2f}, {:.2f} mm\n".format(self.raster_step[0],
                                                                               self.raster_step[1])
         out += "|  Z-steps                      : {:.2f} mm\n".format(self.zsteps)

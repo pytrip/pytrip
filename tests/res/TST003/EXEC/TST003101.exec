@@ -1,0 +1,47 @@
+* 1H plan on a 5 cm diameter sphere in a 256x256 x300 mm water phantom.
+* In this case there are 100 slices of 3 mm thickness. 
+* X and Y are 256 x 256, each pixel is 1 x1 mm.
+*
+* /Niels Bassler <bassler@phys.au.dk> 22nd July 2013
+*
+*makegeometry ifjcell /  ctdim(256,256,300) ctsteps(1,1,3) ctnum(0) centre(128,128,150) shape(box(20,20,20))
+*
+* This file is ONLY for checking the PyTRiP parser
+* and not supposed to be any reasonable plan for TRiP calculations
+
+scancap / bolus(5.6) offh2o(1.234) minparticles(5678) path(uw2) rifi(3.333)
+
+sis  * /delete
+hlut * /delete
+ddd  * /delete
+dedx * /delete
+
+* 1H
+sis "$TRIP98/DATA/SIS/1H.sis" / read
+ddd "$TRIP98/DATA/DDD/1H/RF0MM/1H*" / read
+spc "$TRIP98/DATA/SPC/1H/RF0MM/1H*" / read
+dedx "$TRIP98/DATA/DEDX/20040607.dedx" /read
+hlut "$TRIP98/DATA/HLUT/19990218.hlut" /read
+
+ct "tst003000" / read
+voi "tst003000" / read select(target)
+voi target / maxdosefraction(0.9)
+
+random 100
+field 1 / new fwhm(4.1) raster(2,3) couch(-13.9) gantry(46.7) zstep(3.4) proj(1H) contourext(0.12) doseext(0.21)
+field 2 / new fwhm(4.2) raster(3,2) couch(-22.8) gantry(55.6) zstep(3.5) proj(1H) contourext(0.67) doseext(0.76)
+field 3 / new fwhm(4.3) raster(2,2) couch(-31.7) gantry(64.5) zstep(3.6) proj(1H) contourext(0.23) doseext(0.32)
+
+plan / dose(2.34)
+opt / field(*) phys CTbased dosealg(ms) optalg(bf) geps(1e-4) eps(1e-3) iter(500)
+
+field 1 / file(tst003001.bev.gd) bev(*) nolateral 
+field 1 / file(tst003001.bevlet.gd) bev(*) dosemeanlet
+field 1 / file(tst003001.rst) reverseorder write
+
+dose "tst003001.dos" / calculate field(*) write
+dose "tst003001.dos" / calculate field(*) dosemeanlet write
+
+quit
+
+

@@ -30,6 +30,7 @@ import logging
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
 from pytrip.tripexecuter.execute import Execute
+from pytrip.tripexecuter.execparser import ExecParser
 
 logger = logging.getLogger(__name__)
 
@@ -156,7 +157,10 @@ class Plan(object):
         out += "   Plan '{:s}'\n".format(self.basename)
         out += "----------------------------------------------------------------------------\n"
         out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
-        out += "|  Target VOI                   : {:s}\n".format(self.voi_target.name)
+        if self.voi_target:
+            out += "|  Target VOI                   : {:s}\n".format(self.voi_target.name)
+        else:
+            out += "|  Target VOI                   : (none set)\n"
         if self.vois_oar:
             for _oar in self.vois_oar:
                 out += "|  Organs at Risk VOIs          : {:s}\n".format(_oar.name)
@@ -166,9 +170,9 @@ class Plan(object):
         if self.fields:
             out += "+---Fields\n"
             for _field in self.fields:
-                out += "|   |           #{:d}              : {:s}\n".format(_field.number, _field.basename)
+                out += "|   |           #{:d}              : '{:s}'\n".format(_field.number, _field.basename)
         else:
-            out += "|  Fields                       : (none set)\n"
+            out += "|   Fields                      : (none set)\n"
 
         if self.dosecubes:
             out += "+---Dose cubes:\n"
@@ -275,6 +279,12 @@ class Plan(object):
         with open(exec_path, "w") as f:
             f.write(self._trip_exec)
 
+    def read_exec(self, exec_path):
+        """ Reads an .exec file onto self.
+        """
+        _exec = ExecParser(self)
+        _exec._parse_exec(exec_path)
+
     def save_data(self, images, path):
         """ Save this plan, including associated data.
         TODO: may have to be implemented in a better way.
@@ -371,7 +381,10 @@ class Plan(object):
                                                                       str(datetime.datetime.now())))
         # TODO: add user and host
         # We can only check if dir exists, if this is supposed to run locally.
-        # TODO: add UUID of plan inro header?
+
+        if hasattr(self, "UUID"):
+            output.append("*$$$ Plan UUID {:s}".format(self.UUID))
+        output.append("*")
         output.append("time / on")
         output.append("sis  * /delete")
         output.append("hlut * /delete")
