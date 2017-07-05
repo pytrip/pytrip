@@ -924,7 +924,9 @@ class Cube(object):
             logger.warning("Overlapping slices found: slice thickness is larger than the slice distance.")
 
         self.set_byteorder()
-        self._set_format_str_from_dicom()
+        self.data_type = "integer"
+        self.num_bytes = 2
+        self._set_format_str()
         self.header_set = True
 
         # unique for whole structure set
