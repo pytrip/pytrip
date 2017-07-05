@@ -26,8 +26,9 @@ import tempfile
 import unittest
 import logging
 
-from pytrip.ctx import CtxCube
 import tests.base
+from pytrip.ctx import CtxCube
+from pytrip.error import FileNotFound
 from pytrip.util import TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
@@ -74,6 +75,8 @@ class TestCtx(unittest.TestCase):
         # check if generated files exists
         self.assertTrue(os.path.exists(saved_header_path))
         self.assertTrue(os.path.exists(saved_cubedata_path))
+
+        # get checksum
         f = open(saved_cubedata_path, 'rb')
         generated_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
@@ -95,17 +98,17 @@ class TestCtx(unittest.TestCase):
 
     def test_problems_when_reading(self):
         # check malformed filename
-        with self.assertRaises(FileNotFoundError) as e:
+        with self.assertRaises(FileNotFound) as e:
             logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000[2:-1])
 
-        # check exception without dot
-        with self.assertRaises(FileNotFoundError) as e:
+        # check exception if filename is without dot
+        with self.assertRaises(FileNotFound) as e:
             logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000 + "hed")
 
-        # check wrong exception (file self.cube000 + ".vdx" exists !)
-        with self.assertRaises(FileNotFoundError) as e:
+        # check opening wrong filetype (file self.cube000 + ".vdx" exists !)
+        with self.assertRaises(FileNotFound) as e:
             logger.info("Catching " + e.msg)
             self.read_and_write_cube(self.cube000 + ".vdx")
 
