@@ -378,20 +378,32 @@ class TRiP98FileLocator(object):
     def __init__(self, name, cube_type):
         self.trip98path = TRiP98FilePath(name, cube_type)
 
+        # construct list of suffixes to check
+        # they may or may not include leading dot (i.e. ".dosemlet" or "dosemlet")
+        # suffix may also be lower or UPPERCASE
+        self.list_of_suffixes_to_check = []
+        for optional_dot in ('', '.'):
+            for suffix in self.trip98path.allowed_suffix:
+                self.list_of_suffixes_to_check.append(optional_dot + suffix.lower())
+                self.list_of_suffixes_to_check.append(optional_dot + suffix.upper())
+        self.list_of_suffixes_to_check.append("")
+
     @property
     def header(self):
         basename = self.trip98path.basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
-        for gzip_extension in ("", ".gz", ".GZ"):
-            for header_extension in (self.trip98path.header_file_extension.lower(),
-                                     self.trip98path.header_file_extension.upper()):
-                candidate_path = basename + header_extension + gzip_extension
-                if os.path.exists(candidate_path):
-                    logger.info("Found " + candidate_path)
-                    return candidate_path
-                else:
-                    files_tried.append(candidate_path)
+
+        for suffix in self.list_of_suffixes_to_check:
+            for gzip_extension in ("", ".gz", ".GZ"):
+                for header_extension in (self.trip98path.header_file_extension.lower(),
+                                         self.trip98path.header_file_extension.upper()):
+                    candidate_path = basename + suffix + header_extension + gzip_extension
+                    if os.path.exists(candidate_path):
+                        logger.info("Found " + candidate_path)
+                        return candidate_path
+                    else:
+                        files_tried.append(candidate_path)
         logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
@@ -400,14 +412,15 @@ class TRiP98FileLocator(object):
         basename = self.trip98path.basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
-        for gzip_extension in ("", ".gz", ".GZ"):
-            for datafile_extension in (self.trip98path.data_file_extension.lower(),
-                                       self.trip98path.data_file_extension.upper()):
-                candidate_path = basename + datafile_extension + gzip_extension
-                if os.path.exists(candidate_path):
-                    return candidate_path
-                else:
-                    files_tried.append(candidate_path)
+        for suffix in self.list_of_suffixes_to_check:
+            for gzip_extension in ("", ".gz", ".GZ"):
+                for datafile_extension in (self.trip98path.data_file_extension.lower(),
+                                           self.trip98path.data_file_extension.upper()):
+                    candidate_path = basename + suffix + datafile_extension + gzip_extension
+                    if os.path.exists(candidate_path):
+                        return candidate_path
+                    else:
+                        files_tried.append(candidate_path)
         logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
