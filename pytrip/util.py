@@ -390,6 +390,36 @@ class TRiP98FileLocator(object):
 
     @property
     def header(self):
+        """
+        Calculates the path to the header file existing on the disk.
+        Assuming that in the filesystem files "a.hed" and "c.ctx" are present it will work like following:
+
+        >>> import pytrip as pt
+        >>> TRiP98FileLocator("tests/res/TST003/tst003000", pt.CtxCube).header
+        'tests/res/TST003/tst003000.hed'
+
+        It can also work well with gzipped filenames:
+        >>> ungzipped_file = "tests/res/TST003/tst003012.dosemlet.hed"
+        >>> os.path.exists(ungzipped_file)
+        False
+
+        >>> gzipped_file = ungzipped_file + ".gz"
+        >>> gzipped_file
+        'tests/res/TST003/tst003012.dosemlet.hed.gz'
+        >>> os.path.exists(gzipped_file)
+        True
+
+        FileLocator can automatically find requested file by adding suffix dosemlet which is appropriate to
+        requested cube (note that the returned path points to the file which exists on the disk).
+        >>> TRiP98FileLocator('tests/res/TST003/tst003012', pt.LETCube).header
+        'tests/res/TST003/tst003012.dosemlet.hed.gz'
+
+        After changing the cube to DosCube we get the path to another file (also located on the disk).
+        >>> TRiP98FileLocator('tests/res/TST003/tst003012', pt.DosCube).header
+        'tests/res/TST003/tst003012.hed'
+
+        :return: path to the header file which exists on the filesystem or None if not found
+        """
         basename = self.trip98path.basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
@@ -409,6 +439,12 @@ class TRiP98FileLocator(object):
 
     @property
     def datafile(self):
+        """
+        It works exactly in the same way as header method in TRiP98FileLocator class,
+        but returns path to the datafile.
+
+        :return: path to the data file which exists on the filesystem or None if not found
+        """
         basename = self.trip98path.basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
