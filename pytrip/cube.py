@@ -414,16 +414,10 @@ class Cube(object):
             path_locator = TRiP98FileLocator(path, self)
 
             header_path = path_locator.header
-            if not header_path:
-                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
-
             datafile_path = path_locator.datafile
-            if not datafile_path:
-                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
 
-            # finally read files
-            self._read_trip_header_file(header_path=header_path)
-            self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
+            if not datafile_path or not header_path:
+                raise FileNotFoundError("Loading {:s} failed, file not found".format(path))
 
         elif len(path) == 2:
             header_path, datafile_path = path
@@ -455,15 +449,15 @@ class Cube(object):
                                                                                datafile_path))
                 raise FileNotFoundError("Loading {:s} failed, file not found".format(datafile_path))
 
-            # finally read files
-            self._read_trip_header_file(header_path=header_path)
-            self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
-
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
 
         else:
             raise Exception("More than two arguments provided as path variable to Cube.read method")
+
+        # finally read files
+        self._read_trip_header_file(header_path=header_path)
+        self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
 
     def _read_trip_header_file(self, header_path):  # TODO: could be made private? #126
         """ Reads a header file, accepts also if file is .gz compressed.
