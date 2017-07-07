@@ -1,7 +1,7 @@
 versioneer<0.18
 # pytest v 3.0, released in 08.2016 doesn't work well with Python 3.2
-pytest<3.0 ; python_version >= '3.2' and python_version < '3.3' or os_name == 'nt' # py 3.2
-pytest ; python_version < '3.0' and python_version >= '3.3' and os_name != 'nt' # py different than 3.2
+pytest<3.0 ; python_version >= '3.2' and python_version < '3.3' or os_name == 'nt' # py 3.2 or Windows
+pytest ; (python_version < '3.0' or python_version >= '3.3') and os_name != 'nt' # py different than 3.2
 pytest-capturelog
 pytest-timeout
 pytest-xdist ; (python_version < '3.0' or python_version >= '3.3') and os_name != 'nt' # py different than 3.2
@@ -9,5 +9,5 @@ pytest-xdist<1.18.0  ; python_version >= '3.2' and python_version < '3.3' or os_
 pytest-cov ; python_version != '3.2'
 tox
 scipy<0.16.1 ; (python_version >= '3.2' and python_version < '3.4') and (os_name != 'nt') # newer versions of scipy doesn't have manylinux1 package for python 3.3
-scipy<0.20 ; os_name == 'nt' # all Windows versions
+scipy==0.19.0 ; os_name == 'nt' # all Windows versions
 scipy<0.20 ; (python_version < '3.2' or python_version >= '3.4') and (os_name != 'nt') # Linux with py 2.7, 3.4 and higher

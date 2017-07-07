@@ -19,9 +19,10 @@
 """
 This module provides the LETCube for handling LET data.
 """
-import numpy as np
 from pytrip.cube import Cube
 import pytriplib
+
+import numpy as np
 
 
 class LETCube(Cube):
@@ -29,36 +30,25 @@ class LETCube(Cube):
 
     It is similar to DosCubes and CtxCubes, but is intended to hold LET data.
     The object has build-in methods to read and write the LET data cubes,
-    calculate the LET-volume historgrams, and write these to disk.
+    calculate the LET-volume histograms, and write these to disk.
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = ".dosemlet.dos"
-    header_file_extension = ".dosemlet.hed"
+    data_file_extension = '.dos'
+    allowed_suffix = ('dosemlet', 'mlet')
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
 
-    def write(self, path):
-        """Write the LETCube and its header to a file with the filename 'path'.
-
-        :param str path: path to header file, data file or basename (without extension)
-
-        """
-
-        header_file, let_file = self.parse_path(path_name=path)
-        self._write_trip_header(header_file)
-        self._write_trip_data(let_file)
-
     def get_max(self):
         """ Returns the largest value in the LETCube.
 
-        :returns: the largets value found in the in the LETCube.
+        :returns: the largest value found in the in the LETCube.
         """
         return np.amax(self.cube)
 
     def calculate_lvh(self, voi):
-        """ Calculate a LET-volume historgram.
+        """ Calculate a LET-volume histogram.
 
         :param Voi voi: The volume of interest, in the form of a Voi object.
         :returns: A tuple containing

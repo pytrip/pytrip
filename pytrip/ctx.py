@@ -37,8 +37,7 @@ class CtxCube(Cube):
     """ Class for handling CT-data. In TRiP98 these are stored in VOXELPLAN format with the .ctx suffix.
     This class can also handle Dicom files.
     """
-    data_file_extension = ".ctx"
-    header_file_extension = ".hed"
+    data_file_extension = '.ctx'
 
     def __init__(self, cube=None):
         """ Creates an instance of a CtxCube.
@@ -140,18 +139,6 @@ class CtxCube(Cube):
             _ds.pixel_array = pixel_array
             data.append(_ds)
         return data
-
-    def write(self, path):
-        """ Write CT-data to disk, in TRiP98/Voxelplan format.
-
-        This method will build and write both the .hed and .ctx file.
-
-        :param str path: path to header file, data file or basename (without extension)
-        """
-
-        header_file, ctx_file = self.parse_path(path_name=path)
-        self._write_trip_header(header_file)
-        self._write_trip_data(ctx_file)
 
     def write_dicom(self, directory):
         """ Write CT-data to disk, in Dicom format.

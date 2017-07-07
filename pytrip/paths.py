@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-This module provides the DensityCube class and some special class to find robust angles for treament
+This module provides the DensityCube class and some special class to find robust angles for treatment
 based on a quality index factor defined in http://dx.doi.org/10.3109/0284186X.2015.1067720.
 """
 import gc
@@ -44,7 +44,7 @@ def cmp_sort(a, b):
 
 class DensityProjections:
     """
-    Functions here were mosly used buy for the publication http://dx.doi.org/10.3109/0284186X.2015.1067720
+    Functions here were mostly used buy for the publication http://dx.doi.org/10.3109/0284186X.2015.1067720
     """
     def __init__(self, cube):
         """ TODO: Documentation
@@ -243,7 +243,7 @@ class DensityProjections:
 
 
 class DensityCube(Cube):
-    """ Class for working with denisity cubes [g/cm3]
+    """ Class for working with density cubes [g/cm3]
     """
 
     def __init__(self, ctxcube, hlut_path="/data/hlut_den.dat"):

@@ -50,23 +50,20 @@ def main(args=sys.argv[1:]):
 
     output_dir = parsed_args.outputdir
 
-    _, data_file_name = pt.CtxCube.parse_path(parsed_args.ctx_data)
-    data_file_path = pt.CtxCube.discover_file(data_file_name)
-
-    if not os.path.exists(data_file_path):
-        logger.error("CTX file missing")
-        return 1
-
     logger.info("Convert CT images...")
     c = pt.CtxCube()
-    c.read(data_file_name)
+    try:
+        c.read(parsed_args.ctx_data)
+    except Exception as e:
+        logger.error(e)
+        return 1
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     c.write_dicom(output_dir)
 
-    ctx_basename = os.path.splitext(data_file_path)[0]
-    ctx_path = ctx_basename + ".vdx"
+    ctx_dirname = os.path.dirname(parsed_args.ctx_data)
+    ctx_path = os.path.join(ctx_dirname, c.basename + ".vdx")
     if os.path.exists(ctx_path):
         logger.info("Convert VDX structures...")
         v = pt.VdxCube(cube=c)

@@ -26,11 +26,13 @@ import tempfile
 import unittest
 import logging
 
-from pytrip import DosCube
-from pytrip.ctx import CtxCube
 import tests.base
+from pytrip.ctx import CtxCube
+from pytrip.error import FileNotFound
+from pytrip.util import TRiP98FileLocator
 
 logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 class TestCtx(unittest.TestCase):
@@ -50,9 +52,10 @@ class TestCtx(unittest.TestCase):
         c = CtxCube()
         c.read(path)
 
-        _, data_file = CtxCube.parse_path(self.cube000)
-        data_file_path = CtxCube.discover_file(data_file)
+        # get path to the cube data file, extracting it from a partial path
+        data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
 
+        # get the hashsum
         if data_file_path.endswith(".gz"):
             f = gzip.open(data_file_path)
         else:
@@ -67,24 +70,47 @@ class TestCtx(unittest.TestCase):
         logger.debug("Generated random file name " + outfile)
 
         # save cube and calculate hashsum
-        c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
-        f = open(outfile + CtxCube.data_file_extension, 'rb')
+        saved_header_path, saved_cubedata_path = c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
+
+        # check if generated files exists
+        self.assertTrue(os.path.exists(saved_header_path))
+        self.assertTrue(os.path.exists(saved_cubedata_path))
+
+        # get checksum
+        f = open(saved_cubedata_path, 'rb')
         generated_md5 = hashlib.md5(f.read()).hexdigest()
         f.close()
-        logger.debug("Removing " + outfile + CtxCube.data_file_extension)
-        os.remove(outfile + CtxCube.data_file_extension)
-        logger.debug("Removing " + outfile + CtxCube.header_file_extension)
-        os.remove(outfile + CtxCube.header_file_extension)
+        logger.debug("Removing " + saved_cubedata_path)
+        os.remove(saved_cubedata_path)
+        logger.debug("Removing " + saved_header_path)
+        os.remove(saved_header_path)
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
     def test_write(self):
         possible_names = [self.cube000,
                           self.cube000 + ".ctx", self.cube000 + ".hed",
+                          self.cube000 + ".CTX", self.cube000 + ".HED",
                           self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"]
 
         for name in possible_names:
             self.read_and_write_cube(name)
+
+    def test_problems_when_reading(self):
+        # check malformed filename
+        with self.assertRaises(FileNotFound) as e:
+            logger.info("Catching {:s}".format(str(e)))
+            self.read_and_write_cube(self.cube000[2:-1])
+
+        # check exception if filename is without dot
+        with self.assertRaises(FileNotFound) as e:
+            logger.info("Catching {:s}".format(str(e)))
+            self.read_and_write_cube(self.cube000 + "hed")
+
+        # check opening wrong filetype (file self.cube000 + ".vdx" exists !)
+        with self.assertRaises(FileNotFound) as e:
+            logger.info("Catching {:s}".format(str(e)))
+            self.read_and_write_cube(self.cube000 + ".vdx")
 
     def test_addition(self):
         # read cube
@@ -92,52 +118,6 @@ class TestCtx(unittest.TestCase):
         c.read(self.cube000)
         d = c + 5
         self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
-
-    def test_filename_parsing(self):
-        bare_name = "frodo_baggins"
-        cube_ext = ".ctx"
-        header_ext = ".hed"
-        gzip_ext = ".gz"
-
-        # all possible reasonable names for input file
-        testing_names = (bare_name,
-                         bare_name + cube_ext, bare_name + cube_ext + gzip_ext,
-                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
-
-        # loop over all names
-        for name in testing_names:
-            logger.info("Parsing " + name)
-            header_filename, cube_filename = CtxCube.parse_path(name)
-
-            self.assertIsNotNone(header_filename)
-            self.assertIsNotNone(cube_filename)
-
-            logger.info("Parsing output: " + header_filename + " , " + cube_filename)
-
-            # test if got what was expected
-            self.assertEqual(header_filename, bare_name + header_ext)
-            self.assertEqual(cube_filename, bare_name + cube_ext)
-
-        dos_cube_ext = ".dos"
-
-        # all possible reasonable names for input file
-        testing_names = (bare_name,
-                         bare_name + dos_cube_ext, bare_name + dos_cube_ext + gzip_ext,
-                         bare_name + header_ext, bare_name + header_ext + gzip_ext)
-
-        # loop over all names
-        for name in testing_names:
-            logger.info("Parsing " + name)
-            dos_header_filename, dos_cube_filename = DosCube.parse_path(name)
-
-            self.assertIsNotNone(dos_header_filename)
-            self.assertIsNotNone(dos_cube_filename)
-
-            logger.info("Parsing output: " + dos_header_filename + " , " + dos_cube_filename)
-
-            # test if got what was expected
-            self.assertEqual(dos_header_filename, bare_name + header_ext)
-            self.assertEqual(dos_cube_filename, bare_name + dos_cube_ext)
 
 
 if __name__ == '__main__':
