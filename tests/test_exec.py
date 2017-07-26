@@ -101,6 +101,8 @@ class TestLocalExec(unittest.TestCase):
         if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
             t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
 
+        executer_str = str(t)
+        self.assertGreater(len(executer_str), 1)
         # No results will be generated since, TRiP98 is not installed in test environment.
 
 
