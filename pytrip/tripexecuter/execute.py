@@ -108,7 +108,7 @@ class Execute(object):
         out += "|   UUID                        : {:s}\n".format(str(self.__uuid__))
         out += "|   CtxCube.basename            : '{:s}'\n".format(self.ctx.basename)
         out += "|   VdxCube.basename            : '{:s}'\n".format(self.vdx.basename)
-        out += "|   STDOUT prefix               : '{:s}'\n".format(self.logfile_prefiz_stdout)
+        out += "|   STDOUT prefix               : '{:s}'\n".format(self.logfile_prefix_stdout)
         out += "|   STDERR prefix               : '{:s}'\n".format(self.logfile_prefix_stderr)
         out += "|   TRiP98 command              : '{:s}'\n".format(self.trip_bin_path)
         out += "|   Dummy run                   : {:s}\n".format(str(self._norun))
