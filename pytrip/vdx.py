@@ -1369,21 +1369,32 @@ class Contour:
         j = 0
         while i < len(content):
             line = content[i]
-            if set_point:
+
+            # skip any empty lines
+            if line.strip() == "":
+                i += 1  # go to next line
+                continue
+
+            if set_point:  # expect list of x,y,z points
                 if j >= points:
                     break
+
                 con_dat = line.split()
-                self.contour.append([float(con_dat[0]) + self.cube.xoffset,
-                                     float(con_dat[1]) + self.cube.yoffset,
-                                     float(con_dat[2])])
-                j += 1
-            else:
+                if len(con_dat) < 3:  # point must be at least three dimensional
+                    logger.warning(".vdx line {:d}: ignored, expected <x> <y> <z> positions".format(i))
+                else:
+                    self.contour.append([float(con_dat[0]) + self.cube.xoffset,
+                                         float(con_dat[1]) + self.cube.yoffset,
+                                         float(con_dat[2])])
+                    j += 1  # increment point counter
+
+            else:  # in case we do not have a point, some keyword may be found
                 if re.match("internal_false", line) is not None:
                     self.internal_false = True
                 if re.match("number_of_points", line) is not None:
                     points = int(line.split()[1])
                     set_point = True
-            i += 1
+            i += 1  # go to next line
 
         # check if the contour is closed
         # self.contour[:] holds the actual data points
