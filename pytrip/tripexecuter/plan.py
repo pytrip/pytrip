@@ -47,29 +47,31 @@ class Plan(object):
                             "Ne": (10, 20),
                             "Ar": (16, 40)}
 
-    _opt_principles = {"H2Obased": "Very simplified single field optimization",
-                       "CTbased": "Full optimization, multiple fields"}
+    # dicts are in the form of
+    # "<valid trip tag>": (<enum>, "Short name", "Description, e.g. for alt tags")
+    opt_principles = {"H2Obased": (0, "Simple opt.", "Very simplified single field optimization"),
+                      "CTbased": (1, "Full opt.", "Full optimization, multiple fields")}
 
-    _opt_methods = {"phys": "Physical dose only",
-                    "bio": "Biological optimization"}
+    opt_methods = {"phys": (0, "Physical", "Physical dose only [Gy]"),
+                   "bio": (1, "Biological", "Biological optimization [Gy(RBE)]")}
 
-    _opt_algs = {"cl": "classic",
-                 "cg": "conjugate graients (default)",
-                 "gr": "plain gradients",
-                 "bf": "Bortfeld's algorithm",
-                 "fr": "Fletcher-Reeves algorithm"}
+    opt_algs = {"cl": (0, "Classic", ""),
+                "cg": (1, "Conjugate gradients", "(default)"),
+                "gr": (2, "Plain gradients", ""),
+                "bf": (3, "Bortfeld", "Bortfeld's algorithm"),
+                "fr": (4, "Fletcher-Reeves", "Fletcher-Reeves' algorithm")}
 
-    _bio_algs = {"cl": "classic (default)",
-                 "ld": "lowdose (faster)"}
+    bio_algs = {"cl": (0, "Classic (default)", ""),
+                "ld": (1, "Lowdose (faster)", "")}
 
-    _dose_algs = {"cl": "classic (default)",
-                  "ap": "allpoints",
-                  "ms": "multiple scatter"}
+    dose_algs = {"cl": (0, "Classic (default)", ""),
+                 "ap": (1, "Allpoints", ""),
+                 "ms": (2, "Multiple scatter", "")}
 
-    _scanpaths = {"none": "No path, output as is",
-                  "uw": "U. Weber, efficient",
-                  "uw2": "very efficient, works also for non-grid points",
-                  "mk": "M. Kraemer, conservative"}
+    scanpaths = {"none": (0, "No path", "output as is"),
+                 "uw": (1, "U. Weber", "efficient"),
+                 "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
+                 "mk": (3, "M. Kraemer", "conservative")}
 
     def __init__(self, basename="", comment=""):
         """
@@ -205,15 +207,15 @@ class Plan(object):
         out += "| Optimization parameters\n"
         out += "|   Optimization enabled        : {:s}\n".format(str(self.optimize))
         out += "|   Optimization method         : '{:s}' {:s}\n".format(self.opt_method,
-                                                                        self._opt_methods[self.opt_method])
+                                                                        self.opt_methods[self.opt_method][1])
         out += "|   Optimization principle      : '{:s}' {:s}\n".format(self.opt_principle,
-                                                                        self._opt_principles[self.opt_principle])
+                                                                        self.opt_principles[self.opt_principle][1])
         out += "|   Optimization algorithm      : '{:s}' {:s}\n".format(self.opt_alg,
-                                                                        self._opt_algs[self.opt_alg])
+                                                                        self.opt_algs[self.opt_alg][1])
         out += "|   Dose algorithm              : '{:s}' {:s}\n".format(self.dose_alg,
-                                                                        self._dose_algs[self.dose_alg])
+                                                                        self.dose_algs[self.dose_alg][1])
         out += "|   Biological algorithm        : '{:s}' {:s}\n".format(self.bio_alg,
-                                                                        self._bio_algs[self.bio_alg])
+                                                                        self.bio_algs[self.bio_alg][1])
         out += "|   Iterations                  : {:d}\n".format(self.iterations)
         out += "|   eps                         : {:.2e}\n".format(self.eps)
         out += "|   geps                        : {:.2e}\n".format(self.geps)
@@ -225,7 +227,7 @@ class Plan(object):
         out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
         out += "|   Min particles               : {:d}\n".format(self.minparticles)
         out += "|   Scanpath                    : '{:s}'\n".format(self.scanpath,
-                                                                   self._scanpaths[self.scanpath])
+                                                                   self.scanpaths[self.scanpath])
         out += "|\n"
         out += "| Optimization target\n"
         out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
@@ -510,19 +512,19 @@ class Plan(object):
 
         opt = "opt / field(*)"
 
-        if self.opt_principle not in self._opt_principles:
+        if self.opt_principle not in self.opt_principles:
             logger.error("Unknown optimization principle {:s}".format(self.plan.opt_principle))
         opt += " {:s}".format(self.opt_principle)  # ctbased or H2Obased
 
-        if self.opt_method not in self._opt_methods:
+        if self.opt_method not in self.opt_methods:
             logger.error("Unknown optimization method {:s}".format(self.plan.opt_method))
         opt += " {:s}".format(self.opt_method)  # "phys" or "bio"
 
-        if self.dose_alg not in self._dose_algs:
+        if self.dose_alg not in self.dose_algs:
             logger.error("Unknown optimization dose algorithm{:s}".format(self.plan.dose_alg))
         opt += " dosealg({:s})".format(self.dose_alg)  # "ap",..
 
-        if self.opt_alg not in self._opt_algs:
+        if self.opt_alg not in self.opt_algs:
             logger.error("Unknown optimization method {:s}".format(self.plan.opt_alg))
         opt += " optalg({:s})".format(self.opt_alg)  # "cl"...
 
