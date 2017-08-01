@@ -720,9 +720,9 @@ class Cube(object):
         output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
         output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset/self.pixel_size)))
+        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
         output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset/self.pixel_size)))
+        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
         output_str += "dimy {:d}\n".format(self.dimy)
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0

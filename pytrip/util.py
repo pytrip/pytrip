@@ -498,7 +498,7 @@ def volume_histogram(cube, voi=None, bins=256):
         vcube = voi.get_voi_cube()
         mask = (vcube.cube == 1000)
 
-    _xrange = (0.0, cube.max()*1.1)
+    _xrange = (0.0, cube.max() * 1.1)
     _hist, x = np.histogram(cube[mask], bins=bins, range=_xrange)
     _fhist = _hist[::-1]  # reverse histogram, so first element is for highest dose
     _fhist = np.cumsum(_fhist)

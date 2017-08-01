@@ -173,7 +173,7 @@ class ExecParser(object):
 
         """
         if "(" in _arg:
-            _val = _arg[_arg.find("(")+1:_arg.find(")")].strip("\"").strip("\'").strip()
+            _val = _arg[_arg.find("(") + 1:_arg.find(")")].strip("\"").strip("\'").strip()
             _arg = _arg[0:_arg.find("(")].strip()
         else:
             _val = ""
