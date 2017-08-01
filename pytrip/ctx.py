@@ -128,7 +128,7 @@ class CtxCube(Cube):
                 # ISO based UIDS
                 # example: 1.2.826.0.1.3680043.8.498.255851143265846913128620976
                 sop_uid_list = ds.SOPInstanceUID.split('.')
-                current_sop_uid = '.'.join(sop_uid_list[:-1] + [str(i+1)])  # replace last part of UID with a number
+                current_sop_uid = '.'.join(sop_uid_list[:-1] + [str(i + 1)])  # replace last part of UID with a number
 
             _ds.SOPInstanceUID = current_sop_uid
             _ds.SliceLocation = str(self.slice_pos[i])

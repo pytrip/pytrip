@@ -40,9 +40,9 @@ def rbe_from_sf(sf_ion, dose_ion, alpha_x, beta_x):
     a = beta_x * dose_ion * 2.0
     b = alpha_x * dose_ion
     c = np.log(sf_ion)  # natural logarithm
-    d = b*b - 4*a*c
-    x1 = (-b + np.sqrt(d)) / (2.0*a)
-    x2 = (-b - np.sqrt(d)) / (2.0*a)
+    d = b * b - 4 * a * c
+    x1 = (-b + np.sqrt(d)) / (2.0 * a)
+    x2 = (-b - np.sqrt(d)) / (2.0 * a)
 
     if x1 > x2:
         dose_x = x1

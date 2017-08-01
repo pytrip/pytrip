@@ -75,9 +75,9 @@ def sf_rcr(dose, let, oxy=None):
         ocube = oer_po2_rcr(let, oxy)
         # ocube = oer_rcr(let)  # TODO: this was old version, not sure how to include.
 
-    a = (a0 * _f(let) + a1 * np.exp(-let/ln)) / ocube
-    b = b1 * np.exp(-let/ln) / ocube
-    c = (c0 * _f(let) + c1 * np.exp(-let/ln)) / ocube
+    a = (a0 * _f(let) + a1 * np.exp(-let / ln)) / ocube
+    b = b1 * np.exp(-let / ln) / ocube
+    c = (c0 * _f(let) + c1 * np.exp(-let / ln)) / ocube
 
     sf = np.exp(-dose * a) + dose * b * np.exp(-dose * c)
     return sf
@@ -97,7 +97,7 @@ def _f(let):
     """
 
     ld = 86.0
-    result = (1 - np.exp(-let/ld) * (1 + let/ld)) * ld/let
+    result = (1 - np.exp(-let / ld) * (1 + let / ld)) * ld / let
 
     # map any zero LET areas to 0.0
     if np.isscalar(result):  # scalar
@@ -125,7 +125,7 @@ def oer_rcr(let):
     omin = 1.10
     omax = 2.92
     lo = 114.0
-    _o = omin + (omax - omin) * np.exp(-(let/lo)*(let/lo))
+    _o = omin + (omax - omin) * np.exp(-(let / lo) * (let / lo))
     return _o
 
 

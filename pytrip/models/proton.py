@@ -128,5 +128,7 @@ def _rbe_apx(dose, apx, sbpx, abx, dzero=0.0):
     else:
         if _rbe == np.inf:
             return dzero
-    _rbe *= (np.sqrt(abx*abx + 4*abx*apx*dose + 4*sbpx*sbpx * dose*dose) - abx)
+    _rbe *= (np.sqrt(abx * abx +
+                     4 * abx * apx * dose +
+                     4 * sbpx * sbpx * dose * dose) - abx)
     return _rbe
