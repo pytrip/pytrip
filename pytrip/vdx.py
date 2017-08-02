@@ -116,7 +116,7 @@ class VdxCube:
         out += "|   structs_rt_series_instance_uid      : '{:s}'\n".format(self._structs_rt_series_instance_uid)
         if self.vois:
             out += "+---VOIs\n"
-            for _i, _v in enumerate(vois):
+            for _i, _v in enumerate(self.vois):
                 out += "|   |           #{:d}              : '{:s}'\n".format(_i, _v.name)
         return out
 
