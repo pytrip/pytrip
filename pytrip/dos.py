@@ -54,7 +54,7 @@ class DosCube(Cube):
         """
         super(DosCube, self).__init__(cube)
         self.type = "DOS"
-        self.target_dose = 0.0
+        self.target_dose = 0.0  # Target dose in Gy or Gy(RBE)
 
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom

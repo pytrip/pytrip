@@ -78,6 +78,7 @@ class VdxCube:
     def __init__(self, cube=None):
         self.vois = []
         self.cube = cube
+        self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
 
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom
@@ -96,6 +97,28 @@ class VdxCube:
             import datetime
             self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
             logger.debug("VDX class creates new patient_id {}".format(self.patient_id))
+
+    def __str__(self):
+        """ str output handler
+        """
+        return self._print()
+
+    def _print(self):
+        """ Pretty print current attributes.
+        """
+        out = "\n"
+        out += "   VdxCube\n"
+        out += "----------------------------------------------------------------------------\n"
+        out += "| UIDs\n"
+        out += "|   dicom_study_instance_uid            : {:s}\n".format(self._dicom_study_instance_uid)
+        out += "|   structs_dicom_series_instance_uid   : '{:s}'\n".format(self._structs_dicom_series_instance_uid)
+        out += "|   structs_sop_instance_uid            : '{:s}'\n".format(self._structs_sop_instance_uid)
+        out += "|   structs_rt_series_instance_uid      : '{:s}'\n".format(self._structs_rt_series_instance_uid)
+        if self.vois:
+            out += "+---VOIs\n"
+            for _i, _v in enumerate(self.vois):
+                out += "|   |           #{:d}              : '{:s}'\n".format(_i, _v.name)
+        return out
 
     def read_dicom(self, data, structure_ids=None):
         """
@@ -153,12 +176,6 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def __str__(self):  # Method for printing
-        """
-        :returns: VOI names separated by '&' sign
-        """
-        return '&'.join(self.get_voi_names())
-
     def add_voi(self, voi):
         """ Appends a new voi to this class.
 
@@ -199,6 +216,7 @@ class VdxCube:
         :param str path: Full path including file extension.
         """
         self.basename = os.path.basename(path).split(".")[0]
+        self.path = path
         fp = open(path, "r")
         content = fp.read().split('\n')
         fp.close()
@@ -551,6 +569,27 @@ class Voi:
         self.slices = []
         self.color = [0, 230, 0]  # default colour
         self.define_colors()
+
+    def __str__(self):
+        """ str output handler
+        """
+        return self._print()
+
+    def _print(self):
+        """ Pretty print current attributes.
+        """
+        out = "\n"
+        out += "   Voi\n"
+        out += "----------------------------------------------------------------------------\n"
+        out += "|   Name                                : '{:s}'\n".format(self.name)
+        out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
+        out += "|   Type                                : {:d}\n".format(self.type)
+        out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
+        out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(hex(self.color[0].strip('0x')),
+                                                                                  hex(self.color[1].strip('0x')),
+                                                                                  hex(self.color[2].strip('0x')))
+
+        return out
 
     def create_copy(self, margin=0):
         """

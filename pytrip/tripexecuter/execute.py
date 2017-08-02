@@ -99,10 +99,8 @@ class Execute(object):
     def _print(self):
         """ Pretty print current attributes.
         """
-        out = ""
-
-        out += "|\n"
-        out += "   Executer"
+        out = "\n"
+        out += "   Executer\n"
         out += "----------------------------------------------------------------------------\n"
         out += "| General configuration\n"
         out += "|   UUID                        : {:s}\n".format(str(self.__uuid__))
@@ -111,7 +109,6 @@ class Execute(object):
         out += "|   STDOUT prefix               : '{:s}'\n".format(self.logfile_prefix_stdout)
         out += "|   STDERR prefix               : '{:s}'\n".format(self.logfile_prefix_stderr)
         out += "|   TRiP98 command              : '{:s}'\n".format(self.trip_bin_path)
-        out += "|   Dummy run                   : {:s}\n".format(str(self._norun))
         out += "|   Cleanup                     : {:s}\n".format(str(self._cleanup))
 
         out += "|\n"
