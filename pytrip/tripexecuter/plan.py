@@ -318,13 +318,13 @@ class Plan(object):
             voi.clean_cache()
 
     def load_dose(self, path, _type, target_dose=0.0):
-        """ Load and append a new DOS cube from path to self.doscubes.
+        """ Load and append a new DosCube from path to self.doscubes.
         """
         dos = DosCube()
         dos.read(os.path.splitext(path)[0] + DosCube.data_file_extension)
         dos._type = _type
-        dos.set_dose(target_dose)
-        self.doscubes.append(dos)
+        dos.target_dose = target_dose
+        self.dosecubes.append(dos)
 
     def destroy(self):
         """ Destructor for Vois and Fields in this class.
