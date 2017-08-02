@@ -583,7 +583,7 @@ class Voi:
         out += "----------------------------------------------------------------------------\n"
         out += "|   Name                                : '{:s}'\n".format(self.name)
         out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
-        out += "|   Type                                : {:d}\n".format(self.type )
+        out += "|   Type                                : {:d}\n".format(self.type)
         out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
         out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(hex(self.color[0].strip('0x')),
                                                                                   hex(self.color[1].strip('0x')),
