@@ -37,13 +37,13 @@ class LETCube(Cube):
     data_file_extension = '.dos'
     allowed_suffix = ('dosemlet', 'mlet')
 
-    let_types = {"unknown" : "unknown LET type"
-                 "DLET" : "dose-averaged LET",
-                 "DLET*" : "dose-averaged LET, all secondaries",
-                 "DLETP" : "dose-averaged LET, protons only",
-                 "TLET" : "track-averaged LET",
-                 "TLET*" : "track-averaged LET, all secondaries",
-                 "TLETP" : "track-averaged LET, protons only"}
+    let_types = {"unknown": "unknown LET type",
+                 "DLET": "dose-averaged LET",
+                 "DLET*": "dose-averaged LET, all secondaries",
+                 "DLETP": "dose-averaged LET, protons only",
+                 "TLET": "track-averaged LET",
+                 "TLET*": "track-averaged LET, all secondaries",
+                 "TLETP": "track-averaged LET, protons only"}
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
