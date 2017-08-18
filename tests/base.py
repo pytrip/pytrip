@@ -17,7 +17,7 @@
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
 """
-TODO: documentation here.
+Methods for providing data paths for PyTRiP testing.
 """
 import os
 
@@ -28,4 +28,12 @@ def get_files():
     """
     dirname = os.path.join('tests', 'res')
     bname = "TST003"
+    return os.path.join(dirname, bname)
+
+def get_trip98base_dir():
+    """
+    get plans from https://neptun.phys.au.dk/~bassler/TRiP/
+    """
+    dirname = os.path.join('tests', 'res')
+    bname = "TRIP98BASE"
     return os.path.join(dirname, bname)

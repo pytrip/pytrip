@@ -35,18 +35,33 @@ class TestLocalExec(unittest.TestCase):
     """ Tests for pytrip.tripexecuter
     """
     def setUp(self):
-        """ Prepare test environment.
+        """
+        Prepare test environment.
         """
         testdir = tests.base.get_files()
+        test_trip98base_dir = tests.base.get_trip98base_dir()
 
         self.patient_name = "tst003000"
 
         self.ctx_path = os.path.join(testdir, self.patient_name + '.ctx')
         self.vdx_path = os.path.join(testdir, self.patient_name + '.vdx')
         self.trip_path = os.path.join(testdir, "TRiP98")
+        self.trip_base_dir = test_trip98base_dir
+
+    def test_rbe_parse(self):
+        """
+        Test parsing of .rbe files
+        """
+        rbe_base_path = os.path.join(self.trip_base_dir, "dummy00.rbe")
+        r = pte.RBEBaseData()
+        r.read(rbe_base_path)
+        print(r)
+        self.assertEqual(r.alpha, 1.00)
+        self.assertEqual(r.beta, 1.00)
 
     def test_exec(self):
-        """ Prepare and execute a dry-run test using the Executer.
+        """
+        Prepare and execute a dry-run test using the Executer.
         """
         logger.info("Test norun TRiP98 execution")
 
