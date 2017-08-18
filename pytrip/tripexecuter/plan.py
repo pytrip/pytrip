@@ -103,8 +103,9 @@ class Plan(object):
 
         self.projectile = "C"  # these are needed by makesis possibly
         self.projectile_a = 12  # these are needed by makesis possibly
-        self.res_tissue_type = ""
-        self.target_tissue_type = ""
+        self.rbe_base_data = []  # list of RBEBaseData() objects
+        self.res_tissue_type = ""  # place RBEBaseData() object here
+        self.target_tissue_type = ""  # place RBEBaseData() object here
         self.active = False
         self.optimize = True  # switch wheter it should be optimized. If False, then a RST file will be loaded instead.
         self.iterations = 500
@@ -239,8 +240,14 @@ class Plan(object):
 
         out += "|\n"
         out += "| Biological parameters\n"
-        out += "|   Target tissue type          : '{:s}'\n".format(self.target_tissue_type)
-        out += "|   Residual tissue type        : '{:s}'\n".format(self.res_tissue_type)
+        if self.rbe_base_data:
+            out += "| RBEBaseData loaded:\n"
+            for _bd in self.rbe_base_data:
+                out += "|     .rbe tissue type          : '{:s}'\n".format(_bd.celltype)
+        if self.target_tissue_type:
+            out += "|   Target tissue type          : '{:s}'\n".format(self.target_tissue_type.celltype)
+        if self.res_tissue_type:
+            out += "|   Residual tissue type        : '{:s}'\n".format(self.res_tissue_type.celltype)
         out += "|   Random seed #1              : {:d}\n".format(self.random_seed1)
 
         out += "|\n"
@@ -434,6 +441,30 @@ class Plan(object):
                                                                       self.target_dose_percent * 0.01))
         return output
 
+    def _make_exec_bio(self):
+        """ Read .rbe files and attach them to tissues
+        """
+
+        _target_name = self.voi_target.name.replace(" ", "_")
+        # TODO: extract list of oar names to new list.
+        # _oar_names = [self.voi_oars.name.replace(" ", "_")....]
+
+        output = []
+
+        # read the .rbe files
+        if self.rbe_base_data:
+            for _bd in self.rbe_base_data:
+                output.append("rbe \"{:s}\" / read".format(_bd.path))
+
+        if self.target_tissue_type:
+            output.append("rbe {:s} / alias({:s})".format(_target_name, self.target_tissue_type.celltype))
+
+        if self.res_tissue_type:
+            logger.warning("Residual tissue type .rbe not implemented yet.")
+        #    output.append("rbe {:s} / alias({:s})".format(_name, self.res_tissue_type.celltype))
+
+        return output
+
     def _make_exec_fields(self):
         """ Generate .exec command string for one or more fields.
         if Plan().optimize is False, then it is expected there will
@@ -596,16 +627,6 @@ class Plan(object):
         output.append("ct {:s} / read".format(self._plan_name))  # loads CTX
         output.append("voi {:s} / read".format(self._plan_name))  # loads VDX
         output.append("voi * /list")  # display all loaded VOIs. Helps for debugging.
-
-        # TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
-        # TODO: check rbe.get_rbe_by_name method
-        if self.target_tissue_type:  # if not None or empty string:
-            rbe = self.rbe.get_rbe_by_name(self.target_tissue_type)
-            output.append("rbe '{:s}' / read".format(rbe.path))
-
-        if self.res_tissue_type:
-            rbe = self.rbe.get_rbe_by_name(self.target_tissue_type)
-            output.append("rbe '{:s}' / read".format(rbe.path))
 
         return output
 
