@@ -54,13 +54,14 @@ class DensityProjections:
     def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
         """ TODO: Documentation
         """
-        l = self.calculate_quality_list(voi, gantry, couch, calculate_from, stepsize, avoid=avoid, gradient=gradient)
-        l = sorted(l, key=cmp_to_key(cmp_sort))
+        result = self.calculate_quality_list(voi, gantry, couch, calculate_from, stepsize,
+                                             avoid=avoid, gradient=gradient)
+        result = sorted(result, key=cmp_to_key(cmp_sort))
         grid_data = []
-        for x in l:
+        for x in result:
             grid_data.append(x["data"][0])
-        l = np.reshape(grid_data, (len(gantry), len(couch)))
-        return l
+        result = np.reshape(grid_data, (len(gantry), len(couch)))
+        return result
 
     def calculate_quality_list(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
         """ TODO: Documentation

@@ -39,14 +39,14 @@ class TestLet(unittest.TestCase):
         self.vdx000 = os.path.join(testdir, "tst003000.vdx")
 
     def test_read(self):
-        l = LETCube()
-        l.read(self.let001)
+        let = LETCube()
+        let.read(self.let001)
 
-        v = create_sphere(l, name="sph", center=[10, 10, 10], radius=8)
+        v = create_sphere(let, name="sph", center=[10, 10, 10], radius=8)
         self.assertIsNotNone(v)
 
         logger.info("Calculating DVH")
-        result = l.calculate_lvh(v)
+        result = let.calculate_lvh(v)
         self.assertIsNotNone(result)
         lvh, min_l, max_l, mean, area = result
         self.assertGreater(area, 2.0)
@@ -55,12 +55,12 @@ class TestLet(unittest.TestCase):
         self.assertEqual(min_l, 0.0)
         self.assertEqual(max_l, 1.0)
 
-        self.assertGreater(l.get_max(), 30.0)
+        self.assertGreater(let.get_max(), 30.0)
 
         fd, outfile = tempfile.mkstemp()
         os.close(fd)  # Windows needs it
         os.remove(outfile)  # we need only temp filename, not the file
-        l.write(outfile)
+        let.write(outfile)
         hed_file = outfile + LETCube.header_file_extension
         dos_file = outfile + LETCube.data_file_extension
         self.assertTrue(os.path.exists(hed_file))
