@@ -40,5 +40,5 @@ l2 = pt.LETCube()
 l1.read("box052000.dosemlet.dos")
 l2.read("box053000.dosemlet.dos")
 
-l = ((d1 * l1) + (d2 * l2)) / (d1 + d2)
-l.write("out.dosemlet.dos")
+let = ((d1 * l1) + (d2 * l2)) / (d1 + d2)
+let.write("out.dosemlet.dos")

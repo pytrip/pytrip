@@ -36,7 +36,7 @@ logger = logging.getLogger(__name__)
 
 try:
     import paramiko
-except:
+except ImportError:
     logger.warning("Paramiko package not installed, only local TRiP access possible")
 
 
@@ -500,7 +500,7 @@ class Execute(object):
                 # login with provided username + empty password
                 try:
                     ssh.connect(self.servername, username=self.username, password="")
-                except:
+                except Exception:
                     logger.error("Cannot connect to " + self.servername)
                     logger.error("Check username, password or key in " + self.rsakey_local_path)
                     raise
@@ -509,7 +509,7 @@ class Execute(object):
                 rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
                 try:
                     ssh.connect(self.servername, username=self.username, pkey=rsa_key)
-                except:
+                except Exception:
                     logger.error("Cannot connect to " + self.servername)
                     logger.error("Check username and your key in " + self.rsakey_local_path)
                     raise
@@ -533,7 +533,7 @@ class Execute(object):
                 # login with provided username + empty password
                 try:
                     transport.connect(username=self.username, password="")
-                except:
+                except Exception:
                     logger.error("Cannot connect to " + self.servername)
                     logger.error("Check username, password or key in " + self.rsakey_local_path)
                     raise
@@ -542,7 +542,7 @@ class Execute(object):
                 rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
                 try:
                     transport.connect(username=self.username, pkey=rsa_key)
-                except:
+                except Exception:
                     logger.error("Cannot connect to " + self.servername)
                     logger.error("Check username and your key in " + self.rsakey_local_path)
                     raise

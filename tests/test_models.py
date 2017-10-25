@@ -81,18 +81,18 @@ class TestProton(unittest.TestCase):
     def test_mcnamara_cube(self):
         """ McNamara test on real cubes.
         """
-        d = pt.DosCube()
-        d.read(self.cube001)
-        l = pt.LETCube()
-        l.read(self.cube001)
-        v = pt.VdxCube(d)
+        dose = pt.DosCube()
+        dose.read(self.cube001)
+        let = pt.LETCube()
+        let.read(self.cube001)
+        v = pt.VdxCube(dose)
         logger.info("Adding VDX from path " + self.vdx)
         v.read(self.vdx)
 
         # increasing LET should increase RBE
         abx = 10.0  # alpha/beta ratio for x-rays [Gy]
-        rbe1 = rbe_mcnamara(d.cube, l.cube, abx)
-        rbe2 = rbe_mcnamara(d.cube, l.cube, 2.0)
+        rbe1 = rbe_mcnamara(dose.cube, let.cube, abx)
+        rbe2 = rbe_mcnamara(dose.cube, let.cube, 2.0)
 
         self.assertTrue(np.all(rbe2 >= rbe1))  # RBE goes up as abx goes down.
 

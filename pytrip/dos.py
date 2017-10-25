@@ -35,7 +35,7 @@ try:
     from dicom import UID
 
     _dicom_loaded = True
-except:
+except ImportError:
     _dicom_loaded = False
 
 logger = logging.getLogger(__name__)

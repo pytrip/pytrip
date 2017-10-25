@@ -33,7 +33,7 @@ try:
     from dicom import UID
 
     _dicom_loaded = True
-except:
+except ImportError:
     _dicom_loaded = False
 
 from pytrip.error import InputError, ModuleNotLoadedError, FileNotFound
