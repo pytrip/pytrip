@@ -24,7 +24,6 @@ Each Voi holds several Slice, which are noramlly synced with an associated CT-cu
 Each Slice holds one or more Contours.
 """
 import os
-import re
 import copy
 from math import pi
 import logging
@@ -228,14 +227,14 @@ class VdxCube:
         while i < n:
             line = content[i]
             if not header_full:
-                if re.match("vdx_file_version", line) is not None:
+                if "vdx_file_version" in line:
                     self.version = line.split()[1]
-                elif re.match("all_indices_zero_based", line) is not None:
+                elif "all_indices_zero_based" in line:
                     self.zero_based = True
 #                TODO number_of_vois not used
-#                elif re.match("number_of_vois", line) is not None:
+#                elif "number_of_vois" in line:
 #                    number_of_vois = int(line.split()[1])
-            if re.match("voi", line) is not None:
+            if "voi" in line:
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
                     if not line.split()[5] == '0':
@@ -864,9 +863,9 @@ class Voi:
         i += 1
         while i < len(content):
             line = content[i]
-            if re.match("voi", line) is not None:
+            if "voi" in line:
                 break
-            if re.match("slice#", line) is not None:
+            if "slice#" in line:
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
@@ -879,7 +878,7 @@ class Voi:
 
                 self.slices.append(s)
 
-            if re.match("#TransversalObjects", line) is not None:
+            if "#TransversalObjects" in line:
                 pass
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
@@ -900,13 +899,13 @@ class Voi:
         i += 1
         while i < len(content):
             line = content[i]
-            if re.match("key", line) is not None:
+            if "key" in line:
                 self.key = line.split()[1]
-            elif re.match("type", line) is not None:
+            elif "type" in line:
                 self.type = int(line.split()[1])
-            elif re.match("number_of_slices", line) is not None:
+            elif "number_of_slices" in line:
                 number_of_slices = int(line.split()[1])
-            elif re.match("slice", line) is not None:
+            elif "slice" in line:
                 s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
@@ -915,7 +914,7 @@ class Voi:
                     raise Exception("cube not loaded")
                 self.slices.append(s)
 
-            elif re.match("voi", line) is not None:
+            elif "voi" in line:
                 break
             elif len(self.slices) >= number_of_slices:
                 break
@@ -1165,9 +1164,9 @@ class Slice:
         i += 1
         while i < len(content):
             line = content[i]
-            if re.match("slice_in_frame", line) is not None:
+            if "slice_in_frame" in line:
                 self.slice_in_frame = float(line.split()[1])
-            elif re.match("thickness", line) is not None:
+            elif "thickness" in line:
                 items = line.split()
                 self.thickness = float(items[1])
                 logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
@@ -1179,13 +1178,13 @@ class Slice:
                     self.start_pos = float(items[3])
                     self.stop_pos = float(items[5])
 
-            elif re.match("number_of_contours", line) is not None:
+            elif "number_of_contours" in line:
                 number_of_contours = int(line.split()[1])
-            elif re.match("contour", line) is not None:
+            elif "contour" in line:
                 c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
-            elif re.match("slice", line) is not None:
+            elif "slice" in line:
                 break
             elif len(self.contour) >= number_of_contours:
                 break
@@ -1429,9 +1428,9 @@ class Contour:
                     j += 1  # increment point counter
 
             else:  # in case we do not have a point, some keyword may be found
-                if re.match("internal_false", line) is not None:
+                if "internal_false" in line:
                     self.internal_false = True
-                if re.match("number_of_points", line) is not None:
+                if "number_of_points" in line:
                     points = int(line.split()[1])
                     set_point = True
             i += 1  # go to next line
