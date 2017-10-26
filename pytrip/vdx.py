@@ -72,9 +72,9 @@ class VdxCube:
 
     >>> import pytrip as pt
     >>> c = pt.CtxCube()
-    >>> c.read("TST000000")
+    >>> c.read("tests/res/TST003/tst003000.ctx.gz")
     >>> v = pt.VdxCube(c)
-    >>> v.read("TST000000.vdx")
+    >>> v.read("tests/res/TST003/tst003000.vdx")
     """
     def __init__(self, cube=None):
         self.vois = []
