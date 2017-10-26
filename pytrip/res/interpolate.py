@@ -68,18 +68,18 @@ class RegularInterpolator(object):
      on interpolated values.
      Example:
 
-         >>> interp_func_1d = RegularInterpolator(x=exp_data_x, y=exp_data_y, kind='linear')
-         >>> interp_func_2d = RegularInterpolator(x=exp_data_x, y=exp_data_y, z=exp_data_z, kind='spline')
+         >> interp_func_1d = RegularInterpolator(x=exp_data_x, y=exp_data_y, kind='linear')
+         >> interp_func_2d = RegularInterpolator(x=exp_data_x, y=exp_data_y, z=exp_data_z, kind='spline')
 
     2. Calling interpolation function to get intermediate values (single number or array) on interpolated ones.
 
-        >>> interpolated_y = interp_func_1d(x=intermediate_x)
-        >>> interpolated_z = interp_func_2d(x=intermediate_x, y=intermediate_y)
+         >> interpolated_y = interp_func_1d(x=intermediate_x)
+         >> interpolated_z = interp_func_2d(x=intermediate_x, y=intermediate_y)
 
     Interpolation in single step is also possible (although less efficient than two-step method):
 
-        >>> interpolated_y = RegularInterpolator.eval(x=intermediate_x, xp=exp_data_x, yp=exp_data_y, kind='linear')
-        >>> interpolated_z = RegularInterpolator(x=intermediate_x, y=intermediate_y, \
+         >> interpolated_y = RegularInterpolator.eval(x=intermediate_x, xp=exp_data_x, yp=exp_data_y, kind='linear')
+         >> interpolated_z = RegularInterpolator(x=intermediate_x, y=intermediate_y, \
         xp=exp_data_x, yp=exp_data_y, zp=exp_data_z, kind='spline')
 
     """

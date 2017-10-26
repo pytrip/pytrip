@@ -153,7 +153,7 @@ class ExecParser(object):
 
     @staticmethod
     def _unpack_arg(_arg):
-        """ Returns the interior of the paranthesis of an argument.
+        """ Returns the interior of the parenthesis of an argument.
 
         'arg(value)'     -> 'arg', 'value'
         'arg("value")'   -> 'arg', 'value'
@@ -168,7 +168,7 @@ class ExecParser(object):
         If there is no value given, simply the _arg is returned and an empty string for the value.
 
         example:
-        >>> _unpack_arg("bolus(2.00)")
+        >>> ExecParser._unpack_arg("bolus(2.00)")
         "bolus", "2.00"
 
         """
