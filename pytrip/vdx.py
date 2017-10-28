@@ -70,10 +70,11 @@ class VdxCube:
 
     We strongly recommend to load a CT and/or a DOS cube first, see example below:
 
-    >>> c = CtxCube()
-    >>> c.read("TST000000")
-    >>> v = VdxCube(c)
-    >>> v.read("TST000000.vdx")
+    >>> import pytrip as pt
+    >>> c = pt.CtxCube()
+    >>> c.read("tests/res/TST003/tst003000.ctx.gz")
+    >>> v = pt.VdxCube(c)
+    >>> v.read("tests/res/TST003/tst003000.vdx")
     """
     def __init__(self, cube=None):
         self.vois = []
@@ -720,7 +721,7 @@ class Voi:
 
     def get_2d_slice(self, plane, depth):
         """ Gets a 2d Slice object from the contour in either sagittal or coronal plane.
-        Contours will be concated.
+        Contours will be concatenated.
 
         :param int plane: either self.sagittal or self.coronal
         :param float depth: position of plane

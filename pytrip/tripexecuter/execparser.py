@@ -21,7 +21,6 @@ Parser for TRiP files.
 """
 
 import os
-# import uuid
 import logging
 
 from pytrip.tripexecuter import Field
@@ -153,7 +152,7 @@ class ExecParser(object):
 
     @staticmethod
     def _unpack_arg(_arg):
-        """ Returns the interior of the paranthesis of an argument.
+        """ Returns the interior of the parenthesis of an argument.
 
         'arg(value)'     -> 'arg', 'value'
         'arg("value")'   -> 'arg', 'value'
@@ -168,8 +167,8 @@ class ExecParser(object):
         If there is no value given, simply the _arg is returned and an empty string for the value.
 
         example:
-        >>> _unpack_arg("bolus(2.00)")
-        "bolus", "2.00"
+        >>> ExecParser._unpack_arg("bolus(2.00)")
+        ('bolus', '2.00')
 
         """
         if "(" in _arg:
@@ -208,7 +207,7 @@ class ExecParser(object):
                 if _par in _dict:
                     _method = _dict[_par][0]
                     _format = _dict[_par][1]
-                    # sometimes, the TRiP paramter names is not equal to the name of the attribute in _obj
+                    # sometimes, the TRiP parameter names is not equal to the name of the attribute in _obj
                     # in these cases, a third string is in the dict, which holds the attribute name.
                     if len(_dict[_par]) > 2:
                         _objattr = _dict[_par][2]
@@ -259,14 +258,14 @@ class ExecParser(object):
 
     def _parse_opt(self, line):
         """
-        Parser for the optimzation command.
+        Parser for the optimization command.
         """
         self._parse_extra_args(line, self._opt_args, self.plan)
 
     @staticmethod
     def _update_obj(_obj, _objattr, _val, _format):
         """
-        :params _obj: object whose paramters will be updated
+        :params _obj: object whose parameters will be updated
         :params _par: attribute to be set in obj
         :params _val: variable which this attribute will be set to
         """
@@ -277,7 +276,7 @@ class ExecParser(object):
         elif _format == 'i':  # single integer
             value = int(_val)
 
-        # handle tuples of arbitray length
+        # handle tuples of arbitrary length
         # "2,2" -> (2,2) or (2.0,2.0) depending on _format = "(i,i)" or "(f,f)"
         elif "(" in _format:
             if "f" in _format:  # tuple will be float
@@ -285,7 +284,7 @@ class ExecParser(object):
             elif "i" in _format:  # tuple will be int
                 value = tuple(map(int, _val.split(",")))
 
-        # handle list of arbitray length
+        # handle list of arbitrary length
         # "2,2" -> [2,2] or [2.0,2.0] depending on _format = "[i,i]" or "[f,f]"
         elif "[" in _format:
             if "f" in _format:  # tuple will be float
@@ -302,8 +301,8 @@ class ExecParser(object):
     @staticmethod
     def _na(_obj, _arg1, _arg2, _format):
         """
-        Not Applicable - used by not implmented TRiP98 arguments/paramters
+        Not Applicable - used by not implemented TRiP98 arguments/parameters
 
         This method simply prints a N/A warning and exits.
         """
-        logger.warning("Not implmented: '{:s}={:s} format={:s}'".format(_arg1, _arg2, _format))
+        logger.warning("Not implemented: '{:s}={:s} format={:s}'".format(_arg1, _arg2, _format))
