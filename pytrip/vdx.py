@@ -225,7 +225,7 @@ class VdxCube:
         header_full = False
         #        number_of_vois = 0
         while i < n:
-            line = content[i]
+            line = content[i].strip()
             if not header_full:
                 if line.startswith("vdx_file_version"):
                     self.version = line.split()[1]
@@ -864,7 +864,7 @@ class Voi:
         self.type = int(items[3])
         i += 1
         while i < len(content):
-            line = content[i]
+            line = content[i].strip()
             if line.startswith("voi"):
                 break
             if line.startswith("slice#"):
@@ -900,7 +900,7 @@ class Voi:
         number_of_slices = 10000
         i += 1
         while i < len(content):
-            line = content[i]
+            line = content[i].strip()
             if line.startswith("key"):
                 self.key = line.split()[1]
             elif line.startswith("type"):
@@ -1165,7 +1165,7 @@ class Slice:
         number_of_contours = 0
         i += 1
         while i < len(content):
-            line = content[i]
+            line = content[i].strip()
             if line.startswith("slice_in_frame"):
                 self.slice_in_frame = float(line.split()[1])
             elif line.startswith("thickness"):
@@ -1202,9 +1202,9 @@ class Slice:
         """
 
         # VDX cubes in version 1.2 do not hold any information on slice thicknesses.
-        line1 = content[i]
-        line2 = content[i + 1]
-        line3 = content[i + 2]
+        line1 = content[i].strip()
+        line2 = content[i + 1].strip()
+        line3 = content[i + 2].strip()
 
         if not line1.startswith("slice#"):
             return None
@@ -1408,10 +1408,10 @@ class Contour:
         points = 0
         j = 0
         while i < len(content):
-            line = content[i]
+            line = content[i].strip()
 
             # skip any empty lines
-            if line.strip() == "":
+            if line == "":
                 i += 1  # go to next line
                 continue
 
