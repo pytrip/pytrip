@@ -868,7 +868,6 @@ class Voi:
             if line.startswith("voi"):
                 break
             if line.startswith("slice#"):
-                print("found slice", line)
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
