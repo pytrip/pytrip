@@ -227,14 +227,14 @@ class VdxCube:
         while i < n:
             line = content[i]
             if not header_full:
-                if "vdx_file_version" in line:
+                if line.startswith("vdx_file_version"):
                     self.version = line.split()[1]
-                elif "all_indices_zero_based" in line:
+                elif line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 #                TODO number_of_vois not used
 #                elif "number_of_vois" in line:
 #                    number_of_vois = int(line.split()[1])
-            if "voi" in line:
+            if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
                     _token = line.split()
@@ -865,9 +865,10 @@ class Voi:
         i += 1
         while i < len(content):
             line = content[i]
-            if "voi" in line:
+            if line.startswith("voi"):
                 break
-            if "slice#" in line:
+            if line.startswith("slice#"):
+                print("found slice", line)
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
@@ -880,7 +881,7 @@ class Voi:
 
                 self.slices.append(s)
 
-            if "#TransversalObjects" in line:
+            if line.startswith("#TransversalObjects"):
                 pass
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
@@ -901,13 +902,13 @@ class Voi:
         i += 1
         while i < len(content):
             line = content[i]
-            if "key" in line:
+            if line.startswith("key"):
                 self.key = line.split()[1]
-            elif "type" in line:
+            elif line.startswith("type"):
                 self.type = int(line.split()[1])
-            elif "number_of_slices" in line:
+            elif line.startswith("number_of_slices"):
                 number_of_slices = int(line.split()[1])
-            elif "slice" in line:
+            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
@@ -916,7 +917,7 @@ class Voi:
                     raise Exception("cube not loaded")
                 self.slices.append(s)
 
-            elif "voi" in line:
+            elif line.startswith("voi"):
                 break
             elif len(self.slices) >= number_of_slices:
                 break
@@ -1166,9 +1167,9 @@ class Slice:
         i += 1
         while i < len(content):
             line = content[i]
-            if "slice_in_frame" in line:
+            if line.startswith("slice_in_frame"):
                 self.slice_in_frame = float(line.split()[1])
-            elif "thickness" in line:
+            elif line.startswith("thickness"):
                 items = line.split()
                 self.thickness = float(items[1])
                 logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
@@ -1180,13 +1181,13 @@ class Slice:
                     self.start_pos = float(items[3])
                     self.stop_pos = float(items[5])
 
-            elif "number_of_contours" in line:
+            elif line.startswith("number_of_contours"):
                 number_of_contours = int(line.split()[1])
-            elif "contour" in line:
+            elif line.startswith("contour"):
                 c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
-            elif "slice" in line:
+            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 break
             elif len(self.contour) >= number_of_contours:
                 break
@@ -1202,7 +1203,6 @@ class Slice:
         """
 
         # VDX cubes in version 1.2 do not hold any information on slice thicknesses.
-
         line1 = content[i]
         line2 = content[i + 1]
         line3 = content[i + 2]
@@ -1430,9 +1430,9 @@ class Contour:
                     j += 1  # increment point counter
 
             else:  # in case we do not have a point, some keyword may be found
-                if "internal_false" in line:
+                if line.startswith("internal_false"):
                     self.internal_false = True
-                if "number_of_points" in line:
+                if line.startswith("number_of_points"):
                     points = int(line.split()[1])
                     set_point = True
             i += 1  # go to next line
