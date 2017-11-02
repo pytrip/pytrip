@@ -524,9 +524,8 @@ def create_cylinder(cube, name, center, radius, depth):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    t = np.linspace(start=0, stop=2.0 * pi, num=100, endpoint=False)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
-    del p[-1]  # delete last element, as c.contour_closed, will ensure it is repeated.
 
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
@@ -553,9 +552,10 @@ def create_sphere(cube, name, center, radius):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100)  # num: sets the number of corners in sphere per slice.
+
+    t = np.linspace(start=0, stop=2.0 * pi,
+                    num=100, endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
-    del p[-1]  # delete the last point will be repeated later in add_contour anyway.
 
     points = []
 
