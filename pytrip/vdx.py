@@ -549,22 +549,34 @@ def create_sphere(cube, name, center, radius):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    t = np.linspace(start=0, stop=2.0 * pi, num=100)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
+    del p[-1]  # delete the last point will be repeated later in add_contour anyway.
+
+    points = []
+
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
             r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            if r2 >= 0.0:
+            if r2 > 0.0:
                 points = [[center[0] + np.math.sqrt(r2) * x[0],
                            center[1] + np.math.sqrt(r2) * x[1], z] for x in p]
-            else:
-                points = [[center[0], center[1], z]]
+                _contour_closed = True
+            # in case r2 == 0.0, the contour in this slice is a point.
+            # TODO: How should the sphere be treated with points in the end slices:
+            # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
+            # The former means the voi consists of contours and points, which I am not sure is vaild.
+            # Here "  oOo  " is implemented.
+            # If you want the " .oOo. " vesion uncomment the next three lines.
+            # else:
+            #     points = [[center[0], center[1], z]]
+            #     _contour_closed = False
             if len(points) > 0:
                 c = Contour(points, cube)
-                c.contour_closed = True  # TODO: Probably the last point is double here
+                c.contour_closed = _contour_closed
                 s.add_contour(c)
                 v.add_slice(s)
     return v
