@@ -906,6 +906,13 @@ class Voi:
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
+                            _slice_number = int(cont2[2])
+                            # bound checking
+                            if _slice_number > self.cube.dimz:
+                                logger.error("VDX slice number# {:d} ".format(_slice_number) +
+                                             "exceeds dimension of CTX cube zmax={:d}".format(self.cube.dimz))
+                                raise Exception("VDX file not compatible with CTX cube")
+
                             # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
                             cont2[2] = self.cube.slice_to_z(int(cont2[2]))
                 if s.get_position() is None:
