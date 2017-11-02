@@ -463,9 +463,11 @@ def create_cube(cube, name, center, width, height, depth):
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [
-                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
-                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z]
+            points = [  # 4 corners of cube in this slice
+                [center[0] - width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] + height / 2, z],
+                [center[0] - width / 2, center[1] + height / 2, z]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
@@ -524,6 +526,8 @@ def create_cylinder(cube, name, center, radius, depth):
     v = Voi(name, cube)
     t = np.linspace(start=0, stop=2.0 * pi, num=100)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
+    del p[-1]  # delete last element, as c.contour_closed, will ensure it is repeated.
+
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
@@ -532,7 +536,7 @@ def create_cylinder(cube, name, center, radius, depth):
             points = [[x[0], x[1], z] for x in p]
             if points:
                 c = Contour(points, cube)
-                c.contour_closed = True  # TODO: Probably the last point is double here
+                c.contour_closed = True
                 s.add_contour(c)
                 v.add_slice(s)
     return v
