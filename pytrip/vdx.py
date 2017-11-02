@@ -554,11 +554,12 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r = (radius**2 - (z - center[2])**2)**0.5
+            r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            if r > 0:
-                points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
+            if r2 >= 0.0:
+                points = [[center[0] + np.math.sqrt(r2) * x[0],
+                           center[1] + np.math.sqrt(r2) * x[1], z] for x in p]
             else:
                 points = [[center[0], center[1], z]]
             if len(points) > 0:
