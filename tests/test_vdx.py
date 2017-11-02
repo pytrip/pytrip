@@ -61,9 +61,9 @@ class TestVdx(unittest.TestCase):
         logger.info("Checking Vdx str method")
         logger.info(str(v))
 
-        logger.info("Checking Vdx write_to_voxel method")
+        logger.info("Checking Vdx _write_vdx method")
         fd, outfile = tempfile.mkstemp()
-        v.write_to_voxel(outfile)
+        v._write_vdx(outfile)
         self.assertTrue(os.path.exists(outfile))
         logger.info("Checking if output file " + outfile + " is not empty")
         self.assertGreater(os.path.getsize(outfile), 1)
@@ -129,8 +129,8 @@ class TestVdx(unittest.TestCase):
         v = create_sphere(c, name="cube3", center=[10, 10, 10], radius=8)
         self.assertEqual(v.number_of_slices(), 6)
 
-        logger.info("Checking Voi to_voxel_string method")
-        self.assertGreater(len(v.to_voxel_string()), 1)
+        logger.info("Checking Voi vdx_string method")
+        self.assertGreater(len(v.vdx_string()), 1)
 
         logger.info("Checking Voi get_slice_at_pos method, non-existent slice")
         self.assertIsNone(v.get_slice_at_pos(137))
@@ -139,8 +139,8 @@ class TestVdx(unittest.TestCase):
         s = v.get_slice_at_pos(11)
         self.assertIsNotNone(s)
 
-        logger.info("Checking Slice to_voxel_string method")
-        self.assertGreater(len(s.to_voxel_string()), 1)
+        logger.info("Checking Slice vdx_string method")
+        self.assertGreater(len(s.vdx_string()), 1)
 
         logger.info("Checking Slice number_of_contours method")
         self.assertEqual(s.number_of_contours(), 1)
@@ -158,8 +158,8 @@ class TestVdx(unittest.TestCase):
         self.assertAlmostEqual(center[2], 12.0)  # TODO why 12 ?
         self.assertGreater(area, 100.0)
 
-        logger.info("Checking Contour to_voxel_string method")
-        self.assertGreater(len(contour.to_voxel_string()), 1)
+        logger.info("Checking Contour vdx_string method")
+        self.assertGreater(len(contour.vdx_string()), 1)
 
         logger.info("Checking Contour number_of_points method")
         self.assertEqual(contour.number_of_points(), 101)

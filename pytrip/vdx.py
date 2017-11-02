@@ -88,7 +88,7 @@ class VdxCube:
         self._structs_sop_instance_uid = UID.generate_uid(prefix=None)
         self._structs_rt_series_instance_uid = UID.generate_uid(prefix=None)
 
-        self.version = "1.2"
+        self.version = "2.0"
         if self.cube is not None:
             self.patient_id = cube.patient_id
             self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
@@ -210,6 +210,19 @@ class VdxCube:
         """
         self.read_vdx(path)
 
+    def vdx_version(self, content):
+        """ Test content for what VDX version this is.
+        Since the VDX version is very undocumented, we are guessing here.
+
+        :param content: the vdx file contents as an array of strings.
+        :returns: vdx version string, e.g. "1.2" or "2.0"
+        """
+        for line in content:
+            if line.strip().startswith("vdx_file_version"):
+                return line.split()[1]
+            else:
+                return "1.2"
+
     def read_vdx(self, path):
         """ Reads a structure file in Voxelplan format.
 
@@ -220,6 +233,9 @@ class VdxCube:
         fp = open(path, "r")
         content = fp.read().split('\n')
         fp.close()
+
+        self.version = self.vdx_version(content)
+
         i = 0
         n = len(content)
         header_full = False
@@ -227,9 +243,7 @@ class VdxCube:
         while i < n:
             line = content[i].strip()
             if not header_full:
-                if line.startswith("vdx_file_version"):
-                    self.version = line.split()[1]
-                elif line.startswith("all_indices_zero_based"):
+                if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 #                TODO number_of_vois not used
 #                elif "number_of_vois" in line:
@@ -262,18 +276,20 @@ class VdxCube:
         """
         return len(self.vois)
 
-    def write_to_voxel(self, path):
+    def _write_vdx(self, path):
         """ Writes all VOIs in voxelplan format.
+
+        All will be written in version 2.0 format, irrespectly of self.version.
 
         :param str path: Full path, including file extension (.vdx).
         """
         fp = open(path, "w")
-        fp.write("vdx_file_version %s\n" % self.version)
+        fp.write("vdx_file_version 2.0\n")
         fp.write("all_indices_zero_based\n")
-        fp.write("number_of_vois %d\n" % self.number_of_vois())
+        fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
         self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
         for voi in self.vois:
-            fp.write(voi.to_voxel_string())
+            fp.write(voi.vdx_string())
         fp.close()
 
     def write_trip(self, path):
@@ -283,7 +299,7 @@ class VdxCube:
         :param str path: Full path, including file extension (.vdx).
         """
         self.concat_contour()
-        self.write_to_voxel(path)
+        self._write_vdx(path)
 
     def write(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
@@ -895,6 +911,8 @@ class Voi:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+        logger.debug("Parsing VDX format 2.0")
+
         line = content[i]
         self.name = ' '.join(line.split()[1:])
         number_of_slices = 10000
@@ -991,10 +1009,12 @@ class Voi:
                 self.slices.append(sl)
         self._sort_slices()
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
+    def vdx_string(self):
+        """
+        Returns list of strings for this voi in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the all lines needed for a Voxelplan formatted file.
+        :returns: a list of str holding the all lines needed for a Voxelplan formatted file.
         """
         if len(self.slices) is 0:
             return ""
@@ -1022,7 +1042,7 @@ class Voi:
                                                                                           pos - 0.5 * sl.thickness,
                                                                                           pos + 0.5 * sl.thickness)
             out += "number_of_contours {:d}\n".format(sl.number_of_contours())
-            out += sl.to_voxel_string()
+            out += sl.vdx_string()
             i += 1
         return out
 
@@ -1254,17 +1274,19 @@ class Slice:
             contour_list.append(con)
         return contour_list
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0)
+    def vdx_string(self):
+        """
+        Returns list of strings for this SLICE in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the slice information with the countour lines for a Voxelplan formatted file.
+        :returns: a list of str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
         for i, cnt in enumerate(self.contour):
             out += "contour %d\n" % i
             out += "internal false\n"
             out += "number_of_points %d\n" % (cnt.number_of_points() + 1)
-            out += cnt.to_voxel_string()
+            out += cnt.vdx_string()
             out += "\n"
         return out
 
@@ -1368,10 +1390,12 @@ class Contour:
         max_z = np.amax(np.array(self.contour)[:, 2])
         return [min_x, min_y, min_z], [max_x, max_y, max_z]
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+    def vdx_string(self):
+        """
+        Returns list of strings for this CONTOUR in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the contour points needed for a Voxelplan formatted file.
+        :returns: an array of str holding the contour points needed for a Voxelplan formatted file.
         """
 
         # The vdx files require all contours to be mapped to a CT cube starting at (x,y) = (0,0)
@@ -1461,7 +1485,8 @@ class Contour:
 
         if self.cube is None:
             _pixel_size = 1.0
-            logger.warning("Reading .vdx in 1.2 format: no CTX cube associated, setting pixel_size to 1.0.")
+            logger.warning("Reading contour data in .vdx in 1.2 format: no CTX cube associated," +
+                           " setting pixel_size to 1.0.")
         else:
             _pixel_size = self.cube.pixel_size
 
