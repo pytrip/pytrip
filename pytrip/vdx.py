@@ -524,7 +524,7 @@ def create_cylinder(cube, name, center, radius, depth):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100, endpoint=False)
+    t = np.linspace(start=0, stop=2.0 * pi, num=99, endpoint=False)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
 
     for i in range(0, cube.dimz):
@@ -554,7 +554,7 @@ def create_sphere(cube, name, center, radius):
     v = Voi(name, cube)
 
     t = np.linspace(start=0, stop=2.0 * pi,
-                    num=100, endpoint=False)  # num: sets the number of corners in sphere per slice.
+                    num=99, endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
 
     points = []
