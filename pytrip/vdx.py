@@ -25,7 +25,7 @@ Each Slice holds one or more Contours.
 """
 import os
 import copy
-from math import pi
+from math import pi, sqrt
 import logging
 from functools import cmp_to_key
 
@@ -179,7 +179,7 @@ class VdxCube:
     def add_voi(self, voi):
         """ Appends a new voi to this class.
 
-        :param Voi voi: the voi to be appened to this class.
+        :param Voi voi: the voi to be appended to this class.
         """
         self.vois.append(voi)
 
@@ -262,7 +262,7 @@ class VdxCube:
             i += 1
 
     def concat_contour(self):
-        """ Loop through all available VOIs and check whether any have mutiple contours in a slice.
+        """ Loop through all available VOIs and check whether any have multiple contours in a slice.
         If so, merge them to a single contour.
 
         This is needed since TRiP98 cannot handle multiple contours in the same slice.
@@ -279,7 +279,7 @@ class VdxCube:
     def _write_vdx(self, path):
         """ Writes all VOIs in voxelplan format.
 
-        All will be written in version 2.0 format, irrespectly of self.version.
+        All will be written in version 2.0 format, irrespectively of self.version.
 
         :param str path: Full path, including file extension (.vdx).
         """
@@ -427,7 +427,7 @@ class VdxCube:
     def write_dicom(self, directory):
         """ Generates a Dicom RTSTRUCT object from self, and writes it to disk.
 
-        :param str directory: Diretory where the rtss.dcm file will be saved.
+        :param str directory: Directory where the rtss.dcm file will be saved.
         """
         dcm = self.create_dicom()
         dcm.save_as(os.path.join(directory, "RTSTRUCT.PYTRIP.dcm"))
@@ -482,13 +482,13 @@ def create_voi_from_cube(cube, name, value=100):
 
     :param Cube cube: A CTX or DOS cube to work on.
     :param str name: Name of the VOI
-    :param int value: The isodose value from which the countour will be generated from.
+    :param int value: The isodose value from which the contour will be generated from.
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
-    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib._cntr as cntr
@@ -566,8 +566,8 @@ def create_sphere(cube, name, center, radius):
             s = Slice(cube)
             s.thickness = cube.slice_distance
             if r2 > 0.0:
-                points = [[center[0] + x[0] * r2**0.5,
-                           center[1] + x[1] * r2**0.5, z] for x in p]
+                points = [[center[0] + x[0] * sqrt(r2),
+                           center[1] + x[1] * sqrt(r2), z] for x in p]
                 _contour_closed = False
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
@@ -577,7 +577,7 @@ def create_sphere(cube, name, center, radius):
             # If you do not want the " .oOo. " version uncomment the next three lines.
             else:
                 points = [[center[0], center[1], z]]
-                _contour_closed = True
+                _contour_closed = False
             if len(points) > 0:
                 c = Contour(points, cube)
                 c.contour_closed = _contour_closed
