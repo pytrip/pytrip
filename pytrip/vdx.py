@@ -20,7 +20,7 @@
 This module holds all the user needs to deal with Volume of interests.
 It provides the top-level VdxCube class, Voi, Slice and Contour classes.
 The Voi class represents a volume of interest 'VOI', also called region of interest 'ROI' in Dicom lingo.
-Each Voi holds several Slice, which are noramlly synced with an associated CT-cube.
+Each Voi holds several Slice, which are normally synced with an associated CT-cube.
 Each Slice holds one or more Contours.
 """
 import os
@@ -62,7 +62,7 @@ class VdxCube:
 
     Note, since TRiP98 only supports one contour per slice for each voi.
     PyTRiP supports functions for connecting multiple contours to a single
-    entity using infinte thin connects.
+    entity using infinite thin connects.
 
     VdxCube can import both dicom data and TRiP data,
     and export in the those formats.
@@ -565,10 +565,10 @@ def create_sphere(cube, name, center, radius):
             r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
+            _contour_closed = True
             if r2 > 0.0:
                 points = [[center[0] + x[0] * sqrt(r2),
                            center[1] + x[1] * sqrt(r2), z] for x in p]
-                _contour_closed = False
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
@@ -577,7 +577,6 @@ def create_sphere(cube, name, center, radius):
             # If you do not want the " .oOo. " version uncomment the next three lines.
             else:
                 points = [[center[0], center[1], z]]
-                _contour_closed = False
             if len(points) > 0:
                 c = Contour(points, cube)
                 c.contour_closed = _contour_closed
@@ -592,7 +591,7 @@ class Voi:
     VOIs may for instance be organs (lung, eye...) or targets (PTV, GTV...), or any other volume of interest.
     """
 
-    sagital = 2  #: deprecated, backwards compability to pytripgui, do not use.
+    sagital = 2  #: deprecated, backwards compatibility to pytripgui, do not use.
     sagittal = 2  #: id for sagittal view
     coronal = 1  #: id for coronal view
 
@@ -675,7 +674,7 @@ class Voi:
         pass
 
     def concat_to_3d_polygon(self):
-        """ Concats all contours into a single contour, and writes all data points to sefl.polygon3d.
+        """ Concats all contours into a single contour, and writes all data points to self.polygon3d.
         """
         self.concat_contour()
         data = []
@@ -685,7 +684,7 @@ class Voi:
 
     def get_3d_polygon(self):
         """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
-        sefl.polygon3d. If this attibute does not exist, create it.
+        sefl.polygon3d. If this attribute does not exist, create it.
         """
         if not hasattr(self, "polygon3d"):
             self.concat_to_3d_polygon()
@@ -1375,29 +1374,27 @@ class Contour:
 
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
-        points = self.contour
-        if not self.contour_closed:
-            points = self.contour + [points[0]]
-        points = np.array(points)
+        points = np.array(self.contour + [self.contour[0]])  # connect the contour first and last point
+        # its needed only for calculation of dxdy in Green's theorem below
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
-            area = -sum(points[:-1, 1] * dx_dy[:, 0])
+            area = -np.dot(points[:-1, 1], dx_dy[:, 0])
             paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
-            area = -sum(points[:-1, 2] * dx_dy[:, 0])
+            area = -np.dot(points[:-1, 2], dx_dy[:, 0])
             paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
-            area = -sum(points[:-1, 2] * dx_dy[:, 1])
+            area = -np.dot(points[:-1, 2], dx_dy[:, 1])
             paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
-            center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
-                               sum(points[0:len(points) - 1:, 1] * paths) / total_path,
+            center = np.array([np.dot(points[:-1, 0], paths) / total_path,
+                               np.dot(points[:-1, 1], paths) / total_path,
                                points[0, 2]])
         else:
-            center = np.array([sum(points[0:len(points) - 1, 0]),
-                               sum(points[0:len(points) - 1:, 1]),
+            center = np.array([np.sum(points[:-1, 0]),
+                               np.sum(points[:-1, 1]),
                                points[0, 2]])
 
         return center, area
