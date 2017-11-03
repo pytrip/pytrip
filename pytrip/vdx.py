@@ -566,18 +566,18 @@ def create_sphere(cube, name, center, radius):
             s = Slice(cube)
             s.thickness = cube.slice_distance
             if r2 > 0.0:
-                points = [[center[0] + np.math.sqrt(r2) * x[0],
-                           center[1] + np.math.sqrt(r2) * x[1], z] for x in p]
-                _contour_closed = True
+                points = [[center[0] + x[0] * r2**0.5,
+                           center[1] + x[1] * r2**0.5, z] for x in p]
+                _contour_closed = False
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
-            # The former means the voi consists of contours and points, which I am not sure is vaild.
+            # The former means the voi consists of contours and points, which I am not sure is valid.
             # Here "  oOo  " is implemented.
-            # If you want the " .oOo. " vesion uncomment the next three lines.
-            # else:
-            #     points = [[center[0], center[1], z]]
-            #     _contour_closed = False
+            # If you do not want the " .oOo. " version uncomment the next three lines.
+            else:
+                points = [[center[0], center[1], z]]
+                _contour_closed = True
             if len(points) > 0:
                 c = Contour(points, cube)
                 c.contour_closed = _contour_closed
@@ -1376,19 +1376,20 @@ class Contour:
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
         points = self.contour
-        points.append(points[-1])
+        if not self.contour_closed:
+            points = self.contour + [points[0]]
         points = np.array(points)
-        dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
+        dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 1] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5)
+            area = -sum(points[:-1, 1] * dx_dy[:, 0])
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5)
+            area = -sum(points[:-1, 2] * dx_dy[:, 0])
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 1])
-            paths = np.array((dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5)
-        total_path = sum(paths)
+            area = -sum(points[:-1, 2] * dx_dy[:, 1])
+            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+        total_path = np.sum(paths)
 
         if total_path > 0:
             center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
@@ -1577,8 +1578,8 @@ class Contour:
         return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
-        """ In case of multiple contours in the same slice, this method will concat them to a single conour.
-        This is important for TRiP98 compability, as TRiP98 cannot handle multiple contours in the same slice of
+        """ In case of multiple contours in the same slice, this method will concat them to a single contour.
+        This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
         for i in range(len(self.children)):

@@ -162,7 +162,7 @@ class TestVdx(unittest.TestCase):
         self.assertGreater(len(contour.vdx_string()), 1)
 
         logger.info("Checking Contour number_of_points method")
-        self.assertEqual(contour.number_of_points(), 101)
+        self.assertEqual(contour.number_of_points(), 99)
 
         logger.info("Checking Contour has_childs method")
         self.assertFalse(contour.has_childs())  # TODO why doesn't have children ?
@@ -198,7 +198,7 @@ class TestVdx(unittest.TestCase):
         logger.info("Test of Voi create_point_tree method")
         v.create_point_tree()
         self.assertIsNotNone(v.points)
-        self.assertEqual(len(v.points), 501)
+        self.assertEqual(len(v.points), 496)
 
         logger.info("Test of Voi get_row_intersections method")
         isec = v.get_row_intersections(pos=(10, 10, 9))
