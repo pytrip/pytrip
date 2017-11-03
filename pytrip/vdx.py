@@ -253,7 +253,7 @@ class VdxCube:
                 if self.version == "1.2":
                     _token = line.split()
                     if len(_token) == 6:
-                        if _token[5] is not '0':
+                        if _token[5] != '0':
                             i = v.read_vdx_old(content, i)
                 else:
                     i = v.read_vdx(content, i)
@@ -878,7 +878,7 @@ class Voi:
         # it seems. DICOM apparently have proper structure already. Nonetheless, this function is also
         # applied to DICOM contours.
 
-        if hasattr(self.slices[0], "slice_in_frame"):
+        if len(self.slices) > 0 and hasattr(self.slices[0], "slice_in_frame"):
             self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
     def read_vdx_old(self, content, i):
