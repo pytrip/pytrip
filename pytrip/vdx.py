@@ -20,13 +20,12 @@
 This module holds all the user needs to deal with Volume of interests.
 It provides the top-level VdxCube class, Voi, Slice and Contour classes.
 The Voi class represents a volume of interest 'VOI', also called region of interest 'ROI' in Dicom lingo.
-Each Voi holds several Slice, which are noramlly synced with an associated CT-cube.
+Each Voi holds several Slice, which are normally synced with an associated CT-cube.
 Each Slice holds one or more Contours.
 """
 import os
-import re
 import copy
-from math import pi
+from math import pi, sqrt
 import logging
 from functools import cmp_to_key
 
@@ -63,7 +62,7 @@ class VdxCube:
 
     Note, since TRiP98 only supports one contour per slice for each voi.
     PyTRiP supports functions for connecting multiple contours to a single
-    entity using infinte thin connects.
+    entity using infinite thin connects.
 
     VdxCube can import both dicom data and TRiP data,
     and export in the those formats.
@@ -89,7 +88,7 @@ class VdxCube:
         self._structs_sop_instance_uid = UID.generate_uid(prefix=None)
         self._structs_rt_series_instance_uid = UID.generate_uid(prefix=None)
 
-        self.version = "1.2"
+        self.version = "2.0"
         if self.cube is not None:
             self.patient_id = cube.patient_id
             self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
@@ -180,7 +179,7 @@ class VdxCube:
     def add_voi(self, voi):
         """ Appends a new voi to this class.
 
-        :param Voi voi: the voi to be appened to this class.
+        :param Voi voi: the voi to be appended to this class.
         """
         self.vois.append(voi)
 
@@ -211,6 +210,19 @@ class VdxCube:
         """
         self.read_vdx(path)
 
+    def vdx_version(self, content):
+        """ Test content for what VDX version this is.
+        Since the VDX version is very undocumented, we are guessing here.
+
+        :param content: the vdx file contents as an array of strings.
+        :returns: vdx version string, e.g. "1.2" or "2.0"
+        """
+        for line in content:
+            if line.strip().startswith("vdx_file_version"):
+                return line.split()[1]
+            else:
+                return "1.2"
+
     def read_vdx(self, path):
         """ Reads a structure file in Voxelplan format.
 
@@ -221,25 +233,28 @@ class VdxCube:
         fp = open(path, "r")
         content = fp.read().split('\n')
         fp.close()
+
+        self.version = self.vdx_version(content)
+
         i = 0
         n = len(content)
         header_full = False
         #        number_of_vois = 0
         while i < n:
-            line = content[i]
+            line = content[i].strip()
             if not header_full:
-                if re.match("vdx_file_version", line) is not None:
-                    self.version = line.split()[1]
-                elif re.match("all_indices_zero_based", line) is not None:
+                if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 #                TODO number_of_vois not used
-#                elif re.match("number_of_vois", line) is not None:
+#                elif "number_of_vois" in line:
 #                    number_of_vois = int(line.split()[1])
-            if re.match("voi", line) is not None:
+            if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
-                    if not line.split()[5] == '0':
-                        i = v.read_vdx_old(content, i)
+                    _token = line.split()
+                    if len(_token) == 6:
+                        if _token[5] != '0':
+                            i = v.read_vdx_old(content, i)
                 else:
                     i = v.read_vdx(content, i)
                 self.add_voi(v)
@@ -247,7 +262,7 @@ class VdxCube:
             i += 1
 
     def concat_contour(self):
-        """ Loop through all available VOIs and check whether any have mutiple contours in a slice.
+        """ Loop through all available VOIs and check whether any have multiple contours in a slice.
         If so, merge them to a single contour.
 
         This is needed since TRiP98 cannot handle multiple contours in the same slice.
@@ -261,18 +276,20 @@ class VdxCube:
         """
         return len(self.vois)
 
-    def write_to_voxel(self, path):
+    def _write_vdx(self, path):
         """ Writes all VOIs in voxelplan format.
+
+        All will be written in version 2.0 format, irrespectively of self.version.
 
         :param str path: Full path, including file extension (.vdx).
         """
         fp = open(path, "w")
-        fp.write("vdx_file_version %s\n" % self.version)
+        fp.write("vdx_file_version 2.0\n")
         fp.write("all_indices_zero_based\n")
-        fp.write("number_of_vois %d\n" % self.number_of_vois())
+        fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
         self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
         for voi in self.vois:
-            fp.write(voi.to_voxel_string())
+            fp.write(voi.vdx_string())
         fp.close()
 
     def write_trip(self, path):
@@ -282,7 +299,7 @@ class VdxCube:
         :param str path: Full path, including file extension (.vdx).
         """
         self.concat_contour()
-        self.write_to_voxel(path)
+        self._write_vdx(path)
 
     def write(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.
@@ -410,7 +427,7 @@ class VdxCube:
     def write_dicom(self, directory):
         """ Generates a Dicom RTSTRUCT object from self, and writes it to disk.
 
-        :param str directory: Diretory where the rtss.dcm file will be saved.
+        :param str directory: Directory where the rtss.dcm file will be saved.
         """
         dcm = self.create_dicom()
         dcm.save_as(os.path.join(directory, "RTSTRUCT.PYTRIP.dcm"))
@@ -446,9 +463,11 @@ def create_cube(cube, name, center, width, height, depth):
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [
-                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
-                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z]
+            points = [  # 4 corners of cube in this slice
+                [center[0] - width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] + height / 2, z],
+                [center[0] - width / 2, center[1] + height / 2, z]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
@@ -463,13 +482,13 @@ def create_voi_from_cube(cube, name, value=100):
 
     :param Cube cube: A CTX or DOS cube to work on.
     :param str name: Name of the VOI
-    :param int value: The isodose value from which the countour will be generated from.
+    :param int value: The isodose value from which the contour will be generated from.
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
-    # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
+    # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
     import matplotlib
     matplotlib.use('Agg')
     import matplotlib._cntr as cntr
@@ -505,8 +524,9 @@ def create_cylinder(cube, name, center, radius, depth):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+    t = np.linspace(start=0, stop=2.0 * pi, num=99, endpoint=False)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
+
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
@@ -515,7 +535,7 @@ def create_cylinder(cube, name, center, radius, depth):
             points = [[x[0], x[1], z] for x in p]
             if points:
                 c = Contour(points, cube)
-                c.contour_closed = True  # TODO: Probably the last point is double here
+                c.contour_closed = True
                 s.add_contour(c)
                 v.add_slice(s)
     return v
@@ -532,21 +552,34 @@ def create_sphere(cube, name, center, radius):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    t = np.linspace(start=0, stop=2.0 * pi, num=100)
+
+    t = np.linspace(start=0, stop=2.0 * pi,
+                    num=99, endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
+
+    points = []
+
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r = (radius**2 - (z - center[2])**2)**0.5
+            r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            if r > 0:
-                points = [[center[0] + r * x[0], center[1] + r * x[1], z] for x in p]
+            _contour_closed = True
+            if r2 > 0.0:
+                points = [[center[0] + x[0] * sqrt(r2),
+                           center[1] + x[1] * sqrt(r2), z] for x in p]
+            # in case r2 == 0.0, the contour in this slice is a point.
+            # TODO: How should the sphere be treated with points in the end slices:
+            # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
+            # The former means the voi consists of contours and points, which I am not sure is valid.
+            # Here "  oOo  " is implemented.
+            # If you do not want the " .oOo. " version uncomment the next three lines.
             else:
                 points = [[center[0], center[1], z]]
             if len(points) > 0:
                 c = Contour(points, cube)
-                c.contour_closed = True  # TODO: Probably the last point is double here
+                c.contour_closed = _contour_closed
                 s.add_contour(c)
                 v.add_slice(s)
     return v
@@ -558,7 +591,7 @@ class Voi:
     VOIs may for instance be organs (lung, eye...) or targets (PTV, GTV...), or any other volume of interest.
     """
 
-    sagital = 2  #: deprecated, backwards compability to pytripgui, do not use.
+    sagital = 2  #: deprecated, backwards compatibility to pytripgui, do not use.
     sagittal = 2  #: id for sagittal view
     coronal = 1  #: id for coronal view
 
@@ -641,7 +674,7 @@ class Voi:
         pass
 
     def concat_to_3d_polygon(self):
-        """ Concats all contours into a single contour, and writes all data points to sefl.polygon3d.
+        """ Concats all contours into a single contour, and writes all data points to self.polygon3d.
         """
         self.concat_contour()
         data = []
@@ -651,7 +684,7 @@ class Voi:
 
     def get_3d_polygon(self):
         """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
-        sefl.polygon3d. If this attibute does not exist, create it.
+        sefl.polygon3d. If this attribute does not exist, create it.
         """
         if not hasattr(self, "polygon3d"):
             self.concat_to_3d_polygon()
@@ -845,7 +878,7 @@ class Voi:
         # it seems. DICOM apparently have proper structure already. Nonetheless, this function is also
         # applied to DICOM contours.
 
-        if hasattr(self.slices[0], "slice_in_frame"):
+        if len(self.slices) > 0 and hasattr(self.slices[0], "slice_in_frame"):
             self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
     def read_vdx_old(self, content, i):
@@ -863,15 +896,22 @@ class Voi:
         self.type = int(items[3])
         i += 1
         while i < len(content):
-            line = content[i]
-            if re.match("voi", line) is not None:
+            line = content[i].strip()
+            if line.startswith("voi"):
                 break
-            if re.match("slice#", line) is not None:
+            if line.startswith("slice#"):
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
                     for cont1 in s.contour:
                         for cont2 in cont1.contour:
+                            _slice_number = int(cont2[2])
+                            # bound checking
+                            if _slice_number > self.cube.dimz:
+                                logger.error("VDX slice number# {:d} ".format(_slice_number) +
+                                             "exceeds dimension of CTX cube zmax={:d}".format(self.cube.dimz))
+                                raise Exception("VDX file not compatible with CTX cube")
+
                             # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
                             cont2[2] = self.cube.slice_to_z(int(cont2[2]))
                 if s.get_position() is None:
@@ -879,7 +919,7 @@ class Voi:
 
                 self.slices.append(s)
 
-            if re.match("#TransversalObjects", line) is not None:
+            if line.startswith("#TransversalObjects"):
                 pass
                 # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
@@ -894,19 +934,21 @@ class Voi:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+        logger.debug("Parsing VDX format 2.0")
+
         line = content[i]
         self.name = ' '.join(line.split()[1:])
         number_of_slices = 10000
         i += 1
         while i < len(content):
-            line = content[i]
-            if re.match("key", line) is not None:
+            line = content[i].strip()
+            if line.startswith("key"):
                 self.key = line.split()[1]
-            elif re.match("type", line) is not None:
+            elif line.startswith("type"):
                 self.type = int(line.split()[1])
-            elif re.match("number_of_slices", line) is not None:
+            elif line.startswith("number_of_slices"):
                 number_of_slices = int(line.split()[1])
-            elif re.match("slice", line) is not None:
+            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
@@ -915,7 +957,7 @@ class Voi:
                     raise Exception("cube not loaded")
                 self.slices.append(s)
 
-            elif re.match("voi", line) is not None:
+            elif line.startswith("voi"):
                 break
             elif len(self.slices) >= number_of_slices:
                 break
@@ -990,10 +1032,12 @@ class Voi:
                 self.slices.append(sl)
         self._sort_slices()
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0).
+    def vdx_string(self):
+        """
+        Returns list of strings for this voi in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the all lines needed for a Voxelplan formatted file.
+        :returns: a list of str holding the all lines needed for a Voxelplan formatted file.
         """
         if len(self.slices) is 0:
             return ""
@@ -1021,7 +1065,7 @@ class Voi:
                                                                                           pos - 0.5 * sl.thickness,
                                                                                           pos + 0.5 * sl.thickness)
             out += "number_of_contours {:d}\n".format(sl.number_of_contours())
-            out += sl.to_voxel_string()
+            out += sl.vdx_string()
             i += 1
         return out
 
@@ -1164,10 +1208,10 @@ class Slice:
         number_of_contours = 0
         i += 1
         while i < len(content):
-            line = content[i]
-            if re.match("slice_in_frame", line) is not None:
+            line = content[i].strip()
+            if line.startswith("slice_in_frame"):
                 self.slice_in_frame = float(line.split()[1])
-            elif re.match("thickness", line) is not None:
+            elif line.startswith("thickness"):
                 items = line.split()
                 self.thickness = float(items[1])
                 logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
@@ -1179,13 +1223,13 @@ class Slice:
                     self.start_pos = float(items[3])
                     self.stop_pos = float(items[5])
 
-            elif re.match("number_of_contours", line) is not None:
+            elif line.startswith("number_of_contours"):
                 number_of_contours = int(line.split()[1])
-            elif re.match("contour", line) is not None:
+            elif line.startswith("contour"):
                 c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
-            elif re.match("slice", line) is not None:
+            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 break
             elif len(self.contour) >= number_of_contours:
                 break
@@ -1201,10 +1245,9 @@ class Slice:
         """
 
         # VDX cubes in version 1.2 do not hold any information on slice thicknesses.
-
-        line1 = content[i]
-        line2 = content[i + 1]
-        line3 = content[i + 2]
+        line1 = content[i].strip()
+        line2 = content[i + 1].strip()
+        line3 = content[i + 2].strip()
 
         if not line1.startswith("slice#"):
             return None
@@ -1254,17 +1297,19 @@ class Slice:
             contour_list.append(con)
         return contour_list
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file (format 2.0)
+    def vdx_string(self):
+        """
+        Returns list of strings for this SLICE in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the slice information with the countour lines for a Voxelplan formatted file.
+        :returns: a list of str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
         for i, cnt in enumerate(self.contour):
             out += "contour %d\n" % i
             out += "internal false\n"
             out += "number_of_points %d\n" % (cnt.number_of_points() + 1)
-            out += cnt.to_voxel_string()
+            out += cnt.vdx_string()
             out += "\n"
         return out
 
@@ -1329,28 +1374,27 @@ class Contour:
 
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
-        points = self.contour
-        points.append(points[-1])
-        points = np.array(points)
-        dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
+        points = np.array(self.contour + [self.contour[0]])  # connect the contour first and last point
+        # its needed only for calculation of dxdy in Green's theorem below
+        dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 1] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5)
+            area = -np.dot(points[:-1, 1], dx_dy[:, 0])
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 0])
-            paths = np.array((dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5)
+            area = -np.dot(points[:-1, 2], dx_dy[:, 0])
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
-            area = -sum(points[0:len(points) - 1, 2] * dx_dy[:, 1])
-            paths = np.array((dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5)
-        total_path = sum(paths)
+            area = -np.dot(points[:-1, 2], dx_dy[:, 1])
+            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+        total_path = np.sum(paths)
 
         if total_path > 0:
-            center = np.array([sum(points[0:len(points) - 1, 0] * paths) / total_path,
-                               sum(points[0:len(points) - 1:, 1] * paths) / total_path,
+            center = np.array([np.dot(points[:-1, 0], paths) / total_path,
+                               np.dot(points[:-1, 1], paths) / total_path,
                                points[0, 2]])
         else:
-            center = np.array([sum(points[0:len(points) - 1, 0]),
-                               sum(points[0:len(points) - 1:, 1]),
+            center = np.array([np.sum(points[:-1, 0]),
+                               np.sum(points[:-1, 1]),
                                points[0, 2]])
 
         return center, area
@@ -1368,10 +1412,12 @@ class Contour:
         max_z = np.amax(np.array(self.contour)[:, 2])
         return [min_x, min_y, min_z], [max_x, max_y, max_z]
 
-    def to_voxel_string(self):
-        """ Creates the Voxelplan formatted text, which can be written into a .vdx file.
+    def vdx_string(self):
+        """
+        Returns list of strings for this CONTOUR in voxelplan format, which can be written into a .vdx file.
+        VDX format 2.0 only.
 
-        :returns: a str holding the contour points needed for a Voxelplan formatted file.
+        :returns: an array of str holding the contour points needed for a Voxelplan formatted file.
         """
 
         # The vdx files require all contours to be mapped to a CT cube starting at (x,y) = (0,0)
@@ -1408,10 +1454,10 @@ class Contour:
         points = 0
         j = 0
         while i < len(content):
-            line = content[i]
+            line = content[i].strip()
 
             # skip any empty lines
-            if line.strip() == "":
+            if line == "":
                 i += 1  # go to next line
                 continue
 
@@ -1429,9 +1475,9 @@ class Contour:
                     j += 1  # increment point counter
 
             else:  # in case we do not have a point, some keyword may be found
-                if re.match("internal_false", line) is not None:
+                if line.startswith("internal_false"):
                     self.internal_false = True
-                if re.match("number_of_points", line) is not None:
+                if line.startswith("number_of_points"):
                     points = int(line.split()[1])
                     set_point = True
             i += 1  # go to next line
@@ -1461,7 +1507,8 @@ class Contour:
 
         if self.cube is None:
             _pixel_size = 1.0
-            logger.warning("Reading .vdx in 1.2 format: no CTX cube associated, setting pixel_size to 1.0.")
+            logger.warning("Reading contour data in .vdx in 1.2 format: no CTX cube associated," +
+                           " setting pixel_size to 1.0.")
         else:
             _pixel_size = self.cube.pixel_size
 
@@ -1473,14 +1520,16 @@ class Contour:
                                  _pixel_size * float(y) / 16.0,
                                  float(slice_number)])
 
-        # check if the contour is closed
+        # The legacy 1.2 VDX format does not discriminate between open or closed contours.
+        # Therefore all contours read will be closed, except for POIs.
+        # I checked VDX 1.2 files generated by TRiP and converted from dcm2trip, the last point
+        # is not repeated here.
         if len(self.contour) > 1:  # check if this is an actual contour, and not a POI
-            if self.contour[0] == self.contour[-1]:
-                self.contour_closed = True
-                # remove last element
-                del self.contour[-1]
-            else:
-                self.contour_closed = False
+            logging.debug("VDX 1.2 read, contour is closed")
+            self.contour_closed = True
+        else:
+            logging.debug("VDX 1.2 read, contour is a POI")
+            self.contour_closed = False
 
     def add_child(self, contour):
         """ (TODO: Document me)
@@ -1526,8 +1575,8 @@ class Contour:
         return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
-        """ In case of multiple contours in the same slice, this method will concat them to a single conour.
-        This is important for TRiP98 compability, as TRiP98 cannot handle multiple contours in the same slice of
+        """ In case of multiple contours in the same slice, this method will concat them to a single contour.
+        This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
         for i in range(len(self.children)):
