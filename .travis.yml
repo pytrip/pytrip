@@ -98,7 +98,7 @@ install:
 
 # finally run tox tests
 script:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --recreate --notest && tox ; fi
+  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --notest && tox ; fi
 # dropping MacOSX support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
 #  - if [[ $TRAVIS_OS_NAME == "osx" ]]; then travis_wait ./.travis/run_osx.sh ; fi
 # in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
