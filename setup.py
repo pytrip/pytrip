@@ -177,7 +177,6 @@ setuptools.setup(
         'Programming Language :: C',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
@@ -201,4 +200,6 @@ setuptools.setup(
             'gd2agr=pytrip.utils.gd2agr:main',
         ],
     },
-    cmdclass=get_cmdclass())
+    cmdclass=get_cmdclass(),
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*'
+)

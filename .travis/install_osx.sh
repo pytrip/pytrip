@@ -50,10 +50,6 @@ case "${TOXENV}" in
             pyenv install -s 3.2
             pyenv global 3.2
             ;;
-        py33*)
-            pyenv install -s 3.3.6
-            pyenv global 3.3.6
-            ;;
         py34*)
             pyenv install -s 3.4.4
             pyenv global 3.4.4
