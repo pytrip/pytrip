@@ -233,7 +233,7 @@ class SPC(object):
             # self.eref = payload
             return payload
 
-        if tag.code == 19:  # H[nE]: spectrum contens divided by the bin width
+        if tag.code == 19:  # H[nE]: spectrum contents divided by the bin width
             sdtype = ste + 'f8'
             cnt = int(tag.size / 8)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))
