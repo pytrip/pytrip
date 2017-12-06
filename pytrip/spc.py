@@ -25,19 +25,57 @@ http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98fmtspc.html
 
 """
 
+import os
 import numpy as np
+
+
+class SPCCollection(object):
+    def __init__(self, dirname):
+        self.dirname = dirname
+        self.data = {}  # key - energy, value - SPC object
+
+    def read(self):
+        files = os.listdir(self.dirname)
+        for file in files:
+            if file.endswith(".spc"):
+                energy = int(file.split('.')[-2][3:]) / 100
+                print("energy", energy)
+                self.data[energy] = SPC(os.path.join(self.dirname, file))
+                self.data[energy].read_spc()
+
+    def write(self):
+        if not os.path.exists(self.dirname):
+            os.makedirs(self.dirname)
+        for spc_object in self.data.values():
+            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(
+                pp=spc_object.projname,
+                tt=spc_object.targname,
+                uuu="MeV",
+                eeeee=int(100 * spc_object.energy)
+            )
+            print(fname)
+            spc_object.write_spc(os.path.join(self.dirname, fname))
 
 
 class SPC(object):
     def __init__(self, filename):
         self.filename = filename
+        self.data = []
 
     def read_spc(self):
         print(self.filename)
         self.read_data()
 
-    def write_spc(self, filename):
-        fd = open(filename, "wb")
+    def write_spc(self, filename=None):
+        fname = filename
+        if fname is None:
+            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(
+                pp=self.projname,
+                tt=self.targname,
+                uuu="MeV",
+                eeeee=int(100 * self.energy)
+            )
+        fd = open(fname, "wb")
 
         # filetype 1
         # <filetype> is an 80-byte ASCII character string starting with "SPCM" or "SPCI",
