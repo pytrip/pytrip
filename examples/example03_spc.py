@@ -86,13 +86,11 @@ for energy_dir in os.listdir(dir_with_energies):
         with open(datafile, 'r') as f:
             lines = f.readlines()
 
-        depthblock.nparts = len(lines)
-
         for i, line in enumerate(lines):
             print(i, line)
             z = i + 2
 
-            items = line.split()
+            items = [float(x) for x in line.split()]
 
             specieblock = spc.SBlock()
             specieblock.z = float(z)
@@ -100,13 +98,28 @@ for energy_dir in os.listdir(dir_with_energies):
             specieblock.lz = int(specieblock.z)
             specieblock.la = int(specieblock.a)
             specieblock.nc = 0
-            specieblock.ne = len(items)
-            specieblock.dscum = 0
+
+            specieblock.ebindata = np.arange(start=0, stop=150, step=1, dtype=np.float64)
+            specieblock.histdata = np.zeros_like(specieblock.ebindata[:-1],dtype=np.float64)
+            specieblock.histdata[:len(items)] = items
+            specieblock.rcumdata = np.zeros_like(specieblock.ebindata,dtype=np.float64)
+            specieblock.rcumdata[1:] = np.cumsum(specieblock.histdata)
+            specieblock.rcumdata /= np.max(specieblock.rcumdata)
+
+            specieblock.dscum = np.sum(specieblock.histdata)
+
+            specieblock.ne = specieblock.histdata.size
 
             depthblock.species.append(specieblock)
+            depthblock.nparts += 1
 
         spc_object.data.append(depthblock)
         spc_object.ndsteps += 1
 
     spc_object.write_spc(os.path.join(target_dir, fname))
+
+    test_scp = spc.SPC(os.path.join(target_dir, fname))
+    test_scp.read_spc()
+
+    print("2+2")
 
