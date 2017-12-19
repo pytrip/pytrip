@@ -11,7 +11,7 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
 # name of pypi repo to be used
 PYPIREPO=$1
 
-# python target to be used (cp27-cp27m, cp27-cp27mu, cp33-cp33m, cp34-cp34m or cp35-cp35m)
+# python target to be used (cp27-cp27m, cp27-cp27mu, cp34-cp34m or cp35-cp35m)
 TARGET=$2
 
 # optional pre-command (i.e. linux32)

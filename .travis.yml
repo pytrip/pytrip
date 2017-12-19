@@ -25,9 +25,6 @@ matrix:
           python: 3.2
           env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0" STVER="<30.0.0"
         - os: linux
-          python: 3.3
-          env: TOXENV=py33
-        - os: linux
           python: 3.4
           env: TOXENV=py34
         - os: linux
@@ -47,9 +44,6 @@ matrix:
 #          env: TOXENV=py34
 #        - os: osx
 #          language: generic
-#          env: TOXENV=py33
-#        - os: osx
-#          language: generic
 #          env: TOXENV=py32 VENVVER="<14.0.0" PIPVER="<8.0.0"
 #        - os: osx
 #          language: generic
@@ -57,8 +51,6 @@ matrix:
     # fired only when making release (on tags): manylinux1 pep packages (32 and 64 bits)
     # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
     # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
-    # python 3.3 is handled separately as at the time no matplotlib package is provided for py3.3
-    #   and matplotlib has to be compiled from sources which takes a lot of time
     # documentation checks and PEP8 code quality checks included in packaging
         - python: 3.5
           env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
