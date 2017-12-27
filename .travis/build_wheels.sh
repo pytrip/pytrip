@@ -23,6 +23,12 @@ do
     # Set python location
     PYBIN=/opt/python/$TARGET/bin
 
+    # Check pip version
+    ${PYBIN}/pip -V
+
+    # List installed packages
+    ${PYBIN}/pip freeze
+
     # Install versioneer and generate versioneer stuff
     ${PYBIN}/pip install versioneer
     cd /io
