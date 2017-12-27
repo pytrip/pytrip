@@ -36,9 +36,9 @@ do
     cd -
 
     # Install requirements and get the exit code
-    # include pre-releases (i.e. RC - release candidates) and development versions
+    # do not include pre-releases (i.e. RC - release candidates) and development versions
     set +e
-    ${PYBIN}/pip install --pre --upgrade -r /io/requirements.txt
+    ${PYBIN}/pip install --upgrade -r /io/requirements.txt
     RET_CODE=$?
     set -e
 
@@ -47,7 +47,7 @@ do
         install_freetype
         # libpng is needed by matplotlib, blas and lapack by numpy
         yum install -y libpng-devel lapack-devel blas-devel atlas-devel
-        ${PYBIN}/pip install --pre --upgrade -r /io/requirements.txt
+        ${PYBIN}/pip install --upgrade -r /io/requirements.txt
     fi
 
     # Make a wheel
