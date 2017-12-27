@@ -36,8 +36,9 @@ do
     cd -
 
     # Install requirements and get the exit code
+    # include pre-releases (i.e. RC - release candidates) and development versions
     set +e
-    ${PYBIN}/pip install -U -r /io/requirements.txt
+    ${PYBIN}/pip install --pre --upgrade -r /io/requirements.txt
     RET_CODE=$?
     set -e
 
@@ -46,7 +47,7 @@ do
         install_freetype
         # libpng is needed by matplotlib, blas and lapack by numpy
         yum install -y libpng-devel lapack-devel blas-devel atlas-devel
-        ${PYBIN}/pip install -U -r /io/requirements.txt
+        ${PYBIN}/pip install --pre --upgrade -r /io/requirements.txt
     fi
 
     # Make a wheel
@@ -66,7 +67,8 @@ do
     PYBIN=/opt/python/$TARGET/bin
 
     # Test if generated wheel can be installed
-    ${PYBIN}/pip install pytrip98 --no-index -f /io/wheelhouse
+    # ignore package index (and pypi server), looking at local directory
+    ${PYBIN}/pip install pytrip98 --no-index --find-links /io/wheelhouse
 
     ${PYBIN}/pip freeze
     ${PYBIN}/pip show pytrip98
