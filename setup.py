@@ -184,7 +184,7 @@ setuptools.setup(
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*']},
     install_requires=[
-        'matplotlib<=1.5.3', 'numpy', 'pydicom'
+        'matplotlib', 'numpy', 'pydicom'
     ],
     include_dirs=[np.get_include()],
     ext_modules=extensions,
