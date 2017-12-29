@@ -69,9 +69,6 @@ do
     # Set python location
     PYBIN=/opt/python/$TARGET/bin
 
-    # force matplotlib reinstallation
-    ${PYBIN}/pip  install matplotlib -U --force-reinstall --no-deps
-
     # Test if generated wheel can be installed
     # ignore package index (and pypi server), looking at local directory
     ${PYBIN}/pip install pytrip98 --no-index --find-links /io/wheelhouse
