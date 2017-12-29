@@ -36,7 +36,7 @@ do
     cd -
 
     # see https://github.com/google/python-subprocess32/issues/12#issuecomment-337806379
-    ${PYBIN}/pip install --pre "subprocess32 ; python_version < '3.0'"
+    ${PYBIN}/pip install --pre "subprocess32 ; python_version < '3.0' and platform_machine == 'i686'"
 
     # Install requirements and get the exit code
     # do not include pre-releases (i.e. RC - release candidates) and development versions
