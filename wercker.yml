@@ -84,7 +84,7 @@ test_debian_testing_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-dev
+          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
           python -V
           pip -V
 
@@ -162,7 +162,7 @@ test_ubuntu_1604_testing_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-dev
+          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
           python -V
           pip -V
 
@@ -240,7 +240,7 @@ test_debian_8_jessie_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources python-dev
+          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources python-dev gcc
           python -V
           pip -V
 
