@@ -36,7 +36,7 @@ do
     cd -
 
     # see https://github.com/google/python-subprocess32/issues/12#issuecomment-337806379
-    ${PYBIN}/pip install --pre "subprocess32 ; python_version < '3.0' and platform_machine == 'i686'"
+    ${PYBIN}/pip install --pre "subprocess32 ; python_version < '3.0'"
 
     # Install requirements and get the exit code
     # do not include pre-releases (i.e. RC - release candidates) and development versions
@@ -68,6 +68,9 @@ for TARGET in $PYVERS;
 do
     # Set python location
     PYBIN=/opt/python/$TARGET/bin
+
+    # force matplotlib reinstallation
+    ${PYBIN}/pip  install matplotlib -U --force-reinstall --no-deps
 
     # Test if generated wheel can be installed
     # ignore package index (and pypi server), looking at local directory
