@@ -54,7 +54,7 @@ do
     fi
 
     # Make a wheel
-    ${PYBIN}/pip wheel --pre /io/ -w wheelhouse/
+    ${PYBIN}/pip wheel --no-deps /io/ -w wheelhouse/
 done
 
 # Bundle external shared libraries into the wheels
