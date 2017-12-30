@@ -3,6 +3,5 @@ numpy<1.12 ; python_version >= '3.2' and python_version < '3.4' # numpy starting
 numpy ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
 # matplotlib starting from 2.0, doesn't work well, see issue #226 and others, use older version for py3.2
 matplotlib<=1.5.3  ; python_version >= '3.2' and python_version < '3.4'
-matplotlib<2.0.0 ; (python_version < '3.0' or python_version >= '3.4') and (platform_machine == 'i686') # 32 bit
-matplotlib ; (python_version < '3.0' or python_version >= '3.4') and  (platform_machine != 'i686') # newest for py 2.7, 3.4 and higher
+matplotlib ; (python_version < '3.0' or python_version >= '3.4') # newest for py 2.7, 3.4 and higher
 pydicom

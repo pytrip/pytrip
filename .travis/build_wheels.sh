@@ -6,7 +6,7 @@ set -e -x
 # freetype v2.3.0 installation, some versions of matplotlib require it
 # docker image has only freetype v2.2
 install_freetype() {
-    wget http://downloads.sourceforge.net/freetype/freetype-2.3.0.tar.gz
+    wget --no-check-certificate http://downloads.sourceforge.net/freetype/freetype-2.3.0.tar.gz
     tar -zxvf freetype-2.3.0.tar.gz
     cd freetype-2.3.0
     ./configure --prefix=/usr
@@ -17,6 +17,9 @@ install_freetype() {
 
 # python versions to be used
 PYVERS=$1
+
+# tk-devel is needed to run code dependent on matplotlib
+yum install -y tk-devel
 
 for TARGET in $PYVERS;
 do
@@ -41,7 +44,7 @@ do
     # Install requirements and get the exit code
     # do not include pre-releases (i.e. RC - release candidates) and development versions
     set +e
-    ${PYBIN}/pip install --upgrade -r /io/requirements.txt
+    ${PYBIN}/pip install --upgrade -r /io/requirements.txt --only-binary matplotlib
     RET_CODE=$?
     set -e
 
@@ -76,9 +79,6 @@ do
     ${PYBIN}/pip freeze
     ${PYBIN}/pip show pytrip98
     ls -al ${PYBIN}
-
-    # tk-devel is needed to run code dependent on matplotlib
-    yum install -y tk-devel
 
     ## tests could fail
     ${PYBIN}/dicom2trip --help
