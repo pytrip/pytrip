@@ -84,7 +84,7 @@ test_debian_testing_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip
+          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
           python -V
           pip -V
 
@@ -130,7 +130,7 @@ test_debian_testing_py3:
         name: package_install
         code: |
           pip3 install setuptools
-          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp36m-manylinux1_x86_64.whl
 
     - script:
         name: test
@@ -162,7 +162,7 @@ test_ubuntu_1604_testing_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip
+          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
           python -V
           pip -V
 
@@ -240,7 +240,7 @@ test_debian_8_jessie_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources
+          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources python-dev gcc
           python -V
           pip -V
 

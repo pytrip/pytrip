@@ -1,5 +1,7 @@
+# micro-language and markers are described here: https://www.python.org/dev/peps/pep-0508/
 numpy<1.12 ; python_version >= '3.2' and python_version < '3.4' # numpy starting from 1.12 doesn't support python 3.2 and 3.3
-numpy ; python_version < '3.0' or python_version >= '3.4' # newest numpy for py 2.7, 3.4 and higher
-# matplotlib starting from 2.0, doesn't work well, see issue #226 and others
-matplotlib<=1.5.3 
+numpy ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
+# see issue #226 and others, force using older version of matplotlib for py3.2
+matplotlib<=1.5.3  ; python_version >= '3.2' and python_version < '3.4'
+matplotlib ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
 pydicom
