@@ -26,7 +26,31 @@ http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98fmtspc.html
 """
 
 import os
+from enum import Enum
 import numpy as np
+
+
+class SPCTagCode(Enum):
+    FILETYPE = 1
+    FILEVERSION = 2
+    FILEDATE = 3
+    TARGNAME = 4
+    PROJNAME = 5
+    BEAM_ENERGY = 6
+    PEAK_POSITION = 7
+    NORMALIZATION = 8
+    NO_OF_DEPTH_STEPS = 9
+    DEPTH = 10
+    DEPTH_STEP_NORMALIZATION = 11
+    NO_OF_PARTICLE_SPECIES = 12
+    ZA = 13
+    CUMULATED_NO_OF_FRAGMENTS = 14
+    NC = 15
+    NO_OF_ENERGY_BINS = 16
+    ENERGY_BIN_VALUES = 17
+    ENERGY_BIN_POINTER = 18
+    SPECTRUM_BIN_VALUES = 19
+    CUMULATED_SPECTRUM_BIN_VALUES = 20
 
 
 class SPCCollection(object):
@@ -81,7 +105,7 @@ class SPC(object):
         # <filetype> is an 80-byte ASCII character string starting with "SPCM" or "SPCI",
         # specifying big ("Motorola") or little ("Intel") endian byte order, respectively.
         tag = Tag(fd)
-        tag.code = 1
+        tag.code = SPCTagCode.FILETYPE.value
         tag.size = 80
         tag.endian = self.endian
         tag.set_tag()
@@ -92,7 +116,7 @@ class SPC(object):
         # 19980704 is the "classic" format (fixed energy range),
         # whereas 20020107 is reserved for future possible variable energy range.
         tag = Tag(fd)
-        tag.code = 2
+        tag.code = SPCTagCode.FILEVERSION.value
         tag.size = 80
         tag.endian = self.endian
         tag.set_tag()
@@ -102,7 +126,7 @@ class SPC(object):
         # <filedate> is an 80-byte ASCII character string with the file creation date
         # as returned by the ctime() function. (<dow> <mmm> <dd> <hh>:<mm>:<ss> <yyyy>)
         tag = Tag(fd)
-        tag.code = 3
+        tag.code = SPCTagCode.FILEDATE.value
         tag.size = 80
         tag.endian = self.endian
         tag.set_tag()
@@ -113,14 +137,14 @@ class SPC(object):
         # Since both can have any length, they are padded to the right with binary zeroes
         # up to the next 8-byte boundary.
         tag = Tag(fd)
-        tag.code = 4
+        tag.code = SPCTagCode.TARGNAME.value
         tag.size = 8  # TODO to be padded
         tag.endian = self.endian
         tag.set_tag()
         fd.write(np.asarray(self.targname, dtype="{:s}a{:d}".format(tag._ste, tag.size)))
 
         tag = Tag(fd)
-        tag.code = 5
+        tag.code = SPCTagCode.PROJNAME.value
         tag.size = 8  # TODO to be padded
         tag.endian = self.endian
         tag.set_tag()
@@ -128,7 +152,7 @@ class SPC(object):
 
         # no 6 double; beam energy [MeV/u]
         tag = Tag(fd)
-        tag.code = 6
+        tag.code = SPCTagCode.BEAM_ENERGY.value
         tag.size = 8
         tag.endian = self.endian
         tag.set_tag()
@@ -136,7 +160,7 @@ class SPC(object):
 
         # no 7, double; peak position [g/cm**2]
         tag = Tag(fd)
-        tag.code = 7
+        tag.code = SPCTagCode.PEAK_POSITION.value
         tag.size = 8
         tag.endian = self.endian
         tag.set_tag()
@@ -144,7 +168,7 @@ class SPC(object):
 
         # no 8, double; normalization, usually =1
         tag = Tag(fd)
-        tag.code = 8
+        tag.code = SPCTagCode.NORMALIZATION.value
         tag.size = 8
         tag.endian = self.endian
         tag.set_tag()
@@ -152,7 +176,7 @@ class SPC(object):
 
         # no 9, 8-byte unsigned integer; number of depth steps.
         tag = Tag(fd)
-        tag.code = 9
+        tag.code = SPCTagCode.NO_OF_DEPTH_STEPS.value
         tag.size = 8
         tag.endian = self.endian
         tag.set_tag()
@@ -161,7 +185,7 @@ class SPC(object):
         for dblock in self.data:
             # no 10, double; depth [g/cm**2]
             tag = Tag(fd)
-            tag.code = 10
+            tag.code = SPCTagCode.DEPTH.value
             tag.size = 8
             tag.endian = self.endian
             tag.set_tag()
@@ -169,7 +193,7 @@ class SPC(object):
 
             # no 11, double; normalization for this depth step, usually =1.
             tag = Tag(fd)
-            tag.code = 11
+            tag.code = SPCTagCode.DEPTH_STEP_NORMALIZATION.value
             tag.size = 8
             tag.endian = self.endian
             tag.set_tag()
@@ -177,7 +201,7 @@ class SPC(object):
 
             # no 12, 8-byte unsigned integer; number of particle species.
             tag = Tag(fd)
-            tag.code = 12
+            tag.code = SPCTagCode.NO_OF_PARTICLE_SPECIES.value
             tag.size = 8
             tag.endian = self.endian
             tag.set_tag()
@@ -188,7 +212,7 @@ class SPC(object):
             for l, specie in enumerate(dblock.species):
                 # no 13, double Z, double A, long Z, long A;
                 tag = Tag(fd)
-                tag.code = 13
+                tag.code = SPCTagCode.ZA.value
                 tag.size = 24
                 tag.endian = self.endian
                 tag.set_tag()
@@ -200,7 +224,7 @@ class SPC(object):
                 # i.e. the species sum over Cum[nE].
                 # This number may exceed 1, since for an incoming primary particle many secondaries are created.
                 tag = Tag(fd)
-                tag.code = 14
+                tag.code = SPCTagCode.CUMULATED_NO_OF_FRAGMENTS.value
                 tag.size = 8
                 tag.endian = self.endian
                 tag.set_tag()
@@ -210,7 +234,7 @@ class SPC(object):
                 # <nC> is reserved for later use, so that lateral scattering for each fragment can be included.
                 # At present nC=0.
                 tag = Tag(fd)
-                tag.code = 15
+                tag.code = SPCTagCode.NC.value
                 tag.size = 8
                 tag.endian = self.endian
                 tag.set_tag()
@@ -219,7 +243,7 @@ class SPC(object):
                 # no 16, 8-byte unsigned integer;
                 # 8-byte unsigned integer; number of energy bins for this species
                 tag = Tag(fd)
-                tag.code = 16
+                tag.code = SPCTagCode.NO_OF_ENERGY_BINS.value
                 tag.size = 8
                 tag.endian = self.endian
                 tag.set_tag()
@@ -236,7 +260,7 @@ class SPC(object):
 
                     # no 17, double; energy bin values
                     tag = Tag(fd)
-                    tag.code = 17
+                    tag.code = SPCTagCode.ENERGY_BIN_VALUES.value
                     tag.size = 8 * (specie.ne + 1)
                     tag.endian = self.endian
                     tag.set_tag()
@@ -244,7 +268,7 @@ class SPC(object):
                 else:
                     # no 18,  8-byte unsigned integer
                     tag = Tag(fd)
-                    tag.code = 18
+                    tag.code = SPCTagCode.ENERGY_BIN_POINTER.value
                     tag.size = 8
                     tag.endian = self.endian
                     tag.set_tag()
@@ -252,7 +276,7 @@ class SPC(object):
 
                 # no 19,  double; spectrum bin values
                 tag = Tag(fd)
-                tag.code = 19
+                tag.code = SPCTagCode.SPECTRUM_BIN_VALUES.value
                 tag.size = 8 * specie.ne
                 tag.endian = self.endian
                 tag.set_tag()
@@ -260,7 +284,7 @@ class SPC(object):
 
                 # no 20,  double; running cumulated spectrum bin values
                 tag = Tag(fd)
-                tag.code = 20
+                tag.code = SPCTagCode.CUMULATED_SPECTRUM_BIN_VALUES.value
                 tag.size = 8 * (specie.ne + 1)
                 tag.endian = self.endian
                 tag.set_tag()
@@ -273,35 +297,37 @@ class SPC(object):
         t = Tag(fd)
         db = []
 
-        while t.code < 9:
+        while t.code < SPCTagCode.NO_OF_DEPTH_STEPS.value:
             t.get_tag()
             self.endian = t.endian
             pl = self.get_payload(fd, t)
-            # print(t.code, t.size, pl)
 
         for i in range(self.ndsteps):
+            # no 10, double; depth [g/cm**2]
             t.get_tag()
             pl = self.get_payload(fd, t)
-            # print(t.code, t.size, pl)
 
             # construct the main object
-            if t.code == 10:
+            if t.code == SPCTagCode.DEPTH.value:
                 db.append(DBlock())
                 db[-1].depth = pl
 
+                # no 11, double; normalization for this depth step, usually =1.
                 t.get_tag()
-                if t.code == 11:
+                if t.code == SPCTagCode.DEPTH_STEP_NORMALIZATION.value:
                     pl = self.get_payload(fd, t)
                     db[-1].dsnorm = pl
 
+                # no 12, 8-byte unsigned integer; number of particle species.
                 t.get_tag()
-                if t.code == 12:
+                if t.code == SPCTagCode.NO_OF_PARTICLE_SPECIES.value:
                     pl = self.get_payload(fd, t)
                     db[-1].nparts = pl
 
                 for j in range(db[-1].nparts):  # loop over all species
+                    # no 13, double Z, double A, long Z, long A;
                     t.get_tag()
-                    if t.code == 13:
+                    if t.code == SPCTagCode.ZA.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species.append(SBlock())
                         db[-1].species[-1].z = pl[0]
@@ -309,36 +335,49 @@ class SPC(object):
                         db[-1].species[-1].lz = int(pl[2])
                         db[-1].species[-1].la = int(pl[3])
 
+                    # no 14, double
+                    # The scalar Cum value is the cumulated number (running sum) of fragments,
+                    # i.e. the species sum over Cum[nE].
+                    # This number may exceed 1, since for an incoming primary particle many secondaries are created.
                     t.get_tag()
-                    if t.code == 14:
+                    if t.code == SPCTagCode.CUMULATED_NO_OF_FRAGMENTS.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].dscum = pl
 
+                    # no 15, 8-byte unsigned integer;
+                    # <nC> is reserved for later use, so that lateral scattering for each fragment can be included.
+                    # At present nC=0.
                     t.get_tag()
-                    if t.code == 15:
+                    if t.code == SPCTagCode.NC.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].nc = pl
 
+                    # no 16, 8-byte unsigned integer;
+                    # 8-byte unsigned integer; number of energy bins for this species
                     t.get_tag()
-                    if t.code == 16:
+                    if t.code == SPCTagCode.NO_OF_ENERGY_BINS.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].ne = pl
 
+                    # no 17, double; energy bin values
                     t.get_tag()
-                    if t.code == 17:
+                    if t.code == SPCTagCode.ENERGY_BIN_VALUES.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].ebindata = pl
-                    if t.code == 18:  # both tags will not be present
+                    # no 18,  8-byte unsigned integer
+                    if t.code == SPCTagCode.ENERGY_BIN_POINTER.value:  # both tags will not be present
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].ebindata = db[0].species[pl].ebindata
 
+                    # no 19,  double; spectrum bin values
                     t.get_tag()
-                    if t.code == 19:
+                    if t.code == SPCTagCode.SPECTRUM_BIN_VALUES.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].histdata = pl
 
+                    # no 20,  double; running cumulated spectrum bin values
                     t.get_tag()
-                    if t.code == 20:  # running cummulative sum
+                    if t.code == SPCTagCode.CUMULATED_SPECTRUM_BIN_VALUES.value:
                         pl = self.get_payload(fd, t)
                         db[-1].species[-1].rcumdata = pl
 
@@ -352,80 +391,101 @@ class SPC(object):
         else:
             ste = '>'  # big endian
 
-        if tag.code == 1:
+        # filetype 1
+        # <filetype> is an 80-byte ASCII character string starting with "SPCM" or "SPCI",
+        # specifying big ("Motorola") or little ("Intel") endian byte order, respectively.
+        if tag.code == SPCTagCode.FILETYPE.value:
             sdtype = ste + 'a' + str(tag.size)
-            print(sdtype)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0].decode("UTF-8")
             self.filetype = payload
             return payload
 
-        if tag.code == 2:
+        # fileversion 2
+        # <fileversion> is an 80-byte ASCII character string specifying the file format version as yyyymmdd.
+        # 19980704 is the "classic" format (fixed energy range),
+        # whereas 20020107 is reserved for future possible variable energy range.
+        if tag.code == SPCTagCode.FILEVERSION.value:
             sdtype = ste + 'a' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0].decode("UTF-8")
             self.fileversion = payload
             return payload
 
-        if tag.code == 3:
+        # filedate 3
+        # <filedate> is an 80-byte ASCII character string with the file creation date
+        # as returned by the ctime() function. (<dow> <mmm> <dd> <hh>:<mm>:<ss> <yyyy>)
+        if tag.code == SPCTagCode.FILEDATE.value:
             sdtype = ste + 'a' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0].decode("UTF-8")
             self.filedate = payload
             return payload
 
-        if tag.code == 4:
+        # targname 4, projname 5
+        # <targname> and <projname> are the names of target ("H2O") and projectile ("12C6"), respectively.
+        # Since both can have any length, they are padded to the right with binary zeroes
+        # up to the next 8-byte boundary.
+        if tag.code == SPCTagCode.TARGNAME.value:
             sdtype = ste + 'a' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0].decode("UTF-8")
             self.targname = payload
             return payload
 
-        if tag.code == 5:
+        if tag.code == SPCTagCode.PROJNAME.value:
             sdtype = ste + 'a' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0].decode("UTF-8")
             self.projname = payload
             return payload
 
-        if tag.code == 6:
+        # no 6 double; beam energy [MeV/u]
+        if tag.code == SPCTagCode.BEAM_ENERGY.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             self.energy = payload
             return payload
 
-        if tag.code == 7:
+        # no 7, double; peak position [g/cm**2]
+        if tag.code == SPCTagCode.PEAK_POSITION.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             self.peakpos = payload
             return payload
 
-        if tag.code == 8:
+        # no 8, double; normalization, usually =1
+        if tag.code == SPCTagCode.NORMALIZATION.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             self.norm = payload
             return payload
 
-        if tag.code == 9:  # number of depth steps
+        # no 9, 8-byte unsigned integer; number of depth steps.
+        if tag.code == SPCTagCode.NO_OF_DEPTH_STEPS.value:
             sdtype = ste + 'u' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             self.ndsteps = payload
             return payload
 
-        if tag.code == 10:  # depth [g/cm**2]
+        # no 10, double; depth [g/cm**2]
+        if tag.code == SPCTagCode.DEPTH.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.depth = payload
             return payload
 
-        if tag.code == 11:  # normalization of this depth step
+        # no 11, double; normalization for this depth step, usually =1.
+        if tag.code == SPCTagCode.NO_OF_DEPTH_STEPS.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.dsnorm = payload
             return payload
 
-        if tag.code == 12:  # number of particle species
+        # no 12, 8-byte unsigned integer; number of particle species.
+        if tag.code == SPCTagCode.NO_OF_PARTICLE_SPECIES.value:
             sdtype = ste + 'u' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.nparts = payload
             return payload
 
-        if tag.code == 13:  # data block, Z and A
+        # no 13, double Z, double A, long Z, long A;
+        if tag.code == SPCTagCode.ZA.value:
             payload = np.zeros(4)
 
             sdtype = ste + 'f8'
@@ -439,48 +499,63 @@ class SPC(object):
 
             return payload
 
-        if tag.code == 14:  # CUM: cumulated number (running sum) of fragments
+        # no 14, double
+        # The scalar Cum value is the cumulated number (running sum) of fragments,
+        # i.e. the species sum over Cum[nE].
+        # This number may exceed 1, since for an incoming primary particle many secondaries are created.
+        if tag.code == SPCTagCode.CUMULATED_NO_OF_FRAGMENTS.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.dsnorm = payload
             return payload
 
-        if tag.code == 15:  # nC: reserved for later use
+        # no 15, 8-byte unsigned integer;
+        # <nC> is reserved for later use, so that lateral scattering for each fragment can be included.
+        # At present nC=0.
+        if tag.code == SPCTagCode.NC.value:
             sdtype = ste + 'u' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.nc = payload
             return payload
 
-        if tag.code == 16:  # nE: number of energy bins
+        # no 16, 8-byte unsigned integer;
+        # 8-byte unsigned integer; number of energy bins for this species
+        if tag.code == SPCTagCode.NO_OF_ENERGY_BINS.value:
             sdtype = ste + 'u' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.ne = payload
             return payload
 
-        if tag.code == 17:  # E: energy bin values
+        # no 17, double; energy bin values
+        if tag.code == SPCTagCode.ENERGY_BIN_VALUES.value:
             sdtype = ste + 'f8'
-            cnt = int(tag.size / 8)
+            cnt = tag.size // 8
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))
             # self.ebindata = payload
             return payload
 
-        if tag.code == 18:  # EREF: if tag is set, then use copy of ebin from species os stated in the file.
+        # no 18,  8-byte unsigned integer
+        # EREF: if tag is set, then use copy of ebin from species os stated in the file.
+        if tag.code == SPCTagCode.ENERGY_BIN_POINTER.value:
             sdtype = ste + 'u8'
-            cnt = int(tag.size / 8)
+            cnt = tag.size // 8
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.eref = payload
             return payload
 
-        if tag.code == 19:  # H[nE]: spectrum contents divided by the bin width
+        # no 19,  double; spectrum bin values
+        # H[nE]: spectrum contents divided by the bin width
+        if tag.code == SPCTagCode.SPECTRUM_BIN_VALUES.value:
             sdtype = ste + 'f8'
-            cnt = int(tag.size / 8)
+            cnt = tag.size // 8
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))
             # self.histdata = payload
             return payload
 
-        if tag.code == 20:  # running cumulated spectrum bin values
+        # no 20,  double; running cumulated spectrum bin values
+        if tag.code == SPCTagCode.CUMULATED_SPECTRUM_BIN_VALUES.value:
             sdtype = ste + 'f8'
-            cnt = int(tag.size / 8)
+            cnt = tag.size // 8
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))
             # self.cum = payload
             return payload
