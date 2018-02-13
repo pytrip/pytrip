@@ -13,3 +13,7 @@ matplotlib<2.2.0 ; python_version < '3.0' or python_version >= '3.4' # newest fo
 #
 pydicom<1.0.0 ; python_version >= '3.2' and python_version < '3.4' # only old version of pydicom package works with python 3.2
 pydicom ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
+#
+#
+# Enum structure has appeared in Python 3.4 (https://docs.python.org/3.4/library/enum.html), for older version a backport is needed
+enum34 ; python_version < '3.4'
