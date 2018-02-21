@@ -25,18 +25,25 @@ import datetime
 
 import numpy as np
 
+try:
+    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
+    from pydicom import uid
+    from pydicom.dataset import Dataset, FileDataset
+    from pydicom.sequence import Sequence
+    _dicom_loaded = True
+except ImportError:
+    try:
+        # fallback to old (<1.0) pydicom package version
+        from dicom import UID as uid  # old pydicom had UID instead of uid
+        from dicom.dataset import Dataset, FileDataset
+        from dicom.sequence import Sequence
+        _dicom_loaded = True
+    except ImportError:
+        _dicom_loaded = False
+
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.cube import Cube
 import pytriplib
-
-try:
-    from dicom.dataset import Dataset, FileDataset
-    from dicom.sequence import Sequence
-    from dicom import UID
-
-    _dicom_loaded = True
-except ImportError:
-    _dicom_loaded = False
 
 logger = logging.getLogger(__name__)
 
@@ -62,9 +69,9 @@ class DosCube(Cube):
         if cube is not None:
             self._dicom_study_instance_uid = cube._dicom_study_instance_uid
         else:
-            self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
-        self._plan_dicom_series_instance_uid = UID.generate_uid(prefix=None)
-        self._dose_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+            self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
+        self._plan_dicom_series_instance_uid = uid.generate_uid(prefix=None)
+        self._dose_dicom_series_instance_uid = uid.generate_uid(prefix=None)
 
     def read_dicom(self, dcm):
         """ Imports the dose distribution from DICOM object.
@@ -155,7 +162,7 @@ class DosCube(Cube):
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
-        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
         if self.patient_id in (None, ''):
