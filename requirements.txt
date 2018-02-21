@@ -1,9 +1,16 @@
 # micro-language and markers are described here: https://www.python.org/dev/peps/pep-0508/
+#
 numpy<1.12 ; python_version >= '3.2' and python_version < '3.4' # numpy starting from 1.12 doesn't support python 3.2 and 3.3
 numpy ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
+#
+#
 # see issue #226 and others, force using older version of matplotlib for py3.2
 matplotlib<=1.5.3  ; python_version >= '3.2' and python_version < '3.4'
 matplotlib<2.2.0 ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
 # see discussion here https://github.com/pytrip/pytrip/pull/421 - matplotlib starting from 2.2.0 doesn't support
-# extractring of contour data
-pydicom
+# extracting of contour data
+#
+#
+dicom  ; python_version >= '3.2' and python_version < '3.4' # only old version (0.9.9) of pydicom package works with python 3.2
+# it is available as dicom package on pypi
+pydicom ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
