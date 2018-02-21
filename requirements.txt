@@ -11,6 +11,5 @@ matplotlib<2.2.0 ; python_version < '3.0' or python_version >= '3.4' # newest fo
 # extracting of contour data
 #
 #
-dicom  ; python_version >= '3.2' and python_version < '3.4' # only old version (0.9.9) of pydicom package works with python 3.2
-# it is available as dicom package on pypi
+pydicom<1.0.0 ; python_version >= '3.2' and python_version < '3.4' # only old version of pydicom package works with python 3.2
 pydicom ; python_version < '3.0' or python_version >= '3.4' # newest for py 2.7, 3.4 and higher
