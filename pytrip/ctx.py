@@ -118,7 +118,9 @@ class CtxCube(Cube):
             if ds.SOPInstanceUID.startswith('2.25.'):
                 # UUID based UIDs
                 # example: 2.25.137355362850316362338405159557803441718
-                uuid_part_str = ds.SOPInstanceUID[len('2.25.'):]  # extract last part of UID, as string
+                uuid_part_str = ds.SOPInstanceUID[len('2.25.'):len('2.25.') + 32]  # extract 32bit fragment of
+                # last part of UID, as string
+
                 uuid_object = uuid.UUID(int=int(uuid_part_str))   # convert to UID object, to be able to manipulate it
                 uuid_list = list(uuid_object.fields)              # get list of fields, to be able to edit it
                 uuid_list[-1] = i + 1  # replace clock_seq part of uuid with sequential number
@@ -136,7 +138,6 @@ class CtxCube(Cube):
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]
             _ds.PixelData = pixel_array.tostring()
-            _ds.pixel_array = pixel_array
             data.append(_ds)
         return data
 

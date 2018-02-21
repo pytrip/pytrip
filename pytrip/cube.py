@@ -29,12 +29,18 @@ import datetime
 import numpy as np
 
 try:
-    from dicom.dataset import Dataset, FileDataset
-    from dicom import UID
-
+    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
+    from pydicom import uid
+    from pydicom.dataset import Dataset, FileDataset
     _dicom_loaded = True
 except ImportError:
-    _dicom_loaded = False
+    try:
+        # fallback to old (<1.0) pydicom package version
+        from dicom import UID as uid  # old pydicom had UID instead of uid
+        from dicom.dataset import Dataset, FileDataset
+        _dicom_loaded = True
+    except ImportError:
+        _dicom_loaded = False
 
 from pytrip.error import InputError, ModuleNotLoadedError, FileNotFound
 from pytrip.util import TRiP98FilePath, TRiP98FileLocator
@@ -123,11 +129,11 @@ class Cube(object):
             # UIDs unique for whole structure set
             # generation of UID is done here in init, the reason why we are not generating them in create_dicom
             # method is that subsequent calls to write method shouldn't changed UIDs
-            self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
-            self._ct_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+            self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
+            self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
 
             # unique for each CT slice
-            self._ct_sop_instance_uid = UID.generate_uid(prefix=None)
+            self._ct_sop_instance_uid = uid.generate_uid(prefix=None)
 
             self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
 
@@ -317,10 +323,10 @@ class Cube(object):
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom
         # method is that subsequent calls to write method shouldn't changed UIDs
-        self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
-        self._ct_dicom_series_instance_uid = UID.generate_uid(prefix=None)
+        self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
+        self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
         # unique for each CT slice
-        self._ct_sop_instance_uid = UID.generate_uid(prefix=None)
+        self._ct_sop_instance_uid = uid.generate_uid(prefix=None)
 
     def mask_by_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -880,7 +886,7 @@ class Cube(object):
         # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
         meta.MediaStorageSOPInstanceUID = self._ct_sop_instance_uid
         meta.ImplementationClassUID = "1.2.3.4"
-        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         ds.PatientsName = self.patient_name
         if self.patient_id in (None, ''):

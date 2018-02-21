@@ -22,7 +22,10 @@ It also provides the SubMachine class which treats individual energy layers.
 """
 import logging
 import numpy as np
-import dicom
+try:
+    import pydicom as dicom  # as of version 1.0 pydicom package should be used this way
+except ImportError:
+    import dicom  # fallback to old (<1.0) pydicom package version
 
 from pytrip.file_parser import parse_to_var
 

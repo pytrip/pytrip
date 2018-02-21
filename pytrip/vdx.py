@@ -31,19 +31,26 @@ from functools import cmp_to_key
 
 import numpy as np
 
+try:
+    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
+    from pydicom import uid
+    from pydicom.dataset import Dataset, FileDataset
+    from pydicom.sequence import Sequence
+    _dicom_loaded = True
+except ImportError:
+    try:
+        # fallback to old (<1.0) pydicom package version
+        from dicom import UID as uid  # old pydicom had UID instead of uid
+        from dicom.dataset import Dataset, FileDataset
+        from dicom.sequence import Sequence
+        _dicom_loaded = True
+    except ImportError:
+        _dicom_loaded = False
+
 import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.dos import DosCube
 import pytriplib
-
-try:
-    from dicom.dataset import Dataset, FileDataset
-    from dicom.sequence import Sequence
-    from dicom import UID
-
-    _dicom_loaded = True
-except ImportError:
-    _dicom_loaded = False
 
 logger = logging.getLogger(__name__)
 
@@ -83,10 +90,10 @@ class VdxCube:
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom
         # method is that subsequent calls to write method shouldn't changed UIDs
-        self._dicom_study_instance_uid = UID.generate_uid(prefix=None)
-        self._structs_dicom_series_instance_uid = UID.generate_uid(prefix=None)
-        self._structs_sop_instance_uid = UID.generate_uid(prefix=None)
-        self._structs_rt_series_instance_uid = UID.generate_uid(prefix=None)
+        self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
+        self._structs_dicom_series_instance_uid = uid.generate_uid(prefix=None)
+        self._structs_sop_instance_uid = uid.generate_uid(prefix=None)
+        self._structs_rt_series_instance_uid = uid.generate_uid(prefix=None)
 
         self.version = "2.0"
         if self.cube is not None:
@@ -321,7 +328,7 @@ class VdxCube:
         # SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
         meta.MediaStorageSOPInstanceUID = self._structs_sop_instance_uid
         meta.ImplementationClassUID = "1.2.3.4"
-        meta.TransferSyntaxUID = UID.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
             ds.PatientsName = self.cube.patient_name
