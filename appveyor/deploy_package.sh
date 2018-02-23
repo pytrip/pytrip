@@ -23,7 +23,6 @@ index-servers =
     pypi
 
 [pypi]
-repository: https://pypi.python.org/pypi
 username: ${PYPIUSER}
 password: ${PYPIPASS}
 
@@ -46,6 +45,6 @@ ls -al dist
 # upload only if tag present
 if [[ $APPVEYOR_REPO_TAG == "true" ]]; then
     pip install twine
-    twine upload -r pypi dist/*whl
+    twine upload dist/*whl
 fi
 

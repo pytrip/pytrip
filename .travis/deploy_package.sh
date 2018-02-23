@@ -8,14 +8,11 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
-# name of pypi repo to be used
-PYPIREPO=$1
-
 # python target to be used (cp27-cp27m, cp27-cp27mu, cp34-cp34m or cp35-cp35m)
-TARGET=$2
+TARGET=$1
 
 # optional pre-command (i.e. linux32)
-PRE_CMD=$3
+PRE_CMD=$2
 
 # based on https://github.com/pypa/python-manylinux-demo/blob/master/.travis.yml
 DOCKER_IMAGE_32=quay.io/pypa/manylinux1_i686
@@ -35,7 +32,6 @@ index-servers =
     pypi
 
 [pypi]
-repository: https://pypi.python.org/pypi
 username: ${PYPIUSER}
 password: ${PYPIPASS}
 
@@ -64,7 +60,7 @@ if [[ $TRAVIS_OS_NAME == "osx" ]]; then
 
     # upload only if tag present
     if [[ $TRAVIS_TAG != "" ]]; then
-        pyenv exec twine upload -r $PYPIREPO dist/*
+        pyenv exec twine upload dist/*
     fi
 
 # make a source package
@@ -78,7 +74,7 @@ elif [[ $TARGET == "source" ]]; then
     ls -al dist
     # upload only if tag present
     if [[ $TRAVIS_TAG != "" ]]; then
-        twine upload -r $PYPIREPO dist/*tar.gz
+        twine upload dist/*tar.gz
     fi
 else
 
@@ -102,6 +98,6 @@ else
 
     # upload only if tag present
     if [[ $TRAVIS_TAG != "" ]]; then
-        twine upload -r $PYPIREPO wheelhouse/*
+        twine upload wheelhouse/*
     fi
 fi
