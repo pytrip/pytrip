@@ -106,7 +106,7 @@ def rbe_mcnamara(dose, let, abx):
     :ref: https://doi.org/10.1088/0031-9155/60/21/8399
     """
 
-    _apx = 0.999064 + 0.35605 * let / abx
+    _apx = 0.99064 + 0.35605 * let / abx
     _sbpx = 1.1012 - 0.0038703 * np.sqrt(abx) * let
 
     rbe = _rbe_apx(dose, _apx, _sbpx, abx)
