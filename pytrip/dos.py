@@ -221,7 +221,7 @@ class DosCube(Cube):
 
         ds = self.create_dicom_base()
         ds.Modality = 'RTDOSE'
-        ds.SamplesperPixel = 1
+        ds.SamplesPerPixel = 1
         ds.BitsAllocated = self.num_bytes * 8
         ds.BitsStored = self.num_bytes * 8
         ds.AccessionNumber = ''
@@ -239,7 +239,6 @@ class DosCube(Cube):
         ds.SeriesNumber = '14'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.GridFrameOffsetVector = [x * self.slice_distance for x in range(self.dimz)]
         ds.InstanceNumber = ''
-        ds.NumberofFrames = len(self.cube)
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
         ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size), "%.3f" % (self.yoffset * self.pixel_size),
@@ -262,7 +261,7 @@ class DosCube(Cube):
         rt_set = Dataset()
         rt_set.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
         rt_set.RefdSOPInstanceUID = '1.2.3'
-        ds.ReferencedRTPlans = Sequence([rt_set])
+        ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
