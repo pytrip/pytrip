@@ -203,7 +203,7 @@ class DosCube(Cube):
         dose_ref.DoseReferenceType = 'TARGET'
         dose_ref.TargetPrescriptionDose = self.target_dose
         dose_ref.DoseReferenceDescription = "TUMOR"
-        ds.DoseReferences = Sequence([dose_ref])
+        ds.DoseReferenceSequence = Sequence([dose_ref])
         return ds
 
     def create_dicom(self):

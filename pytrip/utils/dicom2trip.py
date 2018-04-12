@@ -55,16 +55,14 @@ def main(args=sys.argv[1:]):
     if 'images' in dcm:
         c = pt.CtxCube()
         c.read_dicom(dcm)
-        logger.info("Write CtxCube header... {:s}".format(basename + pt.CtxCube.header_file_extension))
-        c.write_trip_header(basename + pt.CtxCube.header_file_extension)
-        logger.info("Write CtxCube...        {:s}".format(basename + pt.CtxCube.data_file_extension))
-        c.write_trip_data(basename + pt.CtxCube.data_file_extension)
+        logger.info("Write CtxCube ... '{:s}'".format(basename + pt.CtxCube.data_file_extension))
+        c.write(basename)
     else:
         logger.warning("No CT data found in {:s}".format(parsed_args.dicom_dir))
         c = None
 
     if 'rtss' in dcm:
-        logger.info("Write VdxCube...        {:s}".format(basename + ".vdx"))
+        logger.info("Write VdxCube ... '{:s}'".format(basename + ".vdx"))
         vdx_cube = pt.VdxCube(cube=c)
         vdx_cube.read_dicom(dcm)
         vdx_cube.write_trip(basename + ".vdx")

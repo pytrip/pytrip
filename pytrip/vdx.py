@@ -331,16 +331,16 @@ class VdxCube:
         meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
-            ds.PatientsName = self.cube.patient_name
+            ds.PatientName = self.cube.patient_name
             ds.Manufacturer = self.cube.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         else:
-            ds.PatientsName = ''
+            ds.PatientName = ''
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.PatientID = self.patient_id  # patient_id of the VdxCube, from CtxCube during __init__.
-        ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        ds.PatientSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
-        ds.PatientsBirthDate = '19010101'
+        ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
         ds.is_little_endian = True
@@ -362,7 +362,7 @@ class VdxCube:
         #   Series Instance UID for structures might be different than Series Instance UID for CTs
         ds.SeriesInstanceUID = self._structs_dicom_series_instance_uid
 
-        ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
+        ds.FrameOfReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.SeriesDate = '19010101'  # !!!!!!!!
         ds.ContentDate = '19010101'  # !!!!!!
         ds.StudyDate = '19010101'  # !!!!!!!
@@ -377,7 +377,7 @@ class VdxCube:
         ds.StructureSetName = 'ROI'
         ds.Modality = 'RTSTRUCT'
         ds.ROIGenerationAlgorithm = '0'  # ROI Generation Algorithm tag, 0x3006,0x0036 (type CS - Code String)
-        ds.ReferringPhysiciansName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
+        ds.ReferringPhysicianName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
 
         roi_label_list = []
         roi_data_list = []
