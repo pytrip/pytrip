@@ -248,7 +248,6 @@ test_debian_8_jessie_py2:
         name: package_install
         code: |
           easy_install -U pip
-          python -c "import pip; print(pip.pep425tags.get_supported())"
           python -c "import platform; print(platform.platform())"
           python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
 

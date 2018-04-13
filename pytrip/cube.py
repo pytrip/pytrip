@@ -788,7 +788,7 @@ class Cube(object):
         self.creation_info = "Created by PyTRiP98;"
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
-        self.patient_name = ds.PatientsName
+        self.patient_name = ds.PatientName
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
         self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
@@ -888,14 +888,14 @@ class Cube(object):
         meta.ImplementationClassUID = "1.2.3.4"
         meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
-        ds.PatientsName = self.patient_name
+        ds.PatientName = self.patient_name
         if self.patient_id in (None, ''):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
         else:
             ds.PatientID = self.patient_id  # Patient ID tag 0x0010,0x0020 (type LO - Long String)
-        ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        ds.PatientSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
-        ds.PatientsBirthDate = '19010101'
+        ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
         ds.is_little_endian = True

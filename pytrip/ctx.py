@@ -78,7 +78,7 @@ class CtxCube(Cube):
 
         ds = self.create_dicom_base()
         ds.Modality = 'CT'
-        ds.SamplesperPixel = 1
+        ds.SamplesPerPixel = 1
         ds.BitsAllocated = self.num_bytes * 8
         ds.BitsStored = self.num_bytes * 8
         ds.HighBit = self.num_bytes * 8 - 1
