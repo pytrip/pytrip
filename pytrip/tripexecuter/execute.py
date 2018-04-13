@@ -266,7 +266,7 @@ class Execute(object):
         # wait until process is finished and get standard output and error streams
         stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
         exit_status = p.returncode
-        logger.debug("TRiP98 exited with status : {:d}".format(exit_status))
+        logger.debug("TRiP98 exited with status: {:d}".format(exit_status))
 
         if stdout is not None:
             logger.debug("Local answer stdout:" + stdout.decode("ascii"))
@@ -343,8 +343,8 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
             stdin, stdout, stderr = ssh.exec_command(_cmd)
-            exit_status = int(ssh.recv_exit_status())  # recv_exit_status() returns an string type
-            logger.debug("TRiP98 exited with status : {:d}".format(exit_status))
+            exit_status = int(stdout.channel.recv_exit_status())  # recv_exit_status() returns an string type
+            logger.debug("TRiP98 exited with status: {:d}".format(exit_status))
             answer_stdout = stdout.read().decode('utf-8')
             answer_stderr = stderr.read().decode('utf-8')
             logger.info("Remote answer stdout:\n{:s}".format(answer_stdout))
@@ -356,8 +356,10 @@ class Execute(object):
         fp_stderr.close()
         ssh.close()
 
-        self._copy_file_from_server(remote_tgz_path, local_tgz_path)
+        self._move_file_from_server(remote_tgz_path, local_tgz_path)
         self._extract_tarball(remote_tgz_path, plan._working_dir)
+        logger.debug("Locally remove {:s}".format(local_tgz_path))
+        os.remove(local_tgz_path)
 
         return exit_status
 
@@ -402,6 +404,7 @@ class Execute(object):
                 # to the proper field in the list of fields.
 
         if self._cleanup:
+            logger.debug("Delete {:s}".format(plan._temp_dir))
             shutil.rmtree(plan._temp_dir)
 
     @staticmethod
@@ -451,7 +454,7 @@ class Execute(object):
 
         """
 
-        logger.debug("Extract {:s} to {:s}".format(tgz_path, basedir))
+        logger.debug("Locally extract {:s} in {:s}".format(tgz_path, basedir))
 
         _basedir, _tarfile = os.path.split(tgz_path)
         _outdirname = _tarfile.rstrip(".tar.gz")  # TODO: os.path.splitext()
@@ -486,13 +489,27 @@ class Execute(object):
     def _copy_file_from_server(self, _from, _to):
         """ Copies a single file from a server
         :param _from: full path on remote server
-        :param _to: fill path on local computer
+        :param _to: full path on local computer
         """
         _from_uri = self.servername + ":" + _from
         logger.debug("Copy {:s} to {:s}".format(_from_uri, _to))
 
         sftp, transport = self._get_sftp_client()
         sftp.get(_from, _to)
+        sftp.close()
+        transport.close()
+
+    def _move_file_from_server(self, _from, _to):
+        """ Copies a removes a single file from a server
+        :param _from: full path on remote server
+        :param _to: full path on local computer
+        """
+        _from_uri = self.servername + ":" + _from
+        logger.debug("Move {:s} to {:s}".format(_from_uri, _to))
+
+        sftp, transport = self._get_sftp_client()
+        sftp.get(_from, _to)
+        sftp.remove(_from)
         sftp.close()
         transport.close()
 
