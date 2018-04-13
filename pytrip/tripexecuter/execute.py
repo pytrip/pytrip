@@ -123,6 +123,8 @@ class Execute(object):
     def execute(self, plan, run=True, _callback=None):
         """
         Executes the Plan() object using TRiP98.
+
+        :returns int: return code from trip execution.
         """
 
         if run:
@@ -135,8 +137,9 @@ class Execute(object):
         self._callback = _callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
         plan.save_exec(plan._exec_path)  # add the .exec as well
-        self._run_trip(plan)  # run TRiP
+        rc = self._run_trip(plan)  # run TRiP
         self._finish(plan)
+        return rc
 
     def _pre_execute(self, plan):
         """
@@ -219,13 +222,16 @@ class Execute(object):
         """ Method for executing the attached exec.
         :params str dir: overrides dir where the TRiP package is assumed to be, otherwise
         the package location is taken from plan._temp_dir
+
+        :returns int: return code from trip execution.
         """
         if not _dir:
             _dir = plan._temp_dir
         if self.remote:
-            self._run_trip_remote(plan, _dir)
+            rc = self._run_trip_remote(plan, _dir)
         else:
-            self._run_trip_local(plan, _dir)
+            rc = self._run_trip_local(plan, _dir)
+        return rc
 
     def _run_trip_local(self, plan, _run_dir):
         """
@@ -233,7 +239,7 @@ class Execute(object):
         :params Plan plan : plan object to be executed
         :params str _run_dir: directory where a clean trip package is located, i.e. where TRiP98 will be run.
 
-        :returns: integer exit status of TRiP98 execution. (0, even if optimiztion fails)
+        :returns int: return code of TRiP98 execution. (0, even if optimiztion fails)
         """
         logger.info("Run TRiP98 in LOCAL mode.")
 
@@ -265,8 +271,11 @@ class Execute(object):
         # fill standard input with configuration file content
         # wait until process is finished and get standard output and error streams
         stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
-        exit_status = p.returncode
-        logger.debug("TRiP98 exited with status: {:d}".format(exit_status))
+        rc = p.returncode
+        if rc != 0:
+            logger.error("TRiP98 error: return code {:d}".format(rc))
+        else:
+            logger.debug("TRiP98 exited with status: {:d}".format(rc))
 
         if stdout is not None:
             logger.debug("Local answer stdout:" + stdout.decode("ascii"))
@@ -281,6 +290,8 @@ class Execute(object):
 
         fp_stdout.close()
         fp_stderr.close()
+
+        return rc
 
     def _run_trip_remote(self, plan, _run_dir=None):
         """ Method for executing the attached plan remotely.
@@ -343,8 +354,12 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
             stdin, stdout, stderr = ssh.exec_command(_cmd)
-            exit_status = int(stdout.channel.recv_exit_status())  # recv_exit_status() returns an string type
-            logger.debug("TRiP98 exited with status: {:d}".format(exit_status))
+            rc = int(stdout.channel.recv_exit_status())  # recv_exit_status() returns an string type
+            if rc != 0:
+                logger.error("TRiP98 error: return code {:d}".format(rc))
+            else:
+                logger.debug("TRiP98 exited with status: {:d}".format(rc))
+
             answer_stdout = stdout.read().decode('utf-8')
             answer_stderr = stderr.read().decode('utf-8')
             logger.info("Remote answer stdout:\n{:s}".format(answer_stdout))
@@ -352,6 +367,7 @@ class Execute(object):
             fp_stdout.write(answer_stdout)
             fp_stderr.write(answer_stderr)
             self.log(answer_stdout)
+
         fp_stdout.close()
         fp_stderr.close()
         ssh.close()
@@ -361,7 +377,7 @@ class Execute(object):
         logger.debug("Locally remove {:s}".format(local_tgz_path))
         os.remove(local_tgz_path)
 
-        return exit_status
+        return rc
 
     def _finish(self, plan):
         """ return requested results, copy them back in to plan._working_dir
