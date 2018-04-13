@@ -232,6 +232,8 @@ class Execute(object):
         Runs TRiP98 on local computer.
         :params Plan plan : plan object to be executed
         :params str _run_dir: directory where a clean trip package is located, i.e. where TRiP98 will be run.
+
+        :returns: integer exit status of TRiP98 execution. (0, even if optimiztion fails)
         """
         logger.info("Run TRiP98 in LOCAL mode.")
 
@@ -263,6 +265,8 @@ class Execute(object):
         # fill standard input with configuration file content
         # wait until process is finished and get standard output and error streams
         stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
+        exit_status = p.returncode
+        logger.debug("TRiP98 exited with status : {:d}".format(exit_status))
 
         if stdout is not None:
             logger.debug("Local answer stdout:" + stdout.decode("ascii"))
@@ -282,6 +286,8 @@ class Execute(object):
         """ Method for executing the attached plan remotely.
         :params Plan plan: plan object
         :params str _run_dir: TODO: not used
+
+        :returns: integer exist staus of TRiP98 execution. (0, even if optimiztion fails)
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
@@ -337,6 +343,8 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
             stdin, stdout, stderr = ssh.exec_command(_cmd)
+            exit_status = int(ssh.recv_exit_status())  # recv_exit_status() returns an string type
+            logger.debug("TRiP98 exited with status : {:d}".format(exit_status))
             answer_stdout = stdout.read().decode('utf-8')
             answer_stderr = stderr.read().decode('utf-8')
             logger.info("Remote answer stdout:\n{:s}".format(answer_stdout))
@@ -350,6 +358,8 @@ class Execute(object):
 
         self._copy_file_from_server(remote_tgz_path, local_tgz_path)
         self._extract_tarball(remote_tgz_path, plan._working_dir)
+
+        return exit_status
 
     def _finish(self, plan):
         """ return requested results, copy them back in to plan._working_dir
