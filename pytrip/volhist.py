@@ -36,25 +36,29 @@ class VolHist:
         :target_dose: set target_dose in [Gy]. Any target_dose in cube.target_dose will be ignored, if set.
         """
 
+        self.cube_basename = cube.basename  # basename of the cube used for histogram
         self.name = voi.name  # name of the VOI
-        self.target_dose = cube.target_dose
+        self.target_dose = cube.target_dose  # optional target dose scaling factor
 
-        logger.info("Processing ROI '{:s}'...".format(self.name))
+        logger.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
 
-        self.ylabel = "Volume [%]"
+        self.ylabel = "Volume [%]"  # units on y-axis
+
+        self.x_is_relative = False  # relative or absolute x units
 
         if cube.type == 'DOS':  # DOS Cube
             # DOS cube data are stored in %%.
             if target_dose:
                 _tdose = 0.001 * target_dose
-                self.xlabel = "Dose [Gy]"
+                self.xlabel = "Dose [Gy]"  # units on x-axis
             elif self.target_dose > 0.0:
                 _tdose = 0.001 * self.target_dose
                 self.xlabel = "Dose [Gy]"
             else:
                 _tdose = 0.1
                 self.xlabel = "Dose [%]"
+                self.x_is_relative = True
             logger.debug("Target dose {}".format(_tdose))
             self.x *= _tdose
 
