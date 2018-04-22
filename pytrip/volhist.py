@@ -29,15 +29,18 @@ class VolHist:
     """
     Volume histogram class
     """
-    def __init__(self, cube, voi, target_dose=None):
+    def __init__(self, cube, voi=None, target_dose=None):
         """
-        :params Cube cube: either LET or DOSe cube
+        :params Cube cube: either LETCube, DosCube or similar object.
         :params Voi voi: a single voi (vdx.vois[i])
         :target_dose: set target_dose in [Gy]. Any target_dose in cube.target_dose will be ignored, if set.
         """
 
         self.cube_basename = cube.basename  # basename of the cube used for histogram
-        self.name = voi.name  # name of the VOI
+        if voi:
+            self.name = voi.name  # name of the VOI
+        else:
+            self.name = "(none)"
         self.target_dose = cube.target_dose  # optional target dose scaling factor
 
         logger.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
