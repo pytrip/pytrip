@@ -25,7 +25,7 @@ import logging
 import argparse
 
 import pytrip as pt
-from pytrip.util import volume_histogram
+from pytrip.volhist import VolHist
 
 import matplotlib
 
@@ -38,16 +38,18 @@ def main(args=sys.argv[1:]):
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("cube", help="Path to input cube. May also be a .dos or dosemlet.dos cube", type=str)
-    parser.add_argument("vdx", help="Path to .vdx file holding the structures", type=str)
-    parser.add_argument("rois", nargs="?", help="Comma-seperated list for ROIs to be analyzed. If not set, print list.",
+    parser.add_argument("cube", help="path to input cube. May also be a .dos or dosemlet.dos cube", type=str)
+    parser.add_argument("vdx", help="path to .vdx file holding the structures", type=str)
+    parser.add_argument("rois", nargs="?", help="comma-seperated list for ROIs to be analyzed. If not set, print list.",
                         type=str, default=None)
     parser.add_argument("-d", "--dose", type=float, dest='dose', metavar='dose',
-                        help="Taget dose in [Gy]", default=-1.0)
+                        help="target dose in [Gy] (if target_dose is unavailable in cube)", default=None)
     parser.add_argument("-o", "--output", type=str, dest='output', metavar='filename',
-                        help="Don't open GUI, save to filename instead.", default=None)
+                        help="don't open GUI, save figure to <filename> instead.", default=None)
+    parser.add_argument("-t", "--tofile", type=str, dest='tofile', metavar='filename',
+                        help="save histogram data to <filename>.", default=None)
     parser.add_argument("-l", "--legend", dest='legend', default=False, action='store_true',
-                        help="Print legend box")
+                        help="print legend box")
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     parsed_args = parser.parse_args(args)
@@ -65,6 +67,7 @@ def main(args=sys.argv[1:]):
     dose = parsed_args.dose
     legend = parsed_args.legend
     outfile = parsed_args.output
+    tofile = parsed_args.tofile
 
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
@@ -90,32 +93,25 @@ def main(args=sys.argv[1:]):
 
     rois = rois_arg.split(",")
 
-    if d.type == 'DOS':
-        if dose < 0.0:
-            plt.xlabel("Dose [%]")
-        else:
-            plt.xlabel("Dose [Gy]")
-    elif d.type == 'LET':
-        plt.xlabel("LET [keV/um]")
-    else:
-        plt.xlabel("")  # unknown data cube
-
     for roi in rois:
-        logger.info("Processing ROI '{:s}'...".format(roi))
         voi = v.get_voi_by_name(roi)
-        x, y = volume_histogram(d.cube, voi)
-        if d.type == 'DOS':
-            if dose < 0.0:
-                x = x * 0.1
-            else:
-                x = x * 0.001 * dose
+        vh = VolHist(d, voi, target_dose=dose)
 
-        plt.plot(x, y, label=roi)
+        plt.xlabel(vh.xlabel)
+        plt.ylabel(vh.ylabel)
+        plt.plot(vh.x, vh.y, label=vh.name)
 
     plt.ylabel("Volume [%]")
     plt.grid(True)
     if legend:
         plt.legend()
+
+    if tofile:
+        logger.info("Write {}".format(tofile))
+        f = open(tofile, "w+")
+        for _x, _y in zip(vh.x, vh.y):
+            f.write("{:.3f} {:.3f}\n".format(_x, _y))
+        f.close()
 
     if outfile:
         plt.savefig(outfile)
