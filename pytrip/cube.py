@@ -626,7 +626,6 @@ class Cube(object):
         if not has_ztable:
             self.slice_pos = [self.zoffset + i * self.slice_distance for i in range(self.slice_number)]
         self._set_format_str()
-        self._set_number_of_bytes()
 
     def _set_format_str(self):
         """Set format string according to byte_order.
@@ -650,17 +649,17 @@ class Cube(object):
             if self.num_bytes == 4:
                 self.format_str += "i"
                 self.pydata_type = np.int32
-        elif self.data_type == "float":
+        elif self.data_type in ["float", "double"]:
             if self.num_bytes == 4:
                 self.format_str += "f"
                 self.pydata_type = np.float32
-        elif self.data_type == "double":
             if self.num_bytes == 8:
                 self.format_str += "d"
                 self.pydata_type = np.double
         else:
             print("Format:", self.byte_order, self.data_type, self.num_bytes)
             raise IOError("Unsupported format.")
+        logger.debug("self.format_str: '{}'".format(self.format_str))
 
     # ######################  WRITING TRIP98 FILES #######################################
 
