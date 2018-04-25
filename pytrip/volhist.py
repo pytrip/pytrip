@@ -37,10 +37,11 @@ class VolHist:
         """
 
         self.cube_basename = cube.basename  # basename of the cube used for histogram
+
+        self.name = "(none)"
         if voi:
             self.name = voi.name  # name of the VOI
-        else:
-            self.name = "(none)"
+
         self.target_dose = cube.target_dose  # optional target dose scaling factor
 
         logger.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
@@ -70,6 +71,24 @@ class VolHist:
 
         else:  # Unknown Cube
             self.xlabel = "(unkown)"
+
+    def write(self, filename, header=False):
+        """
+        Writes the DVH data to disk, using filename.
+        :params str filename:
+        :params bool header: select if header will be included, prefixed with #. Default: False.
+        """
+
+        with open(filename, 'w') as file:
+            if header:
+                file.write("# Cube basename: {}\n".format(self.cube_basename))
+                if self.target_dose:
+                    file.write("# Cube target dose: {} [Gy]\n".format(self.target_dose))
+                file.write("# Voi name: {}\n".format(self.name))
+                file.write("# X-axis: {}\n".format(self.xlabel))
+                file.write("# Y-axis: {}\n".format(self.ylabel))
+            for i, _ in enumerate(self.x):
+                file.write("{:.3f} {:.3f}\n".format(self.x[i], self.y[i]))
 
     @staticmethod
     def volume_histogram(data_cube, voi=None, bins=256):

@@ -96,6 +96,7 @@ class DosCube(Cube):
         min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
         """
 
+        logger.warning("The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.")
         z_pos = 0  # z position
         voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)
@@ -145,6 +146,7 @@ class DosCube(Cube):
         """
         Save DHV for given VOI to the file.
         """
+        logger.warning("The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.")
         dvh_tuple = self.calculate_dvh(voi)
         if dvh_tuple is None:
             logger.warning("Voi {:s} outside the cube".format(voi.get_name()))

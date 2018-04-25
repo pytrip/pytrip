@@ -82,11 +82,16 @@ class TestDos(unittest.TestCase):
         vh = VolHist(c, v)
         self.assertIsNotNone(vh.x)
         self.assertIsNotNone(vh.y)
+        vh.write("foobar_0.dvh", header=True)
+        vh.write("foobar_1.dvh", header=False)
 
         logger.info("Calculating DVH simple for entire cube")
         vh = VolHist(c)
         self.assertIsNotNone(vh.x)
         self.assertIsNotNone(vh.y)
+        vh.write("foobar_2.dvh", header=True)
+        vh.write("foobar_3.dvh", header=False)
+
         # TODO: add some quantitative tests
 
     def test_dicom_plan(self):
