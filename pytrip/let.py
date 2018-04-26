@@ -19,10 +19,12 @@
 """
 This module provides the LETCube for handling LET data.
 """
-from pytrip.cube import Cube
-import pytriplib
+import warnings
 
 import numpy as np
+
+from pytrip.cube import Cube
+import pytriplib
 
 
 class LETCube(Cube):
@@ -66,6 +68,10 @@ class LETCube(Cube):
                   - max_lvh: array of LET values above 98%
                   - area: TODO - what is this?
         """
+        warnings.warn(
+            "The method calculate_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+            DeprecationWarning
+        )
         pos = 0
         size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)
@@ -84,7 +90,7 @@ class LETCube(Cube):
         return lvh, min_let, max_let, mean, area
 
     def write_lvh_to_file(self, voi, path):
-        """ Write the LET-volume historgram to a file.
+        """ Write the LET-volume histogram to a file.
 
         :param Voi voi: The volume of interest, n the form of a Voi object.
         :param str path: Full path of file to be written.

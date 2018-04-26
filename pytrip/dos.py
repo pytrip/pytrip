@@ -22,11 +22,12 @@ This module provides the DosCube class, which the user should use for handling p
 import os
 import logging
 import datetime
+import warnings
 
 import numpy as np
 
 try:
-    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
+    # as of version 1.0 pydicom package import has been renamed from dicom to pydicom
     from pydicom import uid
     from pydicom.dataset import Dataset, FileDataset
     from pydicom.sequence import Sequence
@@ -44,8 +45,6 @@ except ImportError:
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.cube import Cube
 import pytriplib
-
-logger = logging.getLogger(__name__)
 
 
 class DosCube(Cube):
@@ -96,6 +95,10 @@ class DosCube(Cube):
         min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
         """
 
+        warnings.warn(
+            "The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
+            DeprecationWarning
+        )
         z_pos = 0  # z position
         voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)
@@ -145,9 +148,13 @@ class DosCube(Cube):
         """
         Save DHV for given VOI to the file.
         """
+        warnings.warn(
+            "The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+            DeprecationWarning
+        )
         dvh_tuple = self.calculate_dvh(voi)
         if dvh_tuple is None:
-            logger.warning("Voi {:s} outside the cube".format(voi.get_name()))
+            logging.warning("Voi {:s} outside the cube".format(voi.get_name()))
         else:
             dvh, min_dose, max_dose, mean_dose, mean_volume = dvh_tuple
             np.savetxt(dvh, filename)
