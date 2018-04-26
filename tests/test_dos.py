@@ -82,16 +82,36 @@ class TestDos(unittest.TestCase):
         vh = VolHist(c, v)
         self.assertIsNotNone(vh.x)
         self.assertIsNotNone(vh.y)
-        vh.write("foobar_0.dvh", header=True)
-        vh.write("foobar_1.dvh", header=False)
+
+        outdir = tempfile.mkdtemp()
+        c.write_dicom(outdir)
+
+        f1 = os.path.join(outdir, "foobar_1.dvh")
+        vh.write(f1, header=True)
+        self.assertTrue(os.path.exists(f1))
+        self.assertGreater(os.path.getsize(f1, 0))
+
+        f2 = os.path.join(outdir, "foobar_2.dvh")
+        vh.write(f2, header=False)
+        self.assertTrue(os.path.exists(f2))
+        self.assertGreater(os.path.getsize(f2, 0))
 
         logger.info("Calculating DVH simple for entire cube")
         vh = VolHist(c)
         self.assertIsNotNone(vh.x)
         self.assertIsNotNone(vh.y)
-        vh.write("foobar_2.dvh", header=True)
-        vh.write("foobar_3.dvh", header=False)
 
+        f3 = os.path.join(outdir, "foobar_3.dvh")
+        vh.write(f3, header=True)
+        self.assertTrue(os.path.exists(f3))
+        self.assertGreater(os.path.getsize(f3, 0))
+
+        f4 = os.path.join(outdir, "foobar_4.dvh")
+        vh.write(f4, header=False)
+        self.assertTrue(os.path.exists(f4))
+        self.assertGreater(os.path.getsize(f4, 0))
+
+        shutil.rmtree(outdir)
         # TODO: add some quantitative tests
 
     def test_dicom_plan(self):

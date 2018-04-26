@@ -22,8 +22,6 @@ This module provides the volume histogram class.
 import logging
 import numpy as np
 
-logger = logging.getLogger(__name__)
-
 
 class VolHist:
     """
@@ -44,7 +42,7 @@ class VolHist:
 
         self.target_dose = cube.target_dose  # optional target dose scaling factor
 
-        logger.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
+        logging.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
 
         self.ylabel = "Volume [%]"  # units on y-axis
@@ -63,7 +61,7 @@ class VolHist:
                 _tdose = 0.1
                 self.xlabel = "Dose [%]"
                 self.x_is_relative = True
-            logger.debug("Target dose {}".format(_tdose))
+            logging.debug("Target dose {}".format(_tdose))
             self.x *= _tdose
 
         elif cube.type == 'LET':  # LET Cube
@@ -87,8 +85,8 @@ class VolHist:
                 file.write("# Voi name: {}\n".format(self.name))
                 file.write("# X-axis: {}\n".format(self.xlabel))
                 file.write("# Y-axis: {}\n".format(self.ylabel))
-            for i, _ in enumerate(self.x):
-                file.write("{:.3f} {:.3f}\n".format(self.x[i], self.y[i]))
+            for x,y in zip(self.x, self.y):
+                file.write("{:.3f} {:.3f}\n".format(x,y))
 
     @staticmethod
     def volume_histogram(data_cube, voi=None, bins=256):

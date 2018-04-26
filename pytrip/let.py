@@ -20,13 +20,12 @@
 This module provides the LETCube for handling LET data.
 """
 import logging
+import warnings
 
 import numpy as np
 
 from pytrip.cube import Cube
 import pytriplib
-
-logger = logging.getLogger(__name__)
 
 
 class LETCube(Cube):
@@ -70,7 +69,10 @@ class LETCube(Cube):
                   - max_lvh: array of LET values above 98%
                   - area: TODO - what is this?
         """
-        logger.warning("The method calculate_dvh() is deprecated, and is replaced with the pytrip.VolHist object.")
+        warnings.warn(
+            "The method calculate_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+            DeprecationWarning
+        )
         pos = 0
         size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)
