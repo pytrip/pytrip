@@ -89,12 +89,12 @@ class TestDos(unittest.TestCase):
         f1 = os.path.join(outdir, "foobar_1.dvh")
         vh.write(f1, header=True)
         self.assertTrue(os.path.exists(f1))
-        self.assertGreater(os.path.getsize(f1, 0))
+        self.assertGreater(os.path.getsize(f1), 0)
 
         f2 = os.path.join(outdir, "foobar_2.dvh")
         vh.write(f2, header=False)
         self.assertTrue(os.path.exists(f2))
-        self.assertGreater(os.path.getsize(f2, 0))
+        self.assertGreater(os.path.getsize(f2), 0)
 
         logger.info("Calculating DVH simple for entire cube")
         vh = VolHist(c)
@@ -104,12 +104,12 @@ class TestDos(unittest.TestCase):
         f3 = os.path.join(outdir, "foobar_3.dvh")
         vh.write(f3, header=True)
         self.assertTrue(os.path.exists(f3))
-        self.assertGreater(os.path.getsize(f3, 0))
+        self.assertGreater(os.path.getsize(f3), 0)
 
         f4 = os.path.join(outdir, "foobar_4.dvh")
         vh.write(f4, header=False)
         self.assertTrue(os.path.exists(f4))
-        self.assertGreater(os.path.getsize(f4, 0))
+        self.assertGreater(os.path.getsize(f4), 0)
 
         shutil.rmtree(outdir)
         # TODO: add some quantitative tests

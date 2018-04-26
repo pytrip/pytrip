@@ -85,8 +85,8 @@ class VolHist:
                 file.write("# Voi name: {}\n".format(self.name))
                 file.write("# X-axis: {}\n".format(self.xlabel))
                 file.write("# Y-axis: {}\n".format(self.ylabel))
-            for x,y in zip(self.x, self.y):
-                file.write("{:.3f} {:.3f}\n".format(x,y))
+            for x, y in zip(self.x, self.y):
+                file.write("{:.3f} {:.3f}\n".format(x, y))
 
     @staticmethod
     def volume_histogram(data_cube, voi=None, bins=256):

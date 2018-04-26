@@ -19,7 +19,6 @@
 """
 This module provides the LETCube for handling LET data.
 """
-import logging
 import warnings
 
 import numpy as np
@@ -91,7 +90,7 @@ class LETCube(Cube):
         return lvh, min_let, max_let, mean, area
 
     def write_lvh_to_file(self, voi, path):
-        """ Write the LET-volume historgram to a file.
+        """ Write the LET-volume histogram to a file.
 
         :param Voi voi: The volume of interest, n the form of a Voi object.
         :param str path: Full path of file to be written.
