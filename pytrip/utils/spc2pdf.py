@@ -51,6 +51,8 @@ def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("spc_file", help="location of input SPC file", type=argparse.FileType('r'))
     parser.add_argument("pdf_file", help="location of output PDF file", type=argparse.FileType('w'))
+    parser.add_argument('-d', '--depth', help="Plot fluence spectra at depths",
+                        type=float, nargs='+')
     parser.add_argument('-l', '--logscale', help="Enable fluence plotting on logarithmic scale", action='store_true')
     parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
                                                  'for list of possible options (default: gnuplot2)',
@@ -137,6 +139,31 @@ def main(args=sys.argv[1:]):
         pdf.savefig(fig)
         plt.close()
         logging.debug("Summary fluence vs depth plot saved")
+
+        if parsed_args.depth:
+            # then a spectrum plot at depths selected by user
+            for depth in parsed_args.depth:
+                fig, ax = plt.subplots()
+                ax.set_title("Energy spectrum at depth {} [cm]".format(depth))
+                ax.set_xlabel("Energy [MeV]")
+                ax.set_ylabel("Fluence [a.u.]")
+                if parsed_args.logscale:
+                    ax.set_yscale('log')
+                for z in z_uniq:
+                    z_data = data[data.z == z]  # this may cover depth only partially
+                    depth_step = data.depth[np.abs(data.depth - depth).argmin()]
+                    if z_data.fluence.any():
+                        m1 = (data.z == z)
+                        m2 = (data.depth == depth_step)
+                        m3 = m1 & m2
+                        energy_steps = data.energy[m3]
+                        fluence = data.fluence[m3]
+                        if np.any(m3):
+                            ax.plot(energy_steps, fluence, label="Z = {:d}, depth = {:3.3f} [cm]".format(z, depth_step))
+                plt.legend(loc=0)
+                pdf.savefig(fig)
+                plt.close()
+                logging.debug("Spectrum for depth {} saved".format(depth_step))
 
         # then couple of pages, each with heatmap plot of spectrum for given particle specie
         for z in z_uniq:
