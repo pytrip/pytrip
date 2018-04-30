@@ -66,7 +66,7 @@ def main(args=sys.argv[1:]):
 
     # get total number of entries in SPC object, needed to allocate memory for numpy array
     n = 0
-    for db in spc_object.data:
+    for db in sorted(spc_object.data, key=lambda x: x.depth):
         for sb in db.species:
             n += int(sb.ne)
     logging.info("Total number of entries in SPC file {}".format(n))
@@ -79,8 +79,8 @@ def main(args=sys.argv[1:]):
 
     # fill numpy array with spectral data, assuming that no references are used to store bin centers
     n = 0
-    for db in spc_object.data:
-        for sb in db.species:
+    for db in sorted(spc_object.data, key=lambda x: x.depth):
+        for sb in sorted(db.species, key=lambda y: y.z):
             data.depth[n:n + int(sb.ne)] = db.depth
             data.z[n:n + int(sb.ne)] = sb.z
             data.energy[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
@@ -95,10 +95,17 @@ def main(args=sys.argv[1:]):
     logging.info("Particle species Z: {}".format(z_uniq))
 
     depth_uniq = np.unique(data.depth)
-    logging.info("{} of depth steps from {} to {}".format(len(depth_uniq), depth_uniq.min(), depth_uniq.max()))
+    if np.unique(np.diff(depth_uniq)).size == 1:
+        logging.info("{} of depth steps from {} to {}".format(len(depth_uniq), depth_uniq.min(), depth_uniq.max()))
+    else:
+        logging.info("Depth steps {}".format(depth_uniq))
 
     energy_uniq = np.unique(data.energy)
-    logging.info("{} of depth energy bins from {} to {}".format(len(energy_uniq), energy_uniq.min(), energy_uniq.max()))
+    if np.unique(np.diff(energy_uniq)).size == 1:
+        logging.info("{} of depth energy bins from {} to {} (left edges)".format(
+            len(energy_uniq), energy_uniq.min(), energy_uniq.max()))
+    else:
+        logging.info("Energy steps {}".format(energy_uniq))
 
     # save multiple page PDF with plots
     with PdfPages(parsed_args.pdf_file.name) as pdf:
@@ -113,11 +120,13 @@ def main(args=sys.argv[1:]):
         if parsed_args.logscale:
             ax.set_yscale('log')
         for z in z_uniq:
-            z_data = data[data.z == z]
-            zlist = z_data.fluence.reshape(depth_uniq.size, energy_uniq.size).T
-            if zlist.any():
+            z_data = data[data.z == z]  # this may cover depth only partially
+            if z_data.fluence.any():
+                depth_steps = np.unique(data.depth[data.z == z])
+                energy_steps = np.unique(data.energy[data.z == z])
+                zlist = z_data.fluence.reshape(depth_steps.size, energy_steps.size).T
                 total_fluence = zlist.sum(axis=0)
-                ax.plot(depth_uniq, total_fluence, label="Z = {}".format(z))
+                ax.plot(depth_steps, total_fluence, label="Z = {}".format(z))
         plt.legend(loc=0)
         pdf.savefig(fig)
         plt.close()
@@ -126,8 +135,10 @@ def main(args=sys.argv[1:]):
         # then couple of pages, each with heatmap plot of spectrum for given particle specie
         for z in z_uniq:
             z_data = data[data.z == z]
-            zlist = z_data.fluence.reshape(depth_uniq.size, energy_uniq.size).T
-            if zlist.any():
+            if z_data.fluence.any():
+                depth_steps = np.unique(data.depth[data.z == z])
+                energy_steps = np.unique(data.energy[data.z == z])
+                zlist = z_data.fluence.reshape(depth_steps.size, energy_steps.size).T
                 if parsed_args.logscale:
                     norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
                 else:
@@ -136,9 +147,21 @@ def main(args=sys.argv[1:]):
                 ax.set_title("Spectrum for Z = {}".format(z))
                 ax.set_xlabel("Depth [cm]")
                 ax.set_ylabel("Energy [MeV]")
-                max_energy_nonzero_fluence = energy_uniq[zlist.mean(axis=1) > 0].max()
+                max_energy_nonzero_fluence = energy_steps[zlist.mean(axis=1) > 0].max()
                 ax.set_ylim(0, 1.2 * max_energy_nonzero_fluence)
-                im = ax.pcolorfast(depth_uniq, energy_uniq, zlist.clip, norm=norm, cmap=parsed_args.colormap)
+
+                # in case depth or energy steps form arithmetic progress, then pcolorfast expects
+                #   third argument (Z) to be of shape len(X) times len(Y)
+                # otherwise it expects
+                #   third argument (Z) to be of shape len(X)-1 times len(Y)-1
+                # here we check if latter is the case and add one element to X and Y sequences
+                depth_steps_widths = np.diff(depth_steps)
+                energy_steps_widths = np.diff(energy_steps)
+                if np.unique(depth_steps_widths).size > 1 or np.unique(energy_steps_widths).size > 1:
+                    depth_steps = np.append(depth_steps, depth_steps[-1] + depth_steps_widths.min())
+                    energy_steps = np.append(energy_steps, energy_steps[-1] + energy_steps_widths.min())
+
+                im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
                 cbar.set_label("Fluence [a.u.]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
