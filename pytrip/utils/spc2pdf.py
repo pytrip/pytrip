@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2018 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -26,20 +26,29 @@ import argparse
 
 import numpy as np
 
-import matplotlib.pyplot as plt
-from matplotlib import colors
-from matplotlib.backends.backend_pdf import PdfPages
-
 import pytrip as pt
 from pytrip import spc
 
 
 def main(args=sys.argv[1:]):
 
+    # there are some cases (i.e. Travis CI) when this script is run on systems without DISPLAY variable being set
+    # in such case matplotlib backend has to be explicitly specified
+    # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
+    import matplotlib
+    matplotlib.use('PDF')
+    import matplotlib.pyplot as plt
+    from matplotlib import colors
+    from matplotlib.backends.backend_pdf import PdfPages
+
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("spc_file", help="location of input SPC file", type=argparse.FileType('r'))
     parser.add_argument("pdf_file", help="location of output PDF file", type=argparse.FileType('w'))
+    parser.add_argument('-l', '--logscale', help="Enable fluence plotting on logarithmic scale", action='store_true')
+    parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
+                                                 'for list of possible options (default: gnuplot2)',
+                        default='gnuplot2', type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     parsed_args = parser.parse_args(args)
@@ -74,13 +83,14 @@ def main(args=sys.argv[1:]):
         for sb in db.species:
             data.depth[n:n + int(sb.ne)] = db.depth
             data.z[n:n + int(sb.ne)] = sb.z
-            data.energy[n:n + int(sb.ne)] = 0.5 * (sb.ebindata[:-1] + sb.ebindata[1:])  # bin centers
+            data.energy[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
             data.fluence[n:n + int(sb.ne)] = sb.histdata
             n += int(sb.ne)
 
     logging.debug("Temporary numpy array filled with data, size {}".format(data.size))
 
-    # find particle species, depth steps and energy bin centers
+    # find particle species, depth steps and energy bins
+    # TODO think of switching in the future to pandas dataframe with mutliple indexes
     z_uniq = np.unique(data.z)
     logging.info("Particle species Z: {}".format(z_uniq))
 
@@ -95,12 +105,13 @@ def main(args=sys.argv[1:]):
         logging.debug("Saving PDF file {}".format(parsed_args.pdf_file.name))
         plt.rc('text', usetex=False)
 
-        # first a summary plot of fluence vs depth, log scale on fluence (Y), several series corresponding to Z species
+        # first a summary plot of fluence vs depth, several series corresponding to Z species
         fig, ax = plt.subplots()
         ax.set_title("")
         ax.set_xlabel("Depth [cm]")
         ax.set_ylabel("Fluence [a.u.]")
-        ax.set_yscale('log')
+        if parsed_args.logscale:
+            ax.set_yscale('log')
         for z in z_uniq:
             z_data = data[data.z == z]
             zlist = z_data.fluence.reshape(depth_uniq.size, energy_uniq.size).T
@@ -117,14 +128,17 @@ def main(args=sys.argv[1:]):
             z_data = data[data.z == z]
             zlist = z_data.fluence.reshape(depth_uniq.size, energy_uniq.size).T
             if zlist.any():
-                norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
+                if parsed_args.logscale:
+                    norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
+                else:
+                    norm = colors.Normalize(vmin=0.0, vmax=zlist.max())
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum for Z = {}".format(z))
                 ax.set_xlabel("Depth [cm]")
                 ax.set_ylabel("Energy [MeV]")
                 max_energy_nonzero_fluence = energy_uniq[zlist.mean(axis=1) > 0].max()
                 ax.set_ylim(0, 1.2 * max_energy_nonzero_fluence)
-                im = ax.pcolorfast(depth_uniq, energy_uniq, zlist, norm=norm)
+                im = ax.pcolorfast(depth_uniq, energy_uniq, zlist.clip, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
                 cbar.set_label("Fluence [a.u.]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
