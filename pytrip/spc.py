@@ -471,7 +471,7 @@ class SPC(object):
             return payload
 
         # no 11, double; normalization for this depth step, usually =1.
-        if tag.code == SPCTagCode.NO_OF_DEPTH_STEPS.value:
+        if tag.code == SPCTagCode.DEPTH_STEP_NORMALIZATION.value:
             sdtype = ste + 'f' + str(tag.size)
             payload = np.fromfile(fd, count=cnt, dtype=np.dtype(sdtype))[0]
             # self.dsnorm = payload
