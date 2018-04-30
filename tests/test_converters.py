@@ -22,6 +22,7 @@ TODO: documentation here.
 import imghdr
 import unittest
 import os
+import sys
 import tempfile
 import glob
 import logging
@@ -184,7 +185,10 @@ class TestSpc2Pdf(unittest.TestCase):
         try:
             pytrip.utils.spc2pdf.main(["--version"])
         except SystemExit as e:
-            self.assertEqual(e.code, 0)
+            if sys.version_info[0] == 3 and sys.version_info[1] == 2:
+                self.assertEqual(e.code, 1)
+            else:
+                self.assertEqual(e.code, 0)
 
 
 class TestCubeSlicer(unittest.TestCase):
