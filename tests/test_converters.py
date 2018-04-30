@@ -183,12 +183,14 @@ class TestSpc2Pdf(unittest.TestCase):
             retcode = pytrip.utils.spc2pdf.main()
             self.assertEqual(retcode, 1)
         else:
-            from pytrip.utils import spc2pdf
+            # Some import hacking needed by Appveyor
+            from pytrip.utils import spc2pdf  # noqa F401
             self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
 
     def test_version(self):
         try:
-            from pytrip.utils import spc2pdf
+            # Some import hacking needed by Appveyor
+            from pytrip.utils import spc2pdf  # noqa F401
             pytrip.utils.spc2pdf.main(["--version"])
         except SystemExit as e:
             if sys.version_info[0] == 3 and sys.version_info[1] == 2:
