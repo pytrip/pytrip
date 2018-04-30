@@ -104,6 +104,8 @@ test_script:
   - rd /s /q build
 # install generated package
   - cd dist
+  - pip install -U "pip<10.0" # it looks that pip newer than 10.0 removes its API as used below
+  - pip -V
   - python -c "import os; import pip; pip.main(['install', os.listdir('.')[0]]);"
   - cd ..
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
