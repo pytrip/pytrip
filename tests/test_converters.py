@@ -179,7 +179,11 @@ class TestDicom2Trip(unittest.TestCase):
 
 class TestSpc2Pdf(unittest.TestCase):
     def test_check(self):
-        self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
+        if sys.version_info[0] == 3 and sys.version_info[1] == 2:
+            retcode = pytrip.utils.spc2pdf.main()
+            self.assertEqual(retcode, 1)
+        else:
+            self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
 
     def test_version(self):
         try:
