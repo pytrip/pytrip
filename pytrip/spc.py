@@ -27,6 +27,7 @@ http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98fmtspc.html
 
 import os
 from enum import Enum
+import logging
 import numpy as np
 
 
@@ -87,7 +88,7 @@ class SPC(object):
         self.data = []
 
     def read_spc(self):
-        print(self.filename)
+        logging.info("Reading {}".format(self.filename))
         self.read_data()
 
     def write_spc(self, filename=None):

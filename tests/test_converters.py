@@ -176,6 +176,17 @@ class TestDicom2Trip(unittest.TestCase):
             self.assertEqual(e.code, 0)
 
 
+class TestSpc2Pdf(unittest.TestCase):
+    def test_check(self):
+        self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
+
+    def test_version(self):
+        try:
+            pytrip.utils.spc2pdf.main(["--version"])
+        except SystemExit as e:
+            self.assertEqual(e.code, 0)
+
+
 class TestCubeSlicer(unittest.TestCase):
     def setUp(self):
         self.dir_path = os.path.join("tests", "res", "TST003")
