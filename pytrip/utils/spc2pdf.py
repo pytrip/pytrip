@@ -32,6 +32,12 @@ from pytrip import spc
 
 def main(args=sys.argv[1:]):
 
+    # matplotlib on python3.2 (which is already deprecated) won't handle this code
+    # it is not worthy to hack it for this particular piece of the code
+    if sys.version_info[0] == 3 and sys.version_info[1] == 2:
+        logging.error("Python 3.2 is not supported, please use other version")
+        return 1
+
     # there are some cases (i.e. Travis CI) when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
     # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
