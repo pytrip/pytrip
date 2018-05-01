@@ -22,6 +22,7 @@ TODO: documentation here.
 import imghdr
 import unittest
 import os
+import sys
 import tempfile
 import glob
 import logging
@@ -174,6 +175,28 @@ class TestDicom2Trip(unittest.TestCase):
             pytrip.utils.dicom2trip.main(["--version"])
         except SystemExit as e:
             self.assertEqual(e.code, 0)
+
+
+class TestSpc2Pdf(unittest.TestCase):
+    def test_check(self):
+        if sys.version_info[0] == 3 and sys.version_info[1] == 2:
+            retcode = pytrip.utils.spc2pdf.main()
+            self.assertEqual(retcode, 1)
+        else:
+            # Some import hacking needed by Appveyor
+            from pytrip.utils import spc2pdf  # noqa F401
+            self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
+
+    def test_version(self):
+        try:
+            # Some import hacking needed by Appveyor
+            from pytrip.utils import spc2pdf  # noqa F401
+            pytrip.utils.spc2pdf.main(["--version"])
+        except SystemExit as e:
+            if sys.version_info[0] == 3 and sys.version_info[1] == 2:
+                self.assertEqual(e.code, 1)
+            else:
+                self.assertEqual(e.code, 0)
 
 
 class TestCubeSlicer(unittest.TestCase):

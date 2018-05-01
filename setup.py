@@ -198,6 +198,7 @@ setuptools.setup(
             'bevlet2oer=pytrip.utils.bevlet2oer:main',
             'gd2dat=pytrip.utils.gd2dat:main',
             'gd2agr=pytrip.utils.gd2agr:main',
+            'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
     cmdclass=get_cmdclass(),
