@@ -57,11 +57,13 @@ before_test:
 
 test_script:
 # make wheel package
+  - python -m pip install wheel
   - python setup.py bdist_wheel
 # clean build directory
   - rd /s /q build
 # install generated package
-  - python -m pip install --force-reinstall --no-index --find-links=dist pymchelper
+  - python -m pip uninstall pytrip98
+  - python -m pip install --force-reinstall --no-index --find-links=dist pytrip98
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
 # exit in case of failure of a single test
 # exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
