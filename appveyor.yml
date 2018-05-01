@@ -63,7 +63,7 @@ test_script:
   - rd /s /q build
 # install generated package
   - rd /s /q pytrip
-  - python -m pip uninstall pytrip98
+  - python -m wheel install dist\pytrip98*whl
   - python -m pip install --upgrade -r requirements.txt
   - python -m pip install --no-index --find-links=dist pytrip98
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
