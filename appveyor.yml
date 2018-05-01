@@ -27,29 +27,34 @@ environment:
     - platform: x64
       PYTHON: "C:\\Python36-x64"
 init:
-# add Python interpreter to PATH variable
-  - set PATH=%PYTHON%;%PYTHON%\scripts;%PATH%
-# following this one: https://github.com/audreyr/cookiecutter/issues/599
-  - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
 # check python version
   - python -V
 # check 32 or 64 bit
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 
 install:
-# check pip version and upgrade it
-  - python -m pip -V
-  - pip install --upgrade pip --user
-  - python -m pip -V
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+  # Prepend Python to the PATH of this build
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+# check pip version
+  - pip -V
 # install usual requirements
-  - python -m pip install --upgrade -r tests/requirements-test.txt
-  - python -m pip install --upgrade -r requirements.txt
+  - pip install --upgrade -r tests/requirements-test.txt
+  - pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
 # check python and pip versions
   - python -V
-  - python -m pip -V
+  - pip -V
 
 before_test:
 # generate versioneer stuff
@@ -57,15 +62,15 @@ before_test:
 
 test_script:
 # make wheel package
-  - python -m pip install wheel
+  - pip install wheel
   - python setup.py bdist_wheel
 # clean build directory
   - rd /s /q build
-# install generated package
+# remove source directory, to be sure that we use only wheel package for testing
   - rd /s /q pytrip
-  - python -m wheel install dist\pytrip98*whl
-  - python -m pip install --upgrade -r requirements.txt
-  - python -m pip install --no-index --find-links=dist pytrip98
+  - del setup.py
+# install wheel package via pip, as we do not know the wheel filename in advance, we loop over all *.whl files in dist directory
+  - ps: Get-ChildItem -Path dist\ -Recurse -Include *.whl | foreach-object { echo $_ | Out-Host ; pip install $_}
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
 # exit in case of failure of a single test
 # exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
@@ -73,7 +78,6 @@ test_script:
 # deploy package
   - bash appveyor\deploy_package.sh
 
-# upload artifacts
-# disabling to save the space
+# upload artifacts, disabling to save the space
 #artifacts:
 #  - path: dist\*whl
