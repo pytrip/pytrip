@@ -54,9 +54,10 @@ def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("spc_file", help="location of input SPC file", type=argparse.FileType('r'))
     parser.add_argument("pdf_file", help="location of output PDF file", type=argparse.FileType('w'))
-    parser.add_argument('-d', '--depth', help="Plot fluence spectra at depths",
+    parser.add_argument('-d', '--depth', help="Plot spectra at depths",
                         type=float, nargs='+')
-    parser.add_argument('-l', '--logscale', help="Enable fluence plotting on logarithmic scale", action='store_true')
+    parser.add_argument('-l', '--logscale', help="Enable plotting particle number on logarithmic scale",
+                        action='store_true')
     parser.add_argument('-s', '--style', help="Line style", choices=['points', 'lines'], default='lines')
     parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
                                                  'for list of possible options (default: gnuplot2)',
@@ -144,7 +145,7 @@ def main(args=sys.argv[1:]):
         ax.set_title("Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(spc_object.peakpos,
                                                                                  spc_object.energy))
         ax.set_xlabel("Depth [cm]")
-        ax.set_ylabel("Number of particles [a.u.]")
+        ax.set_ylabel("Particle number / primary [(none)]")
         if parsed_args.logscale:
             ax.set_yscale('log')
         for z in z_uniq:
@@ -173,7 +174,7 @@ def main(args=sys.argv[1:]):
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
                 ax.set_xlabel("Energy [MeV/amu]")
-                ax.set_ylabel("Number of particles [1/MeV]")
+                ax.set_ylabel("Particle number / primary [1/MeV]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
                 for z in z_uniq:
@@ -225,12 +226,12 @@ def main(args=sys.argv[1:]):
 
                 im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
-                cbar.set_label("Number of particles [1/MeV]", rotation=270, verticalalignment='bottom')
+                cbar.set_label("Particle number / primary [1/MeV]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
                 plt.close()
-                logging.debug("Number of particles map for Z = {} saved".format(z))
+                logging.debug("Particle number / primary map for Z = {} saved".format(z))
             else:
-                logging.warning("Skipped generation of particles' number map for Z = {}, no data !".format(z))
+                logging.warning("Skipped generation of particle number map for Z = {}, no data !".format(z))
 
         # File metadata
         d = pdf.infodict()
