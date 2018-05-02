@@ -1,8 +1,5 @@
 # validation page for appveyor config: https://ci.appveyor.com/tools/validate-yaml
 
-# build Configuration, i.e. Debug, Release, etc.
-configuration: Release
-
 # we are not building Visual Studio project, so default build step is off
 build: off
 
@@ -11,103 +8,70 @@ environment:
   PYPIPASS:
     secure: Bq/BLSOSlZhPmHsWR1ML1A==
   PYPIUSER: grzanka
-
   matrix:
-#    # http://www.appveyor.com/docs/installed-software#python
+# skipping 32bits as tests there result in Appveyor memory problems
 #    - platform: x86
-#      PYTHON_ROOT: "C:\\Python27"
-#      PYTHON_VERSION: "2.7"
-#      MINICONDAPATH: "C:\\Miniconda"
+#      PYTHON: "C:\\Python27"
 
     - platform: x64
-      PYTHON_ROOT: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7"
-      MINICONDAPATH: "C:\\Miniconda-x64"
+      PYTHON: "C:\\Python27-x64"
 
-#   dropping Python 3.4 support for Windows, to get faster builds https://github.com/pytrip/pytrip/issues/267
 #    - platform: x86
-#      PYTHON_ROOT: "C:\\Python34"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3"
-#
-#    - platform: x64
-#      PYTHON_ROOT: "C:\\Python34-x64"
-#      PYTHON_VERSION: "3.4"
-#      MINICONDAPATH: "C:\\Miniconda3-x64"
-
-# Python3.5 needs VS 14.0 (2015)
-#    - platform: x86
-#      PYTHON_ROOT: "C:\\Python35"
-#      PYTHON_VERSION: "3.5"
-#      MINICONDAPATH: "C:\\Miniconda35"
-#      os: Visual Studio 2015
+#      PYTHON: "C:\\Python35"
 
     - platform: x64
-      PYTHON_ROOT: "C:\\Python35-x64"
-      PYTHON_VERSION: "3.5"
-      MINICONDAPATH: "C:\\Miniconda35-x64"
-      os: Visual Studio 2015
+      PYTHON: "C:\\Python35-x64"
 
-# Python3.6 needs VS 14.0 (2015)
-# memory problems on 32-bit Windows more and more visible https://github.com/pytrip/pytrip/issues/320, disabling
 #    - platform: x86
-#      PYTHON_ROOT: "C:\\Python36"
-#      PYTHON_VERSION: "3.6"
-#      MINICONDAPATH: "C:\\Miniconda36"
-#      os: Visual Studio 2015
+#      PYTHON: "C:\\Python36"
 
     - platform: x64
-      PYTHON_ROOT: "C:\\Python36-x64"
-      PYTHON_VERSION: "3.6"
-      MINICONDAPATH: "C:\\Miniconda36-x64"
-      os: Visual Studio 2015
-
+      PYTHON: "C:\\Python36-x64"
 init:
-# add Python interpreter to PATH variable
-  - set PATH=%PYTHON_ROOT%;%PYTHON_ROOT%\Scripts;%PATH%
-# add Miniconda to PATH variable
-  - set PATH=%MINICONDAPATH%\Scripts;%PATH%
-# following this one: https://github.com/audreyr/cookiecutter/issues/599
-  - "git config --system http.sslcainfo \"C:\\Program Files\\Git\\mingw64\\ssl\\certs\\ca-bundle.crt\""
 # check python version
   - python -V
 # check 32 or 64 bit
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 
 install:
-# tell miniconda to always follow default answers
-  - conda config --set always_yes yes --set changeps1 no
-# update miniconda
-  - conda update -q conda
-# create new conda workspace and activate it
-  - conda create -q --name python%PYTHON_VERSION% python=%PYTHON_VERSION%
-  - activate python%PYTHON_VERSION%
-# as scipy doesn't yet have wheels for windows, install it using conda
-  - conda install -q --name python%PYTHON_VERSION% "pytest"
+  # If there is a newer build queued for the same PR, cancel this one.
+  # The AppVeyor 'rollout builds' option is supposed to serve the same
+  # purpose but it is problematic because it tends to cancel builds pushed
+  # directly to master instead of just PR builds (or the converse).
+  # credits: JuliaLang developers.
+  - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
+        https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
+        Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
+          throw "There are newer queued builds for this pull request, failing early." }
+  # Prepend Python to the PATH of this build
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+# check pip version
+  - pip -V
 # install usual requirements
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"
   - python -c "import scipy as sp;print(sp.version.version)"
-# check python version
+# check python and pip versions
   - python -V
-# check 32 or 64 bit
-  - python -c "import struct;print(8 * struct.calcsize('P'))"
+  - pip -V
+
+before_test:
+# generate versioneer stuff
+  - python %PYTHON%\\scripts\\versioneer install
 
 test_script:
-# generate versioneer stuff
-  - python %MINICONDAPATH%/envs/python%PYTHON_VERSION%/Scripts/versioneer install
 # make wheel package
+  - pip install wheel
   - python setup.py bdist_wheel
 # clean build directory
   - rd /s /q build
-# install generated package
-  - cd dist
-  - python -m pip install -U "pip<10.0" # it looks that pip newer than 10.0 removes its API as used below
-  - pip -V
-  - python -c "import os; import pip; pip.main(['install', os.listdir('.')[0]]);"
-  - cd ..
+# remove source directory, to be sure that we use only wheel package for testing
+  - rd /s /q pytrip
+  - del setup.py
+# install wheel package via pip, as we do not know the wheel filename in advance, we loop over all *.whl files in dist directory
+  - ps: Get-ChildItem -Path dist\ -Recurse -Include *.whl | foreach-object { echo $_ | Out-Host ; pip install $_}
 # run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
 # exit in case of failure of a single test
 # exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
@@ -115,7 +79,6 @@ test_script:
 # deploy package
   - bash appveyor\deploy_package.sh
 
-# upload artifacts
-# disabling to save the space
+# upload artifacts, disabling to save the space
 #artifacts:
 #  - path: dist\*whl
