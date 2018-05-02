@@ -86,7 +86,11 @@ def main(args=sys.argv[1:]):
     # allocate empty numpy array to store SPC data
     data = np.recarray(
         shape=(int(n), ),
-        dtype=[('depth', np.float64), ('z', np.int8), ('energy', np.float64), ('fluence', np.float64)])
+        dtype=[('depth', np.float64),
+               ('z', np.int8),
+               ('energy_left_edge', np.float64),
+               ('energy_bin_width', np.float64),
+               ('fluence', np.float64)])
     logging.debug("Temporary numpy array to store SPC data has shape {}".format(data.shape))
 
     # fill numpy array with spectral data, assuming that no references are used to store bin centers
@@ -95,7 +99,8 @@ def main(args=sys.argv[1:]):
         for sb in sorted(db.species, key=lambda y: y.z):
             data.depth[n:n + int(sb.ne)] = db.depth
             data.z[n:n + int(sb.ne)] = sb.z
-            data.energy[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
+            data.energy_left_edge[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
+            data.energy_bin_width[n:n + int(sb.ne)] = np.diff(sb.ebindata)  # bin widths
             data.fluence[n:n + int(sb.ne)] = sb.histdata
             n += int(sb.ne)
 
@@ -112,7 +117,7 @@ def main(args=sys.argv[1:]):
     else:
         logging.info("Depth steps {}".format(depth_uniq))
 
-    energy_uniq = np.unique(data.energy)
+    energy_uniq = np.unique(data.energy_left_edge)
     if np.unique(np.diff(energy_uniq)).size == 1:
         logging.info("{} of depth energy bins from {} to {} (left edges)".format(
             len(energy_uniq), energy_uniq.min(), energy_uniq.max()))
@@ -145,10 +150,10 @@ def main(args=sys.argv[1:]):
         for z in z_uniq:
             z_data = data[data.z == z]  # this may cover depth only partially
             if z_data.fluence.any():
-                depth_steps = np.unique(data.depth[data.z == z])
-                energy_steps = np.unique(data.energy[data.z == z])
-                zlist = z_data.fluence.reshape(depth_steps.size, energy_steps.size).T
-                total_fluence = zlist.sum(axis=0)
+                depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
+                energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
+                zlist = z_data.fluence.reshape(depth_steps.size, energy_bin_widths.size).T
+                total_fluence = (zlist.T * energy_bin_widths).sum(axis=1)
                 ax.plot(depth_steps, total_fluence,
                         marker=marker, linestyle=linestyle, label="Z = {}".format(z))
         plt.legend(loc=0)
@@ -168,19 +173,17 @@ def main(args=sys.argv[1:]):
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
                 ax.set_xlabel("Energy [MeV/amu]")
-                ax.set_ylabel("Fluence [a.u.]")
+                ax.set_ylabel("Fluence [1/MeV]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
                 for z in z_uniq:
                     z_data = data[data.z == z]  # this may cover depth only partially
                     if z_data.fluence.any():
-                        m1 = (data.z == z)
-                        m2 = (data.depth == depth_step)
-                        m3 = m1 & m2
-                        energy_steps = data.energy[m3]
-                        fluence = data.fluence[m3]
-                        if np.any(m3):
-                            ax.plot(energy_steps, fluence,
+                        mask1 = (z_data.depth == depth_step)
+                        energy_bin_centers = z_data.energy_left_edge[mask1] + 0.5 * z_data.energy_bin_width[mask1]
+                        fluence = z_data.fluence[mask1]
+                        if np.any(mask1):
+                            ax.plot(energy_bin_centers, fluence,
                                     linestyle=linestyle,
                                     marker=marker,
                                     label="Z = {:d}".format(z))
@@ -193,9 +196,11 @@ def main(args=sys.argv[1:]):
         for z in z_uniq:
             z_data = data[data.z == z]
             if z_data.fluence.any():
-                depth_steps = np.unique(data.depth[data.z == z])
-                energy_steps = np.unique(data.energy[data.z == z])
-                zlist = z_data.fluence.reshape(depth_steps.size, energy_steps.size).T
+                depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
+                energy_left_edges = z_data.energy_left_edge[z_data.depth == z_data.depth[0]]
+                energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
+
+                zlist = z_data.fluence.reshape(depth_steps.size, energy_left_edges.size).T
                 if parsed_args.logscale:
                     norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
                 else:
@@ -204,7 +209,7 @@ def main(args=sys.argv[1:]):
                 ax.set_title("Spectrum for Z = {}".format(z))
                 ax.set_xlabel("Depth [cm]")
                 ax.set_ylabel("Energy [MeV]")
-                max_energy_nonzero_fluence = energy_steps[zlist.mean(axis=1) > 0].max()
+                max_energy_nonzero_fluence = energy_left_edges[zlist.mean(axis=1) > 0].max()
                 ax.set_ylim(0, 1.2 * max_energy_nonzero_fluence)
 
                 # in case depth or energy steps form arithmetic progress, then pcolorfast expects
@@ -212,15 +217,15 @@ def main(args=sys.argv[1:]):
                 # otherwise it expects
                 #   third argument (Z) to be of shape len(X)-1 times len(Y)-1
                 # here we check if latter is the case and add one element to X and Y sequences
+                energy_steps = energy_left_edges
                 depth_steps_widths = np.diff(depth_steps)
-                energy_steps_widths = np.diff(energy_steps)
-                if np.unique(depth_steps_widths).size > 1 or np.unique(energy_steps_widths).size > 1:
+                if np.unique(depth_steps_widths).size > 1 or np.unique(energy_bin_widths).size > 1:
                     depth_steps = np.append(depth_steps, depth_steps[-1] + depth_steps_widths.min())
-                    energy_steps = np.append(energy_steps, energy_steps[-1] + energy_steps_widths.min())
+                    energy_steps = np.append(energy_left_edges, energy_left_edges[-1] + energy_bin_widths[-1])
 
                 im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
-                cbar.set_label("Fluence [a.u.]", rotation=270, verticalalignment='bottom')
+                cbar.set_label("Fluence [1/MeV]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
                 plt.close()
                 logging.debug("Fluence map for Z = {} saved".format(z))
