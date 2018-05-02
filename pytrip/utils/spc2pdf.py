@@ -136,7 +136,8 @@ def main(args=sys.argv[1:]):
 
         # first a summary plot of fluence vs depth, several series corresponding to Z species
         fig, ax = plt.subplots()
-        ax.set_title("")
+        ax.set_title("Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(spc_object.peakpos,
+                                                                                 spc_object.energy))
         ax.set_xlabel("Depth [cm]")
         ax.set_ylabel("Fluence [a.u.]")
         if parsed_args.logscale:
@@ -160,17 +161,18 @@ def main(args=sys.argv[1:]):
             depths_to_plot = parsed_args.depth
             if any(math.isnan(d) for d in parsed_args.depth):
                 depths_to_plot = depth_uniq
-                logging.info("Ploting spectrum at all {} depths requested".format(len(depths_to_plot)))
-            for depth in depths_to_plot:
+                logging.info("Plotting spectrum at all {} depths requested".format(len(depths_to_plot)))
+            for depth_requested in depths_to_plot:
+                depth_step = data.depth[np.abs(data.depth - depth_requested).argmin()]
+                logging.info("Depth step {}, depth requested {}".format(depth_step, depth_requested))
                 fig, ax = plt.subplots()
-                ax.set_title("Energy spectrum at depth {:3.3f} [cm]".format(depth))
-                ax.set_xlabel("Energy [MeV]")
+                ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
+                ax.set_xlabel("Energy [MeV/amu]")
                 ax.set_ylabel("Fluence [a.u.]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
                 for z in z_uniq:
                     z_data = data[data.z == z]  # this may cover depth only partially
-                    depth_step = data.depth[np.abs(data.depth - depth).argmin()]
                     if z_data.fluence.any():
                         m1 = (data.z == z)
                         m2 = (data.depth == depth_step)
@@ -181,7 +183,7 @@ def main(args=sys.argv[1:]):
                             ax.plot(energy_steps, fluence,
                                     linestyle=linestyle,
                                     marker=marker,
-                                    label="Z = {:d}, depth = {:3.3f} [cm]".format(z, depth_step))
+                                    label="Z = {:d}".format(z))
                 plt.legend(loc=0)
                 pdf.savefig(fig)
                 plt.close()
