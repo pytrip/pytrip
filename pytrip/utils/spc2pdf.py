@@ -90,7 +90,7 @@ def main(args=sys.argv[1:]):
                ('z', np.int8),
                ('energy_left_edge', np.float64),
                ('energy_bin_width', np.float64),
-               ('fluence', np.float64)])
+               ('tot_part_number', np.float64)])
     logging.debug("Temporary numpy array to store SPC data has shape {}".format(data.shape))
 
     # fill numpy array with spectral data, assuming that no references are used to store bin centers
@@ -101,7 +101,7 @@ def main(args=sys.argv[1:]):
             data.z[n:n + int(sb.ne)] = sb.z
             data.energy_left_edge[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
             data.energy_bin_width[n:n + int(sb.ne)] = np.diff(sb.ebindata)  # bin widths
-            data.fluence[n:n + int(sb.ne)] = sb.histdata
+            data.tot_part_number[n:n + int(sb.ne)] = sb.histdata
             n += int(sb.ne)
 
     logging.debug("Temporary numpy array filled with data, size {}".format(data.size))
@@ -139,27 +139,27 @@ def main(args=sys.argv[1:]):
             linestyle = ''
             marker = '.'
 
-        # first a summary plot of fluence vs depth, several series corresponding to Z species
+        # first a summary plot of particle number vs depth, several series corresponding to Z species
         fig, ax = plt.subplots()
         ax.set_title("Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(spc_object.peakpos,
                                                                                  spc_object.energy))
         ax.set_xlabel("Depth [cm]")
-        ax.set_ylabel("Fluence [a.u.]")
+        ax.set_ylabel("Number of particles [a.u.]")
         if parsed_args.logscale:
             ax.set_yscale('log')
         for z in z_uniq:
             z_data = data[data.z == z]  # this may cover depth only partially
-            if z_data.fluence.any():
+            if z_data.tot_part_number.any():
                 depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
                 energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
-                zlist = z_data.fluence.reshape(depth_steps.size, energy_bin_widths.size).T
-                total_fluence = (zlist.T * energy_bin_widths).sum(axis=1)
-                ax.plot(depth_steps, total_fluence,
+                zlist = z_data.tot_part_number.reshape(depth_steps.size, energy_bin_widths.size).T
+                part_number_at_depth = (zlist.T * energy_bin_widths).sum(axis=1)
+                ax.plot(depth_steps, part_number_at_depth,
                         marker=marker, linestyle=linestyle, label="Z = {}".format(z))
         plt.legend(loc=0)
         pdf.savefig(fig)
         plt.close()
-        logging.debug("Summary fluence vs depth plot saved")
+        logging.debug("Summary particle number vs depth plot saved")
 
         if parsed_args.depth:
             # then a spectrum plot at depths selected by user
@@ -173,17 +173,17 @@ def main(args=sys.argv[1:]):
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
                 ax.set_xlabel("Energy [MeV/amu]")
-                ax.set_ylabel("Fluence [1/MeV]")
+                ax.set_ylabel("Number of particles [1/MeV]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
                 for z in z_uniq:
                     z_data = data[data.z == z]  # this may cover depth only partially
-                    if z_data.fluence.any():
+                    if z_data.tot_part_number.any():
                         mask1 = (z_data.depth == depth_step)
                         energy_bin_centers = z_data.energy_left_edge[mask1] + 0.5 * z_data.energy_bin_width[mask1]
-                        fluence = z_data.fluence[mask1]
+                        tot_part_number = z_data.tot_part_number[mask1]
                         if np.any(mask1):
-                            ax.plot(energy_bin_centers, fluence,
+                            ax.plot(energy_bin_centers, tot_part_number,
                                     linestyle=linestyle,
                                     marker=marker,
                                     label="Z = {:d}".format(z))
@@ -195,12 +195,12 @@ def main(args=sys.argv[1:]):
         # then couple of pages, each with heatmap plot of spectrum for given particle specie
         for z in z_uniq:
             z_data = data[data.z == z]
-            if z_data.fluence.any():
+            if z_data.tot_part_number.any():
                 depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
                 energy_left_edges = z_data.energy_left_edge[z_data.depth == z_data.depth[0]]
                 energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
 
-                zlist = z_data.fluence.reshape(depth_steps.size, energy_left_edges.size).T
+                zlist = z_data.tot_part_number.reshape(depth_steps.size, energy_left_edges.size).T
                 if parsed_args.logscale:
                     norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
                 else:
@@ -209,8 +209,8 @@ def main(args=sys.argv[1:]):
                 ax.set_title("Spectrum for Z = {}".format(z))
                 ax.set_xlabel("Depth [cm]")
                 ax.set_ylabel("Energy [MeV]")
-                max_energy_nonzero_fluence = energy_left_edges[zlist.mean(axis=1) > 0].max()
-                ax.set_ylim(0, 1.2 * max_energy_nonzero_fluence)
+                max_energy_nonzero_part_no = energy_left_edges[zlist.mean(axis=1) > 0].max()
+                ax.set_ylim(0, 1.2 * max_energy_nonzero_part_no)
 
                 # in case depth or energy steps form arithmetic progress, then pcolorfast expects
                 #   third argument (Z) to be of shape len(X) times len(Y)
@@ -225,12 +225,12 @@ def main(args=sys.argv[1:]):
 
                 im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
-                cbar.set_label("Fluence [1/MeV]", rotation=270, verticalalignment='bottom')
+                cbar.set_label("Number of particles [1/MeV]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
                 plt.close()
-                logging.debug("Fluence map for Z = {} saved".format(z))
+                logging.debug("Number of particles map for Z = {} saved".format(z))
             else:
-                logging.warning("Skipped generation of fluence map for Z = {}, no data !".format(z))
+                logging.warning("Skipped generation of particles' number map for Z = {}, no data !".format(z))
 
         # File metadata
         d = pdf.infodict()
