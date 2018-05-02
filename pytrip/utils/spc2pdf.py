@@ -20,9 +20,12 @@
 """
 Script for inspecting SPC files and producing PDF with summary plots
 """
-import sys
-import logging
 import argparse
+import datetime
+import getpass
+import logging
+import math
+import sys
 
 import numpy as np
 
@@ -54,6 +57,7 @@ def main(args=sys.argv[1:]):
     parser.add_argument('-d', '--depth', help="Plot fluence spectra at depths",
                         type=float, nargs='+')
     parser.add_argument('-l', '--logscale', help="Enable fluence plotting on logarithmic scale", action='store_true')
+    parser.add_argument('-s', '--style', help="Line style", choices=['points', 'lines'], default='lines')
     parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
                                                  'for list of possible options (default: gnuplot2)',
                         default='gnuplot2', type=str)
@@ -120,9 +124,20 @@ def main(args=sys.argv[1:]):
         logging.debug("Saving PDF file {}".format(parsed_args.pdf_file.name))
         plt.rc('text', usetex=False)
 
+        # choose linestyle
+        linestyle = '-'
+        marker = ''
+        if parsed_args.style == 'lines':
+            linestyle = '-'
+            marker = ''
+        elif parsed_args.style == 'points':
+            linestyle = ''
+            marker = '.'
+
         # first a summary plot of fluence vs depth, several series corresponding to Z species
         fig, ax = plt.subplots()
-        ax.set_title("")
+        ax.set_title("Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(spc_object.peakpos,
+                                                                                 spc_object.energy))
         ax.set_xlabel("Depth [cm]")
         ax.set_ylabel("Fluence [a.u.]")
         if parsed_args.logscale:
@@ -134,7 +149,8 @@ def main(args=sys.argv[1:]):
                 energy_steps = np.unique(data.energy[data.z == z])
                 zlist = z_data.fluence.reshape(depth_steps.size, energy_steps.size).T
                 total_fluence = zlist.sum(axis=0)
-                ax.plot(depth_steps, total_fluence, label="Z = {}".format(z))
+                ax.plot(depth_steps, total_fluence,
+                        marker=marker, linestyle=linestyle, label="Z = {}".format(z))
         plt.legend(loc=0)
         pdf.savefig(fig)
         plt.close()
@@ -142,16 +158,21 @@ def main(args=sys.argv[1:]):
 
         if parsed_args.depth:
             # then a spectrum plot at depths selected by user
-            for depth in parsed_args.depth:
+            depths_to_plot = parsed_args.depth
+            if any(math.isnan(d) for d in parsed_args.depth):
+                depths_to_plot = depth_uniq
+                logging.info("Plotting spectrum at all {} depths requested".format(len(depths_to_plot)))
+            for depth_requested in depths_to_plot:
+                depth_step = data.depth[np.abs(data.depth - depth_requested).argmin()]
+                logging.info("Depth step {}, depth requested {}".format(depth_step, depth_requested))
                 fig, ax = plt.subplots()
-                ax.set_title("Energy spectrum at depth {} [cm]".format(depth))
-                ax.set_xlabel("Energy [MeV]")
+                ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
+                ax.set_xlabel("Energy [MeV/amu]")
                 ax.set_ylabel("Fluence [a.u.]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
                 for z in z_uniq:
                     z_data = data[data.z == z]  # this may cover depth only partially
-                    depth_step = data.depth[np.abs(data.depth - depth).argmin()]
                     if z_data.fluence.any():
                         m1 = (data.z == z)
                         m2 = (data.depth == depth_step)
@@ -159,7 +180,10 @@ def main(args=sys.argv[1:]):
                         energy_steps = data.energy[m3]
                         fluence = data.fluence[m3]
                         if np.any(m3):
-                            ax.plot(energy_steps, fluence, label="Z = {:d}, depth = {:3.3f} [cm]".format(z, depth_step))
+                            ax.plot(energy_steps, fluence,
+                                    linestyle=linestyle,
+                                    marker=marker,
+                                    label="Z = {:d}".format(z))
                 plt.legend(loc=0)
                 pdf.savefig(fig)
                 plt.close()
@@ -202,6 +226,16 @@ def main(args=sys.argv[1:]):
                 logging.debug("Fluence map for Z = {} saved".format(z))
             else:
                 logging.warning("Skipped generation of fluence map for Z = {}, no data !".format(z))
+
+        # File metadata
+        d = pdf.infodict()
+        d['Title'] = 'SPC summary for {}'.format(parsed_args.spc_file.name)
+        d['Author'] = 'User {}'.format(getpass.getuser())
+        d['Subject'] = '{}'.format(" ".join(sys.argv))
+        d['Keywords'] = 'pytrip, spc'
+        d['Creator'] = 'pytrip98 {}'.format(pt.__version__)
+        d['CreationDate'] = datetime.datetime.today()
+        d['ModDate'] = datetime.datetime.today()
 
     logging.info("Done")
     return 0
