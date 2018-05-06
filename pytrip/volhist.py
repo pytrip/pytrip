@@ -33,14 +33,12 @@ class VolHist:
         :params Voi voi: a single voi (vdx.vois[i])
         :target_dose: set target_dose in [Gy]. Any target_dose in cube.target_dose will be ignored, if set.
         """
-
+        self.target_dose = target_dose
         self.cube_basename = cube.basename  # basename of the cube used for histogram
 
         self.name = "(none)"
         if voi:
             self.name = voi.name  # name of the VOI
-
-        self.target_dose = cube.target_dose  # optional target dose scaling factor
 
         logging.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
@@ -50,12 +48,14 @@ class VolHist:
         self.x_is_relative = False  # relative or absolute x units
 
         if cube.type == 'DOS':  # DOS Cube
+            if not target_dose:
+                target_dose = cube.target_dose  # optional target dose scaling factor
             # DOS cube data are stored in %%.
             if target_dose:
                 _tdose = 0.001 * target_dose
                 self.xlabel = "Dose [Gy]"  # units on x-axis
-            elif self.target_dose > 0.0:
-                _tdose = 0.001 * self.target_dose
+            elif target_dose > 0.0:
+                _tdose = 0.001 * target_dose
                 self.xlabel = "Dose [Gy]"
             else:
                 _tdose = 0.1
@@ -63,6 +63,8 @@ class VolHist:
                 self.x_is_relative = True
             logging.debug("Target dose {}".format(_tdose))
             self.x *= _tdose
+
+            self.target_dose = target_dose
 
         elif cube.type == 'LET':  # LET Cube
             self.xlabel = "LET [keV/um]"
