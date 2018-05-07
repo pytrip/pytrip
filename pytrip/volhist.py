@@ -20,6 +20,7 @@
 This module provides the volume histogram class.
 """
 import logging
+import warnings
 import numpy as np
 
 
@@ -115,9 +116,10 @@ class VolHist:
             mask = (vcube.cube == 1000)
 
         if True not in mask:
-            logging.warning("Given VOI has no extend and contains no voxels.")
-            x = np.arange(100)
-            y = np.zeros(100)
+            warnings.warn("Given VOI has no extend and contains no voxels.",
+                          UserWarning)
+            x = np.arange(100, dtype=np.float64)
+            y = np.zeros(100, dtype=np.float64)
             return x, y
 
         _xrange = (0.0, data_cube.max() * 1.1)

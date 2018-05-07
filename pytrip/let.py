@@ -49,6 +49,7 @@ class LETCube(Cube):
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
+        self.type = "LET"
         self.let_type = None
 
     def get_max(self):
