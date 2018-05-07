@@ -37,6 +37,7 @@ class VolHist:
         """
         self.target_dose = target_dose
         self.cube_basename = cube.basename  # basename of the cube used for histogram
+        self.x_is_relative = False  # relative or absolute x units
 
         self.name = "(none)"
         if voi:
@@ -45,9 +46,12 @@ class VolHist:
         logging.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
 
-        self.ylabel = "Volume [%]"  # units on y-axis
+        if not self.x or not self.y:
+            self.xlabel = "(no data)"
+            self.ylabel = "(no data)"
+            return
 
-        self.x_is_relative = False  # relative or absolute x units
+        self.ylabel = "Volume [%]"  # units on y-axis
 
         if cube.type == 'DOS':  # DOS Cube
             if not target_dose:
@@ -114,11 +118,10 @@ class VolHist:
         else:
             vcube = voi.get_voi_cube()
             mask = (vcube.cube == 1000)
-
-        if not mask.any():
-            warnings.warn("Given VOI has no extend and contains no voxels.",
-                          UserWarning)
-            return None, None
+            if not mask.any():
+                warnings.warn("Given VOI has no extend and contains no voxels.",
+                              UserWarning)
+                return None, None
 
         _xrange = (0.0, data_cube.max() * 1.1)
         _hist, x = np.histogram(data_cube[mask], bins=bins, range=_xrange)
