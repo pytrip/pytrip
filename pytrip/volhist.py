@@ -27,6 +27,7 @@ class VolHist:
     """
     Volume histogram class
     """
+
     def __init__(self, cube, voi=None, target_dose=None):
         """
         :params Cube cube: either LETCube, DosCube or similar object.
@@ -101,6 +102,8 @@ class VolHist:
 
         If VOI is not given, it will calculate the histogram for the entire dose cube.
 
+        If VOI is a point or has no contents, all y values are set to 0.
+
         Providing voi will slow down this function a lot, so if in a loop, it is recommended to do masking
         i.e. only provide Dos.cube[mask] instead.
         """
@@ -110,6 +113,12 @@ class VolHist:
         else:
             vcube = voi.get_voi_cube()
             mask = (vcube.cube == 1000)
+
+        if True not in mask:
+            logging.warning("Given VOI has no extend and contains no voxels.")
+            x = np.arange(100)
+            y = np.zeros(100)
+            return x, y
 
         _xrange = (0.0, data_cube.max() * 1.1)
         _hist, x = np.histogram(data_cube[mask], bins=bins, range=_xrange)
