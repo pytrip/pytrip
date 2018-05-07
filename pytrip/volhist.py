@@ -46,7 +46,7 @@ class VolHist:
         logging.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
 
-        if not self.x or not self.y:
+        if not self.x.any() or not self.y.any():
             self.xlabel = "(no data)"
             self.ylabel = "(no data)"
             return
