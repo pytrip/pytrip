@@ -115,12 +115,10 @@ class VolHist:
             vcube = voi.get_voi_cube()
             mask = (vcube.cube == 1000)
 
-        if True not in mask:
+        if not mask.any():
             warnings.warn("Given VOI has no extend and contains no voxels.",
                           UserWarning)
-            x = np.arange(100, dtype=np.float64)
-            y = np.zeros(100, dtype=np.float64)
-            return x, y
+            return None, None
 
         _xrange = (0.0, data_cube.max() * 1.1)
         _hist, x = np.histogram(data_cube[mask], bins=bins, range=_xrange)
