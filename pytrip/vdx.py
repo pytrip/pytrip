@@ -1139,6 +1139,7 @@ class Slice:
     """ The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+
     def __init__(self, cube=None):
         self.cube = cube
         self.contour = []
@@ -1315,7 +1316,11 @@ class Slice:
         for i, cnt in enumerate(self.contour):
             out += "contour %d\n" % i
             out += "internal false\n"
-            out += "number_of_points %d\n" % (cnt.number_of_points() + 1)
+
+            if cnt.number_of_points() == 1:  # Handle POIs
+                out += "number_of_points {:d}\n".format(cnt.number_of_points())
+            else:  # Handle ROIs
+                out += "number_of_points {:d}\n".format(cnt.number_of_points() + 1)
             out += cnt.vdx_string()
             out += "\n"
         return out
@@ -1358,6 +1363,7 @@ class Slice:
 class Contour:
     """ Class for handling single Contours.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
