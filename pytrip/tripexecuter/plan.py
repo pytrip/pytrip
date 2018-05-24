@@ -531,6 +531,8 @@ class Plan(object):
         # TODO: sanity check numbers
         opt += " geps({:.2e})".format(self.geps)
         opt += " eps({:.2e})".format(self.eps)
+        opt += "iter({:d})".format(self.iterations)
+
         return [opt]
 
     def _make_exec_output(self, basename, fields):
