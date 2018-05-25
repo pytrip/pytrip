@@ -135,7 +135,7 @@ class Cube(object):
             # unique for each CT slice
             self._ct_sop_instance_uid = uid.generate_uid(prefix=None)
 
-            self.z_table = False  # list of slice#,pos(mm),thickness(mm),tilt
+            self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
 
     def __add__(self, other):
         """ Overload + operator
@@ -559,52 +559,52 @@ class Cube(object):
         i = 0
         self.header_set = True
         content = content.split('\n')
-        has_ztable = False
+        self.z_table = False
         while i < len(content):
-            if re.match("version", content[i]) is not None:
+            if re.match("version", content[i]):
                 self.version = content[i].split()[1]
-            if re.match("modality", content[i]) is not None:
+            if re.match("modality", content[i]):
                 self.modality = content[i].split()[1]
-            if re.match("created_by", content[i]) is not None:
+            if re.match("created_by", content[i]):
                 self.created_by = content[i].replace("created_by ", "", 1)
                 self.created_by = self.created_by.rstrip()
-            if re.match("creation_info", content[i]) is not None:
+            if re.match("creation_info", content[i]):
                 self.creation_info = content[i].replace("creation_info ", "", 1)
                 self.creation_info = self.creation_info.rstrip()
-            if re.match("primary_view", content[i]) is not None:
+            if re.match("primary_view", content[i]):
                 self.primary_view = content[i].split()[1]
-            if re.match("data_type", content[i]) is not None:
+            if re.match("data_type", content[i]):
                 self.data_type = content[i].split()[1]
-            if re.match("num_bytes", content[i]) is not None:
+            if re.match("num_bytes", content[i]):
                 self.num_bytes = int(content[i].split()[1])
-            if re.match("byte_order", content[i]) is not None:
+            if re.match("byte_order", content[i]):
                 self.byte_order = content[i].split()[1]
-            if re.match("patient_name", content[i]) is not None:
+            if re.match("patient_name", content[i]):
                 self.patient_name = content[i].split()[1]
-            if re.match("slice_dimension", content[i]) is not None:
+            if re.match("slice_dimension", content[i]):
                 self.slice_dimension = int(content[i].split()[1])
-            if re.match("pixel_size", content[i]) is not None:
+            if re.match("pixel_size", content[i]):
                 self.pixel_size = float(content[i].split()[1])
-            if re.match("slice_distance", content[i]) is not None:
+            if re.match("slice_distance", content[i]):
                 self.slice_distance = float(content[i].split()[1])
                 self.slice_thickness = float(content[i].split()[1])  # TRiP format only. See #342
-            if re.match("slice_number", content[i]) is not None:
+            if re.match("slice_number", content[i]):
                 self.slice_number = int(content[i].split()[1])
-            if re.match("xoffset", content[i]) is not None:
+            if re.match("xoffset", content[i]):
                 self.xoffset = int(content[i].split()[1])
-            if re.match("yoffset", content[i]) is not None:
+            if re.match("yoffset", content[i]):
                 self.yoffset = int(content[i].split()[1])
-            if re.match("zoffset", content[i]) is not None:
+            if re.match("zoffset", content[i]):
                 self.zoffset = int(content[i].split()[1])
-            if re.match("dimx", content[i]) is not None:
+            if re.match("dimx", content[i]):
                 self.dimx = int(content[i].split()[1])
-            if re.match("dimy", content[i]) is not None:
+            if re.match("dimy", content[i]):
                 self.dimy = int(content[i].split()[1])
-            if re.match("dimz", content[i]) is not None:
+            if re.match("dimz", content[i]):
                 self.dimz = int(content[i].split()[1])
-            if re.match("slice_no", content[i]) is not None:
+            if re.match("slice_no", content[i]):
                 self.slice_pos = [float(j) for j in range(self.slice_number)]
-                has_ztable = True
+                self.z_table = True
                 i += 1
                 for j in range(self.slice_number):
                     self.slice_pos[j] = float(content[i].split()[1])
@@ -623,7 +623,7 @@ class Cube(object):
         # Note:
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
-        if not has_ztable:
+        if not self.z_table:
             self.slice_pos = [self.zoffset + i * self.slice_distance for i in range(self.slice_number)]
         self._set_format_str()
 
@@ -739,8 +739,8 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += "{:3d}{:16.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
-                                                                       self.slice_thickness, 0)  # 0 gantry tilt
+                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
+                                                                          self.slice_thickness, 0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
@@ -799,8 +799,8 @@ class Cube(object):
         self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
         self.dimz = len(dcm["images"])
-        self.z_table = True
         self._set_z_table_from_dicom(dcm)
+        self.z_table = True
 
         # Fix for bug #342
         # TODO: slice_distance should probably be a list of distances,
