@@ -143,8 +143,8 @@ class VdxCube:
         self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
         self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
-        if hasattr(dcm, 'ROIContours'):
-            _contours = dcm.ROIContours
+        if hasattr(dcm, 'ROIContours'):   # deprecated
+            _contours = dcm.ROIContours   # deprecated
         elif hasattr(dcm, 'ROIContourSequence'):
             _contours = dcm.ROIContourSequence
         else:
@@ -153,8 +153,8 @@ class VdxCube:
 
         for i, item in enumerate(_contours):
             if structure_ids is None or item.RefdROINumber in structure_ids:
-                if hasattr(dcm, "RTROIObservations"):
-                    _roi = dcm.RTROIObservations[i]
+                if hasattr(dcm, "RTROIObservations"):   # deprecated
+                    _roi = dcm.RTROIObservations[i]     # deprecated
                 elif hasattr(dcm, "RTROIObservationsSequence"):
                     _roi = dcm.RTROIObservationsSequence[i]
                 else:
@@ -1016,8 +1016,8 @@ class Voi:
         _roi_type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(_roi_type_name)
         self.color = data.ROIDisplayColor
-        if "Contours" in data.dir():
-            contours = data.Contours
+        if "Contours" in data.dir():   # deprecated
+            contours = data.Contours   # deprecated
         else:
             contours = data.ContourSequence
         for i, contour in enumerate(contours):
@@ -1026,17 +1026,23 @@ class Voi:
             _z_pos = contour.ContourData[2]
 
             # if we have a new z_position, add a new slice object to self.slices
-            if _z_pos not in [i.get_position() for i in self.slices]:
+            if _z_pos not in [_slice.get_position() for _slice in self.slices]:
                 logger.debug("Append new slice at z_position {:f} to slices list:".format(_z_pos))
                 sl = Slice(cube=self.cube)
-                sl.add_dicom_contour(contour)
-                # TODO: check on con.ContourGeometricType = 'CLOSED_PLANAR'
-                # so far we simply assume all contours from DICOM are closed.
-                if sl.contour[-1].number_of_points() > 3:
-                    sl.contour[-1].contour_closed = True
-                else:
-                    sl.contour[-1].contour_closed = False
                 self.slices.append(sl)
+            else:
+                # lookup proper slice (just to be sure, should the contours come in random order)
+                sl = self.get_slice_at_pos(_z_pos)
+
+            # add the contour data to this slice
+            sl.add_dicom_contour(contour)
+            # TODO: check on con.ContourGeometricType = 'CLOSED_PLANAR'
+            # so far we simply assume all contours from DICOM are closed.
+            if sl.contours[-1].number_of_points() > 3:
+                sl.contours[-1].contour_closed = True
+            else:
+                sl.contours[-1].contour_closed = False
+
         self._sort_slices()
 
     def vdx_string(self):
@@ -1142,7 +1148,7 @@ class Slice:
 
     def __init__(self, cube=None):
         self.cube = cube
-        self.contour = []
+        self.contours = []  # list of contours in this slice
 
         # the slice positions are recorded, however the thickness
         # may be smaller than just the distance between two slices.
@@ -1156,7 +1162,7 @@ class Slice:
 
         :param Contour contour: the contour to be added.
         """
-        self.contour.append(contour)
+        self.contours.append(contour)
 
     def add_dicom_contour(self, dcm):
         """ Adds a Dicom CONTOUR to the existing list of contours in this Slice class.
@@ -1166,25 +1172,25 @@ class Slice:
 
         # do not apply any offset here, since everything is written in real world coordinates.
         _offset = [0.0, 0.0, 0.0]
-        self.contour.append(
+        self.contours.append(
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
                     self.cube))
         # add the slice position to slice_in_frame which is needed later for sorting.
-        self.slice_in_frame = self.contour[-1].contour[0][2]
+        self.slice_in_frame = self.contours[-1].contour[0][2]
 
     def get_position(self):
         """
         :returns: the position of this slice in [mm] including zoffset
         """
-        if len(self.contour) == 0:
+        if len(self.contours) == 0:
             return None
-        return self.contour[0].contour[0][2]
+        return self.contours[0].contour[0][2]
 
     def get_intersections(self, pos):
         """ (TODO: needs documentation)
         """
         intersections = []
-        for c in self.contour:
+        for c in self.contours:
             intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
@@ -1195,7 +1201,7 @@ class Slice:
         """
         tot_area = 0.0
         center_pos = np.array([0.0, 0.0, 0.0])
-        for contour in self.contour:
+        for contour in self.contours:
             center, area = contour.calculate_center()
             tot_area += area
             center_pos += area * center
@@ -1239,7 +1245,7 @@ class Slice:
                 self.add_contour(c)
             elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 break
-            elif len(self.contour) >= number_of_contours:
+            elif len(self.contours) >= number_of_contours:
                 break
             i += 1
         return i - 1
@@ -1290,7 +1296,7 @@ class Slice:
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
 
         contour_list = []
-        for item in self.contour:
+        for item in self.contours:
             con = Dataset()
             contour = []
             for p in item.contour:
@@ -1313,7 +1319,7 @@ class Slice:
         :returns: a list of str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
-        for i, cnt in enumerate(self.contour):
+        for i, cnt in enumerate(self.contours):
             out += "contour %d\n" % i
             out += "internal false\n"
 
@@ -1329,32 +1335,32 @@ class Slice:
         """
         :returns: number of contours found in this Slice object.
         """
-        return len(self.contour)
+        return len(self.contours)
 
     def concat_contour(self):
         """ Concat all contours in this Slice object to a single contour.
         """
-        for i in range(len(self.contour) - 1, 0, -1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].concat()
+        for i in range(len(self.contours) - 1, 0, -1):
+            self.contours[0].push(self.contours[i])
+            self.contours.pop(i)
+        self.contours[0].concat()
 
     def remove_inner_contours(self):
         """ Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
         """
-        for i in range(len(self.contour) - 1, 0, -1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].remove_inner_contours()
+        for i in range(len(self.contours) - 1, 0, -1):
+            self.contours[0].push(self.contours[i])
+            self.contours.pop(i)
+        self.contours[0].remove_inner_contours()
 
     def get_min_max(self):
         """ Set self.temp_min and self.temp_max if they dont exist.
 
         :returns: minimum and maximum x y coordinates in Voi.
         """
-        temp_min, temp_max = self.contour[0].get_min_max()
-        for i in range(1, len(self.contour)):
-            min1, max1 = self.contour[i].get_min_max()
+        temp_min, temp_max = self.contours[0].get_min_max()
+        for i in range(1, len(self.contours)):
+            min1, max1 = self.contours[i].get_min_max()
             temp_min = pytrip.res.point.min_list(temp_min, min1)
             temp_max = pytrip.res.point.max_list(temp_max, max1)
         return temp_min, temp_max
