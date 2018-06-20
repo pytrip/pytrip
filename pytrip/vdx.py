@@ -82,7 +82,11 @@ class VdxCube:
     >>> v = pt.VdxCube(c)
     >>> v.read("tests/res/TST003/tst003000.vdx")
     """
+
     def __init__(self, cube=None):
+        """
+        :param cube: CtxCube type object
+        """
         self.vois = []
         self.cube = cube
         self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
@@ -143,9 +147,7 @@ class VdxCube:
         self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
         self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
-        if hasattr(dcm, 'ROIContours'):   # deprecated
-            _contours = dcm.ROIContours   # deprecated
-        elif hasattr(dcm, 'ROIContourSequence'):
+        if hasattr(dcm, 'ROIContourSequence'):
             _contours = dcm.ROIContourSequence
         else:
             logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
@@ -153,9 +155,7 @@ class VdxCube:
 
         for i, item in enumerate(_contours):
             if structure_ids is None or item.RefdROINumber in structure_ids:
-                if hasattr(dcm, "RTROIObservations"):   # deprecated
-                    _roi = dcm.RTROIObservations[i]     # deprecated
-                elif hasattr(dcm, "RTROIObservationsSequence"):
+                if hasattr(dcm, "RTROIObservationsSequence"):
                     _roi = dcm.RTROIObservationsSequence[i]
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
@@ -686,7 +686,7 @@ class Voi:
         self.concat_contour()
         data = []
         for sl in self.slices:
-            data.extend(sl.contour[0].contour)
+            data.extend(sl.contours[0].contour)
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
@@ -706,7 +706,7 @@ class Voi:
         self.concat_contour()
 
         for sl in self.slices:  # TODO: should be sorted
-            contour = sl.contour[0].contour
+            contour = sl.contours[0].contour
             p = {}
             for x in contour:
                 p[x[0], x[1], x[2]] = []
@@ -715,7 +715,7 @@ class Voi:
         last_contour = None
 
         for i, sl in enumerate(self.slices):
-            contour = sl.contour[0].contour
+            contour = sl.contours[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
                 next_contour = self.slices[i + 1].contour[0].contour
@@ -857,7 +857,8 @@ class Voi:
         return roi
 
     def create_dicom_contour_data(self, i):
-        """ Based on self.slices, DICOM contours are generated for the DICOM ROI.
+        """
+        Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
         :returns: Dicom ROI_CONTOURS
         """
@@ -878,7 +879,8 @@ class Voi:
         return roi_contours
 
     def _sort_slices(self):
-        """ Sorts all slices stored in self for increasing z.
+        """
+        Sorts all slices stored in self for increasing z.
         This is needed for displaying Saggital and Coronal view.
         """
         # slice_in_frame is only given by VDX, and these are also the only frames which need to be sorted
@@ -889,8 +891,10 @@ class Voi:
             self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
     def read_vdx_old(self, content, i):
-        """ Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
+        """
+        Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
         VDX format 1.2.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -935,8 +939,10 @@ class Voi:
         return i - 1
 
     def read_vdx(self, content, i):
-        """ Reads a single VOI from Voxelplan .vdx data from 'content'.
-        Format 2.0
+        """
+        Reads a single VOI from Voxelplan .vdx data from 'content'.
+        VDX format version 2.0
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1034,11 +1040,25 @@ class Voi:
                 # lookup proper slice (just to be sure, should the contours come in random order)
                 sl = self.get_slice_at_pos(_z_pos)
 
-            # add the contour data to this slice
+            # append the contour data to the contour list of this slice
             sl.add_dicom_contour(contour)
-            # TODO: check on con.ContourGeometricType = 'CLOSED_PLANAR'
-            # so far we simply assume all contours from DICOM are closed.
-            if sl.contours[-1].number_of_points() > 3:
+
+            # 'CLOSED_PLANAR' indicates that the last point shall be connected to the first point,
+            # where the first point is not repeated in the Contour Data.
+            #
+            # 'POINT' indicates that the contour is a single point, defining a specific location of significance.
+            #
+            # 'OPEN_PLANAR' indicates that the last vertex shall not be connected to the first point,
+            # and that all points in Contour Data (3006,0050) shall be coplanar.
+            #
+            # 'OPEN_NONPLANAR' indicates that the last vertex shall not be connected to the first point,
+            # and that the points in Contour Data (3006,0050) may be non-coplanar.
+            # This can be used to represent objects best described by a single, possibly non-coplanar curve,
+            # such as a brachytherapy applicator.
+            #
+            # Reference: https://www.dabsoft.ch/dicom/3/C.8.8.6.1/
+
+            if contour.ContourGeometricType == 'CLOSED_PLANAR':
                 sl.contours[-1].contour_closed = True
             else:
                 sl.contours[-1].contour_closed = False
@@ -1243,6 +1263,7 @@ class Slice:
                 c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
+                # TODO: not sure if multiple contours for the same ROI/VOI are allowed in VDX format.
             elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 break
             elif len(self.contours) >= number_of_contours:
@@ -1279,7 +1300,10 @@ class Slice:
         return i
 
     def create_dicom_contours(self, dcmcube):
-        """ Creates and returns a list of Dicom CONTOUR objects from self.
+        """
+        Creates and returns a list of Dicom CONTOUR objects from self.
+
+        :param dcmcube: TODO write me
         """
 
         # in order to get DICOM readable by Eclipse we need to connect each contour with CT slice
@@ -1367,13 +1391,14 @@ class Slice:
 
 
 class Contour:
-    """ Class for handling single Contours.
+    """
+    Class for handling single Contours.
     """
 
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
-        self.contour = contour
+        self.contour = contour  # TODO: consider renaming this to 'data' or 'contour_data'
         # contour_closed: if set to True, the last point in the contour will be repeated when writing VDX files.
         self.contour_closed = False
 
@@ -1526,8 +1551,8 @@ class Contour:
 
         if self.cube is None:
             _pixel_size = 1.0
-            logger.warning("Reading contour data in .vdx in 1.2 format: no CTX cube associated," +
-                           " setting pixel_size to 1.0.")
+            _warn = "Reading contour data in .vdx in 1.2 format: no CTX cube associated, setting pixel_size to 1.0."
+            logger.warning(_warn)
         else:
             _pixel_size = self.cube.pixel_size
 
