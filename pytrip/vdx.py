@@ -914,7 +914,7 @@ class Voi:
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
-                    for cont1 in s.contour:
+                    for cont1 in s.contours:
                         for cont2 in cont1.contour:
                             _slice_number = int(cont2[2])
                             # bound checking
