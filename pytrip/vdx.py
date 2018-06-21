@@ -159,6 +159,7 @@ class VdxCube:
                 if hasattr(dcm, "RTROIObservationsSequence"):
                     _roi_observation = dcm.RTROIObservationsSequence[i]
                     # _roi_name = dcm.RTROIObservationsSequence[i].ROIObservationLabel  # OPTIONAL by DICOM
+                    # kept for future use.
 
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
@@ -1039,10 +1040,10 @@ class Voi:
 
         :param roi_obs: dcm['rtss'].RTROIObservationsSequence[i]
         :param roi_cont: dcm['rtss'].ROIContourSequence[i]
+        :param roi_name: the name of this ROI.
         """
 
         if not hasattr(roi_cont, "ContourSequence"):
-
             logger.warning("No DICOM (3006,0050) Contour Data found in "
                            "(3006,0039) ROIContourSequence[] for ROI:'{}'".format(roi_name))
             return
