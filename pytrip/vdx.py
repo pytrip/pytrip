@@ -27,6 +27,7 @@ import os
 import copy
 from math import pi, sqrt
 import logging
+import warnings
 from functools import cmp_to_key
 
 import numpy as np
@@ -177,6 +178,16 @@ class VdxCube:
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
+        """
+        :returns: a list of available voi names.
+        :warning: deprecated method, use voi_names() instead.
+        """
+        warnings.warn("Call to deprecated method get_voi_names(). Use voi_names() instead.",
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        return self.voi_names()
+
+    def voi_names(self):
         """
         :returns: a list of available voi names.
         """
@@ -1031,10 +1042,8 @@ class Voi:
         _roi_type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(_roi_type_name)
         self.color = data.ROIDisplayColor
-        if "Contours" in data.dir():   # deprecated
-            contours = data.Contours   # deprecated
-        else:
-            contours = data.ContourSequence
+
+        contours = data.ContourSequence
         for i, contour in enumerate(contours):
 
             # get current slice position

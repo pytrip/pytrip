@@ -83,7 +83,7 @@ def main(args=sys.argv[1:]):
     v = pt.VdxCube(d)
     v.read(path_vdx)
 
-    vois = v.get_voi_names()
+    vois = v.voi_names()
 
     if not rois_arg:
         print("Available ROIs:")

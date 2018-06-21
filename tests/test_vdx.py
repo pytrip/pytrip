@@ -49,11 +49,11 @@ class TestVdx(unittest.TestCase):
         logger.info("Adding VDX from path " + self.vdx)
         v.read(self.vdx)
 
-        logger.info("Checking len of get_voi_names")
-        self.assertEqual(len(v.get_voi_names()), 2)
+        logger.info("Checking len of voi_names")
+        self.assertEqual(len(v.voi_names()), 2)
 
-        logger.info("Checking get_voi_names")
-        self.assertEqual(v.get_voi_names(), ['target', 'voi_empty'])
+        logger.info("Checking voi_names")
+        self.assertEqual(v.voi_names(), ['target', 'voi_empty'])
 
         logger.info("Checking number of vois")
         self.assertEqual(v.number_of_vois(), 2)
@@ -184,8 +184,8 @@ class TestVdx(unittest.TestCase):
         self.assertEqual(s_max[2], 18.0)
         self.assertEqual(s_min[2], 3.0)
 
-        logger.info("Test of Voi get_2d_slice method (sagital)")
-        s2 = v.get_2d_slice(plane=pt.Voi.sagital, depth=10.0)
+        logger.info("Test of Voi get_2d_slice method (sagittal)")
+        s2 = v.get_2d_slice(plane=pt.Voi.sagittal, depth=10.0)
         self.assertIsNotNone(s2)
 
         logger.info("Test of Voi get_2d_slice method (coronal)")
