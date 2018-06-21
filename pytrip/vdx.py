@@ -644,21 +644,30 @@ class Voi:
             pass
         return voi
 
-    def get_voi_cube(self):
+    def get_voi_cube(self, level=1000, recalc=False):
         """
         This method returns a DosCube object with value 1000 in each voxel within the Voi and zeros elsewhere.
         It can be used as a mask, for selecting certain voxels.
         The function may take some time to execute the first invocation, but is faster for subsequent calls,
         due to caching.
 
-        :returns: a DosCube object which holds the value 1000 in those voxels which are inside the Voi.
+        :param level: Level which will be set to every voxel which is inside VOI. 1000 by default.
+        :param recalc: force recalculation (avoid caching)
+        :returns: a DosCube object which holds the value <level> in those voxels which are inside the Voi.
         """
-        if hasattr(self, "voi_cube"):  # caching: checks if class has voi_cube attribute
-            # TODO: add parameter as argument to this function. Note, this needs to be compatible with
-            # caching the cube. E.g. the method might be called twice with different arguments.
-            return self.voi_cube
+        # caching: checks if class has voi_cube attribute
+        # this is needed for speedup.
+
+        if not recalc and hasattr(self, "voi_cube"):
+            _max = self.voi_cube.max()
+            _max_inv = 1 / _max
+            if _max == level:
+                return self.voi_cube
+            else:
+                return self.voi_cube * _max_inv * level
+
         self.voi_cube = DosCube(self.cube)
-        self.voi_cube.mask_by_voi_all(self, 1000)
+        self.voi_cube.mask_by_voi_all(self, level)
         return self.voi_cube
 
     def add_slice(self, slice):
@@ -1103,12 +1112,19 @@ class Voi:
         return out
 
     def get_row_intersections(self, pos):
-        """ (TODO: Documentation needed)
         """
-        slice = self.get_slice_at_pos(pos[2])
-        if slice is None:
+        For a given postion pos, returns a sorted list of x-coordinates where the y-coordinate intersects the contours.
+
+        :param pos: a 3D position in the form [x,y,z] (mm)
+        :returns: a sorted list of all x coordinates of all contours intersecting with the contours.
+
+        TODO: could be made static
+        TODO: could be made private
+        """
+        _slice = self.get_slice_at_pos(pos[2])
+        if _slice is None:
             return None
-        return np.sort(slice.get_intersections(pos))
+        return np.sort(_slice.get_intersections(pos))
 
     def get_slice_at_pos(self, z):
         """
@@ -1207,7 +1223,17 @@ class Slice:
         return self.contours[0].contour[0][2]
 
     def get_intersections(self, pos):
-        """ (TODO: needs documentation)
+        """
+        For a given position <pos>, return a list of x-coordinates intersecting where the pos.y intersects all contours
+        found in this slice.
+
+        :params pos: a position in the form [x,y]
+        :returns: a list of x-coordinates intersecting the y-coordinate found in pos[1].
+
+        :warning: method name may change.
+        TODO: rename this method. It could possibly be merged with get_x_intersections.
+        TODO: could be made static
+        TODO: could be made private
         """
         intersections = []
         for c in self.contours:
