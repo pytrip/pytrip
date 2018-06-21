@@ -273,6 +273,8 @@ class Cube(object):
         :param Voi voi: the volume of interest
         :param int preset: value to be assigned to the voxels within the contour.
         :param data_type: numpy data type, default is np.int16
+
+        TODO: this needs some faster implementation.
         """
         data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
         if preset != 0:

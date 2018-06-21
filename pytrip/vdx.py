@@ -738,7 +738,7 @@ class Voi:
             contour = sl.contours[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[i + 1].contour[0].contour
+                next_contour = self.slices[i + 1].contours[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -759,7 +759,8 @@ class Voi:
         self.points = points
 
     def get_2d_projection_on_basis(self, basis, offset=None):
-        """ (TODO: Documentation)
+        """
+        (TODO: Documentation)
         """
         a = np.array(basis[0])
         b = np.array(basis[1])
@@ -780,7 +781,8 @@ class Voi:
         return product
 
     def get_2d_slice(self, plane, depth):
-        """ Gets a 2d Slice object from the contour in either sagittal or coronal plane.
+        """
+        Gets a 2d Slice object from the contour in either sagittal or coronal plane.
         Contours will be concatenated.
 
         :param int plane: either self.sagittal or self.coronal
@@ -793,10 +795,10 @@ class Voi:
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -811,7 +813,8 @@ class Voi:
         return s
 
     def define_colors(self):
-        """ Creates a list of default colours [R,G,B] in self.colours.
+        """
+        Creates a list of default colours [R,G,B] in self.colours.
         """
         self.colors = []
         self.colors.append([0, 0, 255])
@@ -822,7 +825,8 @@ class Voi:
         self.colors.append([255, 255, 0])
 
     def calculate_center(self):
-        """ Calculates the center of gravity for the VOI.
+        """
+        Calculates the center of gravity for the VOI.
 
         :returns: A numpy array[x,y,z] with positions in [mm]
         """
@@ -1056,7 +1060,7 @@ class Voi:
                 self.slices.append(sl)
             else:
                 # lookup proper slice (just to be sure, should the contours come in random order)
-                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(self, _z_pos))
+                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(self.name, _z_pos))
                 sl = self.get_slice_at_pos(_z_pos)
 
             # append the contour data to the contour list of this slice
@@ -1194,7 +1198,8 @@ class Voi:
 
 
 class Slice:
-    """ The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
+    """
+    The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
 
@@ -1275,8 +1280,10 @@ class Slice:
             return center_pos, tot_area
 
     def read_vdx(self, content, i):
-        """ Reads a single Slice from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Slice from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1316,8 +1323,10 @@ class Slice:
         return i - 1
 
     def read_vdx_old(self, content, i):
-        """ Reads a single Slice from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Slice from Voxelplan .vdx data from 'content'.
         VDX format 1.2.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1406,7 +1415,8 @@ class Slice:
         return len(self.contours)
 
     def concat_contour(self):
-        """ Concat all contours in this Slice object to a single contour.
+        """
+        Concat all contours in this Slice object to a single contour.
         """
         for i in range(len(self.contours) - 1, 0, -1):
             self.contours[0].push(self.contours[i])
@@ -1414,7 +1424,8 @@ class Slice:
         self.contours[0].concat()
 
     def remove_inner_contours(self):
-        """ Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
+        """
+        Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
         """
         for i in range(len(self.contours) - 1, 0, -1):
             self.contours[0].push(self.contours[i])
@@ -1422,7 +1433,8 @@ class Slice:
         self.contours[0].remove_inner_contours()
 
     def get_min_max(self):
-        """ Set self.temp_min and self.temp_max if they dont exist.
+        """
+        Set self.temp_min and self.temp_max if they dont exist.
 
         :returns: minimum and maximum x y coordinates in Voi.
         """
@@ -1450,7 +1462,8 @@ class Contour:
         self.contour_closed = False
 
     def push(self, contour):
-        """ Push a contour on the contour stack.
+        """
+        Push a contour on the contour stack.
 
         :param Contour contour: a Contour object.
         """
@@ -1461,7 +1474,8 @@ class Contour:
         self.add_child(contour)
 
     def calculate_center(self):
-        """ Calculate the center for a single contour, and the area of a contour in 3 dimensions.
+        """
+        Calculate the center for a single contour, and the area of a contour in 3 dimensions.
 
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
@@ -1529,7 +1543,8 @@ class Contour:
         return out
 
     def read_vdx(self, content, i):
-        """ Reads a single Contour from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Contour from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
 
        Note:
@@ -1588,7 +1603,8 @@ class Contour:
         return i - 1
 
     def read_vdx_old(self, slice_number, xy_line):
-        """ Reads a single Contour from Voxelplan .vdx data from 'content' and appends it to self.contour data
+        """
+        Reads a single Contour from Voxelplan .vdx data from 'content' and appends it to self.contour data
         VDX format 1.2.
 
         See also notes in read_vdx(), regarding the length of a contour.
@@ -1652,7 +1668,8 @@ class Contour:
         return False
 
     def print_child(self, level):
-        """ Print child to stdout.
+        """
+        Print child to stdout.
 
         :param int level: (TODO: needs documentation)
         """
@@ -1668,7 +1685,8 @@ class Contour:
         return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
-        """ In case of multiple contours in the same slice, this method will concat them to a single contour.
+        """
+        In case of multiple contours in the same slice, this method will concat them to a single contour.
         This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
@@ -1702,7 +1720,8 @@ class Contour:
             self.children[i].children = []
 
     def _merge(self, contour):
-        """ Merge two contours into a single one.
+        """
+        Merge two contours into a single one.
         """
         if len(self.contour) == 0:
             self.contour = contour.contour

@@ -149,7 +149,7 @@ class TestVdx(unittest.TestCase):
         dicom_cont = s.create_dicom_contours(v.cube.create_dicom())
         self.assertEqual(len(dicom_cont), 1)
 
-        contour = s.contour[0]
+        contour = s.contours[0]
 
         logger.info("Checking Contour calculate_center method")
         center, area = contour.calculate_center()

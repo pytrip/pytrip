@@ -38,7 +38,7 @@ my_ctx.read(ctx_path)
 # load VOIs
 my_vdx = pt.VdxCube(my_ctx)  # my_vdx is the object which will hold all volumes of interest and the meta information
 my_vdx.read(vdx_path)  # load the .vdx file
-print(my_vdx.get_voi_names())  # show us all VOIs found in the .vdx file
+print(my_vdx.voi_names())  # show us all VOIs found in the .vdx file
 
 # Select the requested VOI from the VdxCube object
 target_voi = my_vdx.get_voi_by_name(my_target_voi)
