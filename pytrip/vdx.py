@@ -1036,7 +1036,7 @@ class Voi:
         :param info: (not used)
         :param Dicom data: Dicom ROI object which contains the contours.
         """
-        if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
+        if "ContourSequence" not in data.dir():
             return
 
         _roi_type_name = info.RTROIInterpretedType
@@ -1051,11 +1051,12 @@ class Voi:
 
             # if we have a new z_position, add a new slice object to self.slices
             if _z_pos not in [_slice.get_position() for _slice in self.slices]:
-                logger.debug("Append new slice at z_position {:f} to slices list:".format(_z_pos))
+                logger.debug("VOI {}: Append new slice at z = {:f} cm to slices list:".format(self.name, _z_pos))
                 sl = Slice(cube=self.cube)
                 self.slices.append(sl)
             else:
                 # lookup proper slice (just to be sure, should the contours come in random order)
+                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(self, _z_pos))
                 sl = self.get_slice_at_pos(_z_pos)
 
             # append the contour data to the contour list of this slice
@@ -1076,7 +1077,13 @@ class Voi:
             #
             # Reference: https://www.dabsoft.ch/dicom/3/C.8.8.6.1/
 
-            if contour.ContourGeometricType == 'CLOSED_PLANAR':
+            # Apparently DICOM may have single points as contours which can be marked as either POINT or CLOSED_PLANAR.
+            # Here, we will let any contour which is less than 3 points be an open contour per definition.
+            # example a CLOSED_PLANAR point:
+            # SLICERRT: pinnacle3-9.9-phantom-imrt
+            # - ROIContourSequence[2].ContourSequence[16].ContourGeometricType
+
+            if contour.NumberOfContourPoints > 2 and contour.ContourGeometricType == 'CLOSED_PLANAR':
                 sl.contours[-1].contour_closed = True
             else:
                 sl.contours[-1].contour_closed = False
@@ -1233,8 +1240,8 @@ class Slice:
 
     def get_intersections(self, pos):
         """
-        For a given position <pos>, return a list of x-coordinates intersecting where the pos.y intersects all contours
-        found in this slice.
+        For a given position <pos>, return a list of x-coordinates intersecting where the pos.y intersects all
+        closed contours found in this slice.
 
         :params pos: a position in the form [x,y]
         :returns: a list of x-coordinates intersecting the y-coordinate found in pos[1].
@@ -1246,7 +1253,9 @@ class Slice:
         """
         intersections = []
         for c in self.contours:
-            intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
+            # do not include open contours.
+            if c.contour_closed:
+                intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
     def calculate_center(self):
@@ -1428,6 +1437,9 @@ class Slice:
 class Contour:
     """
     Class for handling single Contours.
+    The contour class holds a list of points self.contour = [[x0,y0,z0], [x1,y1,z1], ... [xn, yn, zn]] in millimeters.
+    A contour can also be a single point (POI).
+    A contour may be open or closed.
     """
 
     def __init__(self, contour, cube=None):
@@ -1529,6 +1541,7 @@ class Contour:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+        self.contour_closed = False
         set_point = False
         points = 0
         j = 0
@@ -1583,6 +1596,7 @@ class Contour:
         :params slice_number: list of numbers (as characters) with slice number
         :params xy_line: list of numbers (as characters) representing X and Y coordinates of a contour
         """
+        self.contour_closed = False
 
         if self.cube is None:
             _pixel_size = 1.0
