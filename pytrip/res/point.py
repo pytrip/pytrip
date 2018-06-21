@@ -110,13 +110,25 @@ def get_area_contour(polygon):
 
 
 def get_x_intersection(y, polygon):
+    """
+    For a given 2D polygon, return a list of x-coordinates which crosses a given y.
+    The 2D polygon is assumed closed, but the last point should not be repeated.
+
+    :param float y: a given y coordinate
+    :param polygon: a list of points, in the form [[x0,y0], [x1,y1], ...  [xn,yn]]
+
+    :returns: a list of x coordinates.
+    """
     intersections = []
     x1 = polygon[0][0]
     y1 = polygon[0][1]
     n = len(polygon)
+
+    # walk along all sides of the 2D polygon
     for i in range(n + 1):
-        x2 = polygon[i % n][0]
+        x2 = polygon[i % n][0]  # modulus operator will make last point to 0, i.e. start index.
         y2 = polygon[i % n][1]
+        # test if y is between y1 and y2
         if y > min(y1, y2):
             if y <= max(y1, y2):
                 x = (x2 - x1) / (y2 - y1) * (y - y1) + x1

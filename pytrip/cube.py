@@ -273,17 +273,25 @@ class Cube(object):
         :param Voi voi: the volume of interest
         :param int preset: value to be assigned to the voxels within the contour.
         :param data_type: numpy data type, default is np.int16
+
+        TODO: this needs some faster implementation.
         """
         data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
         if preset != 0:
             for i_z in range(self.dimz):
                 for i_y in range(self.dimy):
+                    # For a line along y, figure out how many contour intersections there are,
+                    # then check how many intersections there are with x < than current point.
+                    # If the number is odd, then the point is inside the VOI.
+                    # If the number is even, then the point is outisde the VOI.
+                    # This algorithm also works with multiple disconnected contours.
                     intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
                     if intersection is None:
                         break
                     if len(intersection) > 0:
                         k = 0
                         for i_x in range(self.dimx):
+                            # count the number of intersections k along y, where intersection_x < current x position
                             if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
                                 k += 1
                                 if k >= len(intersection):
@@ -624,7 +632,7 @@ class Cube(object):
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
         if not self.z_table:
-            self.slice_pos = [self.zoffset + i * self.slice_distance for i in range(self.slice_number)]
+            self.slice_pos = [self.zoffset + _i * self.slice_distance for _i in range(self.slice_number)]
         self._set_format_str()
 
     def _set_format_str(self):

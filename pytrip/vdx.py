@@ -27,6 +27,7 @@ import os
 import copy
 from math import pi, sqrt
 import logging
+import warnings
 from functools import cmp_to_key
 
 import numpy as np
@@ -82,7 +83,11 @@ class VdxCube:
     >>> v = pt.VdxCube(c)
     >>> v.read("tests/res/TST003/tst003000.vdx")
     """
+
     def __init__(self, cube=None):
+        """
+        :param cube: CtxCube type object
+        """
         self.vois = []
         self.cube = cube
         self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
@@ -143,9 +148,7 @@ class VdxCube:
         self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
         self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
-        if hasattr(dcm, 'ROIContours'):
-            _contours = dcm.ROIContours
-        elif hasattr(dcm, 'ROIContourSequence'):
+        if hasattr(dcm, 'ROIContourSequence'):
             _contours = dcm.ROIContourSequence
         else:
             logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
@@ -153,9 +156,7 @@ class VdxCube:
 
         for i, item in enumerate(_contours):
             if structure_ids is None or item.RefdROINumber in structure_ids:
-                if hasattr(dcm, "RTROIObservations"):
-                    _roi = dcm.RTROIObservations[i]
-                elif hasattr(dcm, "RTROIObservationsSequence"):
+                if hasattr(dcm, "RTROIObservationsSequence"):
                     _roi = dcm.RTROIObservationsSequence[i]
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
@@ -177,6 +178,16 @@ class VdxCube:
                 self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
+        """
+        :returns: a list of available voi names.
+        :warning: deprecated method, use voi_names() instead.
+        """
+        warnings.warn("Call to deprecated method get_voi_names(). Use voi_names() instead.",
+                      category=DeprecationWarning,
+                      stacklevel=2)
+        return self.voi_names()
+
+    def voi_names(self):
         """
         :returns: a list of available voi names.
         """
@@ -644,21 +655,30 @@ class Voi:
             pass
         return voi
 
-    def get_voi_cube(self):
+    def get_voi_cube(self, level=1000, recalc=False):
         """
         This method returns a DosCube object with value 1000 in each voxel within the Voi and zeros elsewhere.
         It can be used as a mask, for selecting certain voxels.
         The function may take some time to execute the first invocation, but is faster for subsequent calls,
         due to caching.
 
-        :returns: a DosCube object which holds the value 1000 in those voxels which are inside the Voi.
+        :param level: Level which will be set to every voxel which is inside VOI. 1000 by default.
+        :param recalc: force recalculation (avoid caching)
+        :returns: a DosCube object which holds the value <level> in those voxels which are inside the Voi.
         """
-        if hasattr(self, "voi_cube"):  # caching: checks if class has voi_cube attribute
-            # TODO: add parameter as argument to this function. Note, this needs to be compatible with
-            # caching the cube. E.g. the method might be called twice with different arguments.
-            return self.voi_cube
+        # caching: checks if class has voi_cube attribute
+        # this is needed for speedup.
+
+        if not recalc and hasattr(self, "voi_cube"):
+            _max = self.voi_cube.max()
+            _max_inv = 1 / _max
+            if _max == level:
+                return self.voi_cube
+            else:
+                return self.voi_cube * _max_inv * level
+
         self.voi_cube = DosCube(self.cube)
-        self.voi_cube.mask_by_voi_all(self, 1000)
+        self.voi_cube.mask_by_voi_all(self, level)
         return self.voi_cube
 
     def add_slice(self, slice):
@@ -686,7 +706,7 @@ class Voi:
         self.concat_contour()
         data = []
         for sl in self.slices:
-            data.extend(sl.contour[0].contour)
+            data.extend(sl.contours[0].contour)
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
@@ -706,7 +726,7 @@ class Voi:
         self.concat_contour()
 
         for sl in self.slices:  # TODO: should be sorted
-            contour = sl.contour[0].contour
+            contour = sl.contours[0].contour
             p = {}
             for x in contour:
                 p[x[0], x[1], x[2]] = []
@@ -715,10 +735,10 @@ class Voi:
         last_contour = None
 
         for i, sl in enumerate(self.slices):
-            contour = sl.contour[0].contour
+            contour = sl.contours[0].contour
             n_points = len(contour)
             if i < n_slice - 1:
-                next_contour = self.slices[i + 1].contour[0].contour
+                next_contour = self.slices[i + 1].contours[0].contour
             else:
                 next_contour = None
             for j, point in enumerate(contour):
@@ -739,7 +759,8 @@ class Voi:
         self.points = points
 
     def get_2d_projection_on_basis(self, basis, offset=None):
-        """ (TODO: Documentation)
+        """
+        (TODO: Documentation)
         """
         a = np.array(basis[0])
         b = np.array(basis[1])
@@ -760,7 +781,8 @@ class Voi:
         return product
 
     def get_2d_slice(self, plane, depth):
-        """ Gets a 2d Slice object from the contour in either sagittal or coronal plane.
+        """
+        Gets a 2d Slice object from the contour in either sagittal or coronal plane.
         Contours will be concatenated.
 
         :param int plane: either self.sagittal or self.coronal
@@ -773,10 +795,10 @@ class Voi:
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contour[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -791,7 +813,8 @@ class Voi:
         return s
 
     def define_colors(self):
-        """ Creates a list of default colours [R,G,B] in self.colours.
+        """
+        Creates a list of default colours [R,G,B] in self.colours.
         """
         self.colors = []
         self.colors.append([0, 0, 255])
@@ -802,7 +825,8 @@ class Voi:
         self.colors.append([255, 255, 0])
 
     def calculate_center(self):
-        """ Calculates the center of gravity for the VOI.
+        """
+        Calculates the center of gravity for the VOI.
 
         :returns: A numpy array[x,y,z] with positions in [mm]
         """
@@ -857,7 +881,8 @@ class Voi:
         return roi
 
     def create_dicom_contour_data(self, i):
-        """ Based on self.slices, DICOM contours are generated for the DICOM ROI.
+        """
+        Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
         :returns: Dicom ROI_CONTOURS
         """
@@ -878,7 +903,8 @@ class Voi:
         return roi_contours
 
     def _sort_slices(self):
-        """ Sorts all slices stored in self for increasing z.
+        """
+        Sorts all slices stored in self for increasing z.
         This is needed for displaying Saggital and Coronal view.
         """
         # slice_in_frame is only given by VDX, and these are also the only frames which need to be sorted
@@ -889,8 +915,10 @@ class Voi:
             self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
 
     def read_vdx_old(self, content, i):
-        """ Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
+        """
+        Reads a single VOI from Voxelplan .vdx data from 'content', assuming a legacy .vdx format.
         VDX format 1.2.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -910,7 +938,7 @@ class Voi:
                 s = Slice(cube=self.cube)
                 i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
-                    for cont1 in s.contour:
+                    for cont1 in s.contours:
                         for cont2 in cont1.contour:
                             _slice_number = int(cont2[2])
                             # bound checking
@@ -935,8 +963,10 @@ class Voi:
         return i - 1
 
     def read_vdx(self, content, i):
-        """ Reads a single VOI from Voxelplan .vdx data from 'content'.
-        Format 2.0
+        """
+        Reads a single VOI from Voxelplan .vdx data from 'content'.
+        VDX format version 2.0
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1010,33 +1040,58 @@ class Voi:
         :param info: (not used)
         :param Dicom data: Dicom ROI object which contains the contours.
         """
-        if "Contours" not in data.dir() and "ContourSequence" not in data.dir():
+        if "ContourSequence" not in data.dir():
             return
 
         _roi_type_name = info.RTROIInterpretedType
         self.type = self.get_roi_type_number(_roi_type_name)
         self.color = data.ROIDisplayColor
-        if "Contours" in data.dir():
-            contours = data.Contours
-        else:
-            contours = data.ContourSequence
+
+        contours = data.ContourSequence
         for i, contour in enumerate(contours):
 
             # get current slice position
             _z_pos = contour.ContourData[2]
 
             # if we have a new z_position, add a new slice object to self.slices
-            if _z_pos not in [i.get_position() for i in self.slices]:
-                logger.debug("Append new slice at z_position {:f} to slices list:".format(_z_pos))
+            if _z_pos not in [_slice.get_position() for _slice in self.slices]:
+                logger.debug("VOI {}: Append new slice at z = {:f} cm to slices list:".format(self.name, _z_pos))
                 sl = Slice(cube=self.cube)
-                sl.add_dicom_contour(contour)
-                # TODO: check on con.ContourGeometricType = 'CLOSED_PLANAR'
-                # so far we simply assume all contours from DICOM are closed.
-                if sl.contour[-1].number_of_points() > 3:
-                    sl.contour[-1].contour_closed = True
-                else:
-                    sl.contour[-1].contour_closed = False
                 self.slices.append(sl)
+            else:
+                # lookup proper slice (just to be sure, should the contours come in random order)
+                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(self.name, _z_pos))
+                sl = self.get_slice_at_pos(_z_pos)
+
+            # append the contour data to the contour list of this slice
+            sl.add_dicom_contour(contour)
+
+            # 'CLOSED_PLANAR' indicates that the last point shall be connected to the first point,
+            # where the first point is not repeated in the Contour Data.
+            #
+            # 'POINT' indicates that the contour is a single point, defining a specific location of significance.
+            #
+            # 'OPEN_PLANAR' indicates that the last vertex shall not be connected to the first point,
+            # and that all points in Contour Data (3006,0050) shall be coplanar.
+            #
+            # 'OPEN_NONPLANAR' indicates that the last vertex shall not be connected to the first point,
+            # and that the points in Contour Data (3006,0050) may be non-coplanar.
+            # This can be used to represent objects best described by a single, possibly non-coplanar curve,
+            # such as a brachytherapy applicator.
+            #
+            # Reference: https://www.dabsoft.ch/dicom/3/C.8.8.6.1/
+
+            # Apparently DICOM may have single points as contours which can be marked as either POINT or CLOSED_PLANAR.
+            # Here, we will let any contour which is less than 3 points be an open contour per definition.
+            # example a CLOSED_PLANAR point:
+            # SLICERRT: pinnacle3-9.9-phantom-imrt
+            # - ROIContourSequence[2].ContourSequence[16].ContourGeometricType
+
+            if contour.NumberOfContourPoints > 2 and contour.ContourGeometricType == 'CLOSED_PLANAR':
+                sl.contours[-1].contour_closed = True
+            else:
+                sl.contours[-1].contour_closed = False
+
         self._sort_slices()
 
     def vdx_string(self):
@@ -1077,12 +1132,19 @@ class Voi:
         return out
 
     def get_row_intersections(self, pos):
-        """ (TODO: Documentation needed)
         """
-        slice = self.get_slice_at_pos(pos[2])
-        if slice is None:
+        For a given postion pos, returns a sorted list of x-coordinates where the y-coordinate intersects the contours.
+
+        :param pos: a 3D position in the form [x,y,z] (mm)
+        :returns: a sorted list of all x coordinates of all contours intersecting with the contours.
+
+        TODO: could be made static
+        TODO: could be made private
+        """
+        _slice = self.get_slice_at_pos(pos[2])
+        if _slice is None:
             return None
-        return np.sort(slice.get_intersections(pos))
+        return np.sort(_slice.get_intersections(pos))
 
     def get_slice_at_pos(self, z):
         """
@@ -1136,13 +1198,14 @@ class Voi:
 
 
 class Slice:
-    """ The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
+    """
+    The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
 
     def __init__(self, cube=None):
         self.cube = cube
-        self.contour = []
+        self.contours = []  # list of contours in this slice
 
         # the slice positions are recorded, however the thickness
         # may be smaller than just the distance between two slices.
@@ -1156,7 +1219,7 @@ class Slice:
 
         :param Contour contour: the contour to be added.
         """
-        self.contour.append(contour)
+        self.contours.append(contour)
 
     def add_dicom_contour(self, dcm):
         """ Adds a Dicom CONTOUR to the existing list of contours in this Slice class.
@@ -1166,26 +1229,38 @@ class Slice:
 
         # do not apply any offset here, since everything is written in real world coordinates.
         _offset = [0.0, 0.0, 0.0]
-        self.contour.append(
+        self.contours.append(
             Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
                     self.cube))
         # add the slice position to slice_in_frame which is needed later for sorting.
-        self.slice_in_frame = self.contour[-1].contour[0][2]
+        self.slice_in_frame = self.contours[-1].contour[0][2]
 
     def get_position(self):
         """
         :returns: the position of this slice in [mm] including zoffset
         """
-        if len(self.contour) == 0:
+        if len(self.contours) == 0:
             return None
-        return self.contour[0].contour[0][2]
+        return self.contours[0].contour[0][2]
 
     def get_intersections(self, pos):
-        """ (TODO: needs documentation)
+        """
+        For a given position <pos>, return a list of x-coordinates intersecting where the pos.y intersects all
+        closed contours found in this slice.
+
+        :params pos: a position in the form [x,y]
+        :returns: a list of x-coordinates intersecting the y-coordinate found in pos[1].
+
+        :warning: method name may change.
+        TODO: rename this method. It could possibly be merged with get_x_intersections.
+        TODO: could be made static
+        TODO: could be made private
         """
         intersections = []
-        for c in self.contour:
-            intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
+        for c in self.contours:
+            # do not include open contours.
+            if c.contour_closed:
+                intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
     def calculate_center(self):
@@ -1195,7 +1270,7 @@ class Slice:
         """
         tot_area = 0.0
         center_pos = np.array([0.0, 0.0, 0.0])
-        for contour in self.contour:
+        for contour in self.contours:
             center, area = contour.calculate_center()
             tot_area += area
             center_pos += area * center
@@ -1205,8 +1280,10 @@ class Slice:
             return center_pos, tot_area
 
     def read_vdx(self, content, i):
-        """ Reads a single Slice from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Slice from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1237,16 +1314,19 @@ class Slice:
                 c = Contour([], self.cube)
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
+                # TODO: not sure if multiple contours for the same ROI/VOI are allowed in VDX format.
             elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
                 break
-            elif len(self.contour) >= number_of_contours:
+            elif len(self.contours) >= number_of_contours:
                 break
             i += 1
         return i - 1
 
     def read_vdx_old(self, content, i):
-        """ Reads a single Slice from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Slice from Voxelplan .vdx data from 'content'.
         VDX format 1.2.
+
         :params [str] content: list of lines with the .vdx content
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
@@ -1273,7 +1353,10 @@ class Slice:
         return i
 
     def create_dicom_contours(self, dcmcube):
-        """ Creates and returns a list of Dicom CONTOUR objects from self.
+        """
+        Creates and returns a list of Dicom CONTOUR objects from self.
+
+        :param dcmcube: TODO write me
         """
 
         # in order to get DICOM readable by Eclipse we need to connect each contour with CT slice
@@ -1290,7 +1373,7 @@ class Slice:
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
 
         contour_list = []
-        for item in self.contour:
+        for item in self.contours:
             con = Dataset()
             contour = []
             for p in item.contour:
@@ -1313,7 +1396,7 @@ class Slice:
         :returns: a list of str holding the slice information with the countour lines for a Voxelplan formatted file.
         """
         out = ""
-        for i, cnt in enumerate(self.contour):
+        for i, cnt in enumerate(self.contours):
             out += "contour %d\n" % i
             out += "internal false\n"
 
@@ -1329,50 +1412,58 @@ class Slice:
         """
         :returns: number of contours found in this Slice object.
         """
-        return len(self.contour)
+        return len(self.contours)
 
     def concat_contour(self):
-        """ Concat all contours in this Slice object to a single contour.
         """
-        for i in range(len(self.contour) - 1, 0, -1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].concat()
+        Concat all contours in this Slice object to a single contour.
+        """
+        for i in range(len(self.contours) - 1, 0, -1):
+            self.contours[0].push(self.contours[i])
+            self.contours.pop(i)
+        self.contours[0].concat()
 
     def remove_inner_contours(self):
-        """ Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
         """
-        for i in range(len(self.contour) - 1, 0, -1):
-            self.contour[0].push(self.contour[i])
-            self.contour.pop(i)
-        self.contour[0].remove_inner_contours()
+        Removes any "holes" in the contours of this slice, thereby changing the topology of the contour.
+        """
+        for i in range(len(self.contours) - 1, 0, -1):
+            self.contours[0].push(self.contours[i])
+            self.contours.pop(i)
+        self.contours[0].remove_inner_contours()
 
     def get_min_max(self):
-        """ Set self.temp_min and self.temp_max if they dont exist.
+        """
+        Set self.temp_min and self.temp_max if they dont exist.
 
         :returns: minimum and maximum x y coordinates in Voi.
         """
-        temp_min, temp_max = self.contour[0].get_min_max()
-        for i in range(1, len(self.contour)):
-            min1, max1 = self.contour[i].get_min_max()
+        temp_min, temp_max = self.contours[0].get_min_max()
+        for i in range(1, len(self.contours)):
+            min1, max1 = self.contours[i].get_min_max()
             temp_min = pytrip.res.point.min_list(temp_min, min1)
             temp_max = pytrip.res.point.max_list(temp_max, max1)
         return temp_min, temp_max
 
 
 class Contour:
-    """ Class for handling single Contours.
+    """
+    Class for handling single Contours.
+    The contour class holds a list of points self.contour = [[x0,y0,z0], [x1,y1,z1], ... [xn, yn, zn]] in millimeters.
+    A contour can also be a single point (POI).
+    A contour may be open or closed.
     """
 
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
-        self.contour = contour
+        self.contour = contour  # TODO: consider renaming this to 'data' or 'contour_data'
         # contour_closed: if set to True, the last point in the contour will be repeated when writing VDX files.
         self.contour_closed = False
 
     def push(self, contour):
-        """ Push a contour on the contour stack.
+        """
+        Push a contour on the contour stack.
 
         :param Contour contour: a Contour object.
         """
@@ -1383,7 +1474,8 @@ class Contour:
         self.add_child(contour)
 
     def calculate_center(self):
-        """ Calculate the center for a single contour, and the area of a contour in 3 dimensions.
+        """
+        Calculate the center for a single contour, and the area of a contour in 3 dimensions.
 
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
@@ -1451,7 +1543,8 @@ class Contour:
         return out
 
     def read_vdx(self, content, i):
-        """ Reads a single Contour from Voxelplan .vdx data from 'content'.
+        """
+        Reads a single Contour from Voxelplan .vdx data from 'content'.
         VDX format 2.0.
 
        Note:
@@ -1463,6 +1556,7 @@ class Contour:
         :params int i: line number to the list.
         :returns: current line number, after parsing the VOI.
         """
+        self.contour_closed = False
         set_point = False
         points = 0
         j = 0
@@ -1509,7 +1603,8 @@ class Contour:
         return i - 1
 
     def read_vdx_old(self, slice_number, xy_line):
-        """ Reads a single Contour from Voxelplan .vdx data from 'content' and appends it to self.contour data
+        """
+        Reads a single Contour from Voxelplan .vdx data from 'content' and appends it to self.contour data
         VDX format 1.2.
 
         See also notes in read_vdx(), regarding the length of a contour.
@@ -1517,11 +1612,12 @@ class Contour:
         :params slice_number: list of numbers (as characters) with slice number
         :params xy_line: list of numbers (as characters) representing X and Y coordinates of a contour
         """
+        self.contour_closed = False
 
         if self.cube is None:
             _pixel_size = 1.0
-            logger.warning("Reading contour data in .vdx in 1.2 format: no CTX cube associated," +
-                           " setting pixel_size to 1.0.")
+            _warn = "Reading contour data in .vdx in 1.2 format: no CTX cube associated, setting pixel_size to 1.0."
+            logger.warning(_warn)
         else:
             _pixel_size = self.cube.pixel_size
 
@@ -1572,7 +1668,8 @@ class Contour:
         return False
 
     def print_child(self, level):
-        """ Print child to stdout.
+        """
+        Print child to stdout.
 
         :param int level: (TODO: needs documentation)
         """
@@ -1588,7 +1685,8 @@ class Contour:
         return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
 
     def concat(self):
-        """ In case of multiple contours in the same slice, this method will concat them to a single contour.
+        """
+        In case of multiple contours in the same slice, this method will concat them to a single contour.
         This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
@@ -1622,7 +1720,8 @@ class Contour:
             self.children[i].children = []
 
     def _merge(self, contour):
-        """ Merge two contours into a single one.
+        """
+        Merge two contours into a single one.
         """
         if len(self.contour) == 0:
             self.contour = contour.contour

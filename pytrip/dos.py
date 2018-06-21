@@ -110,7 +110,9 @@ class DosCube(Cube):
             slice = voi.get_slice_at_pos(z_pos)
             if slice is not None:   # VOI intersects with this slice
                 voi_and_cube_intersect = True
-                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i], np.array(slice.contour[0].contour), voxel_size)
+                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i],
+                                                           np.array(slice.contours[0].contour),
+                                                           voxel_size)
 
         if voi_and_cube_intersect:
             sum_of_doses = sum(dose_bins)

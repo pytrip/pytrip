@@ -58,7 +58,7 @@ class TestLocalExec(unittest.TestCase):
         v = pt.VdxCube(c)
         v.read(self.vdx_path)
 
-        print(v.get_voi_names())
+        print(v.voi_names())
 
         plan = pte.Plan(basename=self.patient_name)
         self.assertIsNotNone(plan)
