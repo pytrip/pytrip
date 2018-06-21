@@ -148,6 +148,8 @@ class VdxCube:
         self._structs_dicom_series_instance_uid = dcm.SeriesInstanceUID
         self._structs_sop_instance_uid = dcm.SOPInstanceUID
 
+        self.basename = dcm.PatientID
+
         if hasattr(dcm, 'ROIContourSequence'):
             _contours = dcm.ROIContourSequence
         else:
