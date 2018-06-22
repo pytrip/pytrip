@@ -796,6 +796,7 @@ class Cube(object):
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientName
+        self.basename = ds.PatientID.replace(" ", "_")
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
         self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
