@@ -154,28 +154,27 @@ class VdxCube:
             logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
             exit()
 
-        for i, item in enumerate(_contours):
-            if structure_ids is None or item.RefdROINumber in structure_ids:
+        for i, _roi_contour in enumerate(_contours):
+            if structure_ids is None or _roi_contour.RefdROINumber in structure_ids:
                 if hasattr(dcm, "RTROIObservationsSequence"):
-                    _roi = dcm.RTROIObservationsSequence[i]
+                    _roi_observation = dcm.RTROIObservationsSequence[i]
+                    # _roi_name = dcm.RTROIObservationsSequence[i].ROIObservationLabel  # OPTIONAL by DICOM
+                    # kept for future use.
+
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
                     exit()
-                if hasattr(dcm.StructureSetROISequence[i], "ROIName"):
-                    v = Voi(dcm.StructureSetROISequence[i].ROIName, self.cube)
+
+                if hasattr(dcm, "StructureSetROISequence"):
+                    _roi_name = dcm.StructureSetROISequence[i].ROIName  # REQUIRED by DICOM. At least an empty string.
                 else:
-                    v = Voi("(UnnamedROI #{d})".format(i), self.cube)
-                v.read_dicom(_roi, item)
+                    logger.error("No StructureSetROISequence found in dicom RTSTRUCT")
+                    exit()
+
+                v = Voi(_roi_name, self.cube)
+                v.read_dicom(_roi_observation, _roi_contour, _roi_name)
 
                 self.add_voi(v)
-
-        # self.cube.xoffset = 0
-        # self.cube.yoffset = 0
-        # self.cube.zoffset = 0
-
-        """shift = min(self.cube.slice_pos)
-        for i in range(len(self.cube.slice_pos)):
-                self.cube.slice_pos[i] = self.cube.slice_pos[i]-shift"""
 
     def get_voi_names(self):
         """
@@ -307,6 +306,7 @@ class VdxCube:
         fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
         self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
         for voi in self.vois:
+            logger.debug("writing VOI {}".format(voi.name))
             fp.write(voi.vdx_string())
         fp.close()
 
@@ -1034,20 +1034,25 @@ class Voi:
             return 'ORGAN'
         return ''
 
-    def read_dicom(self, info, data):
-        """ Reads a single ROI (= VOI) from a Dicom data set.
-
-        :param info: (not used)
-        :param Dicom data: Dicom ROI object which contains the contours.
+    def read_dicom(self, roi_obs, roi_cont, roi_name="(none)"):
         """
-        if "ContourSequence" not in data.dir():
+        Reads a single ROI (= VOI) from a Dicom data set.
+
+        :param roi_obs: dcm['rtss'].RTROIObservationsSequence[i]
+        :param roi_cont: dcm['rtss'].ROIContourSequence[i]
+        :param roi_name: the name of this ROI.
+        """
+
+        if not hasattr(roi_cont, "ContourSequence"):
+            logger.warning("No DICOM (3006,0050) Contour Data found in "
+                           "(3006,0039) ROIContourSequence[] for ROI:'{}'".format(roi_name))
             return
 
-        _roi_type_name = info.RTROIInterpretedType
+        _roi_type_name = roi_obs.RTROIInterpretedType
         self.type = self.get_roi_type_number(_roi_type_name)
-        self.color = data.ROIDisplayColor
+        self.color = roi_cont.ROIDisplayColor
 
-        contours = data.ContourSequence
+        contours = roi_cont.ContourSequence
         for i, contour in enumerate(contours):
 
             # get current slice position
