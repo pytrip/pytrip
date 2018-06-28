@@ -50,16 +50,23 @@ v.read(vdx_path)
 # we may print all contours found in the Vdx file, if we want to
 print(v.get_voi_names())
 
-# Ok, we have the Contours and the CT cube ready. Next we must prepare a plan.
+# Prepare Kernel data for a given projectile:
+mykernel = pte.KernelModel()
+mykernel.projectile = pte.Projectile("C", a=12)
+mykernel.ddd_path = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+mykernel.spc_path = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+mykernel.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
+mykernel.rifi_thickness = 3.0  # 3 mm ripple filter. (Only for documentaiton, will not affect dose optimization.)
+mykernel.rifi_name = "GSI_1D_3mm"  # Additional free text for documentation.
+mykernel.comment = "Carbon-12 ions with 3 mm 1D Ripple Filter"
+
+# Ok, we have the Contours, the CT cube and dose kernels ready. Next we must prepare a plan.
 # We may choose any basename for the patient. All output files will be named using
 # this basename.
-plan = pte.Plan(basename=patient_name)
+plan = pte.Plan(basename=patient_name, kernel=mykernel)
 
 # We need to specify where the kernel files can be found. The location may depend on the ion we
 # wnat to treat with. This example is for carbon ions:
-plan.ddd_dir = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-plan.spc_dir = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-plan.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
 plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
 plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
 plan.working_dir = "/home/bassler/test/"  # working dir must exist.
@@ -73,12 +80,11 @@ plan.bolus = 0.0  # No bolus is applied here. Set this to some value, if you are
 plan.offh2o = 1.873  # Some offset mimicing the monitoring ionization chambers and exit window of the beam nozzle.
 
 # Next we need to specify at least one field, and add that field to the plan.
-field = pte.Field()
+field = pte.Field(kernel=mykernel)
 field.basename = patient_name  # This name will be used for output filenames, if any field specific output is saved.
 field.gantry = 10.0  # degrees
 field.couch = 90.0  # degrees
 field.fwhm = 4.0  # spot size in [mm]
-field.projectile = 'C'
 
 print(field)  # We can print all parameters of this field, for checking.
 plan.fields.append(field)  # attach field to plan. You may attach multiple fields.
