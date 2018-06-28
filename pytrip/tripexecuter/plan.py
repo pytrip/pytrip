@@ -74,12 +74,15 @@ class Plan(object):
                  "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
                  "mk": (3, "M. Kraemer", "conservative")}
 
-    def __init__(self, basename="", comment="", kernel=None):
+    def __init__(self, basename="", comment="", kernels=None):
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
         if it has been calculated.
         :params str basename: TRiP98 qualified plan name. E.g. "test000001"
-        :params str comment:" any string for documentation purposes.
+        :params str comment: any string for documentation purposes.
+        :params kernels KernelModel:  a list of Kernel models which describes what projectile to use here.
+        So far our versions of TRiP does not support multi-ion optimization.
+        Therefore only a single kernel should be provided, i.e. [kernel].
         """
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
@@ -149,7 +152,13 @@ class Plan(object):
         self._make_sis = ""  # placeholder for generate sistable command
 
         # TODO: for pytrip 3.0 all attributes are stored in Kernel object.
-        if kernel:
+        # The API is here already prepared for multi-ion optimization, but for now it is not implemented.
+        if kernels:
+            kernel = kernels[0]
+            if len(kernels) > 1:
+                logger.warning("Multi-ion therapy is not implemented. "
+                               "Using data from the first kernel in list: '{}'.".format(kernel.name))
+
             self.projectile = kernel.projectile.iupac
             self.projectile_a = kernel.projectile.a
             self.rifi = kernel.rifi_thickness

@@ -40,8 +40,8 @@ class Projectile(object):
                             "Ne": (10, 20),
                             "Ar": (16, 40)}
 
-    z = 0
-    a = 0
+    z = -1
+    a = -1
     iupac = ""  # chemical symbol (parsed by TRiP), "H", "He", "C", "O", "Ne" ....
     name = ""   # cleartext name "Protons", "Carbon-12 ions", "Antiprotons", ...
 
@@ -53,22 +53,24 @@ class Projectile(object):
         :param a: nucleon number of proejctile, default value for symb is taken if not specified (12 for C, 4 for He...)
         """
 
+        self.name = name
+
         if symb in self._projectile_defaults:
             self.z = self._projectile_defaults[symb][0]
             self.a = self._projectile_defaults[symb][1]
 
-        self.name = name
+        self.iupac = symb
+
         if z > 0:
             self.z = z
-        else:
-            logger.warning("No projectile charge was set.")
 
         if a > 0:
             self.a = a
-        else:
-            logger.warning("No projectile nucleon number was set.")
 
-        self.iupac = symb
+        if self.z < 1:
+            logger.warning("No projectile charge was set.")
+        if self.a < 1:
+            logger.warning("No projectile nucleon number was set.")
 
     def __str__(self):
         """
