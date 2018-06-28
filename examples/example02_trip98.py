@@ -50,7 +50,8 @@ v.read(vdx_path)
 # we may print all contours found in the Vdx file, if we want to
 print(v.get_voi_names())
 
-# Prepare Kernel data for a given projectile:
+# We need to specify where the kernel files can be found. The location may depend on the ion we
+# want to treat with. This example sets up a kernel model for C-12 ions with a 3 mm Ripple Filter.
 mykernel = pte.KernelModel()
 mykernel.projectile = pte.Projectile("C", a=12)
 mykernel.ddd_path = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
@@ -65,22 +66,20 @@ mykernel.comment = "Carbon-12 ions with 3 mm 1D Ripple Filter"
 # this basename.
 plan = pte.Plan(basename=patient_name, kernels=(mykernel, ))
 
-# We need to specify where the kernel files can be found. The location may depend on the ion we
-# wnat to treat with. This example is for carbon ions:
-plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"
-plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"
+# Plan specific data:
+plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"  # Hounsfield lookup table location
+plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"  # Stopping power tables
 plan.working_dir = "/home/bassler/test/"  # working dir must exist.
 
 # Set the plan target to the voi called "CTV"
 plan.voi_target = v.get_voi_by_name('CTV')
 
-# some optional parameters (if not set, they will all be zero by default)
-plan.rifi = 3.0  # 3 mm ripple filter. (This is only for documentaiton, it will not affect the dose optimization.)
+# some optional plan specific parameters (if not set, they will all be zero by default)
 plan.bolus = 0.0  # No bolus is applied here. Set this to some value, if you are to optimize very shallow tumours.
 plan.offh2o = 1.873  # Some offset mimicing the monitoring ionization chambers and exit window of the beam nozzle.
 
 # Next we need to specify at least one field, and add that field to the plan.
-field = pte.Field(kernel=mykernel)
+field = pte.Field(kernel=mykernel)  # The ion speicies is selected by passing the corresponding kernel to the field.
 field.basename = patient_name  # This name will be used for output filenames, if any field specific output is saved.
 field.gantry = 10.0  # degrees
 field.couch = 90.0  # degrees
@@ -105,9 +104,10 @@ te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vd
 # te.username = "bassler"
 # te.password = "xxxxxxxx"  # you can set a password, but this is strongly discouraged. Better to exchange SSH keys!
 # te.remote_base_dir = "/home/bassler/test"
-# depending on the remote .bashrc_profile setup, it may be needed to specify the full path
+#
+# Depending on the remote .bashrc_profile setup, it may be needed to specify the full path
 # for the remote TRiP installation. On some systems the $PATH is set, so this line can be omitted,
-# or shortened to just "TRiP98"
+# or shortened to just "TRiP98" :
 # te.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
 
 te.execute(plan)  # this will run TRiP
