@@ -36,7 +36,6 @@ class KernelModel(object):
 
     def __init__(self):
         """
-        :param symb: iupac symbol of projectile.
         """
         pass
 

@@ -20,6 +20,11 @@
 Object holding all data needed for a specific projectile/rifi configuration.
 """
 
+import logging
+
+
+logger = logging.getLogger(__name__)
+
 
 class Projectile(object):
     """
@@ -55,9 +60,13 @@ class Projectile(object):
         self.name = name
         if z > 0:
             self.z = z
+        else:
+            logger.warning("No projectile charge was set.")
 
         if a > 0:
             self.a = a
+        else:
+            logger.warning("No projectile nucleon number was set.")
 
         self.iupac = symb
 
