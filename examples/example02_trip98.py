@@ -63,7 +63,7 @@ mykernel.comment = "Carbon-12 ions with 3 mm 1D Ripple Filter"
 # Ok, we have the Contours, the CT cube and dose kernels ready. Next we must prepare a plan.
 # We may choose any basename for the patient. All output files will be named using
 # this basename.
-plan = pte.Plan(basename=patient_name, kernels=[mykernel])
+plan = pte.Plan(basename=patient_name, kernels=(mykernel, ))
 
 # We need to specify where the kernel files can be found. The location may depend on the ion we
 # wnat to treat with. This example is for carbon ions:
