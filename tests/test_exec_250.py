@@ -31,8 +31,9 @@ import tests.base
 logger = logging.getLogger(__name__)
 
 
-class TestLocalExec(unittest.TestCase):
-    """ Tests for pytrip.tripexecuter
+class TestLocalExec250(unittest.TestCase):
+    """
+    Tests for pytrip.tripexecuter, using new API slated for 2.5.0
     """
     def setUp(self):
         """ Prepare test environment.
@@ -60,12 +61,18 @@ class TestLocalExec(unittest.TestCase):
 
         print(v.voi_names())
 
-        plan = pte.Plan(basename=self.patient_name)
+        kernel = pte.KernelModel("C12 Ions RiFi 3MM")
+        kernel.projectile = pte.Projectile("C")
+        kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+        kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+        kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
+        kernel.rifi_thickness = 3.0
+        kernel.rifi_name = "GSI RF3MM"
+        kernel.comment = "C-12 Ions with a 3 mm 1-D Ripple Filter from GSI"
+
+        plan = pte.Plan(basename=self.patient_name, kernels=(kernel, ))
         self.assertIsNotNone(plan)
 
-        plan.ddd_dir = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-        plan.spc_dir = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-        plan.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
         plan.hlut_path = "/opt/TRiP98/base/DATA/HLUT/19990218.hlut"
         plan.dedx_path = "/opt/TRiP98/base/DATA/DEDX/20040607.dedx"
         plan.working_dir = "."  # working dir must exist.
@@ -73,12 +80,11 @@ class TestLocalExec(unittest.TestCase):
         # add the target voi to the plan
         plan.voi_target = v.get_voi_by_name('target')
 
-        plan.rifi = 3.0
         plan.bolus = 0.0
         plan.offh2o = 1.873
 
         # create a field and add it to the plan
-        field = pte.Field()
+        field = pte.Field(kernel=kernel)
         self.assertIsNotNone(field)
         field.basename = self.patient_name
         field.gantry = 10.0

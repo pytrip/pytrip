@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2018 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -39,6 +39,7 @@ class Plan(object):
     """ Class of handling plans.
     """
     # list of projectile name - charge and most common isotope.
+    # This may be replaced later by Kernel Module
     _projectile_defaults = {"H": (1, 1),
                             "He": (2, 4),
                             "Li": (3, 7),
@@ -73,12 +74,15 @@ class Plan(object):
                  "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
                  "mk": (3, "M. Kraemer", "conservative")}
 
-    def __init__(self, basename="", comment=""):
+    def __init__(self, basename="", comment="", kernels=None):
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
         if it has been calculated.
         :params str basename: TRiP98 qualified plan name. E.g. "test000001"
-        :params str comment:" any string for documentation purposes.
+        :params str comment: any string for documentation purposes.
+        :params kernels KernelModel:  a list of Kernel models which describes what projectile to use here.
+        So far our versions of TRiP does not support multi-ion optimization.
+        Therefore only a single kernel should be provided, i.e. [kernel].
         """
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
@@ -95,14 +99,14 @@ class Plan(object):
 
         # directories and file paths.
         self.working_dir = ""  # directory where all input files are stored, and where all output files will be put.
-        self.ddd_dir = "$TRIP98/DATA/DDD/12C/RF3MM/12C.*"
-        self.spc_dir = ""
-        self.sis_path = ""
+        self.ddd_dir = "$TRIP98/DATA/DDD/12C/RF3MM/12C.*"   # deprecated, use KernelModel
+        self.spc_dir = ""  # deprecated, use KernelModel
+        self.sis_path = ""  # deprecated, use KernelModel
         self.hlut_path = "$TRIP98/DATA/19990211.hlut"
         self.dedx_path = "$TRIP98/DATA/DEDX/20040607.dedx"
 
-        self.projectile = "C"  # these are needed by makesis possibly
-        self.projectile_a = 12  # these are needed by makesis possibly
+        self.projectile = "C"  # these are needed by makesis possibly  # deprecated, use KernelModel
+        self.projectile_a = 12  # these are needed by makesis possibly  # deprecated, use KernelModel
         self.res_tissue_type = ""
         self.target_tissue_type = ""
         self.active = False
@@ -120,7 +124,7 @@ class Plan(object):
         # Scancap parameters:
         # Thickness of ripple filter (0.0 for none)
         # will only used for the TRiP98 Scancap command.
-        self.rifi = 0.0  # rifi thickness in [mm]
+        self.rifi = 0.0  # rifi thickness in [mm]  # deprecated, use KernelModel
         self.bolus = 0.0  # amount of bolus to be applied in [mm]
         self.offh2o = 0.0  # Offset of exit-window and ionchambers in [mm]
         self.minparticles = 5000  # smallest amount of particle which will go into a raster spot
@@ -146,6 +150,21 @@ class Plan(object):
 
         self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
         self._make_sis = ""  # placeholder for generate sistable command
+
+        # TODO: for pytrip 3.0 all attributes are stored in Kernel object.
+        # The API is here already prepared for multi-ion optimization, but for now it is not implemented.
+        if kernels:
+            kernel = kernels[0]
+            if len(kernels) > 1:
+                logger.warning("Multi-ion therapy is not implemented. "
+                               "Using data from the first kernel in list: '{}'.".format(kernel.name))
+
+            self.projectile = kernel.projectile.iupac
+            self.projectile_a = kernel.projectile.a
+            self.rifi = kernel.rifi_thickness
+            self.ddd_dir = kernel.ddd_path
+            self.spc_dir = kernel.spc_path
+            self.sis_path = kernel.sis_path
 
     def __str__(self):
         """ string out handler
