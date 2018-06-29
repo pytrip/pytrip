@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2018 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -64,6 +64,7 @@ class TRiP98FilePath(object):
     See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html for more details.
 
     """
+
     def __init__(self, name, cube_type):
         """
         Creates a helper class to deal with TRiP98 filenames.
@@ -369,7 +370,7 @@ class TRiP98FilePath(object):
 
         :return:  path to the (unzipped) data file.
         """
-        return self._filename_without_extension
+        return os.path.basename(self._filename_without_extension)
 
 
 class TRiP98FileLocator(object):

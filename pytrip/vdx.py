@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2018 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -83,6 +83,14 @@ class VdxCube:
     >>> v = pt.VdxCube(c)
     >>> v.read("tests/res/TST003/tst003000.vdx")
     """
+
+    # stictly, VDX does not have .hed companion. However, in practice, .vdx files are always
+    # associated with a .hed .ctx cube pair. In order to discover these, the header file
+    # extentions may be associated to this as a .vdx data file.
+
+    header_file_extension = '.hed'
+    data_file_extension = '.vdx'
+    allowed_suffix = tuple()
 
     def __init__(self, cube=None):
         """
