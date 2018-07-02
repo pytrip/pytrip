@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2018 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -64,6 +64,7 @@ class TRiP98FilePath(object):
     See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html for more details.
 
     """
+
     def __init__(self, name, cube_type):
         """
         Creates a helper class to deal with TRiP98 filenames.
@@ -353,8 +354,10 @@ class TRiP98FilePath(object):
     @property
     def basename(self):
         """
+        Returns the basename, without leading directory or trailing suffixes.
+
         >>> import pytrip as pt
-        >>> TRiP98FilePath("patient1", pt.DosCube).basename
+        >>> TRiP98FilePath("foobar/patient1", pt.DosCube).basename
         'patient1'
         >>> TRiP98FilePath("patient1.dos", pt.DosCube).basename
         'patient1'
@@ -369,6 +372,31 @@ class TRiP98FilePath(object):
 
         :return:  path to the (unzipped) data file.
         """
+        # return self._filename_without_extension
+        return os.path.basename(self._filename_without_extension)
+
+    @property
+    def dir_basename(self):
+        """
+        Returns the basename including the leading directory.
+
+        >>> import pytrip as pt
+        >>> TRiP98FilePath("foobar/patient1", pt.DosCube).dir_basename
+        'foobar/patient1'
+        >>> TRiP98FilePath("patient1.dos", pt.DosCube).dir_basename
+        'patient1'
+        >>> TRiP98FilePath("patient1.dos", pt.CtxCube).dir_basename
+        'patient1.dos'
+        >>> TRiP98FilePath("patient1.dos.gz", pt.DosCube).dir_basename
+        'patient1'
+        >>> TRiP98FilePath("patient1.hed", pt.DosCube).dir_basename
+        'patient1'
+        >>> TRiP98FilePath("patient1.phys.hed", pt.DosCube).dir_basename
+        'patient1.phys'
+
+        :return:  path + basename to the (unzipped) data file.
+        """
+        # return self._filename_without_extension
         return self._filename_without_extension
 
 
@@ -418,7 +446,7 @@ class TRiP98FileLocator(object):
 
         :return: path to the header file which exists on the filesystem or None if not found
         """
-        basename = self.trip98path.basename
+        dir_basename = self.trip98path.dir_basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
 
@@ -426,7 +454,7 @@ class TRiP98FileLocator(object):
             for gzip_extension in ("", ".gz", ".GZ"):
                 for header_extension in (self.trip98path.header_file_extension.lower(),
                                          self.trip98path.header_file_extension.upper()):
-                    candidate_path = basename + suffix + header_extension + gzip_extension
+                    candidate_path = dir_basename + suffix + header_extension + gzip_extension
                     if os.path.exists(candidate_path):
                         logger.info("Found " + candidate_path)
                         return candidate_path
@@ -443,14 +471,14 @@ class TRiP98FileLocator(object):
 
         :return: path to the data file which exists on the filesystem or None if not found
         """
-        basename = self.trip98path.basename
+        dir_basename = self.trip98path.dir_basename
         files_tried = []
         logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
         for suffix in self.list_of_suffixes_to_check:
             for gzip_extension in ("", ".gz", ".GZ"):
                 for datafile_extension in (self.trip98path.data_file_extension.lower(),
                                            self.trip98path.data_file_extension.upper()):
-                    candidate_path = basename + suffix + datafile_extension + gzip_extension
+                    candidate_path = dir_basename + suffix + datafile_extension + gzip_extension
                     if os.path.exists(candidate_path):
                         return candidate_path
                     else:
