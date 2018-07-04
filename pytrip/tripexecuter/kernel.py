@@ -56,8 +56,8 @@ class KernelModel(object):
         out += "|  RiFi Name                         : '{:s}'\n".format(str(self.rifi_name))
         out += "|  RiFi Thickness [mm]               : {:.2f}\n".format(self.rifi_thickness)
         out += "|"
-        out += "|  SPC Path                          : '{:s}'\n".format(str(self.spc_path))
         out += "|  DDD Path                          : '{:s}'\n".format(str(self.ddd_path))
+        out += "|  SPC Path                          : '{:s}'\n".format(str(self.spc_path))
         out += "|  SIS Path                          : '{:s}'\n".format(str(self.sis_path))
         out += "|"
         out += "|  Comment                           : '\n{:s}'\n".format(str(self.comment))
