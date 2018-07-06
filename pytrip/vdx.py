@@ -1550,7 +1550,7 @@ class Contour:
                                                          0, 0, 0)
 
         # repeat the first point, to close the contour, if needed
-        if self.contour_closed:
+        if self.contour_closed and len(self.contour) > 1:
             out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
                                                          self.contour[0][1] - self.cube.yoffset,
                                                          self.contour[0][2],
