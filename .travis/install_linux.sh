@@ -8,7 +8,7 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
-if [[ $TOXENV == py32* ]];
+if [[ $TOXENV == py32* ]] || [[ $TOXENV == packaging ]];
 then
     sudo apt-get -qq update
     sudo apt-get install --no-install-recommends -y wget libblas-dev liblapack-dev gfortran libfreetype6-dev g++
