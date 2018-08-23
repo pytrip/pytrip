@@ -11,7 +11,7 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
 if [[ $TOXENV == py32* ]];
 then
     sudo apt-get -qq update
-    sudo apt-get install --no-install-recommends -y libblas-dev liblapack-dev gfortran libfreetype6-dev g++
+    sudo apt-get install --no-install-recommends -y wget libblas-dev liblapack-dev gfortran libfreetype6-dev g++
 fi
 
 # we limit py version as starting from 1.5 support for python 3.3 is dropped
