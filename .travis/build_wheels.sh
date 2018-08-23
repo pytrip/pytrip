@@ -6,6 +6,7 @@ set -e -x
 # freetype v2.3.0 installation, source versions of matplotlib require it to get installed via pip
 # docker image has only freetype v2.2
 install_freetype() {
+    yum install -y wget
     wget --no-check-certificate http://downloads.sourceforge.net/freetype/freetype-2.3.0.tar.gz
     tar -zxvf freetype-2.3.0.tar.gz
     cd freetype-2.3.0
