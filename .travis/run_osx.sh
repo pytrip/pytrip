@@ -8,7 +8,7 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # exit with a non-zero status, or zero if all commands in the
                 # pipeline exit successfully.
 
-if [[ $TOXENV == py27* ]] || [[ $TOXENV == py32* ]] ;
+if [[ $TOXENV == py27* ]];
 then
     echo "TESTS DISABLED"
 else

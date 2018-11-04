@@ -29,9 +29,6 @@ pip install --user --upgrade versioneer
 # For native python 2.7 we can jump out
 if [[ $TOXENV == py27* ]] ; then exit 0; fi
 
-# For native python 3.2 we disable tests
-if [[ $TOXENV == py32* ]] ; then exit 0; fi
-
 # For Python 3, first install pyenv (and deps)
 brew update || brew update
 brew install freetype
@@ -46,10 +43,6 @@ eval "$(pyenv init -)"
 # TODO find the way to make it faster (use pre-installed python versions on travis?)
 # this is most time-consuming issue, now takes about 2 min
 case "${TOXENV}" in
-        py32*)
-            pyenv install -s 3.2
-            pyenv global 3.2
-            ;;
         py34*)
             pyenv install -s 3.4.4
             pyenv global 3.4.4
