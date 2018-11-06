@@ -19,7 +19,7 @@ matrix:
 # it doesn't make sense to run normal tests for py35, as coverage will run them and upload
 # coverage includes also testing documentation generation with sphinx
         - os: linux
-          python: 3.5
+          python: 3.6
           env: TOXENV=coverage
         - os: linux
           python: 3.4
