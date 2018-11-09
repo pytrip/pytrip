@@ -2,9 +2,8 @@
 
 language: python
 
-services:
-  - docker
-
+#services:
+#  - docker
 
 env:
   global:
@@ -14,11 +13,9 @@ env:
 matrix:
     include:
     # Linux tests for various python versions
-        - os: linux
-          python: 2.7
+        - python: 2.7
           env: TOXENV=py27
-        - os: linux
-          python: 2.7
+        - python: 2.7
           env: TOXENV=coverage
 #        - os: linux
 #          python: 3.4
@@ -46,7 +43,7 @@ matrix:
 #        - python: nightly
 #          env: TOXENV=py37
 
-sudo: required
+sudo: false
 dist: xenial
 
 # install dependencies (i.e. python-pip package)
@@ -57,11 +54,8 @@ dist: xenial
 
 # install packages from requirement.txt and other stuff
 install:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait ./.travis/install_linux.sh ; fi
+  - travis_wait ./.travis/install_linux.sh
 
 # finally run tox tests
 script:
-  - if [[ $TRAVIS_OS_NAME == "linux" ]]; then travis_wait tox --recreate --notest && tox ; fi
-# in case all previous commands in script section succeeded, run deploy (if tag is present then upload)
-  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then .travis/deploy_package.sh "$TARGET" $PRECMD; fi
-
+  - tox --notest && travis_retry tox -- -n 8
