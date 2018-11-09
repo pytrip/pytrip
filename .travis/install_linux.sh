@@ -9,7 +9,8 @@ set -o pipefail # Return value of a pipeline as the value of the last command to
                 # pipeline exit successfully.
 
 # we limit py version as starting from 1.5 support for python 3.3 is dropped
-pip install --upgrade virtualenv pip setuptools tox wheel 'py<1.5'
+pip install --upgrade virtualenv pip setuptools tox wheel
 
 pip install -r requirements.txt
 pip install -r tests/requirements-test.txt
+pip install --upgrade 'tox==3.2.0'
