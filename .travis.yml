@@ -15,42 +15,42 @@ matrix:
     # Linux tests for various python versions
         - python: 2.7
           env: TOXENV=py27
-        - python: 2.7
+        - python: 3.6
           env: TOXENV=coverage
-#        - os: linux
-#          python: 3.4
-#          env: TOXENV=py34
-#        - os: linux
-#          python: 3.6
-#          env: TOXENV=py36
-#        - os: linux
-#          python: nightly
-#          env: TOXENV=py37
-#    # fired only when making release (on tags): manylinux1 pep packages (32 and 64 bits)
-#    # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
-#    # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
-#    # documentation checks and PEP8 code quality checks included in packaging
-#        - python: 3.5
-#          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
-#        - python: 3.5
-#          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m"
-#        - python: 3.5
-#          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
-#        - python: 3.5
-#          env: TOXENV=packaging TARGET=source
-#    # jobs allowed to fail
-#    allow_failures:
-#        - python: nightly
-#          env: TOXENV=py37
+        - os: linux
+          python: 3.4
+          env: TOXENV=py34
+        - os: linux
+          python: 3.6
+          env: TOXENV=py36
+        - os: linux
+          python: nightly
+          env: TOXENV=py37
+    # fired only when making release (on tags): manylinux1 pep packages (32 and 64 bits)
+    # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
+    # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
+    # documentation checks and PEP8 code quality checks included in packaging
+        - python: 3.5
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
+        - python: 3.5
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m"
+        - python: 3.5
+          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
+        - python: 3.5
+          env: TOXENV=packaging TARGET=source
+    # jobs allowed to fail
+    allow_failures:
+        - python: nightly
+          env: TOXENV=py37
 
 sudo: false
 dist: xenial
 
 # install dependencies (i.e. python-pip package)
-#before_install:
-#  - PYTHON_VERSION="py3"
-#  - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
-#  - sudo ./install_deps.sh $PYTHON_VERSION
+before_install:
+  - PYTHON_VERSION="py3"
+  - if [[ $TOXENV == "py27" ]]; then PYTHON_VERSION="py2" ; fi
+  - sudo ./install_deps.sh $PYTHON_VERSION
 
 # install packages from requirement.txt and other stuff
 install:
