@@ -1,8 +1,6 @@
 versioneer<0.18
-# pytest v 3.0, released in 08.2016 doesn't work well with Python 3.2 and 3.3 (as in 11.2017)
 pytest
 pytest-xdist
 pytest-catchlog
 tox
-scipy>=1.0.0 ; os_name == 'nt' # all Windows versions
-scipy<0.20 ;  os_name != 'nt' # Linux
+scipy
