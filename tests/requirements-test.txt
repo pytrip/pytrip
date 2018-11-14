@@ -1,6 +1,5 @@
 versioneer<0.18
 pytest
 pytest-xdist
-pytest-catchlog
 tox
 scipy
