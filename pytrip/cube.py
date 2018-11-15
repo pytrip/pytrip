@@ -535,7 +535,9 @@ class Cube(object):
             import gzip
             with gzip.open(datafile_path, "rb") as f:
                 s = f.read(data_dtype.itemsize * data_count)
-                cube = np.frombuffer(s, dtype=data_dtype, count=data_count)
+                tmpcube = np.frombuffer(s, dtype=data_dtype, count=data_count)
+                # frombuffer returns read-only array, so we need to make it writable
+                cube = np.require(tmpcube, dtype=data_dtype, requirements=['W', 'O'])
         else:
             cube = np.fromfile(datafile_path, dtype=data_dtype)
 
