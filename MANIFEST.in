@@ -1,6 +1,6 @@
   recursive-include pytrip *.py
   recursive-include examples *.py
-  exclude *.sh *.yml *.ini *.txt .gitkeep *.so
+  exclude *.sh *.yml *.ini *.txt .gitkeep *.so .coveragerc
   exclude versioneer.py *LICENSE
   prune appveyor
   prune docs
