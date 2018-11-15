@@ -50,21 +50,8 @@ set -x
 
 echo "User" $PYPIUSER
 
-# simple building for MacOSX
-if [[ $TRAVIS_OS_NAME == "osx" ]]; then
-
-    pyenv exec pip install -U wheel twine
-
-    # make and upload wheel package
-    pyenv exec python setup.py bdist_wheel
-
-    # upload only if tag present
-    if [[ $TRAVIS_TAG != "" ]]; then
-        pyenv exec twine upload dist/*
-    fi
-
 # make a source package
-elif [[ $TARGET == "source" ]]; then
+if [[ $TARGET == "source" ]]; then
     # install necessary tools
     pip install -U wheel twine
 
