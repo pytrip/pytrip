@@ -84,7 +84,7 @@ else
     pip install -U wheel twine
 
     # upload only if tag present
-    #if [[ $TRAVIS_TAG != "" ]]; then
-    #    twine upload wheelhouse/*
-    #fi
+    if [[ $TRAVIS_TAG != "" ]]; then
+        twine upload wheelhouse/*
+    fi
 fi
