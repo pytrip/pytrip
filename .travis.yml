@@ -32,11 +32,11 @@ matrix:
           services: docker
           sudo: true
         - python: 3.6
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m"
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m cp37-cp37m"
           services: docker
           sudo: true
         - python: 3.6
-          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
+          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m cp37-cp37m"
           services: docker
           sudo: true
         - python: 3.6
@@ -56,3 +56,4 @@ install:
 # finally run tox tests
 script:
   - tox --notest && travis_retry tox -- -n 8
+  - if [[ "$TRAVIS_TEST_RESULT" == "0" ]] && [[ $TOXENV == "packaging" ]]; then .travis/deploy_package.sh "$TARGET" $PRECMD; fi
