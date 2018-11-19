@@ -9,21 +9,14 @@ environment:
     secure: Bq/BLSOSlZhPmHsWR1ML1A==
   PYPIUSER: grzanka
   matrix:
-# skipping 32bits as tests there result in Appveyor memory problems
-#    - platform: x86
-#      PYTHON: "C:\\Python27"
-
     - platform: x64
       PYTHON: "C:\\Python27-x64"
 
-#    - platform: x86
-#      PYTHON: "C:\\Python35"
+    - platform: x64
+      PYTHON: "C:\\Python34-x64"
 
     - platform: x64
       PYTHON: "C:\\Python35-x64"
-
-#    - platform: x86
-#      PYTHON: "C:\\Python36"
 
     - platform: x64
       PYTHON: "C:\\Python36-x64"
