@@ -9,21 +9,14 @@ environment:
     secure: Bq/BLSOSlZhPmHsWR1ML1A==
   PYPIUSER: grzanka
   matrix:
-# skipping 32bits as tests there result in Appveyor memory problems
-#    - platform: x86
-#      PYTHON: "C:\\Python27"
-
     - platform: x64
       PYTHON: "C:\\Python27-x64"
 
-#    - platform: x86
-#      PYTHON: "C:\\Python35"
+    - platform: x64
+      PYTHON: "C:\\Python34-x64"
 
     - platform: x64
       PYTHON: "C:\\Python35-x64"
-
-#    - platform: x86
-#      PYTHON: "C:\\Python36"
 
     - platform: x64
       PYTHON: "C:\\Python36-x64"
@@ -48,6 +41,7 @@ install:
 # check pip version
   - pip -V
 # install usual requirements
+  - pip install --upgrade virtualenv pip setuptools tox wheel --user
   - pip install --upgrade -r tests/requirements-test.txt
   - pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
@@ -56,10 +50,6 @@ install:
 # check python and pip versions
   - python -V
   - pip -V
-
-before_test:
-# generate versioneer stuff
-  - python %PYTHON%\\scripts\\versioneer install
 
 test_script:
 # make wheel package

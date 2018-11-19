@@ -34,12 +34,6 @@ do
     # List installed packages
     ${PYBIN}/pip freeze
 
-    # Install versioneer and generate versioneer stuff
-    ${PYBIN}/pip install versioneer
-    cd /io
-    ${PYBIN}/versioneer install
-    cd -
-
     # see https://github.com/google/python-subprocess32/issues/12#issuecomment-337806379
     # installation of subprocess32 port package from source fails, so let us use
     # current development version (--pre enables that)

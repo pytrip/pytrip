@@ -83,13 +83,7 @@ The standard way to execute Python scripts WILL NOT WORK::
 
 To have the code working, two things are needed:
 
-* installation of ``versioneer`` package (needed to set proper version number)
 * adjustment of PYTHONPATH variable.
-
-First let us install ``versioneer`` package and generate necessary files::
-
-   $ pip install versioneer
-   $ ./install_versioneer.sh
 
 Now code can be run by typing::
 
@@ -147,12 +141,7 @@ Get Started for non-GIT developers
 
     $ git clone git@github.com:pytrip/pytrip.git
 
-2. Follow steps 4-6 from the instruction for GIT-aware developers. Install versioneer::
-
-   $ pip install versioneer
-   $ ./install_versioneer.sh
-
-To run code locally, prefix usual calls with ``PYTHONPATH=.``::
+2. Follow steps 4-6 from the instruction for GIT-aware developers. To run code locally, prefix usual calls with ``PYTHONPATH=.``::
 
    $ PYTHONPATH=. python pytrip/utils/cubeslice.py --help
    usage: cubeslice.py [-h] [--data [DATA]] [--ct [CT]] [-v] [-f N] [-t M] [-H]
