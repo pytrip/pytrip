@@ -48,13 +48,12 @@ build_manylinux_64:
   box: grzanka/manylinux-test
   steps:
 
-    # check python versions and install versioneer
+    # check python versions
     - script:
         name: prerequisites
         code: |
           /opt/python/cp27-cp27m/bin/python -V
           /opt/python/cp27-cp27m/bin/pip -V
-          /opt/python/cp27-cp27m/bin/pip install versioneer
 
     # make a manylinux1 package
     - script:

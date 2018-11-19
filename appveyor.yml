@@ -57,10 +57,6 @@ install:
   - python -V
   - pip -V
 
-before_test:
-# generate versioneer stuff
-  - python %PYTHON%\\scripts\\versioneer install
-
 test_script:
 # make wheel package
   - pip install wheel
