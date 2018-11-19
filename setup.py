@@ -25,6 +25,7 @@ import subprocess
 
 import numpy as np
 
+
 def git_version():
     """
     Inspired by https://github.com/numpy/numpy/blob/master/setup.py
