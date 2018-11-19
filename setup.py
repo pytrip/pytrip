@@ -20,6 +20,7 @@
 TODO: documentation here.
 """
 import os
+from distutils.core import setup
 import setuptools
 import subprocess
 
