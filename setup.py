@@ -23,6 +23,7 @@ import os
 import setuptools
 import subprocess
 
+import numpy as np
 
 def git_version():
     """
