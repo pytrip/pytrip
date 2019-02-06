@@ -89,6 +89,7 @@ def main(args=sys.argv[1:]):
         shape=(int(n), ),
         dtype=[('depth', np.float64),
                ('z', np.int8),
+               ('a', np.int8),
                ('energy_left_edge', np.float64),
                ('energy_bin_width', np.float64),
                ('tot_part_number', np.float64)])
@@ -100,6 +101,7 @@ def main(args=sys.argv[1:]):
         for sb in sorted(db.species, key=lambda y: y.z):
             data.depth[n:n + int(sb.ne)] = db.depth
             data.z[n:n + int(sb.ne)] = sb.z
+            data.a[n:n + int(sb.ne)] = sb.a
             data.energy_left_edge[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
             data.energy_bin_width[n:n + int(sb.ne)] = np.diff(sb.ebindata)  # bin widths
             data.tot_part_number[n:n + int(sb.ne)] = sb.histdata
@@ -108,9 +110,8 @@ def main(args=sys.argv[1:]):
     logging.debug("Temporary numpy array filled with data, size {}".format(data.size))
 
     # find particle species, depth steps and energy bins
-    # TODO think of switching in the future to pandas dataframe with mutliple indexes
-    z_uniq = np.unique(data.z)
-    logging.info("Particle species Z: {}".format(z_uniq))
+    az_uniq = np.unique(data[['a','z']])
+    logging.info("Particle species A, Z: {}".format(az_uniq))
 
     depth_uniq = np.unique(data.depth)
     if np.unique(np.diff(depth_uniq)).size == 1:
@@ -148,15 +149,16 @@ def main(args=sys.argv[1:]):
         ax.set_ylabel("Particle number / primary [(none)]")
         if parsed_args.logscale:
             ax.set_yscale('log')
-        for z in z_uniq:
-            z_data = data[data.z == z]  # this may cover depth only partially
-            if z_data.tot_part_number.any():
-                depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
-                energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
-                zlist = z_data.tot_part_number.reshape(depth_steps.size, energy_bin_widths.size).T
+        for az in az_uniq:
+            a, z = az
+            az_data = data[(data.z == z) & (data.a == a)]  # this may cover depth only partially
+            if az_data.tot_part_number.any():
+                depth_steps = az_data.depth[az_data.energy_left_edge == az_data.energy_left_edge[0]]
+                energy_bin_widths = az_data.energy_bin_width[az_data.depth == az_data.depth[0]]
+                zlist = az_data.tot_part_number.reshape(depth_steps.size, energy_bin_widths.size).T
                 part_number_at_depth = (zlist.T * energy_bin_widths).sum(axis=1)
                 ax.plot(depth_steps, part_number_at_depth,
-                        marker=marker, linestyle=linestyle, label="Z = {}".format(z))
+                        marker=marker, linestyle=linestyle, label="A = {}, Z = {}".format(a, z))
         plt.legend(loc=0)
         pdf.savefig(fig)
         plt.close()
@@ -174,42 +176,44 @@ def main(args=sys.argv[1:]):
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
                 ax.set_xlabel("Energy [MeV/amu]")
-                ax.set_ylabel("Particle number / primary [1/MeV]")
+                ax.set_ylabel("Particle number / primary [1/MeV/amu]")
                 if parsed_args.logscale:
                     ax.set_yscale('log')
-                for z in z_uniq:
-                    z_data = data[data.z == z]  # this may cover depth only partially
-                    if z_data.tot_part_number.any():
-                        mask1 = (z_data.depth == depth_step)
-                        energy_bin_centers = z_data.energy_left_edge[mask1] + 0.5 * z_data.energy_bin_width[mask1]
-                        tot_part_number = z_data.tot_part_number[mask1]
+                for az in az_uniq:
+                    a, z = az
+                    az_data = data[(data.z == z) & (data.a == a)]
+                    if az_data.tot_part_number.any():
+                        mask1 = (az_data.depth == depth_step)
+                        energy_bin_centers = az_data.energy_left_edge[mask1] + 0.5 * az_data.energy_bin_width[mask1]
+                        tot_part_number = az_data.tot_part_number[mask1]
                         if np.any(mask1):
                             ax.plot(energy_bin_centers, tot_part_number,
                                     linestyle=linestyle,
                                     marker=marker,
-                                    label="Z = {:d}".format(z))
+                                    label="Z = {:d} A = {:d}".format(z, a))
                 plt.legend(loc=0)
                 pdf.savefig(fig)
                 plt.close()
                 logging.debug("Spectrum for depth {} saved".format(depth_step))
 
         # then couple of pages, each with heatmap plot of spectrum for given particle specie
-        for z in z_uniq:
-            z_data = data[data.z == z]
-            if z_data.tot_part_number.any():
-                depth_steps = z_data.depth[z_data.energy_left_edge == z_data.energy_left_edge[0]]
-                energy_left_edges = z_data.energy_left_edge[z_data.depth == z_data.depth[0]]
-                energy_bin_widths = z_data.energy_bin_width[z_data.depth == z_data.depth[0]]
+        for az in az_uniq:
+            a, z = az
+            az_data = data[(data.z == z) & (data.a == a)]
+            if az_data.tot_part_number.any():
+                depth_steps = az_data.depth[az_data.energy_left_edge == az_data.energy_left_edge[0]]
+                energy_left_edges = az_data.energy_left_edge[az_data.depth == az_data.depth[0]]
+                energy_bin_widths = az_data.energy_bin_width[az_data.depth == az_data.depth[0]]
 
-                zlist = z_data.tot_part_number.reshape(depth_steps.size, energy_left_edges.size).T
+                zlist = az_data.tot_part_number.reshape(depth_steps.size, energy_left_edges.size).T
                 if parsed_args.logscale:
                     norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
                 else:
                     norm = colors.Normalize(vmin=0.0, vmax=zlist.max())
                 fig, ax = plt.subplots()
-                ax.set_title("Spectrum for Z = {}".format(z))
+                ax.set_title("Spectrum for Z = {} A = {}".format(z, a))
                 ax.set_xlabel("Depth [cm]")
-                ax.set_ylabel("Energy [MeV]")
+                ax.set_ylabel("Energy [MeV/amu]")
                 max_energy_nonzero_part_no = energy_left_edges[zlist.mean(axis=1) > 0].max()
                 ax.set_ylim(0, 1.2 * max_energy_nonzero_part_no)
 
@@ -226,7 +230,7 @@ def main(args=sys.argv[1:]):
 
                 im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
-                cbar.set_label("Particle number / primary [1/MeV]", rotation=270, verticalalignment='bottom')
+                cbar.set_label("Particle number / primary [1/MeV/amu]", rotation=270, verticalalignment='bottom')
                 pdf.savefig(fig)
                 plt.close()
                 logging.debug("Particle number / primary map for Z = {} saved".format(z))
