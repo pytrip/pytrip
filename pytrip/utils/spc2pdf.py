@@ -110,7 +110,7 @@ def main(args=sys.argv[1:]):
     logging.debug("Temporary numpy array filled with data, size {}".format(data.size))
 
     # find particle species, depth steps and energy bins
-    az_uniq = np.unique(data[['a','z']])
+    az_uniq = np.unique(data[['a', 'z']])
     logging.info("Particle species A, Z: {}".format(az_uniq))
 
     depth_uniq = np.unique(data.depth)
