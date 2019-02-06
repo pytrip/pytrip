@@ -125,11 +125,11 @@ class Field(object):
         from the target Voi provided.
 
         """
-        if len(isocenter_str) is 0:
+        if len(isocenter_str) == 0:
             self.isocenter = []
             return
         _target = isocenter_str.split(",")
-        if len(_target) is 3:
+        if len(_target) == 3:
             try:
                 self.isocenter = [float(_target[0]), float(_target[1]), float(_target[2])]
                 return
