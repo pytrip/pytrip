@@ -1116,7 +1116,7 @@ class Voi:
 
         :returns: a list of str holding the all lines needed for a Voxelplan formatted file.
         """
-        if len(self.slices) is 0:
+        if len(self.slices) == 0:
             return ""
 
         out = "\n"

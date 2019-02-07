@@ -482,10 +482,10 @@ class Plan(object):
 
             # set isocenter if specified in field
             _ic = _field.isocenter
-            if len(_ic) is not 0:
+            if len(_ic) >= 3:
                 line += " target({:.1f},{:.1f},{:.1f}) ".format(_ic[0], _ic[1], _ic[2])
 
-            # set dose extention:
+            # set dose extension:
             # TODO: check number of decimals which make sense
             # TODO: zeros allowed?
             line += " doseext({:.4f})".format(_field.dose_extension)
@@ -565,7 +565,7 @@ class Plan(object):
         output = []
         window = self.window
         window_str = ""
-        if len(window) is 6:
+        if len(window) == 6:
             window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f} ".format(window[0], window[1],  # Xmin/max
                                                                                      window[2], window[3],  # Ymin/max
                                                                                      window[4], window[5])  # Zmin/max
@@ -601,8 +601,8 @@ class Plan(object):
 
         if self.want_rst and self.optimize:
             for i, field in enumerate(fields):
-                    output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
-                    self._out_files.append(field.basename + ".rst")
+                output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
+                self._out_files.append(field.basename + ".rst")
 
         # TODO: add various .gd files
         return output

@@ -115,7 +115,7 @@ class DensityProjections:
     def optimize_angle(self, voi, couch, gantry, margin, iteration, avoid=[]):
         """ TODO: Documentation
         """
-        if iteration is 0:
+        if iteration == 0:
             return [gantry, couch]
         grid = self.calculate_quality_list(
             voi, np.linspace(gantry, gantry + margin, 3), np.linspace(couch, couch + margin, 3), avoid=avoid)
@@ -207,9 +207,9 @@ class DensityProjections:
         dimension = window_size / self.cube.pixel_size
         dimension = np.int16(dimension)
         start = center - self.cube.pixel_size * 0.5 * np.array(dimension[0] * b + dimension[1] * c)
-        if calculate_from is 1:
+        if calculate_from == 1:
             start = self.calculate_back_start_voi(voi, start, step_vec)
-        if calculate_from is 2:
+        elif calculate_from == 2:
             start = self.calculate_front_start_voi(voi, start, step_vec)
 
         data = pytriplib.calculate_wepl(

@@ -537,7 +537,7 @@ class Execute(object):
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         # If no password is supplied, try to look for a private key
-        if self.password is "" or None:
+        if not self.password:
             rsa_keypath = os.path.expanduser(self.rsakey_local_path)
             if not os.path.isfile(rsa_keypath):
                 # login with provided username + empty password
@@ -570,7 +570,7 @@ class Execute(object):
         # transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
         # If no password is supplied, try to look for a private key
-        if self.password is "" or None:
+        if not self.password:
             rsa_keypath = os.path.expanduser(self.rsakey_local_path)
             if not os.path.isfile(rsa_keypath):
                 # login with provided username + empty password
