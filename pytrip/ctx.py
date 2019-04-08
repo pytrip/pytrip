@@ -49,6 +49,8 @@ class CtxCube(Cube):
         """ Imports CT-images from Dicom object.
 
         :param Dicom dcm: a Dicom object
+        you can create Dicom object with pt.dicomhelper.read_dicom_dir(dicom_path)
+        Don't confuse dicom object with filename or pydicom object
         """
         if "images" not in dcm:
             raise InputError("Data doesn't contain ct data")
