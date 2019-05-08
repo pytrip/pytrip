@@ -64,7 +64,7 @@ class CtxCube(Cube):
         for i in range(len(dcm["images"])):
             data = np.array(dcm["images"][i].pixel_array) * slope + intersect
             self.cube[i][:][:] = data
-        if self.slice_pos[1] < self.slice_pos[0]:
+        if len(self.slice_pos) > 1 and self.slice_pos[1] < self.slice_pos[0]:
             self.slice_pos.reverse()
             self.zoffset = self.slice_pos[0]
             self.cube = self.cube[::-1]
