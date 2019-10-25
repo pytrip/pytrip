@@ -131,9 +131,9 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
-    package_data={'pytrip': ['data/*.dat', 'pytriplib.*']},
+    package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
     install_requires=[
-        'matplotlib<2.2.0', 'numpy', 'pydicom'
+        'matplotlib', 'numpy', 'pydicom'
     ],
     include_dirs=[np.get_include()],
     ext_modules=extensions,
