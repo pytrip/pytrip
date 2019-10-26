@@ -44,7 +44,7 @@ echo "TAG" $APPVEYOR_REPO_TAG
 ls -al dist
 # upload only if tag present
 if [[ $APPVEYOR_REPO_TAG == "true" ]]; then
-    pip install twine
+    python -m pip install twine
     twine upload dist/*whl
 fi
 
