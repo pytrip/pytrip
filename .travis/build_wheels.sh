@@ -7,7 +7,7 @@ set -e -x
 # docker image has only freetype v2.2
 install_freetype() {
     yum install -y wget
-    wget --no-check-certificate http://downloads.sourceforge.net/freetype/freetype-2.3.0.tar.gz
+    wget --no-check-certificate https://download.savannah.gnu.org/releases/freetype/freetype-old/freetype-2.3.0.tar.gz
     tar -zxvf freetype-2.3.0.tar.gz
     cd freetype-2.3.0
     ./configure --prefix=/usr
