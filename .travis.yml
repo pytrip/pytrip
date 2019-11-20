@@ -32,7 +32,7 @@ matrix:
           services: docker
           sudo: true
         - python: 3.6
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp34-cp34m cp35-cp35m cp36-cp36m cp37-cp37m"
+          env: TOXENV=packaging PRECMD=linux32 TARGET="cp35-cp35m cp36-cp36m cp37-cp37m"
           services: docker
           sudo: true
         - python: 3.6
