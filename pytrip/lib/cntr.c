@@ -1,5 +1,7 @@
 /* -*- mode: c; c-basic-offset: 4 -*- */
 
+// Code copied from https://github.com/matplotlib/matplotlib/blob/v2.1.2/src/cntr.c (src/cntr.c from matplotlib v2.1.2)
+
 /*
   cntr.c
   General purpose contour tracer for quadrilateral meshes.
