@@ -517,12 +517,10 @@ def create_voi_from_cube(cube, name, value=100):
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
     # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
-    import matplotlib
-    matplotlib.use('Agg')
-    import matplotlib._cntr as cntr
+    import _cntr
     for i in range(cube.dimz):
         x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
-        isodose_obj = cntr.Cntr(x, y, cube.cube[i])
+        isodose_obj = _cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(value)
         s = Slice(cube)
         s.thickness = cube.slice_distance

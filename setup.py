@@ -85,7 +85,12 @@ with open('README.rst') as readme_file:
 extensions = [setuptools.Extension(
     'pytriplib',
     sources=[os.path.join('pytrip', 'lib', 'filter_point.c')],
-    extra_compile_args=['-fpic'])]
+    extra_compile_args=['-fpic']),
+    setuptools.Extension(
+        '_cntr',
+        sources=[os.path.join('pytrip', 'lib', 'cntr.c')],
+        extra_compile_args=['-fpic'])
+]
 
 setuptools.setup(
     name='pytrip98',
@@ -131,9 +136,9 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
-    package_data={'pytrip': ['data/*.dat', 'pytriplib.*']},
+    package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
     install_requires=[
-        'matplotlib<2.2.0', 'numpy', 'pydicom'
+        'matplotlib', 'numpy', 'pydicom'
     ],
     include_dirs=[np.get_include()],
     ext_modules=extensions,
