@@ -678,7 +678,7 @@ class Voi:
         # this is needed for speedup.
 
         if not recalc and hasattr(self, "voi_cube"):
-            _max = self.voi_cube.max()
+            _max = self.voi_cube.cube.max()
             _max_inv = 1 / _max
             if _max == level:
                 return self.voi_cube
