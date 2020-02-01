@@ -874,10 +874,51 @@ int point_in_contour(double * point,double * contour,int n_contour)
     }
     return count%2;
 }
+
+int point_in_contour_array_version(double * point,PyArrayObject * contour)
+{
+    // assumed input shape:
+    //  -> point is 1D array with 2 elements
+    //  -> contour is 2D array with (X,3) shape
+    // both structures hold doubles
+    int a,b;
+    int m = 0;
+    int count = 0;
+    int n_contour = PyArray_DIM(contour, 0);
+
+    double point_x = point[0];
+    double point_y = point[1];
+
+    double contour_ax = 0.0;
+    double contour_ay = 0.0;
+    double contour_bx = 0.0;
+    double contour_by = 0.0;
+
+    for(m = 0; m < n_contour; m++)
+    {
+        a = m;
+        if(m == n_contour -1)
+            b = 0;
+        else
+            b = m+1;
+
+        contour_ax = *((double*)PyArray_GETPTR2(contour, a, 0));
+        contour_ay = *((double*)PyArray_GETPTR2(contour, a, 1));
+        contour_bx = *((double*)PyArray_GETPTR2(contour, b, 0));
+        contour_by = *((double*)PyArray_GETPTR2(contour, b, 1));
+        if( (contour_ay <= point_y && contour_by > point_y) || (contour_ay > point_y && contour_by <= point_y))
+        {
+            if(contour_ax-point_x+(contour_bx-contour_ax)/(contour_by-contour_ay)*(point_y-contour_ay) >= 0)
+                count++;
+        }
+    }
+    return count%2;
+}
+
+
 static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 {
     int i,j,l,m,n;
-    double * size;
     double point[2];
     int resolution = 5;
     double tiny_area = 1.0/pow(resolution,2);
@@ -885,85 +926,121 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     int edge = 0;
     int inside = 0;
 
-    int dims[3];
     int n_contour;
-    int out_dim[] = {1500};
+    npy_intp out_dim[] = {1500};
     int upper_limit = 1500;
     int p1[2],p2[2];
 
 
     //~ int upper_limit;
-    double * contour;
-    double * data;
     double min_x = 0;
     double max_x = 0;
     double min_y = 0;
     double max_y = 0;
-    short * dose;
     PyArrayObject *vec_dose,*vec_contour,*vec_size;
     PyArrayObject *vec_out;
 
+    // function expects as input:
+    //  vec_dose - 2-D table of int16, shape (X,Y)
+    //  vec_contour - 2-D table of float64, shape (Z, 3)
+    //  vec_size - 1-D table of float64, shape (3,)
     if (!PyArg_ParseTuple(args, "OOO",&vec_dose,&vec_contour,&vec_size))
         return NULL;
 
+
+    // function returns as output 1-D table of doubles, size out_dim[0] (1500)
+    vec_out = (PyArrayObject *) PyArray_ZEROS(1,out_dim,NPY_DOUBLE, NPY_ANYORDER);
+
+    n_contour = PyArray_DIM(vec_contour, 0);
+
+    double  voxel_size_x = 0.0;
+    double voxel_size_y = 0.0;
+    double voxel_size_z = 0.0;
+
+    voxel_size_x = *((double*)PyArray_GETPTR1(vec_size, 0));
+    voxel_size_y = *((double*)PyArray_GETPTR1(vec_size, 1));
+    voxel_size_z = *((double*)PyArray_GETPTR1(vec_size, 2));
+
+    // debugging printouts
+//    printf("input dose array ndim : %d\n", PyArray_NDIM(vec_dose));
+//    printf("input dose array dim 0 : %" NPY_INTP_FMT "\n", PyArray_DIM(vec_dose, 0));
+//    printf("input dose array dim 1 : %" NPY_INTP_FMT "\n", PyArray_DIM(vec_dose, 1));
+//
+//    printf("input contour array ndim : %d\n", PyArray_NDIM(vec_contour));
+//    printf("input contour array dim 0 : %" NPY_INTP_FMT "\n", PyArray_DIM(vec_contour, 0));
+//    printf("input contour array dim 1 : %" NPY_INTP_FMT "\n", PyArray_DIM(vec_contour, 1));
+//
+//    printf("input voxel_size array ndim : %d\n", PyArray_NDIM(vec_size));
+//    printf("input voxel_size array dim 0 : %" NPY_INTP_FMT "\n", PyArray_DIM(vec_size, 0));
+//
+//    printf("voxel size : %g, %g, %g\n", voxel_size_x, voxel_size_y, voxel_size_z);
     l = 0;
-    dims[0] = vec_dose->dimensions[0];
-    dims[1] = vec_dose->dimensions[1];
 
-    dose = (short *)vec_dose->data;
-    contour = (double*)vec_contour->data;
-    n_contour = vec_contour->dimensions[0];
+    min_x = *((double*)PyArray_GETPTR2(vec_contour, 0, 0));
+    max_x = *((double*)PyArray_GETPTR2(vec_contour, 0, 0));
+    min_y = *((double*)PyArray_GETPTR2(vec_contour, 1, 0));
+    max_y = *((double*)PyArray_GETPTR2(vec_contour, 1, 0));
 
-    size = (double*)vec_size->data;
+    double contour_element_x = 0.0;
+    double contour_element_y = 0.0;
 
-    vec_out = (PyArrayObject *) PyArray_FromDims(1,out_dim,NPY_DOUBLE);
-    data = (double *)vec_out->data;
-    min_x = contour[0];
-    max_x = contour[0];
-    min_y = contour[1];
-    max_y = contour[1];
+
     for(i = 1; i < n_contour; i++)
     {
-        if(min_x > contour[3*i])
-            min_x = contour[3*i];
-        else if(max_x < contour[3*i])
-            max_x = contour[3*i];
-        if(min_y > contour[3*i+1])
-            min_y = contour[3*i+1];
-        else if(max_y < contour[3*i+1])
-            max_y = contour[3*i+1];
+        contour_element_x = *((double*)PyArray_GETPTR2(vec_contour, i, 0));
+        contour_element_y = *((double*)PyArray_GETPTR2(vec_contour, i, 1));
+
+        if(min_x > contour_element_x)
+            min_x = contour_element_x;
+        else if(max_x < contour_element_x)
+            max_x = contour_element_x;
+        if(min_y > contour_element_y)
+            min_y = contour_element_y;
+        else if(max_y < contour_element_y)
+            max_y = contour_element_y;
     }
-    min_x -= size[0];
-    max_x += size[0];
-    min_y -= size[1];
-    max_y += size[1];
+    min_x -= voxel_size_x;
+    max_x += voxel_size_x;
+    min_y -= voxel_size_y;
+    max_y += voxel_size_y;
 
     n = 0;
-    for(i = 0; i < dims[0]; i++)
+    // loop over all elements of cube slice
+    npy_int16 slice_element = 0;
+    for(i = 0; i < PyArray_DIM(vec_dose, 0); i++)
     {
-        if((0.5+i)*size[1] < min_y || (0.5+i)*size[0] > max_y)
+        if((0.5+i)*voxel_size_y < min_y || (0.5+i)*voxel_size_y > max_y)
             continue;
-        for(j = 0; j < dims[1]; j++)
+        for(j = 0; j < PyArray_DIM(vec_dose, 1); j++)
         {
-            point[0] = (0.5+j)*size[0];
-            point[1] = (0.5+i)*size[1];
+            point[0] = (0.5+j)*voxel_size_x;
+            point[1] = (0.5+i)*voxel_size_y;
 
             if(point[0] < min_x || point[0] > max_x)
                 continue;
             inside = 0;
-            if(point_in_contour(point,contour,n_contour) == 1)
+            if(point_in_contour_array_version(point,vec_contour) == 1)  // TODO
             {
                 inside = 1;
-                if(dose[dims[0]*i+j] < upper_limit)
-                    data[dose[dims[0]*i+j]] += 1;
+                slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
+                if(slice_element < upper_limit)
+                    *((double*)PyArray_GETPTR1(vec_out, slice_element)) += 1;
             }
             edge = 0;
             for(m = 0; m < n_contour; m++)
             {
-                p1[0] = (int)(contour[3*(m%n_contour)]/size[0]);
-                p1[1] = (int)(contour[3*(m%n_contour)+1]/size[1]);
-                p2[0] = (int)(contour[3*((m+1)%n_contour)]/size[0]);
-                p2[1] = (int)(contour[3*((m+1)%n_contour)+1]/size[1]);
+
+                contour_element_x = *((double*)PyArray_GETPTR2(vec_contour, m%n_contour, 0));
+                p1[0] = (int)(contour_element_x/voxel_size_x);
+
+                contour_element_y = *((double*)PyArray_GETPTR2(vec_contour, m%n_contour, 1));
+                p1[1] = (int)(contour_element_y/voxel_size_y);
+
+                contour_element_x = *((double*)PyArray_GETPTR2(vec_contour, (m+1)%n_contour, 0));
+                p2[0] = (int)(contour_element_x/voxel_size_x);
+
+                contour_element_y = *((double*)PyArray_GETPTR2(vec_contour, (m+1)%n_contour, 1));
+                p2[1] = (int)(contour_element_y/voxel_size_y);
 
                 if(p1[0] == j && p1[1] == i)
                 {
@@ -978,20 +1055,21 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
             }
             if(edge)
             {
-                point[0] = (j)*size[0];
-                point[1] = (i)*size[1];
+                point[0] = j*voxel_size_x;
+                point[1] = i*voxel_size_y;
 
                 for(m = 0; m < resolution; m++)
                 {
                     for(n = 0; n < resolution; n++)
                     {
-                        point_a[0] = point[0]+(m+0.5)*size[0]/(resolution);
-                        point_a[1] = point[1]+(n+0.5)*size[1]/(resolution);
-                        if(point_in_contour(point_a,contour,n_contour))
+                        point_a[0] = point[0]+(m+0.5)*voxel_size_x/resolution;
+                        point_a[1] = point[1]+(n+0.5)*voxel_size_y/resolution;
+                        slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
+                        if(point_in_contour_array_version(point_a,vec_contour))
                         {
                             if(!inside)
                             {
-                                data[dose[dims[0]*i+j]] += tiny_area;
+                                *((double*)PyArray_GETPTR1(vec_out, slice_element)) += tiny_area;
                             }
 
                         }
@@ -999,7 +1077,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
                         {
                             if(inside)
                             {
-                                data[dose[dims[0]*i+j]] -= tiny_area;
+                                *((double*)PyArray_GETPTR1(vec_out, slice_element)) -= tiny_area;
                             }
                         }
                     }
@@ -1556,7 +1634,8 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     vec_out = (PyArrayObject *) PyArray_ZEROS(1, out_dims, NPY_DOUBLE, NPY_ANYORDER);
 
     // loop over all elements of input cube and calculate center-of-mass location
-    npy_int16 cube_element;
+    npy_int16 cube_element = 0;
+    tot_dose = 0.0;
     for (i = 0; i < PyArray_DIM(arg1, 0); i++)
     {
         for (j = 0; j < PyArray_DIM(arg1, 1); j++)
