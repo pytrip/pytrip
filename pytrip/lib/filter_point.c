@@ -1532,53 +1532,71 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     return PyArray_Return(vec_out);
 }
 
-static PyObject * calculate_dose_center(PyObject *self, PyObject *args)
-{
-    PyArrayObject *vec_in,*vec_out;
-    short * in;
-    int i,j,k,l;
-    double * out;
-    long tot_dose;
-    int cubedim[3];
-    int a,a_temp,b_temp;
-    int dim[] = {3};
+static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
 
-    if (!PyArg_ParseTuple(args, "O",&vec_in))
-        return NULL;
-    cubedim[0] = vec_in->dimensions[0];
-    cubedim[1] = vec_in->dimensions[1];
-    cubedim[2] = vec_in->dimensions[2];
-    in = (short *)vec_in->data;
-    vec_out = (PyArrayObject *) PyArray_FromDims(1,dim,NPY_DOUBLE);
-    out = (double *)vec_out->data;
-    out[0] = 0;
-    out[1] = 0;
-    out[2] = 0;
-    tot_dose = 0;
-    a = cubedim[2]*cubedim[1];
-    for (i = 0; i < cubedim[0]; i++)
+    // parse input argument to a PyObject
+    PyObject *arg1 = NULL;
+    if (!PyArg_ParseTuple(args, "O", &arg1)) return NULL;
+
+    // TODO add check if input is a 3-D table holding int32 integers
+
+    // output vector, 1-dimensional, 3 elements
+    // it should hold coordinates of center-of-the-mass of the dose cube
+    PyArrayObject *vec_out;
+    npy_intp out_dims[1];
+
+    // 3-D array iterators
+    int i, j, k;
+
+    // total dose
+    double tot_dose;
+
+    // allocate output vector with zeros
+    out_dims[0] = 3;  // set the vector to be 3 elements long
+    vec_out = (PyArrayObject *) PyArray_ZEROS(1, out_dims, NPY_DOUBLE, NPY_ANYORDER);
+
+//    printf("input ndim %d\n", PyArray_NDIM(arg1));
+//
+//    printf("input dim 0 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 0));
+//    printf("input dim 1 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 1));
+//    printf("input dim 2 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 2));
+//
+//    printf("type %d \n", PyArray_DESCR(arg1)->type_num);
+//
+//    printf("input is float %d\n", PyArray_ISFLOAT(arg1));
+//    printf("input is integer %d\n", PyArray_ISINTEGER(arg1));
+//    printf("input is number %d\n", PyArray_ISNUMBER(arg1));
+//
+//    printf("input is signed int %d\n", PyArray_ISSIGNED(arg1));
+//    printf("input is unsigned int %d\n", PyArray_ISUNSIGNED(arg1));
+//    printf("input is object %d\n", PyArray_ISOBJECT(arg1));
+//    printf("input is user def %d\n", PyArray_ISUSERDEF(arg1));
+
+    // loop over all elements of input cube and calculate center-of-mass location
+    npy_int16 cube_element;
+    for (i = 0; i < PyArray_DIM(arg1, 0); i++)
     {
-        a_temp = i*a;
-        for (j = 0; j < cubedim[1]; j++)
+        for (j = 0; j < PyArray_DIM(arg1, 1); j++)
         {
-            b_temp = a_temp+j*cubedim[1];
-
-            for (k = 0; k < cubedim[2]; k++)
+            for (k = 0; k < PyArray_DIM(arg1, 2); k++)
             {
-                l = b_temp+k;
-                if (in[l] > 0)
-                {
-                    tot_dose += in[l];
-                    out[0] += in[l]*k;
-                    out[1] += in[l]*j;
-                    out[2] += in[l]*i;
+                cube_element = *((npy_int16*)PyArray_GETPTR3(arg1, i, j, k));
+                if( cube_element > 0){
+                    tot_dose += cube_element;
+                    *((double*)PyArray_GETPTR1(vec_out, 0)) += (double)cube_element * i;
+                    *((double*)PyArray_GETPTR1(vec_out, 1)) += (double)cube_element * j;
+                    *((double*)PyArray_GETPTR1(vec_out, 2)) += (double)cube_element * k;
                 }
             }
         }
     }
-    out[0] /= tot_dose;
-    out[1] /= tot_dose;
-    out[2] /= tot_dose;
+
+    *((double*)PyArray_GETPTR1(vec_out, 0)) /= tot_dose;
+    *((double*)PyArray_GETPTR1(vec_out, 1)) /= tot_dose;
+    *((double*)PyArray_GETPTR1(vec_out, 2)) /= tot_dose;
+
+//    printf("tot_dose %g\n", tot_dose);
+
     return PyArray_Return(vec_out);
 }
 
@@ -1739,8 +1757,8 @@ static PyMethodDef pytriplibMethods[] = {
 static struct PyModuleDef moduledef = {
         PyModuleDef_HEAD_INIT,
         "pytriplib",
-        NULL,
-        NULL,
+        "pytriplib docstring (TODO)",
+        -1,
         pytriplibMethods,
         NULL,
         NULL,
