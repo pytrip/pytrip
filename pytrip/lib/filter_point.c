@@ -1555,23 +1555,6 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     out_dims[0] = 3;  // set the vector to be 3 elements long
     vec_out = (PyArrayObject *) PyArray_ZEROS(1, out_dims, NPY_DOUBLE, NPY_ANYORDER);
 
-//    printf("input ndim %d\n", PyArray_NDIM(arg1));
-//
-//    printf("input dim 0 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 0));
-//    printf("input dim 1 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 1));
-//    printf("input dim 2 %" NPY_INTP_FMT "\n", PyArray_DIM(arg1, 2));
-//
-//    printf("type %d \n", PyArray_DESCR(arg1)->type_num);
-//
-//    printf("input is float %d\n", PyArray_ISFLOAT(arg1));
-//    printf("input is integer %d\n", PyArray_ISINTEGER(arg1));
-//    printf("input is number %d\n", PyArray_ISNUMBER(arg1));
-//
-//    printf("input is signed int %d\n", PyArray_ISSIGNED(arg1));
-//    printf("input is unsigned int %d\n", PyArray_ISUNSIGNED(arg1));
-//    printf("input is object %d\n", PyArray_ISOBJECT(arg1));
-//    printf("input is user def %d\n", PyArray_ISUSERDEF(arg1));
-
     // loop over all elements of input cube and calculate center-of-mass location
     npy_int16 cube_element;
     for (i = 0; i < PyArray_DIM(arg1, 0); i++)
@@ -1594,8 +1577,6 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     *((double*)PyArray_GETPTR1(vec_out, 0)) /= tot_dose;
     *((double*)PyArray_GETPTR1(vec_out, 1)) /= tot_dose;
     *((double*)PyArray_GETPTR1(vec_out, 2)) /= tot_dose;
-
-//    printf("tot_dose %g\n", tot_dose);
 
     return PyArray_Return(vec_out);
 }
