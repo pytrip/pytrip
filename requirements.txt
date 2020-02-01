@@ -1,6 +1,6 @@
 # micro-language and markers are described here: https://www.python.org/dev/peps/pep-0508/
 numpy<1.16  ; python_version < '3.5'  # numpy 1.16 and 1.17 subsequently dropped support for python < 3.5 and 2.x (see https://docs.scipy.org/doc/numpy/release.html#numpy-1-17-0-release-notes)
-numpy<1.18 ; python_version >= '3.5' # latest numpy version for new python versions
+numpy; python_version >= '3.5' # latest numpy version for new python versions
 matplotlib
 pydicom
 # Enum structure has appeared in Python 3.4 (https://docs.python.org/3.4/library/enum.html), for older version a backport is needed
