@@ -132,12 +132,11 @@ class ExecParser(object):
     def __init__(self, plan):
         self.plan = plan
 
-    def _parse_exec(self, path):
+    def parse_exec(self, path):
         """ Parse an .exec file and store it into self.plan
 
         :params str path: path to .exec file including file extension
         """
-        self.folder = os.path.dirname(path)
         with open(path, "r") as fp:
             data = fp.read()
 
