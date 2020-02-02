@@ -20,7 +20,6 @@
 Parser for TRiP files.
 """
 
-import os
 import logging
 
 from pytrip.tripexecuter import Field
