@@ -236,65 +236,66 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
 
 static PyObject * filter_points(PyObject *self, PyObject *args)
 {
-    PyArrayObject *vecin,*vecout;
     int i = 0;
-    double ** points,*cout,**out;
+    int k = 0;
     double dist;
-    int dims[2];
-    int j, k, rows;
-    double * tmp_point;
     double d, dist_2;
     int to_close;
+
+    double current_point_x = 0.0;
+    double current_point_y = 0.0;
+
+    double out_item_x = 0.0;
+    double out_item_y = 0.0;
+
+    // array objects into which input will be unpacked and output packed into
+    PyArrayObject *vecin;
+    PyArrayObject *list_out;
+    PyArrayObject *list_item;
 
     if (!PyArg_ParseTuple(args, "Od", &vecin,&dist))
         return NULL;
 
-    points = pyvector_to_array(vecin);
-    rows = vecin->dimensions[0];
-
-    dims[0] = rows;
-    dims[1] = 2;
-
-    j = 1;
+//    printf("dist: %g\n", dist);
+//    printf("input dose array ndim : %d\n", PyArray_NDIM(vecin));
+//    printf("input dose array dim 0 : %" NPY_INTP_FMT "\n", PyArray_DIM(vecin, 0));
+//    printf("input dose array dim 1 : %" NPY_INTP_FMT "\n", PyArray_DIM(vecin, 1));
 
     dist_2 = pow(dist,2);
 
-    out = (double **)malloc(sizeof(double *)*rows);
+    list_out = PyList_New(0);
+    list_item = PyList_New(2);
+    PyList_SetItem(list_item, 0, PyFloat_FromDouble(*((double*)PyArray_GETPTR2(vecin, 0, 0))));
+    PyList_SetItem(list_item, 1, PyFloat_FromDouble(*((double*)PyArray_GETPTR2(vecin, 0, 1))));
+    PyList_Append(list_out, list_item);
 
-    for(i = 0; i < rows; i++)
-    {
-        out[i] = (double *)malloc(sizeof(double)*2);
-    }
-
-    out[0] = points[0];
-    for(i = 0; i < rows; i++)
+    for(i = 0; i <  PyArray_DIM(vecin, 0); i++)
     {
         to_close = 0;
-        tmp_point = points[i];
-        for(k = 0; k < j; k++)
+        current_point_x = *((double*)PyArray_GETPTR2(vecin, i, 0));
+        current_point_y = *((double*)PyArray_GETPTR2(vecin, i, 1));
+
+        for(k = 0; k < PyList_Size(list_out); k++)
         {
-            d = pow(tmp_point[0]-out[k][0],2)+pow(tmp_point[1]-out[k][1],2);
+            out_item_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(list_out, k), 0));
+            out_item_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(list_out, k), 1));
+
+            d = pow(current_point_x-out_item_x,2) + pow(current_point_y-out_item_y,2);
             if (d < dist_2)
             {
                 to_close = 1;
             }
         }
-        if (to_close == 0)
-            out[j++] = tmp_point;
+        if (to_close == 0){
+            list_item = PyList_New(2);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(current_point_x));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(current_point_y));
+            PyList_Append(list_out, list_item);
+        }
 
     }
 
-    dims[0] = j;
-
-    vecout = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    cout = (double *)vecout->data;
-
-    for (i = 0; i < j; i++)
-    {
-        cout[2*i] = out[i][0];
-        cout[2*i+1] = out[i][1];
-    }
-    return PyArray_Return(vecout);
+    return PyArray_Return(list_out);
 }
 double dot(double * a,double * b,int len)
 {
