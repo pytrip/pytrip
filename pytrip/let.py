@@ -70,7 +70,7 @@ class LETCube(Cube):
                   - area: TODO - what is this?
         """
         warnings.warn(
-            "The method calculate_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+            "The method calculate_lvh() is deprecated, and is replaced with the pytrip.VolHist object.",
             DeprecationWarning
         )
         pos = 0
