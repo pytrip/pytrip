@@ -32,7 +32,7 @@ class Field(object):
     proper file extension)
     """
 
-    def __init__(self, basename="", kernel=None):
+    def __init__(self, basename=""):
         """ Create an instance of the Field class.
         :params str basename" The name of this field, will be used as basename for .rst files.
         """
@@ -77,8 +77,6 @@ class Field(object):
         out += "   Field {:d} '{:s}'\n".format(self.number, self.basename)
         out += "----------------------------------------------------------------------------\n"
         out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
-        out += "|  Projectile                   : {:s}-{:s}\n".format(self.projectile,
-                                                                      str(self.projectile_a))
         out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
         out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
         out += "|\n"
