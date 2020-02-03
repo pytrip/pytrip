@@ -875,46 +875,6 @@ int point_in_contour(double * point,double * contour,int n_contour)
     return count%2;
 }
 
-int point_in_contour_array_version(double * point,PyArrayObject * contour)
-{
-    // assumed input shape:
-    //  -> point is 1D array with 2 elements
-    //  -> contour is 2D array with (X,3) shape
-    // both structures hold doubles
-    int a,b;
-    int m = 0;
-    int count = 0;
-    int n_contour = PyArray_DIM(contour, 0);
-
-    double point_x = point[0];
-    double point_y = point[1];
-
-    double contour_ax = 0.0;
-    double contour_ay = 0.0;
-    double contour_bx = 0.0;
-    double contour_by = 0.0;
-
-    for(m = 0; m < n_contour; m++)
-    {
-        a = m;
-        if(m == n_contour -1)
-            b = 0;
-        else
-            b = m+1;
-
-        contour_ax = *((double*)PyArray_GETPTR2(contour, a, 0));
-        contour_ay = *((double*)PyArray_GETPTR2(contour, a, 1));
-        contour_bx = *((double*)PyArray_GETPTR2(contour, b, 0));
-        contour_by = *((double*)PyArray_GETPTR2(contour, b, 1));
-        if( (contour_ay <= point_y && contour_by > point_y) || (contour_ay > point_y && contour_by <= point_y))
-        {
-            if(contour_ax-point_x+(contour_bx-contour_ax)/(contour_by-contour_ay)*(point_y-contour_ay) >= 0)
-                count++;
-        }
-    }
-    return count%2;
-}
-
 
 static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 {
@@ -931,6 +891,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     int upper_limit = 1500;
     int p1[2],p2[2];
 
+    double * contour;
 
     //~ int upper_limit;
     double min_x = 0;
@@ -952,6 +913,8 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     vec_out = (PyArrayObject *) PyArray_ZEROS(1,out_dim,NPY_DOUBLE, NPY_ANYORDER);
 
     n_contour = PyArray_DIM(vec_contour, 0);
+
+    contour = (double*)PyArray_DATA(vec_contour);
 
     double  voxel_size_x = 0.0;
     double voxel_size_y = 0.0;
@@ -1019,7 +982,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
             if(point[0] < min_x || point[0] > max_x)
                 continue;
             inside = 0;
-            if(point_in_contour_array_version(point,vec_contour) == 1)  // TODO
+            if(point_in_contour(point,contour,n_contour) == 1)  // TODO
             {
                 inside = 1;
                 slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
@@ -1065,7 +1028,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
                         point_a[0] = point[0]+(m+0.5)*voxel_size_x/resolution;
                         point_a[1] = point[1]+(n+0.5)*voxel_size_y/resolution;
                         slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
-                        if(point_in_contour_array_version(point_a,vec_contour))
+                        if(point_in_contour(point_a,contour, n_contour))
                         {
                             if(!inside)
                             {
