@@ -1278,61 +1278,77 @@ static PyObject * calculate_wepl(PyObject *self, PyObject *args)
 //
 //}
 
-/*Plane: 1 is coronal and 2 is sagittal*/
+
 static PyObject * slice_on_plane(PyObject *self, PyObject *args)
 {
-    int i,j,l;
-    PyArrayObject *vec_slice,*vec_out;
+    int i;
     double depth;
     int plane;
-    double * contour_data;
-    double * out;
-    double * point1;
-    double * point2;
-    double points[10][3];
     double factor;
-    int dims[2];
+
+    // array objects into which input will be unpacked and output packed into
+    PyArrayObject *vec_slice;
+    PyArrayObject *list_out;
+    PyArrayObject *list_item;
+
+    // helper variables to read and operate on input data
+    double first_point_x = 0.0;
+    double second_point_x = 0.0;
+    double first_point_y = 0.0;
+    double second_point_y = 0.0;
+    double first_point_z = 0.0;
+    double second_point_z = 0.0;
+
+    /*Plane: 1 is coronal and 2 is sagittal*/
     if (!PyArg_ParseTuple(args, "Oid",&vec_slice,&plane,&depth))
         return NULL;
-    contour_data = (double *)vec_slice->data;
-    j = 0;
-    for(i = 0; i < vec_slice->dimensions[0]-1; i++)
+
+    // allocate empty list for output variable
+    // it will store list of points in 3D space, represented as 3-elements lists
+    list_out = PyList_New(0);
+
+    for(i = 0; i < PyArray_DIM(vec_slice, 0)-1; i++)
     {
-        point1 = &contour_data[3*i];
-        point2 = &contour_data[3*(i+1)];
-        if(plane == 2)
+
+        if(plane == 2) // sagittal, projection onto YZ
         {
-            if((point1[0] >= depth && point2[0] < depth) || (point2[0] >= depth && point1[0] < depth))
+            first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
+            second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
+            if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
             {
-                factor = (depth-point1[0])/(point2[0]-point1[0]);
-                points[j][0] = depth;
-                points[j][1] = point1[1]+(point2[1]-point2[1])*factor;
-                points[j++][2] = point1[2]+(point2[2]-point2[2])*factor;
+                first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
+                second_point_y = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+                first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
+                second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
+
+                list_item = PyList_New(3);
+                PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+                PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+                PyList_Append(list_out, list_item);
             }
         }
-        else if(plane == 1)
+        else if(plane == 1) // coronal, projection onto XZ
         {
-            if((point1[1] >= depth && point2[1] < depth) || (point2[1] >= depth && point1[1] < depth))
+            first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
+            second_point_y = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+            if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
             {
-                factor = (depth-point1[1])/(point2[1]-point1[1]);
-                points[j][0] = point1[0]+(point2[0]-point2[0])*factor;
-                points[j][1] = depth;
-                points[j++][2] = point1[2]+(point2[2]-point2[2])*factor;
+                first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
+                second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
+                first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
+                second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
+
+                list_item = PyList_New(3);
+                PyList_SetItem(list_item, 0, PyFloat_FromDouble(first_point_x+(second_point_x-first_point_x)*factor));
+                PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+                PyList_Append(list_out, list_item);
             }
         }
     }
-    dims[0] = j;
-    dims[1] = 3;
-    vec_out = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    out = (double *)vec_out->data;
-    l = 0;
-    for (i = 0; i < j; i++)
-    {
-        out[l++] = points[i][0];
-        out[l++] = points[i][1];
-        out[l++] = points[i][2];
-    }
-    return PyArray_Return(vec_out);
+
+    return PyArray_Return(list_out);
 }
 //First vector outer cube, second inner cube, third is field vector scaled to indices
 static PyObject * create_field_shadow(PyObject *self, PyObject *args)
