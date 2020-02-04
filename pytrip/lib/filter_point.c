@@ -61,7 +61,8 @@ double _pytriplib_norm(double * vector)
 static PyObject * points_to_contour(PyObject *self, PyObject *args)
 {
     int n_items;
-    int i,j;
+    int j;
+    npy_intp i;
     item *head, *element, *prev, *prev2, *element2;
     double * point,*prev_point;
     double a[2],b[2],c[2];
@@ -282,6 +283,7 @@ static PyObject * filter_points(PyObject *self, PyObject *args)
 
     return list_out;
 }
+
 double dot(double * a,double * b,int len)
 {
     double dot_val = 0.0;
@@ -292,6 +294,7 @@ double dot(double * a,double * b,int len)
     }
     return dot_val;
 }
+
 float *** vec_to_cube_float(PyArrayObject *arrayin)
 {
     int i,j,k,l = 0;
@@ -314,6 +317,7 @@ float *** vec_to_cube_float(PyArrayObject *arrayin)
     }
     return out;
 }
+
 double *** vec_to_cube_double(PyArrayObject *arrayin)
 {
     int i,j,k,l = 0;
@@ -339,6 +343,7 @@ double *** vec_to_cube_double(PyArrayObject *arrayin)
     }
     return out;
 }
+
 double ** vec_to_matrix(PyArrayObject *arrayin)
 {
     int i,j,l = 0;
@@ -356,6 +361,7 @@ double ** vec_to_matrix(PyArrayObject *arrayin)
     }
     return out;
 }
+
 float ** vec_to_matrix_float(PyArrayObject *arrayin)
 {
     int i,j,l = 0;
@@ -373,6 +379,7 @@ float ** vec_to_matrix_float(PyArrayObject *arrayin)
     }
     return out;
 }
+
 float get_element(float *** cube,int * dims,int * element)
 {
     if(element[0] >= 0 && element[0] < dims[0] && element[1] >= 0 && element[1] < dims[1] && element[2] >= 0 && element[2] < dims[2])
@@ -381,6 +388,7 @@ float get_element(float *** cube,int * dims,int * element)
     }
     return -1.0;
 }
+
 float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,int * point,int * step,double * field,double * weight)
 {
     float element;
@@ -458,6 +466,7 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
     }
     return element;
 }
+
 static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
 {
     int i,j,k;
@@ -605,6 +614,7 @@ static PyObject * calculate_dist(PyObject *self, PyObject *args)
     return PyArray_Return(vec_out);
 
 }
+
 double **** rastervector_to_array(PyArrayObject * vector)
 {
     int i,j,k,l;
@@ -638,6 +648,7 @@ double **** rastervector_to_array(PyArrayObject * vector)
     }
     return out;
 }
+
 double *** ddd_vector_to_cube(PyArrayObject * vector)
 {
     int i,j,k;
@@ -665,6 +676,7 @@ double *** ddd_vector_to_cube(PyArrayObject * vector)
     }
     return out;
 }
+
 int lookup_idx_ddd(double ** list,int n,double value)
 {
     int bottom = 0;
@@ -686,6 +698,7 @@ int lookup_idx_ddd(double ** list,int n,double value)
     }
     return mid;
 }
+
 static PyObject * calculate_dose(PyObject *self, PyObject *args)
 {
     int i,j,k;
@@ -791,6 +804,7 @@ static PyObject * calculate_dose(PyObject *self, PyObject *args)
     free(ddd);
     return PyArray_Return(vec_dose);
 }
+
 static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
 {
     int i,j;
@@ -834,6 +848,7 @@ static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
     }
     return PyArray_Return(vec_out);
 }
+
 int point_in_contour(double * point,double * contour,int n_contour)
 {
     int a,b;
@@ -859,7 +874,8 @@ int point_in_contour(double * point,double * contour,int n_contour)
 static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 {
     // temporary variables
-    int i,j,l,m,n;
+    npy_intp i,j,m;
+    int n;
     double point[2];
     int resolution = 5;
     double tiny_area = 1.0/pow(resolution,2);
@@ -880,7 +896,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 
     // helper variables to read and operate on input data
     npy_int16 slice_element = 0;
-    int n_contour;
+    npy_intp n_contour;
     double * contour;
     double contour_element_x = 0.0;
     double contour_element_y = 0.0;
@@ -934,7 +950,6 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 
     // loop over all elements of cube slice
     n = 0;
-    l = 0;
     for(i = 0; i < PyArray_DIM(vec_dose, 0); i++)
     {
         // move to next iteration if a point is outside contour box envelope (y coordinate)
@@ -956,7 +971,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
                 inside = 1;
                 slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
                 if(slice_element < upper_limit)
-                    *((double*)PyArray_GETPTR1(vec_out, slice_element)) += 1;
+                    *((double*)PyArray_GETPTR1(vec_out, (npy_intp)slice_element)) += 1;
             }
             edge = 0;
             for(m = 0; m < n_contour; m++)
@@ -1001,21 +1016,19 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
                         {
                             if(!inside)
                             {
-                                *((double*)PyArray_GETPTR1(vec_out, slice_element)) += tiny_area;
+                                *((double*)PyArray_GETPTR1(vec_out, (npy_intp)slice_element)) += tiny_area;
                             }
-
                         }
                         else
                         {
                             if(inside)
                             {
-                                *((double*)PyArray_GETPTR1(vec_out, slice_element)) -= tiny_area;
+                                *((double*)PyArray_GETPTR1(vec_out, (npy_intp)slice_element)) -= tiny_area;
                             }
                         }
                     }
                 }
             }
-            l++;
         }
     }
     return PyArray_Return(vec_out);
@@ -1598,11 +1611,8 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
 
 static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
 
-    // parse input argument to a PyObject
+    // input vector
     PyObject *arg1 = NULL;
-    if (!PyArg_ParseTuple(args, "O", &arg1)) return NULL;
-
-    // TODO add check if input is a 3-D table holding int32 integers
 
     // output vector, 1-dimensional, 3 elements
     // it should hold coordinates of center-of-the-mass of the dose cube
@@ -1610,10 +1620,15 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     npy_intp out_dims[1];
 
     // 3-D array iterators
-    int i, j, k;
+    npy_intp i, j, k;
 
     // total dose
     double tot_dose;
+
+    // parse input argument to a PyObject
+    if (!PyArg_ParseTuple(args, "O", &arg1)) return NULL;
+
+    // TODO add check if input is a 3-D table holding int32 integers
 
     // allocate output vector with zeros
     out_dims[0] = 3;  // set the vector to be 3 elements long
