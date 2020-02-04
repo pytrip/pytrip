@@ -43,23 +43,6 @@ double max_list(double * list, int len)
     return max_value;
 }
 
-double ** pyvector_to_array(PyArrayObject *arrayin)  {
-    int i, rows;
-    double * array;
-    double **out;
-
-    array = (double *) arrayin->data;  /* pointer to arrayin data as double */
-    rows = arrayin->dimensions[0];
-    out = (double **)malloc(sizeof(double *)*rows);
-    for(i = 0; i < rows; i++)
-    {
-        out[i] = (double *)malloc(sizeof(double)*2);
-        out[i][0] = array[2*i];
-        out[i][1] = array[2*i+1];
-    }
-    return out;
-}
-
 struct list_el{
     double * point;
     struct list_el * next;
@@ -82,8 +65,6 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
     int n_items;
     int i,j;
     int rows;
-    double ** points;
-    PyArrayObject *vecin;
     item *head, *element, *prev, *prev2, *element2;
     double * point,*prev_point;
     double a[2],b[2],c[2];
@@ -92,35 +73,43 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
     int valid;
     int rm_points;
     PyArrayObject *vecout;
-    double *cout;
-    int dims[2];
+    npy_intp  dims[2];
+    PyArrayObject *vecin;
 
     if (!PyArg_ParseTuple(args, "O", &vecin))
         return NULL;
 
-    points = pyvector_to_array(vecin);
-
-    rows = vecin->dimensions[0];
+    rows = PyArray_DIM(vecin, 0);
     if (rows < 3)
     {
         return NULL;
     }
 
     head = (item *)malloc(sizeof(item));
-    head->point = points[0];
+    head->point = (double*)calloc(2, sizeof(double));
+    head->point[0] = *((double*)PyArray_GETPTR2(vecin, 0, 0));
+    head->point[1] = *((double*)PyArray_GETPTR2(vecin, 0, 1));
+
     element = (item *)malloc(sizeof(item));
-    element->point = points[1];
+    element->point = (double*)calloc(2, sizeof(double));
+    element->point[0] = *((double*)PyArray_GETPTR2(vecin, 1, 0));
+    element->point[1] = *((double*)PyArray_GETPTR2(vecin, 1, 1));
+
     head->next = element;
     n_items = 2;
 
     prev = NULL;
     prev2 = NULL;
     element2;
-    point = points[0];
+    point = head->point;
     for(i = 1; i < rows; i++)
     {
         prev_point = point;
-        point = points[i];
+
+        point = (double*)calloc(2, sizeof(double));
+        point[0] = *((double*)PyArray_GETPTR2(vecin, i, 0));
+        point[1] = *((double*)PyArray_GETPTR2(vecin, i, 1));
+
         if(prev_point[0] > point[0])
         {
             if(n != 1)
@@ -131,7 +120,9 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
                 n_items++;
             }
             element2 = (item *)malloc(sizeof(item));
-            element2->point = point;
+            element2->point = (double*)calloc(2, sizeof(double));
+            element2->point[0] = *((double*)PyArray_GETPTR2(vecin, i, 0));
+            element2->point[1] = *((double*)PyArray_GETPTR2(vecin, i, 1));
             element2->next = head;
             head = element2;
             n_items++;
@@ -220,13 +211,13 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
 }
     dims[0] = n_items-rm_points;
     dims[1] = 2;
-    vecout = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    cout = (double *)vecout->data;
-    //~ element = head;
-    for (i = 0; i < n_items-rm_points; i++)
+    vecout = (PyArrayObject *) PyArray_ZEROS(2,dims,NPY_DOUBLE, NPY_ANYORDER);
+
+    element = head;
+    for (i = 0; i < dims[0]; i++)
     {
-        cout[2*i] = element->point[0];
-        cout[2*i+1] = element->point[1];
+        *((double*)PyArray_GETPTR2(vecout, i, 0)) = element->point[0];
+        *((double*)PyArray_GETPTR2(vecout, i, 1)) = element->point[1];
         element = element->next;
     }
     return PyArray_Return(vecout);
