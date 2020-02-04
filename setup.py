@@ -87,10 +87,6 @@ extensions = [setuptools.Extension(
     sources=[os.path.join('pytrip', 'lib', 'core.c')],
     extra_compile_args=['-fpic']),
     setuptools.Extension(
-        'unused',
-        sources=[os.path.join('pytrip', 'lib', 'unused.c')],
-        extra_compile_args=['-fpic']),
-    setuptools.Extension(
         '_cntr',
         sources=[os.path.join('pytrip', 'lib', 'cntr.c')],
         extra_compile_args=['-fpic'])
