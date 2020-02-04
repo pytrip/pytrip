@@ -18,15 +18,13 @@
     along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 
 */
-#include <Python.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include "numpy/arrayobject.h"
-#include "structmember.h"
 #include <math.h>
 #include <string.h>
-double _pytriplib_dot(double * a,double *b);
-double _pytriplib_norm(double * vector);
+#include <stdio.h>
+#include <stdlib.h>
+#include <Python.h>
+#include "numpy/arrayobject.h"
+#include "structmember.h"
 
 // Visual Studio 2010 doesn't support C99, so all the code below should follow C89 standard
 // it means first we declare ALL variables, then we assign them values and use them
@@ -50,21 +48,20 @@ struct list_el{
 
 typedef struct list_el item;
 
-double _pytriplib_norm(double * vector)
-{
-    return sqrt(_pytriplib_dot(vector,vector));
-}
-
 double _pytriplib_dot(double * a,double *b)
 {
     return a[0]*b[0]+a[1]*b[1];
+}
+
+double _pytriplib_norm(double * vector)
+{
+    return sqrt(_pytriplib_dot(vector,vector));
 }
 
 static PyObject * points_to_contour(PyObject *self, PyObject *args)
 {
     int n_items;
     int i,j;
-    int rows;
     item *head, *element, *prev, *prev2, *element2;
     double * point,*prev_point;
     double a[2],b[2],c[2];
@@ -72,15 +69,17 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
     double dot;
     int valid;
     int rm_points;
-    PyArrayObject *vecout;
-    npy_intp  dims[2];
+
+    // array objects into which input will be unpacked and output packed into
     PyArrayObject *vecin;
+    PyArrayObject *vecout;
+    npy_intp  dims[2];  // shape of output vector
 
     if (!PyArg_ParseTuple(args, "O", &vecin))
         return NULL;
 
-    rows = PyArray_DIM(vecin, 0);
-    if (rows < 3)
+    // exit if input vector has less than 3 elements
+    if (PyArray_DIM(vecin, 0) < 3)
     {
         return NULL;
     }
@@ -100,9 +99,9 @@ static PyObject * points_to_contour(PyObject *self, PyObject *args)
 
     prev = NULL;
     prev2 = NULL;
-    element2;
+    element2 = NULL;
     point = head->point;
-    for(i = 1; i < rows; i++)
+    for(i = 1; i < PyArray_DIM(vecin, 0); i++)
     {
         prev_point = point;
 
@@ -241,16 +240,11 @@ static PyObject * filter_points(PyObject *self, PyObject *args)
 
     // array objects into which input will be unpacked and output packed into
     PyArrayObject *vecin;
-    PyArrayObject *list_out;
-    PyArrayObject *list_item;
+    PyObject *list_out;
+    PyObject *list_item;
 
     if (!PyArg_ParseTuple(args, "Od", &vecin,&dist))
         return NULL;
-
-//    printf("dist: %g\n", dist);
-//    printf("input dose array ndim : %d\n", PyArray_NDIM(vecin));
-//    printf("input dose array dim 0 : %" NPY_INTP_FMT "\n", PyArray_DIM(vecin, 0));
-//    printf("input dose array dim 1 : %" NPY_INTP_FMT "\n", PyArray_DIM(vecin, 1));
 
     dist_2 = pow(dist,2);
 
@@ -286,7 +280,7 @@ static PyObject * filter_points(PyObject *self, PyObject *args)
 
     }
 
-    return PyArray_Return(list_out);
+    return list_out;
 }
 double dot(double * a,double * b,int len)
 {
@@ -396,7 +390,6 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
     double element_d;
     int point2[3];
     double point3[3];
-    int b = 0;
 
     element = get_element(cube,dimensions,point);
 
@@ -468,7 +461,6 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
 static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
 {
     int i,j,k;
-    int base[] = {0,0,0};
     PyArrayObject *vec_rho,*vec_field,*vec_cube_size,*vec_out;
     float *** rho_cube,***cout;
     double *field,*cube_size;
@@ -526,9 +518,6 @@ static PyObject * rhocube_to_water(PyObject *self, PyObject *args)
     }
     for(i = 0; i < 3; i++)
         weight[i] /= w_sum;
-    base[0] = (weight[0] > 0.40)?step[0]:0;
-    base[1] = (weight[1] > 0.40)?step[1]:0;
-    base[2] = (weight[2] > 0.40)?step[2]:0;
     for(i = 0; i < dims[0]; i++)
     {
         for(j= 0; j < dims[1]; j++)
@@ -700,7 +689,6 @@ int lookup_idx_ddd(double ** list,int n,double value)
 static PyObject * calculate_dose(PyObject *self, PyObject *args)
 {
     int i,j,k;
-    int iter_ddd = 1;
     int dims[1];
     int submachines;
     int ddd_steps;
@@ -898,7 +886,6 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     double contour_element_y = 0.0;
     double voxel_size_x = 0.0;
     double voxel_size_y = 0.0;
-    double voxel_size_z = 0.0;
 
     // function expects as input:
     //  vec_dose - 2-D table of int16, shape (X,Y)
@@ -920,7 +907,6 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
     // read voxel size from input data structure vec_size
     voxel_size_x = *((double*)PyArray_GETPTR1(vec_size, 0));
     voxel_size_y = *((double*)PyArray_GETPTR1(vec_size, 1));
-    voxel_size_z = *((double*)PyArray_GETPTR1(vec_size, 2));
 
     // calculate box envelope of the contour
     min_x = *((double*)PyArray_GETPTR2(vec_contour, 0, 0));
@@ -1036,7 +1022,6 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 }
 
 
-
 static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
 {
     // temporary variables
@@ -1067,7 +1052,6 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     double contour_element_y = 0.0;
     double voxel_size_x = 0.0;
     double voxel_size_y = 0.0;
-    double voxel_size_z = 0.0;
 
     // function expects as input:
     //  vec_let - 2-D table of double, shape (X,Y)
@@ -1089,7 +1073,6 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     // read voxel size from input data structure vec_size
     voxel_size_x = *((double*)PyArray_GETPTR1(vec_size, 0));
     voxel_size_y = *((double*)PyArray_GETPTR1(vec_size, 1));
-    voxel_size_z = *((double*)PyArray_GETPTR1(vec_size, 2));
 
     // calculate box envelope of the contour
     min_x = *((double*)PyArray_GETPTR2(vec_contour, 0, 0));
@@ -1280,8 +1263,8 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
 
     // array objects into which input will be unpacked and output packed into
     PyArrayObject *vec_slice;
-    PyArrayObject *list_out;
-    PyArrayObject *list_item;
+    PyObject *list_out;
+    PyObject *list_item;
 
     // helper variables to read and operate on input data
     double first_point_x = 0.0;
@@ -1313,6 +1296,8 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
                 first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
                 second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
 
+                factor = (depth-first_point_x)/(second_point_x-first_point_x);
+
                 list_item = PyList_New(3);
                 PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
                 PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
@@ -1331,6 +1316,8 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
                 first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
                 second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
 
+                factor = (depth-first_point_y)/(second_point_y-first_point_y);
+
                 list_item = PyList_New(3);
                 PyList_SetItem(list_item, 0, PyFloat_FromDouble(first_point_x+(second_point_x-first_point_x)*factor));
                 PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
@@ -1340,8 +1327,9 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         }
     }
 
-    return PyArray_Return(list_out);
+    return list_out;
 }
+
 //First vector outer cube, second inner cube, third is field vector scaled to indices
 static PyObject * create_field_shadow(PyObject *self, PyObject *args)
 {
@@ -1441,7 +1429,7 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     int i,j,k,l,m;
     float extension;
     PyArrayObject *vec_in1,*vec_in2,*vec_out,*vec_field;
-    short * in1,*in2;
+    short *in2;
     short * out;
     double * field;
     int tmp;
@@ -1456,13 +1444,15 @@ static PyObject * create_field_ramp(PyObject *self, PyObject *args)
     if (!PyArg_ParseTuple(args, "OOO",&vec_in1,&vec_in2,&vec_field))
         return NULL;
 
+    length_a = 0;
+    length_b = 0;
+
     extension = 1.4f;
     field = (double *)vec_field->data;
     cubedim[0] = vec_in1->dimensions[0];
     cubedim[1] = vec_in1->dimensions[1];
     cubedim[2] = vec_in1->dimensions[2];
 
-    in1 = (short *)vec_in1->data;
     in2 = (short *)vec_in2->data;
 
     vec_out = (PyArrayObject *) PyArray_FromDims(3,cubedim,NPY_INT16);
