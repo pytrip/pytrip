@@ -615,39 +615,39 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
 //
 //}
 
-double **** rastervector_to_array(PyArrayObject * vector)
-{
-    int i,j,k,l;
-    int dims[3];
-
-    double * data;
-    double **** out;
-
-    dims[0] = vector->dimensions[0];
-    dims[1] = vector->dimensions[1];
-    dims[2] = vector->dimensions[2];
-
-    data = (double *)vector->data;
-    out = (double ****)malloc(sizeof(double ***)*dims[0]);
-
-    l = 0;
-    for (i = 0; i < dims[0]; i++)
-    {
-        out[i] = (double ***)malloc(sizeof(double **)*dims[1]);
-        for(j = 0; j < dims[1]; j++)
-        {
-            out[i][j] = (double **)malloc(sizeof(double *)*dims[2]);
-            for(k = 0; k < dims[2]; k++)
-            {
-                out[i][j][k] = (double *)malloc(sizeof(double)*3);
-                out[i][j][k][0] = data[l++];
-                out[i][j][k][1] = data[l++];
-                out[i][j][k][2] = data[l++];
-            }
-        }
-    }
-    return out;
-}
+//double **** rastervector_to_array(PyArrayObject * vector)
+//{
+//    int i,j,k,l;
+//    int dims[3];
+//
+//    double * data;
+//    double **** out;
+//
+//    dims[0] = vector->dimensions[0];
+//    dims[1] = vector->dimensions[1];
+//    dims[2] = vector->dimensions[2];
+//
+//    data = (double *)vector->data;
+//    out = (double ****)malloc(sizeof(double ***)*dims[0]);
+//
+//    l = 0;
+//    for (i = 0; i < dims[0]; i++)
+//    {
+//        out[i] = (double ***)malloc(sizeof(double **)*dims[1]);
+//        for(j = 0; j < dims[1]; j++)
+//        {
+//            out[i][j] = (double **)malloc(sizeof(double *)*dims[2]);
+//            for(k = 0; k < dims[2]; k++)
+//            {
+//                out[i][j][k] = (double *)malloc(sizeof(double)*3);
+//                out[i][j][k][0] = data[l++];
+//                out[i][j][k][1] = data[l++];
+//                out[i][j][k][2] = data[l++];
+//            }
+//        }
+//    }
+//    return out;
+//}
 
 double *** ddd_vector_to_cube(PyArrayObject * vector)
 {
@@ -699,111 +699,111 @@ int lookup_idx_ddd(double ** list,int n,double value)
     return mid;
 }
 
-static PyObject * calculate_dose(PyObject *self, PyObject *args)
-{
-    int i,j,k;
-    int dims[1];
-    int submachines;
-    int ddd_steps;
-    int raster_idx[2];
-    int ddd_idx;
-
-    double u,t,si1,si2,si3,si4;
-
-    double zero[2];
-    double last[2];
-    double stepsize[2];
-
-    double tmp_ddd;
-    float * point;
-
-
-    float * dose,*points;
-    double ****raster_cube;
-    double *** ddd;
-    double max_depth;
-    PyArrayObject *vec_dist,*vec_dose;
-    PyArrayObject *vec_raster,*vec_ddd;
-    if (!PyArg_ParseTuple(args, "OOO",&vec_dist,&vec_raster,&vec_ddd))
-        return NULL;
-    dims[0] = vec_dist->dimensions[0];
-    raster_cube = rastervector_to_array(vec_raster);
-    ddd = ddd_vector_to_cube(vec_ddd);
-    points = (float *)vec_dist->data;
-    vec_dose = (PyArrayObject *) PyArray_FromDims(1,dims,NPY_FLOAT);
-    dose = (float *)vec_dose->data;
-    submachines = (int)vec_raster->dimensions[0];
-    ddd_steps = vec_ddd->dimensions[1];
-    max_depth = ddd[submachines-1][ddd_steps-1][0];
-
-    zero[0] = raster_cube[0][0][0][0];
-    zero[1] = raster_cube[0][0][0][1];
-
-    last[0] = raster_cube[0][vec_raster->dimensions[1]-1][vec_raster->dimensions[2]-1][0];
-    last[1] = raster_cube[0][vec_raster->dimensions[1]-1][vec_raster->dimensions[2]-1][1];
-
-    stepsize[0] = raster_cube[0][0][1][0]-raster_cube[0][0][0][0];
-    stepsize[1] = raster_cube[0][1][0][1]-raster_cube[0][0][0][1];
-    j = 0;
-    for(i = 0; i < dims[0]; i++)
-    {
-        point = &points[3*i];
-        dose[i] = 0;
-        if(point[0] >= zero[0] && point[0] < last[0] && point[1] >= zero[1] && point[1] < last[1] && point[2] < max_depth)
-        {
-            raster_idx[0] = (int)((point[0]-zero[0])/stepsize[0]);
-            raster_idx[1] = (int)((point[1]-zero[1])/stepsize[1]);
-            t = (point[0]-raster_cube[0][raster_idx[1]][raster_idx[0]][0])/(raster_cube[0][raster_idx[1]][raster_idx[0]+1][0]-raster_cube[0][raster_idx[1]][raster_idx[0]][0]);
-            u = (point[1]-raster_cube[0][raster_idx[1]][raster_idx[0]][1])/(raster_cube[0][raster_idx[1]+1][raster_idx[0]][1]-raster_cube[0][raster_idx[1]][raster_idx[0]][1]);
-            si1 = (1-t)*(1-u);
-            si2 = t*(1-u);
-            si3 = (1-t)*u;
-            si4 = t*u;
-            for(j = 0; j < submachines; j++)
-            {
-                tmp_ddd = 0.0;
-
-
-                ddd_idx = lookup_idx_ddd(ddd[j],ddd_steps,point[2]);
-                if (ddd_idx == -1)
-                {
-                    tmp_ddd = -1.0;
-                    continue;
-                }
-                tmp_ddd += ((ddd[j][ddd_idx][2]-ddd[j][ddd_idx+1][2])/(ddd[j][ddd_idx][0]-ddd[j][ddd_idx+1][0])*(point[2]-ddd[j][ddd_idx][0])+ddd[j][ddd_idx][2]);
-
-                dose[i] += (float)(si1*raster_cube[j][raster_idx[1]][raster_idx[0]][2]*tmp_ddd);
-                dose[i] += (float)(si2*raster_cube[j][raster_idx[1]][raster_idx[0]+1][2]*tmp_ddd);
-                dose[i] += (float)(si3*raster_cube[j][raster_idx[1]+1][raster_idx[0]][2]*tmp_ddd);
-                dose[i] += (float)(si4*raster_cube[j][raster_idx[1]+1][raster_idx[0]+1][2]*tmp_ddd);
-            }
-        }
-    }
-    //Cleanup
-    for(i = 0; i < (int)vec_raster->dimensions[0]; i++)
-    {
-        for(j = 0; j < (int)vec_raster->dimensions[1]; j++)
-        {
-            for(k = 0; k < (int)vec_raster->dimensions[2]; k++)
-            {
-                free(raster_cube[i][j][k]);
-            }
-            free(raster_cube[i][j]);
-        }
-        free(raster_cube[i]);
-    }
-    free(raster_cube);
-    for(i = 0; i < (int)vec_ddd->dimensions[0]; i++)
-    {
-        for(j = 0; j < (int)vec_ddd->dimensions[1]; j++)
-        {
-            free(ddd[i][j]);
-        }
-        free(ddd[i]);
-    }
-    free(ddd);
-    return PyArray_Return(vec_dose);
-}
+//static PyObject * calculate_dose(PyObject *self, PyObject *args)
+//{
+//    int i,j,k;
+//    int dims[1];
+//    int submachines;
+//    int ddd_steps;
+//    int raster_idx[2];
+//    int ddd_idx;
+//
+//    double u,t,si1,si2,si3,si4;
+//
+//    double zero[2];
+//    double last[2];
+//    double stepsize[2];
+//
+//    double tmp_ddd;
+//    float * point;
+//
+//
+//    float * dose,*points;
+//    double ****raster_cube;
+//    double *** ddd;
+//    double max_depth;
+//    PyArrayObject *vec_dist,*vec_dose;
+//    PyArrayObject *vec_raster,*vec_ddd;
+//    if (!PyArg_ParseTuple(args, "OOO",&vec_dist,&vec_raster,&vec_ddd))
+//        return NULL;
+//    dims[0] = vec_dist->dimensions[0];
+//    raster_cube = rastervector_to_array(vec_raster);
+//    ddd = ddd_vector_to_cube(vec_ddd);
+//    points = (float *)vec_dist->data;
+//    vec_dose = (PyArrayObject *) PyArray_FromDims(1,dims,NPY_FLOAT);
+//    dose = (float *)vec_dose->data;
+//    submachines = (int)vec_raster->dimensions[0];
+//    ddd_steps = vec_ddd->dimensions[1];
+//    max_depth = ddd[submachines-1][ddd_steps-1][0];
+//
+//    zero[0] = raster_cube[0][0][0][0];
+//    zero[1] = raster_cube[0][0][0][1];
+//
+//    last[0] = raster_cube[0][vec_raster->dimensions[1]-1][vec_raster->dimensions[2]-1][0];
+//    last[1] = raster_cube[0][vec_raster->dimensions[1]-1][vec_raster->dimensions[2]-1][1];
+//
+//    stepsize[0] = raster_cube[0][0][1][0]-raster_cube[0][0][0][0];
+//    stepsize[1] = raster_cube[0][1][0][1]-raster_cube[0][0][0][1];
+//    j = 0;
+//    for(i = 0; i < dims[0]; i++)
+//    {
+//        point = &points[3*i];
+//        dose[i] = 0;
+//        if(point[0] >= zero[0] && point[0] < last[0] && point[1] >= zero[1] && point[1] < last[1] && point[2] < max_depth)
+//        {
+//            raster_idx[0] = (int)((point[0]-zero[0])/stepsize[0]);
+//            raster_idx[1] = (int)((point[1]-zero[1])/stepsize[1]);
+//            t = (point[0]-raster_cube[0][raster_idx[1]][raster_idx[0]][0])/(raster_cube[0][raster_idx[1]][raster_idx[0]+1][0]-raster_cube[0][raster_idx[1]][raster_idx[0]][0]);
+//            u = (point[1]-raster_cube[0][raster_idx[1]][raster_idx[0]][1])/(raster_cube[0][raster_idx[1]+1][raster_idx[0]][1]-raster_cube[0][raster_idx[1]][raster_idx[0]][1]);
+//            si1 = (1-t)*(1-u);
+//            si2 = t*(1-u);
+//            si3 = (1-t)*u;
+//            si4 = t*u;
+//            for(j = 0; j < submachines; j++)
+//            {
+//                tmp_ddd = 0.0;
+//
+//
+//                ddd_idx = lookup_idx_ddd(ddd[j],ddd_steps,point[2]);
+//                if (ddd_idx == -1)
+//                {
+//                    tmp_ddd = -1.0;
+//                    continue;
+//                }
+//                tmp_ddd += ((ddd[j][ddd_idx][2]-ddd[j][ddd_idx+1][2])/(ddd[j][ddd_idx][0]-ddd[j][ddd_idx+1][0])*(point[2]-ddd[j][ddd_idx][0])+ddd[j][ddd_idx][2]);
+//
+//                dose[i] += (float)(si1*raster_cube[j][raster_idx[1]][raster_idx[0]][2]*tmp_ddd);
+//                dose[i] += (float)(si2*raster_cube[j][raster_idx[1]][raster_idx[0]+1][2]*tmp_ddd);
+//                dose[i] += (float)(si3*raster_cube[j][raster_idx[1]+1][raster_idx[0]][2]*tmp_ddd);
+//                dose[i] += (float)(si4*raster_cube[j][raster_idx[1]+1][raster_idx[0]+1][2]*tmp_ddd);
+//            }
+//        }
+//    }
+//    //Cleanup
+//    for(i = 0; i < (int)vec_raster->dimensions[0]; i++)
+//    {
+//        for(j = 0; j < (int)vec_raster->dimensions[1]; j++)
+//        {
+//            for(k = 0; k < (int)vec_raster->dimensions[2]; k++)
+//            {
+//                free(raster_cube[i][j][k]);
+//            }
+//            free(raster_cube[i][j]);
+//        }
+//        free(raster_cube[i]);
+//    }
+//    free(raster_cube);
+//    for(i = 0; i < (int)vec_ddd->dimensions[0]; i++)
+//    {
+//        for(j = 0; j < (int)vec_ddd->dimensions[1]; j++)
+//        {
+//            free(ddd[i][j]);
+//        }
+//        free(ddd[i]);
+//    }
+//    free(ddd);
+//    return PyArray_Return(vec_dose);
+//}
 
 static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
 {
@@ -966,7 +966,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
             inside = 0;
 
             // point entirely inside a contour
-            if(point_in_contour(point,contour,n_contour) == 1)
+            if(point_in_contour(point,contour,(int)n_contour) == 1)
             {
                 inside = 1;
                 slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
@@ -1012,7 +1012,7 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
                         point_a[0] = point[0]+(m+0.5)*voxel_size_x/resolution;
                         point_a[1] = point[1]+(n+0.5)*voxel_size_y/resolution;
                         slice_element = *((npy_int16*)PyArray_GETPTR2(vec_dose, i, j));
-                        if(point_in_contour(point_a,contour, n_contour))
+                        if(point_in_contour(point_a,contour, (int)n_contour))
                         {
                             if(!inside)
                             {
@@ -1038,7 +1038,8 @@ static PyObject * calculate_dvh_slice(PyObject *self, PyObject *args)
 static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
 {
     // temporary variables
-    int i,j,l,m,n;
+    npy_intp i,j,m;
+    int n;
     double point[2];
     int resolution = 5;
     double tiny_area = 1.0/pow(resolution,2);
@@ -1059,7 +1060,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
 
     // helper variables to read and operate on input data
     double slice_element = 0;
-    int n_contour;
+    npy_intp n_contour;
     double * contour;
     double contour_element_x = 0.0;
     double contour_element_y = 0.0;
@@ -1113,7 +1114,6 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
 
     // loop over all elements of cube slice
     n = 0;
-    l = 0;
     for(i = 0; i < PyArray_DIM(vec_let, 0); i++)
     {
         // move to next iteration if a point is outside contour box envelope (y coordinate)
@@ -1194,7 +1194,6 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
                     }
                 }
             }
-            l++;
         }
     }
     return PyArray_Return(vec_out);
@@ -1625,6 +1624,9 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     // total dose
     double tot_dose;
 
+    // element of dose cube
+    npy_int16 cube_element;
+
     // parse input argument to a PyObject
     if (!PyArg_ParseTuple(args, "O", &arg1)) return NULL;
 
@@ -1635,7 +1637,7 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     vec_out = (PyArrayObject *) PyArray_ZEROS(1, out_dims, NPY_DOUBLE, NPY_ANYORDER);
 
     // loop over all elements of input cube and calculate center-of-mass location
-    npy_int16 cube_element = 0;
+    cube_element = 0;
     tot_dose = 0.0;
     for (i = 0; i < PyArray_DIM(arg1, 0); i++)
     {
@@ -1798,7 +1800,7 @@ static PyMethodDef pytriplibMethods[] = {
 {"points_to_contour",(PyCFunction)points_to_contour,METH_VARARGS},
 //{"rhocube_to_water",(PyCFunction)rhocube_to_water,METH_VARARGS},
 //{"calculate_dist",(PyCFunction)calculate_dist,METH_VARARGS},
-{"calculate_dose",(PyCFunction)calculate_dose,METH_VARARGS},
+//{"calculate_dose",(PyCFunction)calculate_dose,METH_VARARGS},
 {"merge_raster_grid",(PyCFunction)merge_raster_grid,METH_VARARGS},
 {"calculate_dvh_slice",(PyCFunction)calculate_dvh_slice,METH_VARARGS},
 {"calculate_lvh_slice",(PyCFunction)calculate_lvh_slice,METH_VARARGS},
