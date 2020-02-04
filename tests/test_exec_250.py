@@ -84,13 +84,13 @@ class TestLocalExec250(unittest.TestCase):
         plan.offh2o = 1.873
 
         # create a field and add it to the plan
-        field = pte.Field(kernel=kernel)
+        field = pte.Field()
         self.assertIsNotNone(field)
         field.basename = self.patient_name
         field.gantry = 10.0
         field.couch = 90.0  # degrees
         field.fwhm = 4.0  # spot size in [mm]
-        field.projectile = 'C'
+        field.kernel = kernel
 
         plan.fields.append(field)
 

@@ -84,7 +84,8 @@ class TestLocalExec(unittest.TestCase):
         field.gantry = 10.0
         field.couch = 90.0  # degrees
         field.fwhm = 4.0  # spot size in [mm]
-        field.projectile = 'C'
+        field.kernel = pte.KernelModel()
+        field.kernel.projectile = pte.Projectile('H')
 
         plan.fields.append(field)
 

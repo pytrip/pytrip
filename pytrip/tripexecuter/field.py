@@ -32,16 +32,7 @@ class Field(object):
     proper file extension)
     """
 
-    # list of projectile name - charge and most common isotope.
-    _projectile_defaults = {"H": (1, 1),
-                            "He": (2, 4),
-                            "Li": (3, 7),
-                            "C": (6, 12),
-                            "O": (8, 16),
-                            "Ne": (10, 20),
-                            "Ar": (16, 40)}
-
-    def __init__(self, basename="", kernel=None):
+    def __init__(self, basename=""):
         """ Create an instance of the Field class.
         :params str basename" The name of this field, will be used as basename for .rst files.
         """
@@ -65,8 +56,7 @@ class Field(object):
 
         self.zsteps = 1.0  # in [mm]
         # the next two are deprecated, use KernelModel
-        self.projectile = 'C'  # see also self._projectile_defaults
-        self.projectile_a = '12'  # Number of nucleons in projectile. If None, default will be used.
+        self.kernel = None
 
         # isocenter holds the [x,y,z] coordinates of the isocenter/target in [mm].
         # This is used for the field / target() option of the TRiP98
@@ -74,11 +64,6 @@ class Field(object):
         self.isocenter = []
 
         self.selected = False
-
-        # TODO: for pytrip 3.0 all attributes are stored in Kernel object.
-        if kernel:
-            self.projectile = kernel.projectile.iupac
-            self.projectile_a = kernel.projectile.a
 
     def __str__(self):
         """ str output handler
@@ -92,8 +77,6 @@ class Field(object):
         out += "   Field {:d} '{:s}'\n".format(self.number, self.basename)
         out += "----------------------------------------------------------------------------\n"
         out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
-        out += "|  Projectile                   : {:s}-{:s}\n".format(self.projectile,
-                                                                      str(self.projectile_a))
         out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
         out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
         out += "|\n"

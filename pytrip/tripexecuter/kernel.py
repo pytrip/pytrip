@@ -25,7 +25,6 @@ class KernelModel(object):
     """
     Kernel data, holding all necessary data for a certain projectile
     """
-
     projectile = None
     rifi_name = ""  # name of ripple filter, e.g. "3 mm Rifi", for documentation only
     rifi_thickness = 0.0  # thickness of RiFi in mm

@@ -38,16 +38,6 @@ logger = logging.getLogger(__name__)
 class Plan(object):
     """ Class of handling plans.
     """
-    # list of projectile name - charge and most common isotope.
-    # This may be replaced later by Kernel Module
-    _projectile_defaults = {"H": (1, 1),
-                            "He": (2, 4),
-                            "Li": (3, 7),
-                            "C": (6, 12),
-                            "O": (8, 16),
-                            "Ne": (10, 20),
-                            "Ar": (16, 40)}
-
     # dicts are in the form of
     # "<valid trip tag>": (<enum>, "Short name", "Description, e.g. for alt tags")
     opt_principles = {"H2Obased": (0, "Simple opt.", "Very simplified single field optimization"),
@@ -491,7 +481,7 @@ class Plan(object):
             line += " doseext({:.4f})".format(_field.dose_extension)
             line += " contourext({:.2f})".format(_field.contour_extension)
             line += " zsteps({:.3f})".format(_field.zsteps)
-            line += ' proj({:s})'.format(_field.projectile)  # TODO: check if 'C' or better '12C"
+            line += ' proj({:s})'.format(_field.kernel.projectile.iupac)  # TODO: check if 'C' or better '12C"
             output.append(line)
         return output
 
