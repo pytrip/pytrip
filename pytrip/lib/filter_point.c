@@ -649,33 +649,33 @@ float calculate_path_length(float *** cube,float *** rho_cube,int * dimensions,i
 //    return out;
 //}
 
-double *** ddd_vector_to_cube(PyArrayObject * vector)
-{
-    int i,j,k;
-    int dims[2];
-    double * data;
-    double *** out;
-
-    dims[0] = vector->dimensions[0];
-    dims[1] = vector->dimensions[1];
-
-    data = (double *)vector->data;
-    out = (double ***)malloc(sizeof(double **)*dims[0]);
-
-    k = 0;
-    for (i = 0; i < dims[0]; i++)
-    {
-        out[i] = (double **)malloc(sizeof(double *)*dims[1]);
-        for(j = 0; j < dims[1]; j++)
-        {
-            out[i][j] = (double *)malloc(sizeof(double)*3);
-            out[i][j][0] = data[k++];
-            out[i][j][1] = data[k++];
-            out[i][j][2] = data[k++];
-        }
-    }
-    return out;
-}
+//double *** ddd_vector_to_cube(PyArrayObject * vector)
+//{
+//    int i,j,k;
+//    int dims[2];
+//    double * data;
+//    double *** out;
+//
+//    dims[0] = vector->dimensions[0];
+//    dims[1] = vector->dimensions[1];
+//
+//    data = (double *)vector->data;
+//    out = (double ***)malloc(sizeof(double **)*dims[0]);
+//
+//    k = 0;
+//    for (i = 0; i < dims[0]; i++)
+//    {
+//        out[i] = (double **)malloc(sizeof(double *)*dims[1]);
+//        for(j = 0; j < dims[1]; j++)
+//        {
+//            out[i][j] = (double *)malloc(sizeof(double)*3);
+//            out[i][j][0] = data[k++];
+//            out[i][j][1] = data[k++];
+//            out[i][j][2] = data[k++];
+//        }
+//    }
+//    return out;
+//}
 
 int lookup_idx_ddd(double ** list,int n,double value)
 {
@@ -805,49 +805,49 @@ int lookup_idx_ddd(double ** list,int n,double value)
 //    return PyArray_Return(vec_dose);
 //}
 
-static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
-{
-    int i,j;
-    PyArrayObject *vec_raster,*vec_out;
-
-    double * raster,*out;
-    double dist;
-    double factor;
-    double a;
-    float sigma;
-    int dims[2];
-    int n;
-
-    if (!PyArg_ParseTuple(args, "Of",&vec_raster,&sigma))
-        return NULL;
-
-    n = vec_raster->dimensions[0];
-    raster = (double *)vec_raster->data;
-    dims[0] = n;
-    dims[1] = 3;
-    vec_out = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
-    out = (double *)vec_out->data;
-    factor = 1/(2*3.141592*sigma*sigma);
-    a = 2*sigma*sigma;
-
-    for (i = 0; i < n; i++)
-        out[3*i+2] = 0.0;
-
-    for(i = 0; i < n; i++)
-    {
-        out[3*i] = raster[3*i];
-        out[3*i+1] = raster[3*i+1];
-        if(raster[3*i+2] > 0.0)
-        {
-            for(j = 0; j < n; j++)
-            {
-                dist = pow(raster[3*i]-raster[3*j],2)+pow(raster[3*i+1]-raster[3*j+1],2);
-                out[3*j+2] += raster[3*i+2]*factor*exp(-dist/a);
-            }
-        }
-    }
-    return PyArray_Return(vec_out);
-}
+//static PyObject * merge_raster_grid(PyObject *self, PyObject *args)
+//{
+//    int i,j;
+//    PyArrayObject *vec_raster,*vec_out;
+//
+//    double * raster,*out;
+//    double dist;
+//    double factor;
+//    double a;
+//    float sigma;
+//    int dims[2];
+//    int n;
+//
+//    if (!PyArg_ParseTuple(args, "Of",&vec_raster,&sigma))
+//        return NULL;
+//
+//    n = vec_raster->dimensions[0];
+//    raster = (double *)vec_raster->data;
+//    dims[0] = n;
+//    dims[1] = 3;
+//    vec_out = (PyArrayObject *) PyArray_FromDims(2,dims,NPY_DOUBLE);
+//    out = (double *)vec_out->data;
+//    factor = 1/(2*3.141592*sigma*sigma);
+//    a = 2*sigma*sigma;
+//
+//    for (i = 0; i < n; i++)
+//        out[3*i+2] = 0.0;
+//
+//    for(i = 0; i < n; i++)
+//    {
+//        out[3*i] = raster[3*i];
+//        out[3*i+1] = raster[3*i+1];
+//        if(raster[3*i+2] > 0.0)
+//        {
+//            for(j = 0; j < n; j++)
+//            {
+//                dist = pow(raster[3*i]-raster[3*j],2)+pow(raster[3*i+1]-raster[3*j+1],2);
+//                out[3*j+2] += raster[3*i+2]*factor*exp(-dist/a);
+//            }
+//        }
+//    }
+//    return PyArray_Return(vec_out);
+//}
 
 int point_in_contour(double * point,double * contour,int n_contour)
 {
@@ -1130,7 +1130,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
             inside = 0;
 
             // point entirely inside a contour
-            if(point_in_contour(point,contour,n_contour) == 1)
+            if(point_in_contour(point,contour,(int)n_contour) == 1)
             {
                 inside = 1;
                 slice_element = *((double*)PyArray_GETPTR2(vec_let, i, j));
@@ -1176,7 +1176,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
                         point_a[0] = point[0]+(m+0.5)*voxel_size_x/resolution;
                         point_a[1] = point[1]+(n+0.5)*voxel_size_y/resolution;
                         slice_element = *((double*)PyArray_GETPTR2(vec_let, i, j));
-                        if(point_in_contour(point_a,contour, n_contour))
+                        if(point_in_contour(point_a,contour, (int)n_contour))
                         {
                             if(!inside)
                             {
@@ -1199,66 +1199,66 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     return PyArray_Return(vec_out);
 }
 
-static PyObject * calculate_wepl(PyObject *self, PyObject *args)
-{
-    int i,j;
-    PyArrayObject *vec_wepl,*vec_start,*vec_basis,*vec_dimensions,*vec_cubesize;
-    PyArrayObject *vec_out;
-    float *wepl;
-    double *start,*step,*a,*b,*cubesize;
-    double *out;
-    double point[3];
-    double * basis;
-    int point_id[3];
-    int * dimensions;
-    int cubedim[3];
-    int id;
-    int out_dim[2];
-    if (!PyArg_ParseTuple(args, "OOOOO",&vec_wepl,&vec_start,&vec_basis,&vec_dimensions,&vec_cubesize))
-        return NULL;
-    wepl = (float *)vec_wepl->data;
-    cubedim[0] = vec_wepl->dimensions[0];
-    cubedim[1] = vec_wepl->dimensions[1];
-    cubedim[2] = vec_wepl->dimensions[2];
-    basis = (double *)vec_basis->data;
-    step = &basis[0];
-    a = &basis[3];
-    b = &basis[6];
-    dimensions = (int *)vec_dimensions->data;
-    out_dim[0] = dimensions[0];
-    out_dim[1] = dimensions[1];
-    start = (double *)vec_start->data;
-    cubesize = (double *)vec_cubesize->data;
-    vec_out = (PyArrayObject *) PyArray_FromDims(2,out_dim,NPY_DOUBLE);
-    out = (double *)vec_out->data;
-
-    for(i = 0; i < dimensions[0]; i++)
-    {
-        for(j = 0; j < dimensions[1]; j++)
-        {
-
-            id = i*dimensions[1]+j;
-            out[id] = 0.0;
-            point[0] = start[0]+a[0]*i+b[0]*j;
-            point[1] = start[1]+a[1]*i+b[1]*j;
-            point[2] = start[2]+a[2]*i+b[2]*j;
-
-            while(1)
-            {
-                point_id[0] = (int)(point[0]/cubesize[0]);
-                point_id[1] = (int)(point[1]/cubesize[1]);
-                point_id[2] = (int)(point[2]/cubesize[2]);
-                if(point_id[0] < 0 || point_id[0] >= cubedim[2] || point_id[1] < 0 || point_id[1] >= cubedim[1] || point_id[2] < 0 || point_id[2] >= cubedim[0])
-                    break;
-                out[id] += wepl[point_id[2]*cubedim[2]*cubedim[1]+point_id[1]*cubedim[2]+point_id[0]];
-                point[0] -= step[0];
-                point[1] -= step[1];
-                point[2] -= step[2];
-            }
-        }
-    }
-    return PyArray_Return(vec_out);
-}
+//static PyObject * calculate_wepl(PyObject *self, PyObject *args)
+//{
+//    int i,j;
+//    PyArrayObject *vec_wepl,*vec_start,*vec_basis,*vec_dimensions,*vec_cubesize;
+//    PyArrayObject *vec_out;
+//    float *wepl;
+//    double *start,*step,*a,*b,*cubesize;
+//    double *out;
+//    double point[3];
+//    double * basis;
+//    int point_id[3];
+//    int * dimensions;
+//    int cubedim[3];
+//    int id;
+//    int out_dim[2];
+//    if (!PyArg_ParseTuple(args, "OOOOO",&vec_wepl,&vec_start,&vec_basis,&vec_dimensions,&vec_cubesize))
+//        return NULL;
+//    wepl = (float *)vec_wepl->data;
+//    cubedim[0] = vec_wepl->dimensions[0];
+//    cubedim[1] = vec_wepl->dimensions[1];
+//    cubedim[2] = vec_wepl->dimensions[2];
+//    basis = (double *)vec_basis->data;
+//    step = &basis[0];
+//    a = &basis[3];
+//    b = &basis[6];
+//    dimensions = (int *)vec_dimensions->data;
+//    out_dim[0] = dimensions[0];
+//    out_dim[1] = dimensions[1];
+//    start = (double *)vec_start->data;
+//    cubesize = (double *)vec_cubesize->data;
+//    vec_out = (PyArrayObject *) PyArray_FromDims(2,out_dim,NPY_DOUBLE);
+//    out = (double *)vec_out->data;
+//
+//    for(i = 0; i < dimensions[0]; i++)
+//    {
+//        for(j = 0; j < dimensions[1]; j++)
+//        {
+//
+//            id = i*dimensions[1]+j;
+//            out[id] = 0.0;
+//            point[0] = start[0]+a[0]*i+b[0]*j;
+//            point[1] = start[1]+a[1]*i+b[1]*j;
+//            point[2] = start[2]+a[2]*i+b[2]*j;
+//
+//            while(1)
+//            {
+//                point_id[0] = (int)(point[0]/cubesize[0]);
+//                point_id[1] = (int)(point[1]/cubesize[1]);
+//                point_id[2] = (int)(point[2]/cubesize[2]);
+//                if(point_id[0] < 0 || point_id[0] >= cubedim[2] || point_id[1] < 0 || point_id[1] >= cubedim[1] || point_id[2] < 0 || point_id[2] >= cubedim[0])
+//                    break;
+//                out[id] += wepl[point_id[2]*cubedim[2]*cubedim[1]+point_id[1]*cubedim[2]+point_id[0]];
+//                point[0] -= step[0];
+//                point[1] -= step[1];
+//                point[2] -= step[2];
+//            }
+//        }
+//    }
+//    return PyArray_Return(vec_out);
+//}
 
 //static PyObject * raytracing(PyObject *self, PyObject *args) // TODO to implement
 //{
@@ -1801,10 +1801,10 @@ static PyMethodDef pytriplibMethods[] = {
 //{"rhocube_to_water",(PyCFunction)rhocube_to_water,METH_VARARGS},
 //{"calculate_dist",(PyCFunction)calculate_dist,METH_VARARGS},
 //{"calculate_dose",(PyCFunction)calculate_dose,METH_VARARGS},
-{"merge_raster_grid",(PyCFunction)merge_raster_grid,METH_VARARGS},
+//{"merge_raster_grid",(PyCFunction)merge_raster_grid,METH_VARARGS},
 {"calculate_dvh_slice",(PyCFunction)calculate_dvh_slice,METH_VARARGS},
 {"calculate_lvh_slice",(PyCFunction)calculate_lvh_slice,METH_VARARGS},
-{"calculate_wepl",(PyCFunction)calculate_wepl,METH_VARARGS},
+//{"calculate_wepl",(PyCFunction)calculate_wepl,METH_VARARGS},
 {"slice_on_plane",(PyCFunction)slice_on_plane,METH_VARARGS},
 {"create_field_shadow",(PyCFunction)create_field_shadow,METH_VARARGS},
 {"create_field_ramp",(PyCFunction)create_field_ramp,METH_VARARGS},
