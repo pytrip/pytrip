@@ -30,55 +30,61 @@ class Projectile(object):
     """
     Object holding projectile specific data.
     """
-
     # list of projectile name - charge and most common isotope.
-    _projectile_defaults = {"H": (1, 1),
-                            "He": (2, 4),
-                            "Li": (3, 7),
-                            "C": (6, 12),
-                            "O": (8, 16),
-                            "Ne": (10, 20),
-                            "Ar": (16, 40)}
+    projectile_defaults = {
+        "H": (1, 1),
+        "He": (2, 4),
+        "Li": (3, 7),
+        "C": (6, 12),
+        "O": (8, 16),
+        "Ne": (10, 20),
+        "Ar": (16, 40)
+    }
 
-    z = -1
-    a = -1
-    iupac = ""  # chemical symbol (parsed by TRiP), "H", "He", "C", "O", "Ne" ....
-    name = ""   # cleartext name "Protons", "Carbon-12 ions", "Antiprotons", ...
-
-    def __init__(self, symb, name="", z=0, a=0):
+    def __init__(self, iupac_symbol: str, a: int = 0, z: int = 0, name: str = ""):
         """
-        :param symb: IUPAC symbol "H", "He", "Li", "C" ...
+        :param iupac_symbol: IUPAC symbol "H", "He", "Li", "C" ..., from projectile_defaults list
         :param name: free text name for this projectile, i.e. "Protons", "Antiprotons", "C-12"
         :param z: charge of projectile. Default value for symb taken if not specified.
         :param a: nucleon number of proejctile, default value for symb is taken if not specified (12 for C, 4 for He...)
         """
+        self.iupac: str = iupac_symbol
+        self.a: int = a
+        self.z: int = z
+        self.name: str = name
 
-        self.name = name
+        if iupac_symbol in Projectile.projectile_defaults:
+            self.z: int = Projectile.projectile_defaults[iupac_symbol][0]
+            self.a: int = Projectile.projectile_defaults[iupac_symbol][1]
 
-        if symb in self._projectile_defaults:
-            self.z = self._projectile_defaults[symb][0]
-            self.a = self._projectile_defaults[symb][1]
+        self.validate_projectile()
 
-        self.iupac = symb
-
-        if z > 0:
-            self.z = z
-
-        if a > 0:
-            self.a = a
-
-        if self.z < 1:
-            logger.warning("No projectile charge was set.")
-        if self.a < 1:
+    def validate_projectile(self):
+        if self.a == 0:
             logger.warning("No projectile nucleon number was set.")
+        if self.z == 0:
+            logger.warning("No projectile charge was set.")
 
-    def __str__(self):
+    def trip98_format(self) -> str:
+        """
+        This method should be used when converting projectile to .exec file
+        :return: TRiP98 compliant string
+        """
+        trip_symbol: str = ""
+        if self.a > 0:
+            trip_symbol += str(self.a)
+        trip_symbol += self.iupac
+        if self.z > 0:
+            trip_symbol += str(self.z)
+        return trip_symbol
+
+    def __str__(self) -> str:
         """
         String out handler
         """
         return self._print()
 
-    def _print(self):
+    def _print(self) -> str:
         """
         Pretty print all attributes.
         """
@@ -88,5 +94,6 @@ class Projectile(object):
         out += "|  Projectile Z                      : {:s}\n".format(str(self.z))
         out += "|  Projectile A                      : {:s}\n".format(str(self.a))
         out += "|  Projectile IUPAC                  : {:s}\n".format(str(self.iupac))
+        out += "|  Symbol used in Trip config file   : {:s}\n".format(self.trip98_format())
         out += "----------------------------------------------------------------------------\n"
         return out
