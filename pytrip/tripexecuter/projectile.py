@@ -22,7 +22,6 @@ Object holding all data needed for a specific projectile/rifi configuration.
 
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -43,7 +42,7 @@ class Projectile(object):
 
     def __init__(self, iupac_symbol: str, a: int = 0, z: int = 0, name: str = ""):
         """
-        :param iupac_symbol: IUPAC symbol "H", "He", "Li", "C" ..., from projectile_defaults list
+        :param iupac_symbol: IUPAC symbol "H", "He", "Li", "C" ...
         :param name: free text name for this projectile, i.e. "Protons", "Antiprotons", "C-12"
         :param z: charge of projectile. Default value for symb taken if not specified.
         :param a: nucleon number of proejctile, default value for symb is taken if not specified (12 for C, 4 for He...)
@@ -94,6 +93,6 @@ class Projectile(object):
         out += "|  Projectile Z                      : {:s}\n".format(str(self.z))
         out += "|  Projectile A                      : {:s}\n".format(str(self.a))
         out += "|  Projectile IUPAC                  : {:s}\n".format(str(self.iupac))
-        out += "|  Symbol used in Trip config file   : {:s}\n".format(self.trip98_format())
+        out += "|  Symbol used in Trip exec file     : {:s}\n".format(self.trip98_format())
         out += "----------------------------------------------------------------------------\n"
         return out
