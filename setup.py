@@ -84,7 +84,7 @@ with open('README.rst') as readme_file:
 
 extensions = [setuptools.Extension(
     'pytriplib',
-    sources=[os.path.join('pytrip', 'lib', 'filter_point.c')],
+    sources=[os.path.join('pytrip', 'lib', 'core.c')],
     extra_compile_args=['-fpic']),
     setuptools.Extension(
         '_cntr',
