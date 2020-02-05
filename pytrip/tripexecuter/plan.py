@@ -64,7 +64,7 @@ class Plan(object):
                  "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
                  "mk": (3, "M. Kraemer", "conservative")}
 
-    def __init__(self, basename="", comment="", kernels=None):
+    def __init__(self, default_kernel, basename="", comment=""):
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
         if it has been calculated.
@@ -76,6 +76,7 @@ class Plan(object):
         """
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
+        self.default_kernel = default_kernel
         self.basename = basename.replace(" ", "_")  # TODO: also for Ctx and Vdx, issue when loading DICOMs.
         self.comment = comment
 
@@ -89,14 +90,10 @@ class Plan(object):
 
         # directories and file paths.
         self.working_dir = ""  # directory where all input files are stored, and where all output files will be put.
-        self.ddd_dir = "$TRIP98/DATA/DDD/12C/RF3MM/12C.*"   # deprecated, use KernelModel
-        self.spc_dir = ""  # deprecated, use KernelModel
-        self.sis_path = ""  # deprecated, use KernelModel
+
         self.hlut_path = "$TRIP98/DATA/19990211.hlut"
         self.dedx_path = "$TRIP98/DATA/DEDX/20040607.dedx"
 
-        self.projectile = "C"  # these are needed by makesis possibly  # deprecated, use KernelModel
-        self.projectile_a = 12  # these are needed by makesis possibly  # deprecated, use KernelModel
         self.res_tissue_type = ""
         self.target_tissue_type = ""
         self.active = False
@@ -140,21 +137,6 @@ class Plan(object):
 
         self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
         self._make_sis = ""  # placeholder for generate sistable command
-
-        # TODO: for pytrip 3.0 all attributes are stored in Kernel object.
-        # The API is here already prepared for multi-ion optimization, but for now it is not implemented.
-        if kernels:
-            kernel = kernels[0]
-            if len(kernels) > 1:
-                logger.warning("Multi-ion therapy is not implemented. "
-                               "Using data from the first kernel in list: '{}'.".format(kernel.name))
-
-            self.projectile = kernel.projectile.iupac
-            self.projectile_a = kernel.projectile.a
-            self.rifi = kernel.rifi_thickness
-            self.ddd_dir = kernel.ddd_path
-            self.spc_dir = kernel.spc_path
-            self.sis_path = kernel.sis_path
 
     def __str__(self):
         """ string out handler
@@ -202,9 +184,6 @@ class Plan(object):
         out += "|\n"
         out += "| Directories\n"
         out += "|   Working directory           : {:s}\n".format(self.working_dir)
-        out += "|   DDD directory               : {:s}\n".format(self.ddd_dir)
-        out += "|   SPC directory               : {:s}\n".format(self.spc_dir)
-        out += "|   SIS path                    : {:s}\n".format(self.sis_path)
         out += "|   HLUT path                   : {:s}\n".format(self.hlut_path)
         out += "|   dE/dx path                  : {:s}\n".format(self.dedx_path)
 
@@ -405,13 +384,13 @@ class Plan(object):
         output.append('hlut "{:s}" / read'.format(self.hlut_path))
 
         # ddd, spc, and sis:
-        output.append('ddd "{:s}" / read'.format(self.ddd_dir))
+        output.append('ddd "{:s}" / read'.format(self.default_kernel.ddd_path))
 
-        if self.spc_dir:  # False for None and empty string.
-            output.append('spc "{:s}" / read'.format(self.spc_dir))
+        if self.default_kernel.spc_path:  # False for None and empty string.
+            output.append('spc "{:s}" / read'.format(self.default_kernel.spc_path))
 
-        if self.sis_path:
-            output.append('sis "{:s}" / read'.format(self.sis_path))
+        if self.default_kernel.sis_path:
+            output.append('sis "{:s}" / read'.format(self.default_kernel.sis_path))
         else:
             if not self._make_sis:
                 logger.error("No SIS table loaded or generated.")
@@ -481,7 +460,7 @@ class Plan(object):
             line += " doseext({:.4f})".format(_field.dose_extension)
             line += " contourext({:.2f})".format(_field.contour_extension)
             line += " zsteps({:.3f})".format(_field.zsteps)
-            line += ' proj({:s})'.format(_field.kernel.projectile.iupac)  # TODO: check if 'C' or better '12C"
+            line += ' proj({:s})'.format(_field.kernel.projectile.trip98_format())
             output.append(line)
         return output
 
