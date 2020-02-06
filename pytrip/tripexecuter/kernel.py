@@ -27,7 +27,7 @@ class KernelModel(object):
     """
     Kernel data, holding all necessary data for a certain projectile
     """
-    def __init__(self, projectile: Projectile, name: str = ""):
+    def __init__(self, projectile=Projectile(), name=""):
         """
         """
         self.projectile = projectile
@@ -39,13 +39,22 @@ class KernelModel(object):
         self.comment = ""  # arbitrary text
         self.name = name  # name for identifying this kernel, ie.e "C12_3mmRiFi"
 
-    def __str__(self) -> str:
+    def __str__(self):
         """
         String out handler
         """
         return self._print()
 
-    def _print(self) -> str:
+    def trip98_validate(self):
+        """
+        Checking if all obligatory fields are valid
+        """
+        if not self.ddd_path:
+            raise Exception("DDD path is not set")
+        if not self.spc_path:
+            raise Exception("SPC path is not set")
+
+    def _print(self):
         """
         Pretty print all attributes.
         """

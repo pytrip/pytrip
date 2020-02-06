@@ -40,7 +40,7 @@ class Projectile(object):
         "Ar": (16, 40)
     }
 
-    def __init__(self, iupac_symbol: str, a: int = 0, z: int = 0, name: str = ""):
+    def __init__(self, iupac_symbol="", a=0, z=0, name=""):
         """
         :param iupac_symbol: IUPAC symbol "H", "He", "Li", "C" ...
         :param name: free text name for this projectile, i.e. "Protons", "Antiprotons", "C-12"
@@ -56,19 +56,12 @@ class Projectile(object):
             self.z = Projectile.projectile_defaults[iupac_symbol][0]
             self.a = Projectile.projectile_defaults[iupac_symbol][1]
 
-        self.validate_projectile()
-
-    def validate_projectile(self):
-        if self.a == 0:
-            logger.warning("No projectile nucleon number was set.")
-        if self.z == 0:
-            logger.warning("No projectile charge was set.")
-
-    def trip98_format(self) -> str:
+    def trip98_format(self):
         """
         This method should be used when converting projectile to .exec file
         :return: TRiP98 compliant string
         """
+        self.trip98_validate()
         trip_symbol = ""
         if self.a > 0:
             trip_symbol += str(self.a)
@@ -77,13 +70,24 @@ class Projectile(object):
             trip_symbol += str(self.z)
         return trip_symbol
 
-    def __str__(self) -> str:
+    def trip98_validate(self):
+        """
+        Checking if all obligatory fields are valid
+        """
+        if self.a == 0:
+            logger.warning("No projectile nucleon number was set.")
+        if self.z == 0:
+            logger.warning("No projectile charge was set.")
+        if not self.iupac:
+            raise Exception("Iupac symbol is not set")
+
+    def __str__(self):
         """
         String out handler
         """
         return self._print()
 
-    def _print(self) -> str:
+    def _print(self):
         """
         Pretty print all attributes.
         """

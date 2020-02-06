@@ -23,6 +23,8 @@ Field() objects here, which can be passed to a Plan() object.
 import logging
 import uuid
 
+from pytrip.tripexecuter.kernel import KernelModel
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +34,7 @@ class Field(object):
     proper file extension)
     """
 
-    def __init__(self, kernel, basename=""):
+    def __init__(self, kernel=KernelModel(), basename=""):
         """ Create an instance of the Field class.
         :params str basename" The name of this field, will be used as basename for .rst files.
         """
@@ -61,8 +63,6 @@ class Field(object):
         # This is used for the field / target() option of the TRiP98
         # It can be used to override the automatically calculated isocenter from TRiP98.
         self.isocenter = []
-
-        self.selected = False
 
     def __str__(self):
         """ str output handler
