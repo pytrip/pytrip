@@ -47,14 +47,14 @@ class Projectile(object):
         :param z: charge of projectile. Default value for symb taken if not specified.
         :param a: nucleon number of proejctile, default value for symb is taken if not specified (12 for C, 4 for He...)
         """
-        self.iupac: str = iupac_symbol
-        self.a: int = a
-        self.z: int = z
-        self.name: str = name
+        self.iupac = iupac_symbol
+        self.a = a
+        self.z = z
+        self.name = name
 
         if iupac_symbol in Projectile.projectile_defaults:
-            self.z: int = Projectile.projectile_defaults[iupac_symbol][0]
-            self.a: int = Projectile.projectile_defaults[iupac_symbol][1]
+            self.z = Projectile.projectile_defaults[iupac_symbol][0]
+            self.a = Projectile.projectile_defaults[iupac_symbol][1]
 
         self.validate_projectile()
 
@@ -69,7 +69,7 @@ class Projectile(object):
         This method should be used when converting projectile to .exec file
         :return: TRiP98 compliant string
         """
-        trip_symbol: str = ""
+        trip_symbol = ""
         if self.a > 0:
             trip_symbol += str(self.a)
         trip_symbol += self.iupac
