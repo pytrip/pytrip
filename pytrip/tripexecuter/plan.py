@@ -31,6 +31,7 @@ from pytrip.dos import DosCube
 from pytrip.let import LETCube
 from pytrip.tripexecuter.execute import Execute
 from pytrip.tripexecuter.execparser import ExecParser
+from pytrip.tripexecuter.kernel import KernelModel
 
 logger = logging.getLogger(__name__)
 
@@ -64,7 +65,7 @@ class Plan(object):
                  "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
                  "mk": (3, "M. Kraemer", "conservative")}
 
-    def __init__(self, default_kernel, basename="", comment=""):
+    def __init__(self, default_kernel=KernelModel(), basename="", comment=""):
         """
         A plan Object, which may hold several fields, general setup, and possible also output,
         if it has been calculated.

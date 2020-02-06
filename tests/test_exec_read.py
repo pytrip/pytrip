@@ -47,9 +47,7 @@ class TestParseExec(unittest.TestCase):
         """
         logger.info("Test parsing '{:s}'".format(self.exec_path))
 
-        projectile = pte.Projectile("H")
-        kernel = pte.KernelModel(projectile)
-        plan = pte.Plan(kernel)
+        plan = pte.Plan()
         plan.read_exec(self.exec_path)
         print(plan)
         for field in plan.fields:

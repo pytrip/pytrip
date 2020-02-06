@@ -22,9 +22,7 @@ Parser for TRiP files.
 
 import logging
 
-from pytrip.tripexecuter.field import Field
-from pytrip.tripexecuter.projectile import Projectile
-from pytrip.tripexecuter.kernel import KernelModel
+from pytrip.tripexecuter import Field
 
 
 logger = logging.getLogger(__name__)
@@ -245,9 +243,7 @@ class ExecParser(object):
         if len(items) > 1:
             if "new" in items[1]:
                 logger.debug("Parse a new field number {:d}".format(_number))
-                projectile = Projectile("C")
-                kernel = KernelModel(projectile, "C12 Ions RiFi 3MM")
-                field = Field(kernel)
+                field = Field()
                 field.number = _number
                 self.plan.fields.append(field)
                 self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
