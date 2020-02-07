@@ -141,6 +141,7 @@ setuptools.setup(
         'matplotlib', 'numpy', 'pydicom'
     ],
     include_dirs=[np.get_include()],
+    ext_package='pytrip',
     ext_modules=extensions,
     entry_points={
         'console_scripts': [
