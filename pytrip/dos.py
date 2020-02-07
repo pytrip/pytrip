@@ -44,7 +44,7 @@ except ImportError:
 
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.cube import Cube
-import pytriplib
+from pytrip import pytriplib
 
 
 class DosCube(Cube):
@@ -110,6 +110,16 @@ class DosCube(Cube):
             slice = voi.get_slice_at_pos(z_pos)
             if slice is not None:   # VOI intersects with this slice
                 voi_and_cube_intersect = True
+                print("i", i)
+                print("self.cube[i]", self.cube[i])
+                print("self.cube[i].max()", self.cube[i].max())
+                print("self.cube[i].dtype", self.cube[i].dtype)
+                print("self.cube[i].shape", self.cube[i].shape)
+                #print("np.array(slice.contours[0].contour)", np.array(slice.contours[0].contour))
+                print("np.array(slice.contours[0].contour).shape", np.array(slice.contours[0].contour).shape)
+                print("np.array(slice.contours[0].contour).dtype", np.array(slice.contours[0].contour).dtype)
+                print("voxel_size", voxel_size)
+                print("voxel_size.dtype", voxel_size.dtype)
                 dose_bins += pytriplib.calculate_dvh_slice(self.cube[i],
                                                            np.array(slice.contours[0].contour),
                                                            voxel_size)

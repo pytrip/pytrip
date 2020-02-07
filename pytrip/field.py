@@ -27,7 +27,7 @@ import logging
 
 from pytrip.res.point import angles_from_trip, max_list, min_list
 from pytrip.res.point import get_basis_from_angles
-import pytriplib
+from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 

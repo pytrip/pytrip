@@ -19,17 +19,19 @@
 """
 TODO: documentation here.
 """
-import os
-import unittest
 import logging
-import tempfile
+import os
 import shutil
+import tempfile
+import unittest
+
 import numpy as np
 
+from pytrip import pytriplib
 from pytrip.dos import DosCube
 from pytrip.vdx import create_sphere
 from pytrip.volhist import VolHist
-import pytriplib
+
 import tests.base
 
 logger = logging.getLogger(__name__)

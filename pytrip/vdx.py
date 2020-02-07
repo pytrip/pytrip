@@ -51,7 +51,7 @@ except ImportError:
 import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.dos import DosCube
-import pytriplib
+from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -517,7 +517,7 @@ def create_voi_from_cube(cube, name, value=100):
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
     # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
-    import _cntr
+    from pytrip import _cntr
     for i in range(cube.dimz):
         x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
         isodose_obj = _cntr.Cntr(x, y, cube.cube[i])
@@ -779,6 +779,7 @@ class Voi:
 
         compare = self.cube.pixel_size
         filtered = pytriplib.filter_points(product, compare / 2.0)
+
         filtered = np.array(sorted(filtered, key=cmp_to_key(_voi_point_cmp)))
         filtered = pytriplib.points_to_contour(filtered)
         product = filtered
@@ -803,10 +804,12 @@ class Voi:
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[1])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
+                    key=lambda x: x[1])
             elif plane is self.coronal:
                 point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth), key=lambda x: x[0])
+                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
+                    key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
