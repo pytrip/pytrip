@@ -19,9 +19,9 @@
 """
 This module provides the DosCube class, which the user should use for handling plan-generated dose distributions.
 """
-import os
-import logging
 import datetime
+import logging
+import os
 import warnings
 
 import numpy as np
@@ -42,9 +42,9 @@ except ImportError:
     except ImportError:
         _dicom_loaded = False
 
-from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.cube import Cube
-from . import pytriplib
+from pytrip.error import InputError, ModuleNotLoadedError
+from pytrip import pytriplib
 
 
 class DosCube(Cube):
