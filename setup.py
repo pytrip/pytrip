@@ -95,7 +95,7 @@ extensions = [setuptools.Extension(
 setuptools.setup(
     name='pytrip98',
     version=git_version(),
-    packages=setuptools.find_packages(exclude="tests"),
+    packages=setuptools.find_packages(exclude=["tests"]),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
