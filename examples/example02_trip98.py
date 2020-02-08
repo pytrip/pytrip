@@ -30,14 +30,16 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  # give some output on what is going on.
 
 # Fist we specify the directory where all our files are:
-wdir = "/home/bassler/test"
+wdir = "/media/deerjelen/backup/working/IFJ/temporary" # working dir must exist.
+patient_dir = "/media/deerjelen/backup/working/IFJ/LT/res/TST000"
+trip_path = "/media/deerjelen/backup/working/IFJ/trip98"
 
 # In TRiP, the patient "TST000" would typically carry the filename "TST000000"
 patient_name = "TST000000"
 
 # so we can construc the paths to the CTX and VDX files like this:
-ctx_path = os.path.join(wdir, patient_name + ".ctx")
-vdx_path = os.path.join(wdir, patient_name + ".vdx")
+ctx_path = os.path.join(patient_dir, patient_name + ".ctx")
+vdx_path = os.path.join(patient_dir, patient_name + ".vdx")
 
 # Next we load the CT cube:
 c = pt.CtxCube()
@@ -52,11 +54,12 @@ print(v.get_voi_names())
 
 # We need to specify where the kernel files can be found. The location may depend on the ion we
 # want to treat with. This example sets up a kernel model for C-12 ions with a 3 mm Ripple Filter.
+
 mykernel = pte.KernelModel()
 mykernel.projectile = pte.Projectile("C", a=12)
-mykernel.ddd_path = "/home/bassler/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-mykernel.spc_path = "/home/bassler/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-mykernel.sis_path = "/home/bassler/TRiP98/base/DATA/SIS/12C.sis"
+mykernel.ddd_path = trip_path + "/DATA/DDD/12C/RF3MM/*"
+mykernel.spc_path = trip_path + "/DATA/SPC/12C/RF3MM/*"
+mykernel.sis_path = trip_path + "/DATA/SIS/19981218.sis"
 mykernel.rifi_thickness = 3.0  # 3 mm ripple filter. (Only for documentaiton, will not affect dose optimization.)
 mykernel.rifi_name = "GSI_1D_3mm"  # Additional free text for documentation.
 mykernel.comment = "Carbon-12 ions with 3 mm 1D Ripple Filter"
@@ -64,12 +67,12 @@ mykernel.comment = "Carbon-12 ions with 3 mm 1D Ripple Filter"
 # Ok, we have the Contours, the CT cube and dose kernels ready. Next we must prepare a plan.
 # We may choose any basename for the patient. All output files will be named using
 # this basename.
-plan = pte.Plan(basename=patient_name, kernels=(mykernel, ))
+plan = pte.Plan(basename=patient_name, default_kernel=mykernel)
 
 # Plan specific data:
-plan.hlut_path = "/home/bassler/TRiP98/base/DATA/HLUT/19990218.hlut"  # Hounsfield lookup table location
-plan.dedx_path = "/home/bassler/TRiP98/base/DATA/DEDX/20040607.dedx"  # Stopping power tables
-plan.working_dir = "/home/bassler/test/"  # working dir must exist.
+plan.hlut_path = trip_path + "/DATA/HLUT/19990218.hlut"  # Hounsfield lookup table location
+plan.dedx_path = trip_path + "/DATA/DEDX/20000830.dedx"  # Stopping power tables
+plan.working_dir = wdir
 
 # Set the plan target to the voi called "CTV"
 plan.voi_target = v.get_voi_by_name('CTV')
@@ -108,7 +111,7 @@ te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vd
 # Depending on the remote .bashrc_profile setup, it may be needed to specify the full path
 # for the remote TRiP installation. On some systems the $PATH is set, so this line can be omitted,
 # or shortened to just "TRiP98" :
-# te.trip_bin_path = "/opt/aptg/TRiP98/bin/TRiP98"
+# te.trip_bin_path = trip_path + "/bin/TRiP98"
 
 te.execute(plan)  # this will run TRiP
 # te.execute(plan, False)  # set to False, if TRiP98 should not be executed. Good for testing.
