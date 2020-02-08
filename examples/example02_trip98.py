@@ -54,7 +54,6 @@ print(v.get_voi_names())
 
 # We need to specify where the kernel files can be found. The location may depend on the ion we
 # want to treat with. This example sets up a kernel model for C-12 ions with a 3 mm Ripple Filter.
-
 mykernel = pte.KernelModel()
 mykernel.projectile = pte.Projectile("C", a=12)
 mykernel.ddd_path = trip_path + "/DATA/DDD/12C/RF3MM/*"
