@@ -24,7 +24,7 @@ import warnings
 import numpy as np
 
 from pytrip.cube import Cube
-import pytriplib
+from pytrip import pytriplib
 
 
 class LETCube(Cube):

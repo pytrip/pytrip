@@ -31,7 +31,7 @@ import numpy as np
 from pytrip.cube import Cube
 from pytrip.res.point import get_basis_from_angles
 from pytrip.res.interpolate import RegularInterpolator
-import pytriplib
+from pytrip import pytriplib
 
 
 def cmp_sort(a, b):

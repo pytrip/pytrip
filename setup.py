@@ -95,7 +95,7 @@ extensions = [setuptools.Extension(
 setuptools.setup(
     name='pytrip98',
     version=git_version(),
-    packages=setuptools.find_packages(exclude="tests"),
+    packages=setuptools.find_packages(exclude=["tests"]),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
@@ -141,6 +141,7 @@ setuptools.setup(
         'matplotlib', 'numpy', 'pydicom'
     ],
     include_dirs=[np.get_include()],
+    ext_package='pytrip',
     ext_modules=extensions,
     entry_points={
         'console_scripts': [
