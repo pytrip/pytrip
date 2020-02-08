@@ -29,10 +29,11 @@ import pytrip.tripexecuter as pte
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)  # give some output on what is going on.
 
+# Please adjust these paths according to location of the patient data (CT and contouring) and TRiP98 installation.
 # Fist we specify the directory where all our files are:
-wdir = "/media/deerjelen/backup/working/IFJ/temporary" # working dir must exist.
-patient_dir = "/media/deerjelen/backup/working/IFJ/LT/res/TST000"
-trip_path = "/media/deerjelen/backup/working/IFJ/trip98"
+wdir = "/home/user/workspace"  # working dir must exist.
+patient_dir = "/home/user/data/yoda"
+trip_path = "/home/user/usr/trip98"
 
 # In TRiP, the patient "TST000" would typically carry the filename "TST000000"
 patient_name = "TST000000"
