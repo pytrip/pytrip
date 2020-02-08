@@ -51,7 +51,7 @@ v = pt.VdxCube(c)
 v.read(vdx_path)
 
 # we may print all contours found in the Vdx file, if we want to
-print(v.get_voi_names())
+print(v.voi_names())
 
 # We need to specify where the kernel files can be found. The location may depend on the ion we
 # want to treat with. This example sets up a kernel model for C-12 ions with a 3 mm Ripple Filter.
