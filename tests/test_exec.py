@@ -60,12 +60,14 @@ class TestLocalExec(unittest.TestCase):
 
         print(v.voi_names())
 
-        plan = pte.Plan(basename=self.patient_name)
+        projectile = pte.Projectile('H')
+        kernel = pte.KernelModel(projectile)
+        kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+        kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+        kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
+        plan = pte.Plan(default_kernel=kernel, basename=self.patient_name)
         self.assertIsNotNone(plan)
 
-        plan.ddd_dir = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-        plan.spc_dir = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-        plan.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
         plan.hlut_path = "/opt/TRiP98/base/DATA/HLUT/19990218.hlut"
         plan.dedx_path = "/opt/TRiP98/base/DATA/DEDX/20040607.dedx"
         plan.working_dir = "."  # working dir must exist.
@@ -78,14 +80,12 @@ class TestLocalExec(unittest.TestCase):
         plan.offh2o = 1.873
 
         # create a field and add it to the plan
-        field = pte.Field()
+        field = pte.Field(kernel)
         self.assertIsNotNone(field)
         field.basename = self.patient_name
         field.gantry = 10.0
         field.couch = 90.0  # degrees
         field.fwhm = 4.0  # spot size in [mm]
-        field.kernel = pte.KernelModel()
-        field.kernel.projectile = pte.Projectile('H')
 
         plan.fields.append(field)
 

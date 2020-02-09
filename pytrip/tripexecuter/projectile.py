@@ -22,7 +22,6 @@ Object holding all data needed for a specific projectile/rifi configuration.
 
 import logging
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -30,47 +29,57 @@ class Projectile(object):
     """
     Object holding projectile specific data.
     """
-
     # list of projectile name - charge and most common isotope.
-    _projectile_defaults = {"H": (1, 1),
-                            "He": (2, 4),
-                            "Li": (3, 7),
-                            "C": (6, 12),
-                            "O": (8, 16),
-                            "Ne": (10, 20),
-                            "Ar": (16, 40)}
+    projectile_defaults = {
+        "H": (1, 1),
+        "He": (2, 4),
+        "Li": (3, 7),
+        "C": (6, 12),
+        "O": (8, 16),
+        "Ne": (10, 20),
+        "Ar": (16, 40)
+    }
 
-    z = -1
-    a = -1
-    iupac = ""  # chemical symbol (parsed by TRiP), "H", "He", "C", "O", "Ne" ....
-    name = ""   # cleartext name "Protons", "Carbon-12 ions", "Antiprotons", ...
-
-    def __init__(self, symb, name="", z=0, a=0):
+    def __init__(self, iupac_symbol="", a=0, z=0, name=""):
         """
-        :param symb: IUPAC symbol "H", "He", "Li", "C" ...
+        :param iupac_symbol: IUPAC symbol "H", "He", "Li", "C" ...
         :param name: free text name for this projectile, i.e. "Protons", "Antiprotons", "C-12"
         :param z: charge of projectile. Default value for symb taken if not specified.
         :param a: nucleon number of proejctile, default value for symb is taken if not specified (12 for C, 4 for He...)
         """
-
+        self.iupac = iupac_symbol
+        self.a = a
+        self.z = z
         self.name = name
 
-        if symb in self._projectile_defaults:
-            self.z = self._projectile_defaults[symb][0]
-            self.a = self._projectile_defaults[symb][1]
+        if iupac_symbol in Projectile.projectile_defaults:
+            self.z = Projectile.projectile_defaults[iupac_symbol][0]
+            self.a = Projectile.projectile_defaults[iupac_symbol][1]
 
-        self.iupac = symb
+    def trip98_format(self):
+        """
+        This method should be used when converting projectile to .exec file
+        :return: TRiP98 compliant string
+        """
+        self.trip98_validate()
+        trip_symbol = ""
+        if self.a > 0:
+            trip_symbol += str(self.a)
+        trip_symbol += self.iupac
+        if self.z > 0:
+            trip_symbol += str(self.z)
+        return trip_symbol
 
-        if z > 0:
-            self.z = z
-
-        if a > 0:
-            self.a = a
-
-        if self.z < 1:
-            logger.warning("No projectile charge was set.")
-        if self.a < 1:
+    def trip98_validate(self):
+        """
+        Checking if all obligatory fields are valid
+        """
+        if self.a == 0:
             logger.warning("No projectile nucleon number was set.")
+        if self.z == 0:
+            logger.warning("No projectile charge was set.")
+        if not self.iupac:
+            raise Exception("Iupac symbol is not set")
 
     def __str__(self):
         """
@@ -88,5 +97,6 @@ class Projectile(object):
         out += "|  Projectile Z                      : {:s}\n".format(str(self.z))
         out += "|  Projectile A                      : {:s}\n".format(str(self.a))
         out += "|  Projectile IUPAC                  : {:s}\n".format(str(self.iupac))
+        out += "|  Symbol used in Trip exec file     : {:s}\n".format(self.trip98_format())
         out += "----------------------------------------------------------------------------\n"
         return out

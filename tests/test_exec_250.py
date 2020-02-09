@@ -61,8 +61,8 @@ class TestLocalExec250(unittest.TestCase):
 
         print(v.voi_names())
 
-        kernel = pte.KernelModel("C12 Ions RiFi 3MM")
-        kernel.projectile = pte.Projectile("C")
+        projectile = pte.Projectile("C")
+        kernel = pte.KernelModel(projectile, "C12 Ions RiFi 3MM")
         kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
         kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
         kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
@@ -70,7 +70,7 @@ class TestLocalExec250(unittest.TestCase):
         kernel.rifi_name = "GSI RF3MM"
         kernel.comment = "C-12 Ions with a 3 mm 1-D Ripple Filter from GSI"
 
-        plan = pte.Plan(basename=self.patient_name, kernels=(kernel, ))
+        plan = pte.Plan(default_kernel=kernel, basename=self.patient_name)
         self.assertIsNotNone(plan)
 
         plan.hlut_path = "/opt/TRiP98/base/DATA/HLUT/19990218.hlut"
@@ -84,13 +84,12 @@ class TestLocalExec250(unittest.TestCase):
         plan.offh2o = 1.873
 
         # create a field and add it to the plan
-        field = pte.Field()
+        field = pte.Field(kernel)
         self.assertIsNotNone(field)
         field.basename = self.patient_name
         field.gantry = 10.0
         field.couch = 90.0  # degrees
         field.fwhm = 4.0  # spot size in [mm]
-        field.kernel = kernel
 
         plan.fields.append(field)
 
