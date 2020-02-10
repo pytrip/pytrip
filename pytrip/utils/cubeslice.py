@@ -19,10 +19,10 @@
 """
 Generates .png files for each slice found in the given cube.
 """
-import os
-import sys
 import argparse
 import logging
+import os
+import sys
 
 from numpy import arange, ma, NINF
 
@@ -40,7 +40,7 @@ def load_data_cube(filename):
     """
 
     if not filename:
-        logger.warn("Empty data cube filename")
+        logger.warning("Empty data cube filename")
         return None, None
 
     logger.info("Reading " + filename)
@@ -56,11 +56,11 @@ def load_data_cube(filename):
     let_path_helper = TRiP98FilePath(filename, pt.LETCube)
     dose_path_helper = TRiP98FilePath(filename, pt.DosCube)
 
-    # check if LET cube type can be determinen by presence of suffix in a name (mlet, dosemlet)
+    # check if LET cube type can be determined by presence of suffix in a name (mlet, dosemlet)
     if let_path_helper.suffix is not None:
         cube_cls = let_path_helper.cube_type
 
-    # check if DOS cube type can be determinen by presence of suffix in a name (phys, bio etc...)
+    # check if DOS cube type can be determined by presence of suffix in a name (phys, bio etc...)
     elif dose_path_helper.suffix is not None:
         cube_cls = dose_path_helper.cube_type
 
@@ -149,10 +149,10 @@ def main(args=sys.argv[1:]):
         return 2
 
     # Check if different output path was requested. If yes, then check if it exists.
-    if args.outputdir is not None:
-        if os.path.isdir(args.outputdir) is False:
-            logger.error("Output directory " + args.outputdir + " does not exist.")
-            return 1
+    if args.outputdir:
+        if not os.path.isdir(args.outputdir):
+            logger.warning("Output directory " + args.outputdir + " does not exist, creating.")
+            os.makedirs(args.outputdir)
 
     data_cube, data_basename = load_data_cube(args.data)
 
@@ -332,7 +332,7 @@ def main(args=sys.argv[1:]):
                 elif isinstance(data_cube, pt.DosCube):
                     data_cb.set_label("Relative dose [%]")
 
-        # by default savefil will produce 800x600 resolution, setting dpi=200 is increasing it to 1600x1200
+        # by default savefig will produce 800x600 resolution, setting dpi=200 is increasing it to 1600x1200
         fig.savefig(output_filename, dpi=200)
 
     return 0
