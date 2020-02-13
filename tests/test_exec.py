@@ -65,6 +65,7 @@ class TestLocalExec(unittest.TestCase):
         kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
         kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
         kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
+        kernel.rifi_thickness = 3.0
         plan = pte.Plan(default_kernel=kernel, basename=self.patient_name)
         self.assertIsNotNone(plan)
 
@@ -75,7 +76,6 @@ class TestLocalExec(unittest.TestCase):
         # add the target voi to the plan
         plan.voi_target = v.get_voi_by_name('target')
 
-        plan.rifi = 3.0
         plan.bolus = 0.0
         plan.offh2o = 1.873
 

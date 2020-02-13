@@ -112,7 +112,6 @@ class Plan(object):
         # Scancap parameters:
         # Thickness of ripple filter (0.0 for none)
         # will only used for the TRiP98 Scancap command.
-        self.rifi = 0.0  # rifi thickness in [mm]  # deprecated, use KernelModel
         self.bolus = 0.0  # amount of bolus to be applied in [mm]
         self.offh2o = 0.0  # Offset of exit-window and ionchambers in [mm]
         self.minparticles = 5000  # smallest amount of particle which will go into a raster spot
@@ -211,7 +210,6 @@ class Plan(object):
 
         out += "|\n"
         out += "| Scanner capabilities (Scancap)\n"
-        out += "|   Ripple filter thickness     : {:.3f} [mm]\n".format(self.rifi)
         out += "|   Bolus thickness             : {:.3f} [mm]\n".format(self.bolus)
         out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
         out += "|   Min particles               : {:d}\n".format(self.minparticles)
@@ -400,7 +398,7 @@ class Plan(object):
 
         # Scancap:
         opt = "scancap / offh2o({:.3f})".format(self.offh2o)
-        opt += " rifi({:.3f})".format(self.rifi)
+        opt += " rifi({:.3f})".format(self.default_kernel.rifi_thickness)  # rifi support is not fully implemented yet
         opt += " bolus({:.3f})".format(self.bolus)
         opt += " minparticles({:d})".format(self.minparticles)
         opt += " path({:s})".format(self.scanpath)
