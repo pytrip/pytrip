@@ -398,7 +398,7 @@ class Plan(object):
 
         # Scancap:
         opt = "scancap / offh2o({:.3f})".format(self.offh2o)
-        opt += " rifi({:.3f})".format(self.default_kernel.rifi_thickness)
+        opt += " rifi({:.3f})".format(self.default_kernel.rifi_thickness)  # rifi support is not fully implemented yet
         opt += " bolus({:.3f})".format(self.bolus)
         opt += " minparticles({:d})".format(self.minparticles)
         opt += " path({:s})".format(self.scanpath)
