@@ -747,6 +747,18 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
+        # add DICOM tags as a commented lines
+        if self.dicom_data:
+            import pprint
+            dicom_dict = self.dicom_data.to_json_dict()
+            dicom_dict_to_save = {}
+            for k,v in dicom_dict.items():
+                if 'Value' in v.keys():
+                    dicom_dict_to_save[k] = v
+            dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
+            for line in dicom_str.splitlines():
+                output_str += "#" + line + "\n"
+
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)
 
@@ -805,6 +817,8 @@ class Cube(object):
         self.dimz = len(dcm["images"])
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
+
+        self.dicom_data = ds
 
         # Fix for bug #342
         # TODO: slice_distance should probably be a list of distances,
