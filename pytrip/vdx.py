@@ -52,7 +52,6 @@ except ImportError:
 import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.dos import DosCube
-from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -770,6 +769,7 @@ class Voi:
         """
         (TODO: Documentation)
         """
+        from pytrip import pytriplib
         a = np.array(basis[0])
         b = np.array(basis[1])
         self.concat_contour()
@@ -798,6 +798,7 @@ class Voi:
         :param float depth: position of plane
         :returns: a Slice object.
         """
+        from pytrip import pytriplib
         self.concat_contour()
         points1 = []
         points2 = []

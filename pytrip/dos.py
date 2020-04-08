@@ -44,7 +44,6 @@ except ImportError:
 
 from pytrip.cube import Cube
 from pytrip.error import InputError, ModuleNotLoadedError
-from pytrip import pytriplib
 
 
 class DosCube(Cube):
@@ -99,6 +98,7 @@ class DosCube(Cube):
             "The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
             DeprecationWarning
         )
+        from pytrip import pytriplib
         z_pos = 0  # z position
         voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)

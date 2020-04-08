@@ -31,7 +31,6 @@ import numpy as np
 from pytrip.cube import Cube
 from pytrip.res.point import get_basis_from_angles
 from pytrip.res.interpolate import RegularInterpolator
-from pytrip import pytriplib
 
 
 def cmp_sort(a, b):
@@ -192,6 +191,7 @@ class DensityProjections:
         :param float stepsize: relative to pixelsize, 1 is a step of 1 pixel
         :return:
         """
+        from pytrip import pytriplib
         # min_structure = 5 TODO why not used ?
         basis = get_basis_from_angles(gantry, couch)
         # Convert angles from degrees to radians

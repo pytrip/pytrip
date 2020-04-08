@@ -563,6 +563,8 @@ class Cube(object):
         self.header_set = True
         content = content.split('\n')
         self.z_table = False
+        self.dicom_str = ""
+
         while i < len(content):
             if re.match("version", content[i]):
                 self.version = content[i].split()[1]
@@ -612,6 +614,8 @@ class Cube(object):
                 for j in range(self.slice_number):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
+            if re.match("#@", content[i]):
+                self.dicom_str += content[i].lstrip("#@")
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
@@ -629,6 +633,12 @@ class Cube(object):
         if not self.z_table:
             self.slice_pos = [self.zoffset + _i * self.slice_distance for _i in range(self.slice_number)]
         self._set_format_str()
+
+        # read DICOM data from header file comments
+        import pydicom
+        tmp = self.dicom_str.replace('\'', '\"')
+        self.dicom_data = pydicom.dataset.Dataset().from_json(tmp)
+
 
     def _set_format_str(self):
         """Set format string according to byte_order.
@@ -757,7 +767,7 @@ class Cube(object):
                     dicom_dict_to_save[k] = v
             dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
             for line in dicom_str.splitlines():
-                output_str += "#" + line + "\n"
+                output_str += "#@" + line + "\n"
 
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)

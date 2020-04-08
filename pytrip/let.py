@@ -24,7 +24,6 @@ import warnings
 import numpy as np
 
 from pytrip.cube import Cube
-from pytrip import pytriplib
 
 
 class LETCube(Cube):
@@ -73,6 +72,7 @@ class LETCube(Cube):
             "The method calculate_lvh() is deprecated, and is replaced with the pytrip.VolHist object.",
             DeprecationWarning
         )
+        from pytrip import pytriplib
         pos = 0
         size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)

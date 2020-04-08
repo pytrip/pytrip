@@ -25,6 +25,8 @@ import logging
 import argparse
 
 import pytrip as pt
+import pytrip.dicomhelper
+import pytrip.ctx
 
 logger = logging.getLogger(__name__)
 
@@ -33,6 +35,7 @@ def main(args=sys.argv[1:]):
     """ Main function for dicom2trip.py
     """
     # parse arguments
+
     parser = argparse.ArgumentParser()
     parser.add_argument("dicom_dir", help="location of directory with DICOM files", type=str)
     parser.add_argument("ctx_basename", help="basename of output file in TRiP98 format", type=str)
@@ -50,6 +53,7 @@ def main(args=sys.argv[1:]):
     basename = parsed_args.ctx_basename
 
     # import DICOM
+#    from pytrip.dicomhelper import read_dicom_dir
     dcm = pt.dicomhelper.read_dicom_dir(parsed_args.dicom_dir)
 
     if 'images' in dcm:
