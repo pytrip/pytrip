@@ -58,10 +58,10 @@ class CtxCube(Cube):
             self._set_header_from_dicom(dcm)
 
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=np.int16)
-        intersect = float(dcm["images"][0].RescaleIntercept)
-        slope = float(dcm["images"][0].RescaleSlope)
 
         for i in range(len(dcm["images"])):
+            intersect = float(dcm["images"][i].RescaleIntercept)
+            slope = float(dcm["images"][i].RescaleSlope)
             data = np.array(dcm["images"][i].pixel_array) * slope + intersect
             self.cube[i][:][:] = data
         if len(self.slice_pos) > 1 and self.slice_pos[1] < self.slice_pos[0]:
@@ -76,7 +76,6 @@ class CtxCube(Cube):
 
         :returns: A Dicom object.
         """
-        data = []
 
         ds = self.create_dicom_base()
         ds.Modality = 'CT'
@@ -88,8 +87,6 @@ class CtxCube(Cube):
         ds.RescaleIntercept = 0.0
         ds.ImageType = ['ORIGINAL', 'PRIMARY', 'AXIAL']
         ds.PatientPosition = 'HFS'
-        # ds.SeriesInstanceUID is created in the top-level cube class
-        # ds.SeriesInstanceUID = '2.16.840.1.113662.2.12.0.3057.1241703565.43'
         ds.RescaleSlope = 1.0
         ds.PixelRepresentation = 1
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
@@ -116,8 +113,8 @@ class CtxCube(Cube):
                     'StudyDescription', 'SeriesDescription', 'ManufacturerModelName', 'PrivateCreator', 'PatientID',
                     'PatientBirthDate', 'PatientSex', 'OtherPatientNames', 'PatientAge', 'BodyPartExamined', 'KVP',
                     'BitsStored', 'HighBit', 'PixelRepresentation', 'RescaleIntercept', 'RescaleSlope']:
-            if self.dicom_data and tag in self.dicom_data:
-                ds[tag] = self.dicom_data[tag]
+            if self.common_dicom_data and tag in self.common_dicom_data:
+                ds[tag] = self.common_dicom_data[tag]
 
         # MediaStorageSOPInstanceUID (0002,0003)
         # ImplementationClassUID (0002,0012)
@@ -125,31 +122,48 @@ class CtxCube(Cube):
         # SOPInstanceUID is specific to each slice
         # need to check if DICOM information is read from DICOM directory or from DICOM file
 
-        import uuid
+        from pydicom import uid
+        data = []  # list of DICOM objects with data specific to the slice
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
+
+            # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
+            # unique to each CT slice !!!
+            # meta.MediaStorageSOPInstanceUID = self._ct_sop_instance_uid
+
             _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
                                         "{:.3f}".format(self.yoffset),
                                         "{:.3f}".format(self.slice_pos[i])]
 
-            if ds.SOPInstanceUID.startswith('2.25.'):
-                # UUID based UIDs
-                # example: 2.25.137355362850316362338405159557803441718
-                uuid_part_str = ds.SOPInstanceUID[len('2.25.'):len('2.25.') + 32]  # extract 32bit fragment of
-                # last part of UID, as string
-
-                uuid_object = uuid.UUID(int=int(uuid_part_str))   # convert to UID object, to be able to manipulate it
-                uuid_list = list(uuid_object.fields)              # get list of fields, to be able to edit it
-                uuid_list[-1] = i + 1  # replace clock_seq part of uuid with sequential number
-                current_uuid = uuid.UUID(fields=uuid_list)        # create uuid object back from updated list
-                current_sop_uid = '2.25.{0}'.format(current_uuid.int)  # create back an UID
+            # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
+            if self._ct_sop_instance_uid_list:
+                #print("setting uid from list", self._ct_sop_instance_uid_list[i])
+                _ds.SOPInstanceUID = self._ct_sop_instance_uid_list[i]
             else:
-                # ISO based UIDS
-                # example: 1.2.826.0.1.3680043.8.498.255851143265846913128620976
-                sop_uid_list = ds.SOPInstanceUID.split('.')
-                current_sop_uid = '.'.join(sop_uid_list[:-1] + [str(i + 1)])  # replace last part of UID with a number
+                _ds.SOPInstanceUID = uid.generate_uid(prefix=None)
+                #print("generating uid ", _ds.SOPInstanceUID)
 
-            _ds.SOPInstanceUID = current_sop_uid
+            _ds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
+
+            # else:
+            #     if _ds.SOPInstanceUID.startswith('2.25.'):
+            #         # UUID based UIDs
+            #         # example: 2.25.137355362850316362338405159557803441718
+            #         uuid_part_str = ds.SOPInstanceUID[len('2.25.'):len('2.25.') + 32]  # extract 32bit fragment of
+            #         # last part of UID, as string
+            #
+            #         uuid_object = uuid.UUID(int=int(uuid_part_str))   # convert to UID object, to be able to manipulate it
+            #         uuid_list = list(uuid_object.fields)              # get list of fields, to be able to edit it
+            #         uuid_list[-1] = i + 1  # replace clock_seq part of uuid with sequential number
+            #         current_uuid = uuid.UUID(fields=uuid_list)        # create uuid object back from updated list
+            #         current_sop_uid = '2.25.{0}'.format(current_uuid.int)  # create back an UID
+            #     else:
+            #         # ISO based UIDS
+            #         # example: 1.2.826.0.1.3680043.8.498.255851143265846913128620976
+            #         sop_uid_list = ds.SOPInstanceUID.split('.')
+            #         current_sop_uid = '.'.join(sop_uid_list[:-1] + [str(i + 1)])  # replace last part of UID with a number
+
+            # _ds.SOPInstanceUID = current_sop_uid
             _ds.SliceLocation = str(self.slice_pos[i])
             _ds.InstanceNumber = str(i + 1)
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)

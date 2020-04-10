@@ -33,24 +33,13 @@ from functools import cmp_to_key
 
 import numpy as np
 
-try:
-    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
-    from pydicom import uid
-    from pydicom.dataset import Dataset, FileDataset
-    from pydicom.sequence import Sequence
-    _dicom_loaded = True
-except ImportError:
-    try:
-        # fallback to old (<1.0) pydicom package version
-        from dicom import UID as uid  # old pydicom had UID instead of uid
-        from dicom.dataset import Dataset, FileDataset
-        from dicom.sequence import Sequence
-        _dicom_loaded = True
-    except ImportError:
-        _dicom_loaded = False
+from pydicom import uid
+from pydicom.dataset import Dataset, FileDataset
+from pydicom.sequence import Sequence
+
 
 import pytrip
-from pytrip.error import InputError, ModuleNotLoadedError
+from pytrip.error import InputError
 from pytrip.dos import DosCube
 
 logger = logging.getLogger(__name__)
@@ -345,8 +334,6 @@ class VdxCube:
 
         :returns: a Dicom RTSTRUCT object holding any VOIs.
         """
-        if _dicom_loaded is False:
-            raise ModuleNotLoadedError("Dicom")
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
         # SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)

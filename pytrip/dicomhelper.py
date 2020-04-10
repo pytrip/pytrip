@@ -22,6 +22,7 @@ Auxiliary functions for handling Dicom data.
 import os
 from pydicom import dcmread
 
+
 def compare_dicom_key(dcm):
     """ Specifying the sorting key for CT images.
     """

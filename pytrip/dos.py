@@ -43,7 +43,7 @@ except ImportError:
         _dicom_loaded = False
 
 from pytrip.cube import Cube
-from pytrip.error import InputError, ModuleNotLoadedError
+from pytrip.error import InputError
 
 
 class DosCube(Cube):
@@ -223,8 +223,6 @@ class DosCube(Cube):
         :returns: a DICOM RT-Dose object.
         """
 
-        if not _dicom_loaded:
-            raise ModuleNotLoadedError("DICOM")
         if not self.header_set:
             raise InputError("Header not loaded")
 
