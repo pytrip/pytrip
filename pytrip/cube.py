@@ -25,12 +25,15 @@ import re
 import sys
 import logging
 import datetime
+import pprint
 
 import numpy as np
 
 import pydicom
 from pydicom import uid
+from pydicom.datadict import dictionary_description
 from pydicom.dataset import Dataset, FileDataset
+from pydicom.tag import Tag
 
 from pytrip.error import InputError, FileNotFound
 from pytrip.util import TRiP98FilePath, TRiP98FileLocator
@@ -83,7 +86,7 @@ class Cube(object):
             self._ct_dicom_series_instance_uid = cube._ct_dicom_series_instance_uid
 
             # unique for each CT slice
-            self._ct_sop_instance_uid_list = cube._ct_sop_instance_uid_list
+            # self._ct_sop_instance_uid_list = cube._ct_sop_instance_uid_list
 
             # here are included tags with _common_ values in case
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
@@ -131,7 +134,7 @@ class Cube(object):
             self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
 
             # unique for each CT slice
-            self._ct_sop_instance_uid_list = []
+            # self._ct_sop_instance_uid_list = []
 
             self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
 
@@ -335,7 +338,7 @@ class Cube(object):
         self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
         self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
         # unique for each CT slice
-        self._ct_sop_instance_uid_list = [uid.generate_uid(prefix=None) for _ in range(self.slice_number)]
+        # self._ct_sop_instance_uid_list = [uid.generate_uid(prefix=None) for _ in range(self.slice_number)]
 
     def mask_by_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -779,10 +782,9 @@ class Cube(object):
 
         # add DICOM tags as a commented lines
         if self.common_dicom_data:
-            import pprint
-            dicom_dict = self.common_dicom_data.to_json_dict()
+            common_dicom_dict = self.common_dicom_data.to_json_dict()
             dicom_dict_to_save = {}
-            for tag_name, tag_value in dicom_dict.items():
+            for tag_name, tag_value in common_dicom_dict.items():
                 # restring saving tags to a subset with reasonable values,
                 # i.e. excluding big binary arrays with pixel data
                 if 'Value' in tag_value.keys():
@@ -790,17 +792,38 @@ class Cube(object):
             dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
             output_str += "#############################################################\n"
             output_str += "####### This file was created from a DICOM data #############\n"
-            output_str += "### Below JSON representation of _common_ DICOM tags   ##\n"
+            output_str += "### Below JSON representation of _common_ DICOM tags   ######\n"
             output_str += "#############################################################\n"
             for line in dicom_str.splitlines():
                 output_str += "#@" + line + "\n"
-            output_str += "### Below JSON representation of _specific_ DICOM tags   ##\n"
-            if self._ct_sop_instance_uid_list:
-                for i in range(len(self.cube)):
-                    output_str += "#& slice {:d} : SOPInstanceUID = ".format(i) + self._ct_sop_instance_uid_list[i] + "\n"
             output_str += "#############################################################\n"
             output_str += "######### End of text representation of DICOM tags ##########\n"
             output_str += "#############################################################\n"
+
+        file_secific_dict_to_save = {}
+        for instance_no, ds in self.file_specific_dicom_data.items():
+            common_dicom_dict = ds.to_json_dict()
+            dicom_dict_to_save = {}
+            for tag_name, tag_value in common_dicom_dict.items():
+                # restring saving tags to a subset with reasonable values,
+                # i.e. excluding big binary arrays with pixel data
+                if 'Value' in tag_value.keys():
+                    dicom_dict_to_save[tag_name] = tag_value
+            file_secific_dict_to_save[instance_no] = dicom_dict_to_save
+
+        output_str += "#############################################################\n"
+        output_str += "### Below JSON representation of _specific_ DICOM tags   ######\n"
+        output_str += "#############################################################\n"
+        dicom_str = pprint.pformat(file_secific_dict_to_save, width=180)
+        for line in dicom_str.splitlines():
+            output_str += "#&" + line + "\n"
+        output_str += "#############################################################\n"
+
+
+            # output_str += "### Below JSON representation of _specific_ DICOM tags   ##\n"
+            # if self._ct_sop_instance_uid_list:
+            #     for i in range(len(self.cube)):
+            #         output_str += "#& slice {:d} : SOPInstanceUID = ".format(i) + self._ct_sop_instance_uid_list[i] + "\n"
 
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)
@@ -865,25 +888,55 @@ class Cube(object):
         self.created_by = "pytrip"
         self.creation_info = "Created by PyTRiP98"
         self.primary_view = "transversal"
+        self.dimz = len(dcm["images"])
+        self.slice_number = self.dimz
+
         self.set_data_type(type(first_file_ds.pixel_array[0][0]))
+
+        # check consistency of the files
+        required_common_tags = set(Tag(name) for name in ['PatientName', 'PatientID', 'Rows', 'PixelSpacing',
+                                                          'SliceThickness', 'Columns', 'StudyInstanceUID',
+                                                          'SeriesInstanceUID'])
+        if not required_common_tags.issubset(common_tags_and_values):
+            print("required_common_tags", required_common_tags)
+            print("common_tags_and_values", common_tags_and_values)
+            problematic_tags = required_common_tags.difference(common_tags_and_values)
+            for tag in problematic_tags:
+                print("Not all files share the same tag '{:s}' and its value".format(dictionary_description(tag)))
+            raise Exception("Not all files are compatible")
+
+            # # here are included tags with _specific_ values (different from file to file) in case
+            # # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
+            # self.file_specific_dicom_data = None
+
+        self.common_dicom_data = Dataset()
+        for tag_name in common_tags_and_values:
+            self.common_dicom_data[tag_name] = first_file_ds[tag_name]
+
+        self.file_specific_dicom_data = {}
+        for ds in dcm["images"]:
+            self.file_specific_dicom_data[ds.InstanceNumber] = Dataset()
+            for tag_name in specific_tags:
+                self.file_specific_dicom_data[ds.InstanceNumber][tag_name] = ds[tag_name]
+
         self.patient_name = first_file_ds.PatientName
         self.basename = first_file_ds.PatientID.replace(" ", "_")
-        self.slice_dimension = int(first_file_ds.Rows)  # should be changed ?
+
+        self.dimx = int(first_file_ds.Rows)  # (0028, 0010) Rows (US)
+        self.slice_dimension = self.dimx
+
+        self.dimy = int(first_file_ds.Columns)  # (0028, 0011) Columns (US)
+
         self.pixel_size = float(first_file_ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
+
         self.slice_thickness = first_file_ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
         # slice_distance != SliceThickness. One may have overlapping slices. See #342
-        self.slice_number = len(dcm["images"])
+
         self.xoffset = float(first_file_ds.ImagePositionPatient[0])
-        self.dimx = int(first_file_ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(first_file_ds.ImagePositionPatient[1])
-        self.dimy = int(first_file_ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(first_file_ds.ImagePositionPatient[2])  # note that zoffset should not be used.
-        self.dimz = len(dcm["images"])
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
-
-        # store all dicom tags internally, may be useful to generate metadata when saving files in TRiP98 format
-        self.common_dicom_data = first_file_ds
 
         # Fix for bug #342
         # TODO: slice_distance should probably be a list of distances,
@@ -906,9 +959,9 @@ class Cube(object):
         self._set_format_str()
         self.header_set = True
 
-        # unique for each CT slice
-        # self._ct_sop_instance_uid = ds.SOPInstanceUID
-        self._ct_sop_instance_uid_list = [tmp_ds.SOPInstanceUID for tmp_ds in dcm["images"]]
+        # # unique for each CT slice
+        # # self._ct_sop_instance_uid = ds.SOPInstanceUID
+        # self._ct_sop_instance_uid_list = [tmp_ds.SOPInstanceUID for tmp_ds in dcm["images"]]
 
         # unique for whole structure set, can be extracted from the first file
         self._dicom_study_instance_uid = first_file_ds.StudyInstanceUID

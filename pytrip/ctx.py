@@ -26,6 +26,7 @@ import copy
 import logging
 
 import numpy as np
+from pydicom.tag import Tag
 
 from pytrip.error import InputError
 from pytrip.cube import Cube
@@ -127,48 +128,30 @@ class CtxCube(Cube):
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
 
-            # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
-            # unique to each CT slice !!!
-            # meta.MediaStorageSOPInstanceUID = self._ct_sop_instance_uid
-
             _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
                                         "{:.3f}".format(self.yoffset),
                                         "{:.3f}".format(self.slice_pos[i])]
 
             # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
-            if self._ct_sop_instance_uid_list:
-                #print("setting uid from list", self._ct_sop_instance_uid_list[i])
-                _ds.SOPInstanceUID = self._ct_sop_instance_uid_list[i]
+            _ds.InstanceNumber = str(i + 1)
+
+            if self.file_specific_dicom_data and Tag('SOPInstanceUID') in self.file_specific_dicom_data[i+1].keys():
+                _ds.SOPInstanceUID = self.file_specific_dicom_data[i+1].SOPInstanceUID
             else:
                 _ds.SOPInstanceUID = uid.generate_uid(prefix=None)
-                #print("generating uid ", _ds.SOPInstanceUID)
 
+            # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
             _ds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
 
-            # else:
-            #     if _ds.SOPInstanceUID.startswith('2.25.'):
-            #         # UUID based UIDs
-            #         # example: 2.25.137355362850316362338405159557803441718
-            #         uuid_part_str = ds.SOPInstanceUID[len('2.25.'):len('2.25.') + 32]  # extract 32bit fragment of
-            #         # last part of UID, as string
-            #
-            #         uuid_object = uuid.UUID(int=int(uuid_part_str))   # convert to UID object, to be able to manipulate it
-            #         uuid_list = list(uuid_object.fields)              # get list of fields, to be able to edit it
-            #         uuid_list[-1] = i + 1  # replace clock_seq part of uuid with sequential number
-            #         current_uuid = uuid.UUID(fields=uuid_list)        # create uuid object back from updated list
-            #         current_sop_uid = '2.25.{0}'.format(current_uuid.int)  # create back an UID
-            #     else:
-            #         # ISO based UIDS
-            #         # example: 1.2.826.0.1.3680043.8.498.255851143265846913128620976
-            #         sop_uid_list = ds.SOPInstanceUID.split('.')
-            #         current_sop_uid = '.'.join(sop_uid_list[:-1] + [str(i + 1)])  # replace last part of UID with a number
+            if self.file_specific_dicom_data and Tag('SliceLocation') in self.file_specific_dicom_data[i+1].keys():
+                _ds.SliceLocation = self.file_specific_dicom_data[i+1].SliceLocation
+            else:
+                _ds.SliceLocation = str(self.slice_pos[i])
 
-            # _ds.SOPInstanceUID = current_sop_uid
-            _ds.SliceLocation = str(self.slice_pos[i])
-            _ds.InstanceNumber = str(i + 1)
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]
             _ds.PixelData = pixel_array.tostring()
+
             data.append(_ds)
         return data
 
