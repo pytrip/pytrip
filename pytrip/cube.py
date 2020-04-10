@@ -20,6 +20,7 @@
 This module provides the Cube class, which is used by the CTX, DOS, LET and VDX modules.
 A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
+import json
 import os
 import re
 import sys
@@ -572,8 +573,8 @@ class Cube(object):
         self.header_set = True
         content = content.split('\n')
         self.z_table = False
-        self.dicom_str = ""
-        self.dicom_slice_str = []
+        self.dicom_common_str = ""
+        self.dicom_specific_str = ""
 
         while i < len(content):
             if re.match("version", content[i]):
@@ -625,9 +626,9 @@ class Cube(object):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
             if re.match("#@", content[i]):
-                self.dicom_str += content[i].lstrip("#@")
+                self.dicom_common_str += content[i].lstrip("#@")
             if re.match("#&", content[i]):
-                self.dicom_slice_str.append(content[i].lstrip("#&"))
+                self.dicom_specific_str += content[i].lstrip("#&")
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
@@ -647,21 +648,15 @@ class Cube(object):
         self._set_format_str()
 
         # read DICOM data from header file comments
-        if self.dicom_str:
-            tmp = self.dicom_str.replace('\'', '\"')
+        if self.dicom_common_str:
+            tmp = self.dicom_common_str.replace('\'', '\"')
             self.common_dicom_data = pydicom.dataset.Dataset().from_json(tmp)
-        if self.dicom_slice_str:
-            self._ct_sop_instance_uid_list = [None] * self.slice_number
-            for line in self.dicom_slice_str:
-                re_slice_tag_value = re.compile("slice (?P<slice_no>.+) : (?P<tag_name>.+) = (?P<tag_value>.+)")
-                match = re_slice_tag_value.search(line)
-                if match:
-                    slice_no = int(match.group('slice_no'))
-                    tag_name = match.group('tag_name')
-                    tag_value = match.group('tag_value')
-                    if tag_name == "SOPInstanceUID":
-                        self._ct_sop_instance_uid_list[slice_no] = tag_value
-                    # print(slice_no, tag_name, tag_value)
+        if self.dicom_specific_str:
+            self.file_specific_dicom_data = {}
+            tmp = self.dicom_specific_str.replace('\'', '\"')
+            json_dataset = json.loads(tmp)
+            for instance_id, ds in json_dataset.items():
+                self.file_specific_dicom_data[int(instance_id)] = pydicom.dataset.Dataset().from_json(ds)
 
     def _set_format_str(self):
         """Set format string according to byte_order.
@@ -819,12 +814,6 @@ class Cube(object):
             output_str += "#&" + line + "\n"
         output_str += "#############################################################\n"
 
-
-            # output_str += "### Below JSON representation of _specific_ DICOM tags   ##\n"
-            # if self._ct_sop_instance_uid_list:
-            #     for i in range(len(self.cube)):
-            #         output_str += "#& slice {:d} : SOPInstanceUID = ".format(i) + self._ct_sop_instance_uid_list[i] + "\n"
-
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)
 
@@ -898,8 +887,6 @@ class Cube(object):
                                                           'SliceThickness', 'Columns', 'StudyInstanceUID',
                                                           'SeriesInstanceUID'])
         if not required_common_tags.issubset(common_tags_and_values):
-            print("required_common_tags", required_common_tags)
-            print("common_tags_and_values", common_tags_and_values)
             problematic_tags = required_common_tags.difference(common_tags_and_values)
             for tag in problematic_tags:
                 print("Not all files share the same tag '{:s}' and its value".format(dictionary_description(tag)))
