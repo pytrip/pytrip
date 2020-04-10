@@ -22,10 +22,7 @@ It also provides the SubMachine class which treats individual energy layers.
 """
 import logging
 import numpy as np
-try:
-    import pydicom as dicom  # as of version 1.0 pydicom package should be used this way
-except ImportError:
-    import dicom  # fallback to old (<1.0) pydicom package version
+from pydicom import dcmread
 
 from pytrip.file_parser import parse_to_var
 
@@ -68,7 +65,7 @@ class Rst:
 
         :param str path: Full path to Dicom file.
         """
-        self.data = dicom.read_file(path)
+        self.data = dcmread(path)
         logger.warning("Rst.read_from_dicom() is not implemented.")
 
     def read(self, path):

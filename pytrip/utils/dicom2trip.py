@@ -52,8 +52,6 @@ def main(args=sys.argv[1:]):
 
     basename = parsed_args.ctx_basename
 
-    # import DICOM
-#    from pytrip.dicomhelper import read_dicom_dir
     dcm = pt.dicomhelper.read_dicom_dir(parsed_args.dicom_dir)
 
     if 'images' in dcm:

@@ -20,11 +20,7 @@
 Auxiliary functions for handling Dicom data.
 """
 import os
-try:
-    import pydicom as dicom  # as of version 1.0 pydicom package should be used this way
-except ImportError:
-    import dicom  # fallback to old (<1.0) pydicom package version
-
+from pydicom import dcmread
 
 def compare_dicom_key(dcm):
     """ Specifying the sorting key for CT images.
@@ -45,7 +41,7 @@ def read_dicom_dir(dicom_dir):
     if not os.path.isdir(dicom_dir):
         raise IOError("Directory {:s} does not exist".format(dicom_dir))
 
-    # list of allowed dicom file extensions names
+    # list of allowed DICOM file extensions names
     # all in lower case
     dicom_suffix = ('.dcm', '.ima', '.v2')
 
@@ -53,12 +49,8 @@ def read_dicom_dir(dicom_dir):
     _files = os.listdir(dicom_dir)
     for item in _files:
         if os.path.splitext(item)[1].lower() in dicom_suffix:
-            dcm = dicom.read_file(os.path.join(dicom_dir, item), force=True)
-            # TODO figureout what was it about (see below)
-            # if dicom.__version__ >= "0.9.5":
-            # dcm = dicom.read_file(os.path.join(dicom_dir, item), force=True)
-            # else:
-            #     dcm = dicom.read_file(os.path.join(dicom_dir, item))
+            # force reading even if no File Meta Information header is found
+            dcm = dcmread(fp=os.path.join(dicom_dir, item), force=True)
             if dcm.Modality == "CT":
                 if "images" not in data:
                     data["images"] = []

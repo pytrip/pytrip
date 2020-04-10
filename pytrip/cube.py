@@ -639,7 +639,6 @@ class Cube(object):
         tmp = self.dicom_str.replace('\'', '\"')
         self.dicom_data = pydicom.dataset.Dataset().from_json(tmp)
 
-
     def _set_format_str(self):
         """Set format string according to byte_order.
         """
@@ -762,12 +761,21 @@ class Cube(object):
             import pprint
             dicom_dict = self.dicom_data.to_json_dict()
             dicom_dict_to_save = {}
-            for k,v in dicom_dict.items():
-                if 'Value' in v.keys():
-                    dicom_dict_to_save[k] = v
+            for tag_name, tag_value in dicom_dict.items():
+                # restring saving tags to a subset with reasonable values,
+                # i.e. excluding big binary arrays with pixel data
+                if 'Value' in tag_value.keys():
+                    dicom_dict_to_save[tag_name] = tag_value
             dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
+            output_str += "#############################################################\n"
+            output_str += "####### This file was created from a DICOM data #############\n"
+            output_str += "### Below text (JSON) representation of DICOM tags follows ##\n"
+            output_str += "#############################################################\n"
             for line in dicom_str.splitlines():
                 output_str += "#@" + line + "\n"
+            output_str += "#############################################################\n"
+            output_str += "######### End of text representation of DICOM tags ##########\n"
+            output_str += "#############################################################\n"
 
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)
@@ -809,7 +817,7 @@ class Cube(object):
         ds = dcm["images"][0]
         self.version = "1.4"
         self.created_by = "pytrip"
-        self.creation_info = "Created by PyTRiP98;"
+        self.creation_info = "Created by PyTRiP98"
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientName
@@ -828,6 +836,7 @@ class Cube(object):
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
 
+        # store all dicom tags internally, may be useful to generate metadata when saving files in TRiP98 format
         self.dicom_data = ds
 
         # Fix for bug #342
@@ -850,6 +859,9 @@ class Cube(object):
         self.num_bytes = 2
         self._set_format_str()
         self.header_set = True
+
+        # unique for each CT slice
+        self._ct_sop_instance_uid = ds.SOPInstanceUID
 
         # unique for whole structure set
         self._dicom_study_instance_uid = ds.StudyInstanceUID
@@ -920,7 +932,7 @@ class Cube(object):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
         else:
             ds.PatientID = self.patient_id  # Patient ID tag 0x0010,0x0020 (type LO - Long String)
-        ds.PatientSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        ds.PatientSex = 'O'  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
         ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'

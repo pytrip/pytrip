@@ -110,6 +110,21 @@ class CtxCube(Cube):
 
         ds.AcquisitionNumber = '1'  # AcquisitionNumber tag 0x0020, 0x0012 (type IS - Integer String)
 
+        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+        for tag in ['ImageType', 'StudyDate', 'SeriesDate', 'ContentDate', 'StudyTime', 'SeriesTime', 'ContentTime',
+                    'Manufacturer', 'InstitutionName', 'InstitutionAddress', 'ReferringPhysicianName', 'StationName',
+                    'StudyDescription', 'SeriesDescription', 'ManufacturerModelName', 'PrivateCreator', 'PatientID',
+                    'PatientBirthDate', 'PatientSex', 'OtherPatientNames', 'PatientAge', 'BodyPartExamined', 'KVP',
+                    'BitsStored', 'HighBit', 'PixelRepresentation', 'RescaleIntercept', 'RescaleSlope']:
+            if self.dicom_data and tag in self.dicom_data:
+                ds[tag] = self.dicom_data[tag]
+
+        # MediaStorageSOPInstanceUID (0002,0003)
+        # ImplementationClassUID (0002,0012)
+
+        # SOPInstanceUID is specific to each slice
+        # need to check if DICOM information is read from DICOM directory or from DICOM file
+
         import uuid
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
