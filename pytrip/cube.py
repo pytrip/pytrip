@@ -95,7 +95,11 @@ class Cube(object):
             # unique for each CT slice
             self._ct_sop_instance_uid = cube._ct_sop_instance_uid
 
+            # data imported from DICOM file
+            self.dicom_data = cube.dicom_data
+
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+
 
         else:
             import getpass
@@ -136,6 +140,9 @@ class Cube(object):
             self._ct_sop_instance_uid = uid.generate_uid(prefix=None)
 
             self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
+
+            # data imported from DICOM file
+            self.dicom_data = None
 
     def __add__(self, other):
         """ Overload + operator
@@ -635,9 +642,10 @@ class Cube(object):
         self._set_format_str()
 
         # read DICOM data from header file comments
-        import pydicom
-        tmp = self.dicom_str.replace('\'', '\"')
-        self.dicom_data = pydicom.dataset.Dataset().from_json(tmp)
+        if self.dicom_str:
+            import pydicom
+            tmp = self.dicom_str.replace('\'', '\"')
+            self.dicom_data = pydicom.dataset.Dataset().from_json(tmp)
 
     def _set_format_str(self):
         """Set format string according to byte_order.
