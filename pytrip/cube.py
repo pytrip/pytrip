@@ -27,6 +27,7 @@ import sys
 import logging
 import datetime
 import pprint
+from enum import Enum, auto
 
 import numpy as np
 
@@ -903,6 +904,8 @@ class Cube(object):
 
         print(self.dicom_data)
 
+        print(self.dicom_data.to_comment())
+
         # check consistency of the files
         required_common_tags = set(Tag(name) for name in ['PatientName', 'PatientID', 'Rows', 'PixelSpacing',
                                                           'SliceThickness', 'Columns', 'StudyInstanceUID',
@@ -1063,6 +1066,15 @@ class Cube(object):
 
 
 class AccompanyingDicomData:
+
+    class DataType(Enum):
+        CT = auto()
+        Dose = auto()
+        Struct = auto()
+        LET = auto()
+        common_CT = auto()
+        common_all = auto()
+
     def __init__(self, ct_datasets=[], dose_dataset=None, structure_dataset=None, let_dataset=None):
         logger.info("Creating Accompanying DICOM data")
         logger.debug("Accessing {:d} CT datasets".format(len(ct_datasets)))
@@ -1070,6 +1082,8 @@ class AccompanyingDicomData:
             logger.debug("Accessing dose datasets")
         if structure_dataset:
             logger.debug("Accessing structure datasets")
+
+        ######### save tag names (and some values)
 
         # common list of all datasets (CT, dose, struct etc)
         all_datasets = list(x for x in [*ct_datasets, dose_dataset, structure_dataset, let_dataset] if x)
@@ -1082,10 +1096,29 @@ class AccompanyingDicomData:
         self.ct_datasets_header_common = self.find_common_tags_and_values(ct_datasets, lambda ds: ds.file_meta)
         self.ct_datasets_data_common = self.find_common_tags_and_values(ct_datasets)
 
-        # list of file specific tags for CT datasets (header and data file)
+        # list of file specific tags (without values!) for CT datasets (header and data file)
         self.ct_datasets_header_specific = self.find_tags_with_specific_values(ct_datasets, lambda ds: ds.file_meta)
         self.ct_datasets_data_specific = self.find_tags_with_specific_values(ct_datasets)
 
+        ######### save tag values
+        self.headers_datasets = {}
+        self.data_datasets = {}
+        if dose_dataset:
+            self.headers_datasets[self.DataType.Dose] = dose_dataset.file_meta
+            self.data_datasets[self.DataType.Dose] = \
+                Dataset(dict((tag_name, tag_value) for tag_name, tag_value in dose_dataset.items() if tag_name != 'PixelData'))
+
+        if ct_datasets:
+            self.headers_datasets[self.DataType.CT] = dict((dataset.InstanceNumber, dataset.file_meta) for dataset in ct_datasets)
+            self.data_datasets[self.DataType.CT] = {}
+            for dataset in ct_datasets:
+                self.data_datasets[self.DataType.CT][dataset.InstanceNumber] = \
+                    Dataset(dict((tag_name, tag_value) for tag_name, tag_value in dataset.items() if tag_name != 'PixelData'))
+
+        if structure_dataset:
+            self.headers_datasets[self.DataType.Struct] = structure_dataset.file_meta
+            self.data_datasets[self.DataType.Struct] = \
+                Dataset(dict((tag_name, tag_value) for tag_name, tag_value in structure_dataset.items() if tag_name != 'PixelData'))
 
     @staticmethod
     def find_common_tags(list_of_datasets=[], access_method=lambda x: x):
@@ -1141,7 +1174,90 @@ class AccompanyingDicomData:
 
         :return:
         """
-        result = ""
+        result = "#############################################################\n"
+        result += "#############################################################\n"
+        result += "####### This file was created from a DICOM data #############\n"
+        result += "#############################################################\n"
+        result += "#############################################################\n"
+
+        if self.DataType.CT in self.headers_datasets:
+            ct_json_dict = {}
+            ct_json_dict['header'] = {}
+
+            first_instance_id = list(self.headers_datasets[self.DataType.CT].keys())[0]
+
+            ct_json_dict['header']['common'] = Dataset(dict(
+                (tag_name, self.headers_datasets[self.DataType.CT][first_instance_id][tag_name]) for tag_name, _ in self.ct_datasets_header_common
+            )).to_json_dict()
+
+            ct_json_dict['header']['specific'] = {}
+            for instance_id, dataset in  self.headers_datasets[self.DataType.CT].items():
+                ct_json_dict['header']['specific'][instance_id] = \
+                    Dataset(dict(
+                        (tag_name, dataset[tag_name]) for tag_name in self.ct_datasets_header_specific
+                    )).to_json_dict()
+
+            result += "####### CT begins #############\n"
+            pretty_string = pprint.pformat(ct_json_dict, width=180)
+            for line in pretty_string.splitlines():
+                result += "#@CT@" + line + "\n"
+            result += "####### CT ends #############\n"
+
+        #
+        # # add DICOM tags as a commented lines
+        # if self.common_meta_dicom_data:
+        #     common_dicom_dict = self.common_meta_dicom_data.to_json_dict()
+        #     dicom_dict_to_save = {}
+        #     for tag_name, tag_value in common_dicom_dict.items():
+        #         # restring saving tags to a subset with reasonable values,
+        #         # i.e. excluding big binary arrays with pixel data
+        #         if 'Value' in tag_value.keys():
+        #             dicom_dict_to_save[tag_name] = tag_value
+        #     dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
+        #     output_str += "#############################################################\n"
+        #     for line in dicom_str.splitlines():
+        #         output_str += "#*" + line + "\n"
+        #     output_str += "#############################################################\n"
+        #
+        # # add DICOM tags as a commented lines
+        # if self.common_dicom_data:
+        #     common_dicom_dict = self.common_dicom_data.to_json_dict()
+        #     dicom_dict_to_save = {}
+        #     for tag_name, tag_value in common_dicom_dict.items():
+        #         # restring saving tags to a subset with reasonable values,
+        #         # i.e. excluding big binary arrays with pixel data
+        #         if 'Value' in tag_value.keys():
+        #             dicom_dict_to_save[tag_name] = tag_value
+        #     dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
+        #     output_str += "#############################################################\n"
+        #     output_str += "####### This file was created from a DICOM data #############\n"
+        #     output_str += "### Below JSON representation of _common_ DICOM tags   ######\n"
+        #     output_str += "#############################################################\n"
+        #     for line in dicom_str.splitlines():
+        #         output_str += "#@" + line + "\n"
+        #     output_str += "#############################################################\n"
+        #     output_str += "######### End of text representation of DICOM tags ##########\n"
+        #     output_str += "#############################################################\n"
+        #
+        # file_secific_dict_to_save = {}
+        # for instance_no, ds in self.file_specific_dicom_data.items():
+        #     common_dicom_dict = ds.to_json_dict()
+        #     dicom_dict_to_save = {}
+        #     for tag_name, tag_value in common_dicom_dict.items():
+        #         # restring saving tags to a subset with reasonable values,
+        #         # i.e. excluding big binary arrays with pixel data
+        #         if 'Value' in tag_value.keys():
+        #             dicom_dict_to_save[tag_name] = tag_value
+        #     file_secific_dict_to_save[instance_no] = dicom_dict_to_save
+        #
+        # output_str += "#############################################################\n"
+        # output_str += "### Below JSON representation of _specific_ DICOM tags   ######\n"
+        # output_str += "#############################################################\n"
+        # dicom_str = pprint.pformat(file_secific_dict_to_save, width=180)
+        # for line in dicom_str.splitlines():
+        #     output_str += "#&" + line + "\n"
+        # output_str += "#############################################################\n"
+
         return result
 
     def from_comment(self):
