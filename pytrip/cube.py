@@ -32,7 +32,8 @@ import numpy as np
 
 import pydicom
 from pydicom import uid
-from pydicom.datadict import dictionary_description
+from pydicom.datadict import dictionary_description, dictionary_keyword, keyword_for_tag, dictionary_VR, \
+    dictionary_has_tag
 from pydicom.dataset import Dataset, FileDataset
 from pydicom.tag import Tag
 
@@ -894,6 +895,14 @@ class Cube(object):
 
         self.set_data_type(type(first_file_ds.pixel_array[0][0]))
 
+        self.dicom_data = AccompanyingDicomData(
+            ct_datasets=dcm.get("images"),
+            structure_dataset=dcm.get("rtss"),
+            dose_dataset=dcm.get("rtdose")
+        )
+
+        print(self.dicom_data)
+
         # check consistency of the files
         required_common_tags = set(Tag(name) for name in ['PatientName', 'PatientID', 'Rows', 'PixelSpacing',
                                                           'SliceThickness', 'Columns', 'StudyInstanceUID',
@@ -1051,3 +1060,123 @@ class Cube(object):
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
 
         return ds
+
+
+class AccompanyingDicomData:
+    def __init__(self, ct_datasets=[], dose_dataset=None, structure_dataset=None, let_dataset=None):
+        logger.info("Creating Accompanying DICOM data")
+        logger.debug("Accessing {:d} CT datasets".format(len(ct_datasets)))
+        if dose_dataset:
+            logger.debug("Accessing dose datasets")
+        if structure_dataset:
+            logger.debug("Accessing structure datasets")
+
+        # common list of all datasets (CT, dose, struct etc)
+        all_datasets = list(x for x in [*ct_datasets, dose_dataset, structure_dataset, let_dataset] if x)
+
+        # list of common tags+values for all datasets (header and data file)
+        self.all_datasets_header_common = self.find_common_tags_and_values(all_datasets, lambda ds: ds.file_meta)
+        self.all_datasets_data_common = self.find_common_tags_and_values(all_datasets)
+
+        # list of common tags+values for CT datasets (header and data file)
+        self.ct_datasets_header_common = self.find_common_tags_and_values(ct_datasets, lambda ds: ds.file_meta)
+        self.ct_datasets_data_common = self.find_common_tags_and_values(ct_datasets)
+
+        # list of file specific tags for CT datasets (header and data file)
+        self.ct_datasets_header_specific = self.find_tags_with_specific_values(ct_datasets, lambda ds: ds.file_meta)
+        self.ct_datasets_data_specific = self.find_tags_with_specific_values(ct_datasets)
+
+
+    @staticmethod
+    def find_common_tags(list_of_datasets=[], access_method=lambda x: x):
+        """
+        TODO
+        :param list_of_datasets:
+        :param access_method:
+        :return: set of common tags
+        """
+        common_tags = set()
+        if list_of_datasets:
+            common_tags = set(access_method(list_of_datasets[0]).keys())
+            for dataset in list_of_datasets[1:]:
+                common_tags.intersection_update(access_method(dataset).keys())
+        return common_tags
+
+    @classmethod
+    def find_common_tags_and_values(cls, list_of_datasets=[], access_method=lambda x: x):
+        """
+        TODO
+        :param list_of_datasets:
+        :param access_method:
+        :return: set of tuples (tag and values) with common values
+        """
+        common_tags_and_values = set()
+        if list_of_datasets:
+            common_tags = cls.find_common_tags(list_of_datasets, access_method)
+            first_dataset = access_method(list_of_datasets[0])
+            for tag in common_tags:
+                if all([first_dataset[tag] == access_method(dataset)[tag] for dataset in list_of_datasets[1:]]):
+                    common_tags_and_values.add((tag, first_dataset[tag].repval))
+        return common_tags_and_values
+
+    @classmethod
+    def find_tags_with_specific_values(cls, list_of_datasets=[], access_method=lambda x: x):
+        """
+        TODO
+        :param list_of_datasets:
+        :param access_method:
+        :return: set of common tags
+        """
+        tags_with_specific_values = set()
+        if list_of_datasets:
+            common_tags = cls.find_common_tags(list_of_datasets, access_method)
+            first_dataset = access_method(list_of_datasets[0])
+            for tag in common_tags:
+                if not all([first_dataset[tag] == access_method(dataset)[tag] for dataset in list_of_datasets[1:]]):
+                    tags_with_specific_values.add(tag)
+        return tags_with_specific_values
+
+    def to_comment(self):
+        """
+
+        :return:
+        """
+        result = ""
+        return result
+
+    def from_comment(self):
+        pass
+
+    def __str__(self):
+
+        def nice_tag_name(tag):
+            if dictionary_has_tag(tag):
+                return dictionary_keyword(tag_name)
+            else:
+                return ""
+
+        result = "all datasets\n"
+        result += "\theader (file meta) common tags and values:\n"
+        for (tag_name, tag_value) in sorted(self.all_datasets_header_common, key=lambda x: x[0]):
+            result += "\t\t{:s} {:s} = {:s}\n".format(str(tag_name), nice_tag_name(tag_name), str(tag_value))
+        result += "\tdata common tags and values:\n"
+        for (tag_name, tag_value) in sorted(self.all_datasets_data_common, key=lambda x: x[0]):
+            result += "\t\t{:s} {:s} = {:s}\n".format(str(tag_name), nice_tag_name(tag_name), str(tag_value))
+
+        result += "CT datasets\n"
+        result += "\theader (file meta) common tags and values:\n"
+        for (tag_name, tag_value) in sorted(self.ct_datasets_header_common, key=lambda x: x[0]):
+            result += "\t\t{:s} {:s} = {:s}\n".format(str(tag_name), nice_tag_name(tag_name), str(tag_value))
+        result += "\tdata common tags and values:\n"
+        for (tag_name, tag_value) in sorted(self.ct_datasets_data_common, key=lambda x: x[0]):
+            result += "\t\t{:s} {:s} = {:s}\n".format(str(tag_name), nice_tag_name(tag_name), str(tag_value))
+
+        result += "CT datasets\n"
+        result += "\theader (file meta) tags with specific values:\n"
+        for tag_name in sorted(self.ct_datasets_header_specific):
+            result += "\t\t{:s} {:s}\n".format(str(tag_name), nice_tag_name(tag_name))
+        result += "\tdata tags with specific values:\n"
+        for tag_name in sorted(self.ct_datasets_data_specific):
+            result += "\t\t{:s} {:s}\n".format(str(tag_name), nice_tag_name(tag_name))
+
+        return result

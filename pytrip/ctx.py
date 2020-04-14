@@ -59,6 +59,7 @@ class CtxCube(Cube):
             self._set_header_from_dicom(dcm)
 
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=np.int16)
+        print("Input Raw Pixel", dcm["images"][0].pixel_array.flatten()[0])
 
         for i in range(len(dcm["images"])):
             intersect = float(dcm["images"][i].RescaleIntercept)
@@ -69,6 +70,7 @@ class CtxCube(Cube):
             self.slice_pos.reverse()
             self.zoffset = self.slice_pos[0]
             self.cube = self.cube[::-1]
+        print("Input Cube Pixel", self.cube.flatten()[0])
 
     def create_dicom(self):
         """ Creates a Dicom object from self.
@@ -114,28 +116,26 @@ class CtxCube(Cube):
                 ds.file_meta[tag] = self.common_meta_dicom_data[tag]
 
         # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-        for tag in ['ImageType', 'StudyDate', 'StudyInstanceUID', 'SeriesDate', 'SeriesInstanceUID',
-                    'ContentDate', 'StudyTime', 'SeriesTime', 'ContentTime',
-                    'Manufacturer', 'InstitutionName', 'InstitutionAddress', 'ReferringPhysicianName', 'StationName',
-                    'StudyDescription', 'SeriesDescription', 'ManufacturerModelName', 'ReferencedImageSequence',
-                    'SequenceDelimitationItem', 'SourceImageSequence', 'IrradiationEventUID','PatientID',
-                    'PatientBirthDate', 'PatientSex', 'OtherPatientNames', 'PatientAge', 'BodyPartExamined', 'KVP',
-                    'BitsStored', 'HighBit', 'PixelRepresentation', 'RescaleIntercept', 'RescaleSlope',
-                    'AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionTime', 'RETIRED_OtherPatientIDs',
-                    'DataCollectionDiameter', 'DeviceSerialNumber', 'SoftwareVersions', 'ProtocolName',
-                    'ReconstructionDiameter', 'DistanceSourceToDetector', 'DistanceSourceToPatient',
-                    'GantryDetectorTilt', 'TableHeight', 'RotationDirection', 'ExposureTime', 'XRayTubeCurrent',
-                    'Exposure', 'FilterType', 'GeneratorPower', 'FocalSpots', 'DateOfLastCalibration',
-                    'TimeOfLastCalibration', 'ConvolutionKernel', 'SingleCollimationWidth', 'TotalCollimationWidth',
-                    'TableSpeed', 'TableFeedPerRotation', 'SpiralPitchFactor', 'DataCollectionCenterPatient',
-                    'ReconstructionTargetCenterPatient', 'ExposureModulationType', 'EstimatedDoseSaving',
-                    'CTDIvol', 'CTDIPhantomTypeCodeSequence', 'CalciumScoringMassFactorDevice',
-                    'CalciumScoringMassFactorDevice', 'OsteoOffset', 'OsteoRegressionLineSlope',
-                    'OsteoRegressionLineIntercept', 'OsteoPhantomNumber', 'FeedPerRotation',
-                    'ImageComments', 'CSAImageHeaderType', 'CSAImageHeaderVersion',
-                    'DataCollectionCenterPatient', 'ReconstructionTargetCenterPatient', 'ImagePositionPatient',
-                    'SmallestImagePixelValue', 'LargestImagePixelValue', 'FrameOfReferenceUID'
-                    ]:
+        for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionTime', 'BitsStored', 'BodyPartExamined',
+                    'CSAImageHeaderType', 'CSAImageHeaderVersion', 'CTDIPhantomTypeCodeSequence', 'CTDIvol',
+                    'CalciumScoringMassFactorDevice', 'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime',
+                    'ConvolutionKernel', 'DataCollectionCenterPatient', 'DataCollectionCenterPatient',
+                    'DataCollectionDiameter', 'DateOfLastCalibration', 'DeviceSerialNumber', 'DistanceSourceToDetector',
+                    'DistanceSourceToPatient', 'EstimatedDoseSaving', 'Exposure', 'ExposureModulationType',
+                    'ExposureTime', 'FeedPerRotation', 'FilterType', 'FocalSpots', 'FrameOfReferenceUID',
+                    'GantryDetectorTilt', 'GeneratorPower', 'HighBit', 'ImageComments', 'ImagePositionPatient',
+                    'ImageType', 'InstitutionAddress', 'InstitutionName', 'IrradiationEventUID', 'KVP',
+                    'LargestImagePixelValue', 'Manufacturer', 'ManufacturerModelName', 'OsteoOffset',
+                    'OsteoPhantomNumber', 'OsteoRegressionLineIntercept', 'OsteoRegressionLineSlope',
+                    'OtherPatientNames', 'PatientAge', 'PatientBirthDate', 'PatientID', 'PatientSex',
+                    'PixelRepresentation', 'ProtocolName', 'RETIRED_OtherPatientIDs', 'ReconstructionDiameter',
+                    'ReconstructionTargetCenterPatient', 'ReconstructionTargetCenterPatient', 'ReferencedImageSequence',
+                    'ReferringPhysicianName', 'RescaleIntercept', 'RescaleSlope', 'RotationDirection',
+                    'SequenceDelimitationItem', 'SeriesDate', 'SeriesDescription', 'SeriesInstanceUID', 'SeriesTime',
+                    'SingleCollimationWidth', 'SmallestImagePixelValue', 'SoftwareVersions', 'SourceImageSequence',
+                    'SpiralPitchFactor', 'StationName', 'StudyDate', 'StudyDescription', 'StudyInstanceUID',
+                    'StudyTime', 'TableFeedPerRotation', 'TableHeight', 'TableSpeed', 'TimeOfLastCalibration',
+                    'TotalCollimationWidth', 'XRayTubeCurrent']:
             if self.common_dicom_data and tag in self.common_dicom_data:
                 ds[tag] = self.common_dicom_data[tag]
 
@@ -176,12 +176,13 @@ class CtxCube(Cube):
                 if self.file_specific_dicom_data[i+1] and tag in self.file_specific_dicom_data[i+1]:
                     _ds[tag] = self.file_specific_dicom_data[i+1][tag]
 
-
-            pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
-            pixel_array[:][:] = self.cube[i][:][:]
+            pixel_array_tmp = np.subtract(self.cube[i][:][:], _ds.RescaleIntercept, casting='safe')
+            pixel_array_tmp /= _ds.RescaleSlope
+            pixel_array = pixel_array_tmp.astype(self.pydata_type)
             _ds.PixelData = pixel_array.tostring()
 
             data.append(_ds)
+        print("Output raw pixel", data[0].pixel_array.flatten()[0])
         return data
 
     def write_dicom(self, directory):
