@@ -100,7 +100,7 @@ class VdxCube:
         self.version = "2.0"
         if self.cube is not None:
             self.patient_id = cube.patient_id
-            self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
+            self._dicom_study_instance_uid = self.cube.common_dicom_data.StudyInstanceUID
             logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
@@ -398,7 +398,7 @@ class VdxCube:
         # first we check if DICOM cube is loaded
         if self.cube is not None:
             rt_ref_series_data = Dataset()
-            rt_ref_series_data.SeriesInstanceUID = self.cube._ct_dicom_series_instance_uid
+            rt_ref_series_data.SeriesInstanceUID = self.cube.common_dicom_data.SeriesInstanceUID
             rt_ref_series_data.ContourImageSequence = Sequence([])
 
             # each CT slice corresponds to one DICOM file

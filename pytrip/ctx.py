@@ -109,19 +109,41 @@ class CtxCube(Cube):
         ds.AcquisitionNumber = '1'  # AcquisitionNumber tag 0x0020, 0x0012 (type IS - Integer String)
 
         # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-        for tag in ['ImageType', 'StudyDate', 'SeriesDate', 'ContentDate', 'StudyTime', 'SeriesTime', 'ContentTime',
+        for tag in ['ImplementationClassUID', 'ImplementationVersionName']:
+            if self.common_meta_dicom_data and tag in self.common_meta_dicom_data:
+                ds.file_meta[tag] = self.common_meta_dicom_data[tag]
+
+        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+        for tag in ['ImageType', 'StudyDate', 'StudyInstanceUID', 'SeriesDate', 'SeriesInstanceUID',
+                    'ContentDate', 'StudyTime', 'SeriesTime', 'ContentTime',
                     'Manufacturer', 'InstitutionName', 'InstitutionAddress', 'ReferringPhysicianName', 'StationName',
-                    'StudyDescription', 'SeriesDescription', 'ManufacturerModelName', 'PrivateCreator', 'PatientID',
+                    'StudyDescription', 'SeriesDescription', 'ManufacturerModelName', 'ReferencedImageSequence',
+                    'SequenceDelimitationItem', 'SourceImageSequence', 'IrradiationEventUID','PatientID',
                     'PatientBirthDate', 'PatientSex', 'OtherPatientNames', 'PatientAge', 'BodyPartExamined', 'KVP',
-                    'BitsStored', 'HighBit', 'PixelRepresentation', 'RescaleIntercept', 'RescaleSlope']:
+                    'BitsStored', 'HighBit', 'PixelRepresentation', 'RescaleIntercept', 'RescaleSlope',
+                    'AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionTime', 'RETIRED_OtherPatientIDs',
+                    'DataCollectionDiameter', 'DeviceSerialNumber', 'SoftwareVersions', 'ProtocolName',
+                    'ReconstructionDiameter', 'DistanceSourceToDetector', 'DistanceSourceToPatient',
+                    'GantryDetectorTilt', 'TableHeight', 'RotationDirection', 'ExposureTime', 'XRayTubeCurrent',
+                    'Exposure', 'FilterType', 'GeneratorPower', 'FocalSpots', 'DateOfLastCalibration',
+                    'TimeOfLastCalibration', 'ConvolutionKernel', 'SingleCollimationWidth', 'TotalCollimationWidth',
+                    'TableSpeed', 'TableFeedPerRotation', 'SpiralPitchFactor', 'DataCollectionCenterPatient',
+                    'ReconstructionTargetCenterPatient', 'ExposureModulationType', 'EstimatedDoseSaving',
+                    'CTDIvol', 'CTDIPhantomTypeCodeSequence', 'CalciumScoringMassFactorDevice',
+                    'CalciumScoringMassFactorDevice', 'OsteoOffset', 'OsteoRegressionLineSlope',
+                    'OsteoRegressionLineIntercept', 'OsteoPhantomNumber', 'FeedPerRotation',
+                    'ImageComments', 'CSAImageHeaderType', 'CSAImageHeaderVersion',
+                    'DataCollectionCenterPatient', 'ReconstructionTargetCenterPatient', 'ImagePositionPatient',
+                    'SmallestImagePixelValue', 'LargestImagePixelValue', 'FrameOfReferenceUID'
+                    ]:
             if self.common_dicom_data and tag in self.common_dicom_data:
                 ds[tag] = self.common_dicom_data[tag]
 
-        # MediaStorageSOPInstanceUID (0002,0003)
-        # ImplementationClassUID (0002,0012)
-
-        # SOPInstanceUID is specific to each slice
-        # need to check if DICOM information is read from DICOM directory or from DICOM file
+        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+        for tag in ['FileMetaInformationGroupLength', 'FileMetaInformationVersion', 'ImplementationClassUID',
+                    'ImplementationVersionName']:
+            if self.common_dicom_data and tag in self.common_dicom_data:
+                ds.file_meta[tag] = self.common_dicom_data[tag]
 
         from pydicom import uid
         data = []  # list of DICOM objects with data specific to the slice
@@ -147,6 +169,13 @@ class CtxCube(Cube):
                 _ds.SliceLocation = self.file_specific_dicom_data[i+1].SliceLocation
             else:
                 _ds.SliceLocation = str(self.slice_pos[i])
+
+            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+            for tag in ['DataCollectionCenterPatient', 'ReconstructionTargetCenterPatient', 'ImagePositionPatient',
+                        'SmallestImagePixelValue', 'LargestImagePixelValue']:
+                if self.file_specific_dicom_data[i+1] and tag in self.file_specific_dicom_data[i+1]:
+                    _ds[tag] = self.file_specific_dicom_data[i+1][tag]
+
 
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
             pixel_array[:][:] = self.cube[i][:][:]

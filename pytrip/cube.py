@@ -82,16 +82,11 @@ class Cube(object):
             self._set_format_str()
             self._set_number_of_bytes()
 
-            # unique for whole structure set
-            self._dicom_study_instance_uid = cube._dicom_study_instance_uid
-            self._ct_dicom_series_instance_uid = cube._ct_dicom_series_instance_uid
-
-            # unique for each CT slice
-            # self._ct_sop_instance_uid_list = cube._ct_sop_instance_uid_list
-
             # here are included tags with _common_ values in case
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
+            self.common_meta_dicom_data = cube.common_meta_dicom_data
             self.common_dicom_data = cube.common_dicom_data
+
 
             # here are included tags with _specific_ values (different from file to file) in case
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
@@ -128,19 +123,11 @@ class Cube(object):
             self.slice_pos = []
             self.basename = ""
 
-            # UIDs unique for whole structure set
-            # generation of UID is done here in init, the reason why we are not generating them in create_dicom
-            # method is that subsequent calls to write method shouldn't changed UIDs
-            self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
-            self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
-
-            # unique for each CT slice
-            # self._ct_sop_instance_uid_list = []
-
             self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
 
             # here are included tags with _common_ values in case
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
+            self.common_meta_dicom_data = None
             self.common_dicom_data = None
 
             # here are included tags with _specific_ values (different from file to file) in case
@@ -333,13 +320,6 @@ class Cube(object):
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
         self.patient_id = ''
-        # UIDs unique for whole structure set
-        # generation of UID is done here in init, the reason why we are not generating them in create_dicom
-        # method is that subsequent calls to write method shouldn't changed UIDs
-        self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
-        self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
-        # unique for each CT slice
-        # self._ct_sop_instance_uid_list = [uid.generate_uid(prefix=None) for _ in range(self.slice_number)]
 
     def mask_by_voi(self, voi, value):
         """ Overwrites the Cube voxels within the given Voi with 'value'.
@@ -573,6 +553,7 @@ class Cube(object):
         self.header_set = True
         content = content.split('\n')
         self.z_table = False
+        self.dicom_meta_common_str = ""
         self.dicom_common_str = ""
         self.dicom_specific_str = ""
 
@@ -625,6 +606,8 @@ class Cube(object):
                 for j in range(self.slice_number):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
+            if re.match("#\*", content[i]):
+                self.dicom_meta_common_str += content[i].lstrip("#*")
             if re.match("#@", content[i]):
                 self.dicom_common_str += content[i].lstrip("#@")
             if re.match("#&", content[i]):
@@ -648,6 +631,9 @@ class Cube(object):
         self._set_format_str()
 
         # read DICOM data from header file comments
+        if self.dicom_meta_common_str:
+            tmp = self.dicom_meta_common_str.replace('\'', '\"')
+            self.common_meta_dicom_data = pydicom.dataset.Dataset().from_json(tmp)
         if self.dicom_common_str:
             tmp = self.dicom_common_str.replace('\'', '\"')
             self.common_dicom_data = pydicom.dataset.Dataset().from_json(tmp)
@@ -776,6 +762,21 @@ class Cube(object):
             output_str += "z_table no\n"
 
         # add DICOM tags as a commented lines
+        if self.common_meta_dicom_data:
+            common_dicom_dict = self.common_meta_dicom_data.to_json_dict()
+            dicom_dict_to_save = {}
+            for tag_name, tag_value in common_dicom_dict.items():
+                # restring saving tags to a subset with reasonable values,
+                # i.e. excluding big binary arrays with pixel data
+                if 'Value' in tag_value.keys():
+                    dicom_dict_to_save[tag_name] = tag_value
+            dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
+            output_str += "#############################################################\n"
+            for line in dicom_str.splitlines():
+                output_str += "#*" + line + "\n"
+            output_str += "#############################################################\n"
+
+        # add DICOM tags as a commented lines
         if self.common_dicom_data:
             common_dicom_dict = self.common_dicom_data.to_json_dict()
             dicom_dict_to_save = {}
@@ -851,6 +852,17 @@ class Cube(object):
         """
         first_file_ds = dcm["images"][0]
 
+        # find common tags in header
+        common_meta_tags = set(first_file_ds.file_meta.keys())
+        for ds in dcm["images"][1:]:
+            common_meta_tags.intersection_update(ds.file_meta.keys())
+
+        # find tags with common values
+        common_meta_tags_and_values = set()
+        for tag in common_meta_tags:
+            if all([first_file_ds.file_meta[tag] == current_file_ds.file_meta[tag] for current_file_ds in dcm["images"][1:]]):
+                common_meta_tags_and_values.add(tag)
+
         # find common tags
         common_tags = set(first_file_ds.keys())
         for ds in dcm["images"][1:]:
@@ -865,13 +877,13 @@ class Cube(object):
         # find tags with specific value
         specific_tags = common_tags - common_tags_and_values
 
-        # print("specific_tags, slice 1", specific_tags)
-        # for tag in specific_tags:
-        #     print(dcm["images"][1][tag])
-        #
-        # print("specific_tags, slice 2", specific_tags)
-        # for tag in specific_tags:
-        #     print(dcm["images"][2][tag])
+        print("specific_tags, slice 1", specific_tags)
+        for tag in specific_tags:
+            print(dcm["images"][1][tag])
+
+        print("specific_tags, slice 2", specific_tags)
+        for tag in specific_tags:
+            print(dcm["images"][2][tag])
 
         self.version = "1.4"
         self.created_by = "pytrip"
@@ -899,6 +911,10 @@ class Cube(object):
         self.common_dicom_data = Dataset()
         for tag_name in common_tags_and_values:
             self.common_dicom_data[tag_name] = first_file_ds[tag_name]
+
+        self.common_meta_dicom_data = Dataset()
+        for tag_name in common_meta_tags_and_values:
+            self.common_meta_dicom_data[tag_name] = first_file_ds.file_meta[tag_name]
 
         self.file_specific_dicom_data = {}
         for ds in dcm["images"]:
@@ -945,14 +961,6 @@ class Cube(object):
         self.num_bytes = 2
         self._set_format_str()
         self.header_set = True
-
-        # # unique for each CT slice
-        # # self._ct_sop_instance_uid = ds.SOPInstanceUID
-        # self._ct_sop_instance_uid_list = [tmp_ds.SOPInstanceUID for tmp_ds in dcm["images"]]
-
-        # unique for whole structure set, can be extracted from the first file
-        self._dicom_study_instance_uid = first_file_ds.StudyInstanceUID
-        self._ct_dicom_series_instance_uid = first_file_ds.SeriesInstanceUID
 
     def set_byteorder(self, endian=None):
         """Set/change the byte order of the data to be written to disk.
@@ -1023,18 +1031,6 @@ class Cube(object):
         ds.is_little_endian = True
         ds.is_implicit_VR = True
         ds.SOPClassUID = '1.2.3'  # !!!!!!!!
-
-        # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
-        # self._dicom_study_instance_uid may be either set in __init__ when creating new object
-        #   or set when import a DICOM file
-        #   Study Instance UID for structures is the same as Study Instance UID for CTs
-        ds.StudyInstanceUID = self._dicom_study_instance_uid
-
-        # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
-        # self._ct_dicom_series_instance_uid may be either set in __init__ when creating new object
-        #   or set when import a DICOM file
-        #   Series Instance UID for structures might be different than Series Instance UID for CTs
-        ds.SeriesInstanceUID = self._ct_dicom_series_instance_uid
 
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
