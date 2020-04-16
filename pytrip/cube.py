@@ -549,9 +549,6 @@ class Cube(object):
         content = content.split('\n')
         self.z_table = False
         dicom_str = []
-        # self.dicom_meta_common_str = ""
-        # self.dicom_common_str = ""
-        # self.dicom_specific_str = ""
 
         while i < len(content):
             if re.match("version", content[i]):
@@ -602,13 +599,8 @@ class Cube(object):
                 for j in range(self.slice_number):
                     self.slice_pos[j] = float(content[i].split()[1])
                     i += 1
-            # if re.match("#\*", content[i]):
-            #     self.dicom_meta_common_str += content[i].lstrip("#*")
             if re.match("#@", content[i]):
-                #self.dicom_common_str += content[i].lstrip("#@")
                 dicom_str.append(content[i])
-            # if re.match("#&", content[i]):
-            #     self.dicom_specific_str += content[i].lstrip("#&")
             i += 1
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
@@ -631,20 +623,6 @@ class Cube(object):
             if not hasattr(self, 'dicom_data'):
                 self.dicom_data = AccompanyingDicomData()
             self.dicom_data.from_comment(dicom_str)
-
-        # # read DICOM data from header file comments
-        # if self.dicom_meta_common_str:
-        #     tmp = self.dicom_meta_common_str.replace('\'', '\"')
-        #     self.common_meta_dicom_data = pydicom.dataset.Dataset().from_json(tmp)
-        # if self.dicom_common_str:
-        #     tmp = self.dicom_common_str.replace('\'', '\"')
-        #     self.common_dicom_data = pydicom.dataset.Dataset().from_json(tmp)
-        # if self.dicom_specific_str:
-        #     self.file_specific_dicom_data = {}
-        #     tmp = self.dicom_specific_str.replace('\'', '\"')
-        #     json_dataset = json.loads(tmp)
-        #     for instance_id, ds in json_dataset.items():
-        #         self.file_specific_dicom_data[int(instance_id)] = pydicom.dataset.Dataset().from_json(ds)
 
     def _set_format_str(self):
         """Set format string according to byte_order.
@@ -1165,7 +1143,7 @@ class AccompanyingDicomData:
             )).to_json_dict()
 
             ct_json_dict['header']['specific'] = {}
-            for instance_id, dataset in  self.headers_datasets[self.DataType.CT].items():
+            for instance_id, dataset in self.headers_datasets[self.DataType.CT].items():
                 ct_json_dict['header']['specific'][instance_id] = \
                     Dataset(dict(
                         (tag_name, dataset[tag_name]) for tag_name in self.ct_datasets_header_specific
@@ -1236,7 +1214,6 @@ class AccompanyingDicomData:
 
     def from_comment(self, parsed_str):
 
-        logger.debug("from_comment")
         re_exp = '#@(?P<type>.+)@ line (?P<line_no>.+) \/ (?P<line_total>.+) : (?P<content>.+)'
         regex = re.compile(re_exp)
 

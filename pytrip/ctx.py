@@ -29,7 +29,7 @@ import numpy as np
 from pydicom.tag import Tag
 
 from pytrip.error import InputError
-from pytrip.cube import Cube
+from pytrip.cube import Cube, AccompanyingDicomData
 
 logger = logging.getLogger(__name__)
 
@@ -110,71 +110,81 @@ class CtxCube(Cube):
 
         ds.AcquisitionNumber = '1'  # AcquisitionNumber tag 0x0020, 0x0012 (type IS - Integer String)
 
-        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-        for tag in ['ImplementationClassUID', 'ImplementationVersionName']:
-            if self.common_meta_dicom_data and tag in self.common_meta_dicom_data:
-                ds.file_meta[tag] = self.common_meta_dicom_data[tag]
+        dicom_data = getattr(self, 'dicom_data', {})
+        headers_datasets = getattr(dicom_data, 'headers_datasets', {})
+        all_ct_header_datasets = headers_datasets.get(AccompanyingDicomData.DataType.CT, {})
+        data_datasets = getattr(dicom_data, 'data_datasets', {})
+        all_ct_data_datasets = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
 
-        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-        for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionTime', 'BitsStored', 'BodyPartExamined',
-                    'CSAImageHeaderType', 'CSAImageHeaderVersion', 'CTDIPhantomTypeCodeSequence', 'CTDIvol',
-                    'CalciumScoringMassFactorDevice', 'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime',
-                    'ConvolutionKernel', 'DataCollectionCenterPatient', 'DataCollectionCenterPatient',
-                    'DataCollectionDiameter', 'DateOfLastCalibration', 'DeviceSerialNumber', 'DistanceSourceToDetector',
-                    'DistanceSourceToPatient', 'EstimatedDoseSaving', 'Exposure', 'ExposureModulationType',
-                    'ExposureTime', 'FeedPerRotation', 'FilterType', 'FocalSpots', 'FrameOfReferenceUID',
-                    'GantryDetectorTilt', 'GeneratorPower', 'HighBit', 'ImageComments', 'ImagePositionPatient',
-                    'ImageType', 'InstitutionAddress', 'InstitutionName', 'IrradiationEventUID', 'KVP',
-                    'LargestImagePixelValue', 'Manufacturer', 'ManufacturerModelName', 'OsteoOffset',
-                    'OsteoPhantomNumber', 'OsteoRegressionLineIntercept', 'OsteoRegressionLineSlope',
-                    'OtherPatientNames', 'PatientAge', 'PatientBirthDate', 'PatientID', 'PatientSex',
-                    'PixelRepresentation', 'ProtocolName', 'RETIRED_OtherPatientIDs', 'ReconstructionDiameter',
-                    'ReconstructionTargetCenterPatient', 'ReconstructionTargetCenterPatient', 'ReferencedImageSequence',
-                    'ReferringPhysicianName', 'RescaleIntercept', 'RescaleSlope', 'RotationDirection',
-                    'SequenceDelimitationItem', 'SeriesDate', 'SeriesDescription', 'SeriesInstanceUID', 'SeriesTime',
-                    'SingleCollimationWidth', 'SmallestImagePixelValue', 'SoftwareVersions', 'SourceImageSequence',
-                    'SpiralPitchFactor', 'StationName', 'StudyDate', 'StudyDescription', 'StudyInstanceUID',
-                    'StudyTime', 'TableFeedPerRotation', 'TableHeight', 'TableSpeed', 'TimeOfLastCalibration',
-                    'TotalCollimationWidth', 'XRayTubeCurrent']:
-            if self.common_dicom_data and tag in self.common_dicom_data:
-                ds[tag] = self.common_dicom_data[tag]
+        logging.debug("all_ct_header_datasets len {:d}".format(len(all_ct_header_datasets)))
+        logging.debug("all_ct_header_datasets keys {:s}".format(",".join(all_ct_header_datasets.keys())))
 
-        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-        for tag in ['FileMetaInformationGroupLength', 'FileMetaInformationVersion', 'ImplementationClassUID',
-                    'ImplementationVersionName']:
-            if self.common_dicom_data and tag in self.common_dicom_data:
-                ds.file_meta[tag] = self.common_dicom_data[tag]
+        logging.debug("all_ct_data_datasets len {:d}".format(len(all_ct_data_datasets)))
+        logging.debug("all_ct_data_datasets keys {:s}".format(",".join(all_ct_data_datasets.keys())))
+
 
         from pydicom import uid
         data = []  # list of DICOM objects with data specific to the slice
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
 
-            _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
-                                        "{:.3f}".format(self.yoffset),
-                                        "{:.3f}".format(self.slice_pos[i])]
-
-            # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
             _ds.InstanceNumber = str(i + 1)
 
-            if self.file_specific_dicom_data and Tag('SOPInstanceUID') in self.file_specific_dicom_data[i+1].keys():
-                _ds.SOPInstanceUID = self.file_specific_dicom_data[i+1].SOPInstanceUID
+            current_ct_header_dataset = all_ct_header_datasets.get(str(_ds.InstanceNumber), {})
+            current_ct_data_dataset = all_ct_data_datasets.get(str(_ds.InstanceNumber), {})
+
+            #logging.debug("current_ct_header_dataset len {:d}".format(len(current_ct_header_dataset)))
+            #logging.debug("current_ct_header_dataset keys {:s}".format(",".join([str(x) for x in current_ct_header_dataset.keys()])))
+
+            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+            for tag in ['ImplementationClassUID', 'ImplementationVersionName', 'MediaStorageSOPInstanceUID']:
+                if Tag(tag) in current_ct_header_dataset:
+                    _ds.file_meta[tag] = current_ct_header_dataset[tag]
+
+            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+            for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionNumber', 'AcquisitionTime', 'BitsStored',
+                        'BodyPartExamined', 'CTDIPhantomTypeCodeSequence', 'CTDIvol', 'CalciumScoringMassFactorDevice',
+                        'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime', 'ConvolutionKernel',
+                        'DataCollectionCenterPatient', 'DataCollectionCenterPatient', 'DataCollectionCenterPatient',
+                        'DataCollectionDiameter', 'DateOfLastCalibration', 'DeviceSerialNumber',
+                        'DistanceSourceToDetector', 'DistanceSourceToPatient', 'EstimatedDoseSaving', 'Exposure',
+                        'ExposureModulationType', 'ExposureTime', 'FilterType', 'FocalSpots', 'FrameOfReferenceUID',
+                        'GantryDetectorTilt', 'GeneratorPower', 'HighBit', 'ImageComments', 'ImagePositionPatient',
+                        'ImagePositionPatient', 'ImageType', 'InstitutionAddress', 'InstitutionName',
+                        'IrradiationEventUID', 'KVP', 'LargestImagePixelValue', 'LargestImagePixelValue',
+                        'Manufacturer', 'ManufacturerModelName', 'OtherPatientNames', 'PatientAge', 'PatientBirthDate',
+                        'PatientID', 'PatientSex', 'PixelRepresentation', 'ProtocolName', 'ReconstructionDiameter',
+                        'ReconstructionTargetCenterPatient', 'ReconstructionTargetCenterPatient',
+                        'ReconstructionTargetCenterPatient', 'ReferencedImageSequence', 'ReferringPhysicianName',
+                        'RescaleIntercept', 'RescaleSlope', 'RescaleType', 'RotationDirection',
+                        'SequenceDelimitationItem', 'SeriesDate', 'SeriesDescription', 'SeriesInstanceUID',
+                        'SeriesNumber', 'SeriesTime', 'SingleCollimationWidth', 'SmallestImagePixelValue',
+                        'SmallestImagePixelValue', 'SoftwareVersions', 'SourceImageSequence', 'SpiralPitchFactor',
+                        'StationName', 'StudyDate', 'StudyDescription', 'StudyID', 'StudyInstanceUID', 'StudyTime',
+                        'TableFeedPerRotation', 'TableHeight', 'TableSpeed', 'TimeOfLastCalibration',
+                        'TotalCollimationWidth', 'WindowCenter', 'WindowCenterWidthExplanation', 'WindowWidth',
+                        'XRayTubeCurrent']:
+                if Tag(tag) in current_ct_data_dataset:
+                    _ds[tag] = current_ct_data_dataset[tag]
+
+            # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
+            if Tag('SOPInstanceUID') in current_ct_data_dataset:
+                _ds.SOPInstanceUID = current_ct_data_dataset.SOPInstanceUID
             else:
                 _ds.SOPInstanceUID = uid.generate_uid(prefix=None)
 
             # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
-            _ds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
+            if Tag('MediaStorageSOPInstanceUID') not in _ds.file_meta:
+                _ds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
 
-            if self.file_specific_dicom_data and Tag('SliceLocation') in self.file_specific_dicom_data[i+1].keys():
-                _ds.SliceLocation = self.file_specific_dicom_data[i+1].SliceLocation
+            if Tag('SliceLocation') in current_ct_data_dataset:
+                _ds.SliceLocation = current_ct_data_dataset.SliceLocation
             else:
                 _ds.SliceLocation = str(self.slice_pos[i])
 
-            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-            for tag in ['DataCollectionCenterPatient', 'ReconstructionTargetCenterPatient', 'ImagePositionPatient',
-                        'SmallestImagePixelValue', 'LargestImagePixelValue']:
-                if self.file_specific_dicom_data[i+1] and tag in self.file_specific_dicom_data[i+1]:
-                    _ds[tag] = self.file_specific_dicom_data[i+1][tag]
+            _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
+                                        "{:.3f}".format(self.yoffset),
+                                        "{:.3f}".format(self.slice_pos[i])]
 
             pixel_array_tmp = np.subtract(self.cube[i][:][:], _ds.RescaleIntercept, casting='safe')
             pixel_array_tmp /= _ds.RescaleSlope
