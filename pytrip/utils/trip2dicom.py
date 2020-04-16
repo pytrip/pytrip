@@ -44,7 +44,9 @@ def main(args=sys.argv[1:]):
     if parsed_args.verbosity == 1:
         logging.basicConfig(level=logging.INFO)
     elif parsed_args.verbosity > 1:
-        logging.basicConfig(level=logging.DEBUG)
+        logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+                            datefmt='%Y-%m-%d:%H:%M:%S',
+                            level=logging.DEBUG)
     else:
         logging.basicConfig()
 
