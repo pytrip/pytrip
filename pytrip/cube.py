@@ -129,15 +129,6 @@ class Cube(object):
 
             self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
 
-            # here are included tags with _common_ values in case
-            # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
-            self.common_meta_dicom_data = None
-            self.common_dicom_data = None
-
-            # here are included tags with _specific_ values (different from file to file) in case
-            # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
-            self.file_specific_dicom_data = None
-
     def __add__(self, other):
         """ Overload + operator
         """
@@ -279,7 +270,7 @@ class Cube(object):
                     # For a line along y, figure out how many contour intersections there are,
                     # then check how many intersections there are with x < than current point.
                     # If the number is odd, then the point is inside the VOI.
-                    # If the number is even, then the point is outisde the VOI.
+                    # If the number is even, then the point is outside the VOI.
                     # This algorithm also works with multiple disconnected contours.
                     intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
                     if intersection is None:
@@ -772,62 +763,8 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
-        # # add DICOM tags as a commented lines
-        # if self.common_meta_dicom_data:
-        #     common_dicom_dict = self.common_meta_dicom_data.to_json_dict()
-        #     dicom_dict_to_save = {}
-        #     for tag_name, tag_value in common_dicom_dict.items():
-        #         # restring saving tags to a subset with reasonable values,
-        #         # i.e. excluding big binary arrays with pixel data
-        #         if 'Value' in tag_value.keys():
-        #             dicom_dict_to_save[tag_name] = tag_value
-        #     dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
-        #     output_str += "#############################################################\n"
-        #     for line in dicom_str.splitlines():
-        #         output_str += "#*" + line + "\n"
-        #     output_str += "#############################################################\n"
-
         if self.dicom_data:
             output_str += self.dicom_data.to_comment()
-
-        # add DICOM tags as a commented lines
-        # if self.common_dicom_data:
-        #     common_dicom_dict = self.common_dicom_data.to_json_dict()
-        #     dicom_dict_to_save = {}
-        #     for tag_name, tag_value in common_dicom_dict.items():
-        #         # restring saving tags to a subset with reasonable values,
-        #         # i.e. excluding big binary arrays with pixel data
-        #         if 'Value' in tag_value.keys():
-        #             dicom_dict_to_save[tag_name] = tag_value
-        #     dicom_str = pprint.pformat(dicom_dict_to_save, width=180)
-        #     output_str += "#############################################################\n"
-        #     output_str += "####### This file was created from a DICOM data #############\n"
-        #     output_str += "### Below JSON representation of _common_ DICOM tags   ######\n"
-        #     output_str += "#############################################################\n"
-        #     for line in dicom_str.splitlines():
-        #         output_str += "#@" + line + "\n"
-        #     output_str += "#############################################################\n"
-        #     output_str += "######### End of text representation of DICOM tags ##########\n"
-        #     output_str += "#############################################################\n"
-        #
-        # file_secific_dict_to_save = {}
-        # for instance_no, ds in self.file_specific_dicom_data.items():
-        #     common_dicom_dict = ds.to_json_dict()
-        #     dicom_dict_to_save = {}
-        #     for tag_name, tag_value in common_dicom_dict.items():
-        #         # restring saving tags to a subset with reasonable values,
-        #         # i.e. excluding big binary arrays with pixel data
-        #         if 'Value' in tag_value.keys():
-        #             dicom_dict_to_save[tag_name] = tag_value
-        #     file_secific_dict_to_save[instance_no] = dicom_dict_to_save
-        #
-        # output_str += "#############################################################\n"
-        # output_str += "### Below JSON representation of _specific_ DICOM tags   ######\n"
-        # output_str += "#############################################################\n"
-        # dicom_str = pprint.pformat(file_secific_dict_to_save, width=180)
-        # for line in dicom_str.splitlines():
-        #     output_str += "#&" + line + "\n"
-        # output_str += "#############################################################\n"
 
         with open(path, "w+", newline='\n') as f:
             f.write(output_str)
@@ -1148,7 +1085,7 @@ class AccompanyingDicomData:
         self.ct_datasets_header_common = self.find_common_tags_and_values(
             list(self.headers_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_common = self.find_common_tags_and_values(
-            list(self.headers_datasets.get(self.DataType.CT, {}).values())
+            list(self.data_datasets.get(self.DataType.CT, {}).values())
         )
         self.ct_datasets_data_common.discard(Tag('PixelData'))
 
@@ -1156,7 +1093,7 @@ class AccompanyingDicomData:
         self.ct_datasets_header_specific = self.find_tags_with_specific_values(
             list(self.headers_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_specific = self.find_tags_with_specific_values(
-            list(self.headers_datasets.get(self.DataType.CT, {}).values()))
+            list(self.data_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_specific.discard(Tag('PixelData'))
 
 
@@ -1237,6 +1174,7 @@ class AccompanyingDicomData:
         if self.DataType.CT in self.data_datasets:
             ct_json_dict['data'] = {}
             first_instance_id = list(self.data_datasets[self.DataType.CT].keys())[0]
+
             ct_json_dict['data']['common'] = Dataset(dict(
                 (tag_name, self.data_datasets[self.DataType.CT][first_instance_id][tag_name])
                 for tag_name, _ in self.ct_datasets_data_common
