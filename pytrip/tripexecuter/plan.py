@@ -213,8 +213,8 @@ class Plan(object):
         out += "|   Bolus thickness             : {:.3f} [mm]\n".format(self.bolus)
         out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
         out += "|   Min particles               : {:d}\n".format(self.minparticles)
-        out += "|   Scanpath                    : '{:s} {:s}'\n".format(self.scanpath,
-                                                                        self.scanpaths[self.scanpath])
+        out += "|   Scanpath                    : '{:s} {}'\n".format(self.scanpath,
+                                                                      self.scanpaths[self.scanpath])
         out += "|\n"
         out += "| Optimization target\n"
         out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
