@@ -213,8 +213,8 @@ class Plan(object):
         out += "|   Bolus thickness             : {:.3f} [mm]\n".format(self.bolus)
         out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
         out += "|   Min particles               : {:d}\n".format(self.minparticles)
-        out += "|   Scanpath                    : '{:s}'\n".format(self.scanpath,
-                                                                   self.scanpaths[self.scanpath])
+        out += "|   Scanpath                    : '{:s} {:s}'\n".format(self.scanpath,
+                                                                        self.scanpaths[self.scanpath])
         out += "|\n"
         out += "| Optimization target\n"
         out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
@@ -239,9 +239,9 @@ class Plan(object):
         out += "|   Raster scan files           : {:s}\n".format(str(self.want_rst))
         if self.window:
             out += "|   Cube output window\n"
-            out += "|      Xmin / Xmax              : {:.2f}\n".format(self.window[0], self.window[1])
-            out += "|      Ymin / Ymax              : {:.2f}\n".format(self.window[2], self.window[3])
-            out += "|      Zmin / Zmax              : {:.2f}\n".format(self.window[4], self.window[5])
+            out += "|      Xmin / Xmax              : {:.2f} / {:.2f}\n".format(self.window[0], self.window[1])
+            out += "|      Ymin / Ymax              : {:.2f} / {:.2f}\n".format(self.window[2], self.window[3])
+            out += "|      Zmin / Zmax              : {:.2f} / {:.2f}\n".format(self.window[4], self.window[5])
         else:
             out += "|   Cube output window          : (none set)\n"
         return out
