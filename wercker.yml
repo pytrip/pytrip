@@ -1,5 +1,5 @@
-# build python 3 by default
-box: python
+# build python 2.7 by default
+box: python2.7
 
 command-timeout: 60
 
@@ -22,14 +22,14 @@ build:
     - script:
         name: echo python information
         code: |
-          echo "python3 version $(python3 --version) running"
-          echo "pip3 version $(pip3 --version) running"
+          echo "python version $(python --version) running"
+          echo "pip version $(pip --version) running"
 
     # making package
     - script:
         name: package_sdist
         code: |
-          python3 setup.py sdist
+          python setup.py sdist
           ls -al dist/*tar.gz
 
     # copy binary to a location that gets passed along to next pipelines
