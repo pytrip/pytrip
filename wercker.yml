@@ -43,9 +43,11 @@ build:
 
 # ---------------------------------- 64 bit -----------------------------------------------
 
-# make a 64-bit manylinux1 package in grzanka/manylinux-test box (based on
+# make a 64-bit manylinux1 package
 build_manylinux_64:
-  box: grzanka/manylinux-test
+  box:
+      id: pypa/manylinux1_x86_64
+      registry: quay.io
   steps:
 
     # check python versions
