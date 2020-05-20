@@ -10,7 +10,7 @@ build:
     # A step that sets up the python virtual environment
     - virtualenv:
         name: setup virtual environment
-        install_wheel: false # Enable wheel to speed up builds (experimental)
+        install_wheel: false # Enable wheel to speed up builds
 
     # installing necessary requirements
     - pip-install:
