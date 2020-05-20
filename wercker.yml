@@ -1,5 +1,5 @@
 # build python 2.7 by default
-box: python2.7
+box: python:2.7
 
 command-timeout: 60
 
