@@ -46,7 +46,7 @@ build:
 # make a 64-bit manylinux1 package
 build_manylinux_64:
   box:
-      id: pypa/manylinux1_x86_64
+      id: quay.io/pypa/manylinux1_x86_64
       registry: quay.io
   steps:
 
