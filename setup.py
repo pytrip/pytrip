@@ -23,8 +23,19 @@ import os
 import setuptools
 import subprocess
 import sys
+from setuptools.command.build_ext import build_ext as _build_ext
 
-import numpy as np
+
+class build_ext(_build_ext):
+    """
+    From https://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py/21621689#21621689
+    """
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 
 def git_version():
@@ -108,6 +119,7 @@ else:
 
 setuptools.setup(
     name='pytrip98',
+    cmdclass={'build_ext': build_ext},
     version=git_version(),
     packages=setuptools.find_packages(exclude=["tests"]),
     url='https://github.com/pytrip/pytrip',
@@ -151,7 +163,6 @@ setuptools.setup(
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
     install_requires=install_requires,
-    include_dirs=[np.get_include()],
     ext_package='pytrip',
     ext_modules=extensions,
     entry_points={
