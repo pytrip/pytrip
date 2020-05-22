@@ -22,6 +22,7 @@ TODO: documentation here.
 import os
 import setuptools
 import subprocess
+import sys
 
 import numpy as np
 
@@ -92,6 +93,19 @@ extensions = [setuptools.Extension(
         extra_compile_args=['-fpic'])
 ]
 
+install_requires = [
+    "matplotlib",
+    "pydicom"
+]
+
+if sys.version_info[0] == 3 and sys.version_info[1] == 5:
+    install_requires += ["numpy<1.19"]
+elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
+    install_requires += ["numpy<1.16"]
+else:
+    install_requires += ["numpy"]
+
+
 setuptools.setup(
     name='pytrip98',
     version=git_version(),
@@ -136,9 +150,7 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
-    install_requires=[
-        'matplotlib', 'numpy', 'pydicom'
-    ],
+    install_requires=install_requires,
     include_dirs=[np.get_include()],
     ext_package='pytrip',
     ext_modules=extensions,
