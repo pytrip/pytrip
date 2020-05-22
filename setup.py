@@ -22,8 +22,20 @@ TODO: documentation here.
 import os
 import setuptools
 import subprocess
+import sys
+from setuptools.command.build_ext import build_ext as _build_ext
 
-import numpy as np
+
+class build_ext(_build_ext):
+    """
+    From https://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py/21621689#21621689
+    """
+    def finalize_options(self):
+        _build_ext.finalize_options(self)
+        # Prevent numpy from thinking it is still in its setup process:
+        __builtins__.__NUMPY_SETUP__ = False
+        import numpy
+        self.include_dirs.append(numpy.get_include())
 
 
 def git_version():
@@ -92,8 +104,26 @@ extensions = [setuptools.Extension(
         extra_compile_args=['-fpic'])
 ]
 
+install_requires = [
+    "matplotlib",
+    "pydicom"
+]
+
+# packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
+# which needs to provide header files (via numpy.get_include()) required to build C extension
+# numpy is also added install_requires which is list of dependencies needed by pip when running `pip install`
+setup_requires = []
+if sys.version_info[0] == 3 and sys.version_info[1] == 5:
+    setup_requires += ["numpy<1.19"]
+elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
+    setup_requires += ["numpy<1.16"]
+else:
+    setup_requires += ["numpy"]
+install_requires += setup_requires
+
 setuptools.setup(
     name='pytrip98',
+    cmdclass={'build_ext': build_ext},
     version=git_version(),
     packages=setuptools.find_packages(exclude=["tests"]),
     url='https://github.com/pytrip/pytrip',
@@ -136,10 +166,8 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
-    install_requires=[
-        'matplotlib', 'numpy', 'pydicom'
-    ],
-    include_dirs=[np.get_include()],
+    setup_requires=setup_requires,
+    install_requires=install_requires,
     ext_package='pytrip',
     ext_modules=extensions,
     entry_points={
