@@ -109,17 +109,17 @@ install_requires = [
     "pydicom"
 ]
 
+# packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
+# which needs to provide header files (via numpy.get_include()) required to build C extension
+# numpy is also added install_requires which is list of dependencies needed by pip when running `pip install`
 setup_requires = []
 if sys.version_info[0] == 3 and sys.version_info[1] == 5:
     install_requires += ["numpy<1.19"]
-    setup_requires +=  ["numpy<1.19"]
 elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
     install_requires += ["numpy<1.16"]
-    setup_requires += ["numpy<1.16"]
 else:
     install_requires += ["numpy"]
-    setup_requires += ["numpy"]
-
+install_requires += setup_requires
 
 setuptools.setup(
     name='pytrip98',
