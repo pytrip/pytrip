@@ -109,12 +109,16 @@ install_requires = [
     "pydicom"
 ]
 
+setup_requires = []
 if sys.version_info[0] == 3 and sys.version_info[1] == 5:
     install_requires += ["numpy<1.19"]
+    setup_requires +=  ["numpy<1.19"]
 elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
     install_requires += ["numpy<1.16"]
+    setup_requires += ["numpy<1.16"]
 else:
     install_requires += ["numpy"]
+    setup_requires += ["numpy"]
 
 
 setuptools.setup(
@@ -162,6 +166,7 @@ setuptools.setup(
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
+    setup_requires=setup_requires,
     install_requires=install_requires,
     ext_package='pytrip',
     ext_modules=extensions,
