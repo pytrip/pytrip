@@ -10,7 +10,7 @@ build:
     # A step that sets up the python virtual environment
     - virtualenv:
         name: setup virtual environment
-        install_wheel: false # Enable wheel to speed up builds (experimental)
+        install_wheel: false # Enable wheel to speed up builds
 
     # installing necessary requirements
     - pip-install:
@@ -43,9 +43,11 @@ build:
 
 # ---------------------------------- 64 bit -----------------------------------------------
 
-# make a 64-bit manylinux1 package in grzanka/manylinux-test box (based on
+# make a 64-bit manylinux1 package
 build_manylinux_64:
-  box: grzanka/manylinux-test
+  box:
+      id: quay.io/pypa/manylinux1_x86_64
+      registry: quay.io
   steps:
 
     # check python versions
@@ -54,6 +56,8 @@ build_manylinux_64:
         code: |
           /opt/python/cp27-cp27m/bin/python -V
           /opt/python/cp27-cp27m/bin/pip -V
+          /opt/python/cp37-cp37m/bin/python -V
+          /opt/python/cp37-cp37m/bin/pip -V
 
     # make a manylinux1 package
     - script:
@@ -65,7 +69,7 @@ build_manylinux_64:
           cd /io
           tar -zxvf pytrip98.tar.gz
           ls -al
-          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m"
+          /io/build_wheels.sh "cp27-cp27m cp27-cp27mu cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38"
 
     # copy binary to a location that gets passed along to next pipelines
     - script:
@@ -73,45 +77,7 @@ build_manylinux_64:
         code: |
           cp /io/wheelhouse/*whl "$WERCKER_OUTPUT_DIR"
 
-# ---------------------------------- debian 9 (testing) -----------------------------------------------
-
-test_debian_testing_py2:
-  box: debian:testing
-
-  steps:
-    - script:
-        name: prerequisites
-        code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
-          python -V
-          pip -V
-
-    - script:
-        name: package_install
-        code: |
-          pip install setuptools
-          pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
-
-    - script:
-        name: test
-        code: |
-          trip2dicom --help
-          dicom2trip --help
-          cubeslice --help
-          rst2sobp --help
-          gd2dat --help
-          gd2agr --help
-          bevlet2oer --help
-          rst_plot --help
-          trip2dicom --version
-          dicom2trip --version
-          cubeslice --version
-          rst2sobp --version
-          gd2dat --version
-          gd2agr --version
-          bevlet2oer --version
-          rst_plot --version
+# ---------------------------------- debian testing -----------------------------------------------
 
 test_debian_testing_py3:
   box: debian:testing
@@ -129,7 +95,7 @@ test_debian_testing_py3:
         name: package_install
         code: |
           pip3 install setuptools
-          pip3 install /pipeline/source/pytrip98-*-cp36m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp38-cp38-linux_x86_64.whl
 
     - script:
         name: test
@@ -151,48 +117,10 @@ test_debian_testing_py3:
           bevlet2oer --version
           rst_plot --version
 
-# ---------------------------------- ubuntu 16.04 -----------------------------------------------
+# ---------------------------------- ubuntu 20.04 -----------------------------------------------
 
-test_ubuntu_1604_testing_py2:
-  box: ubuntu:16.04
-
-  steps:
-    - script:
-        name: prerequisites
-        code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-dev gcc
-          python -V
-          pip -V
-
-    - script:
-        name: package_install
-        code: |
-          pip install setuptools
-          pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
-
-    - script:
-        name: test
-        code: |
-          trip2dicom --help
-          dicom2trip --help
-          cubeslice --help
-          rst2sobp --help
-          gd2dat --help
-          gd2agr --help
-          bevlet2oer --help
-          rst_plot --help
-          trip2dicom --version
-          dicom2trip --version
-          cubeslice --version
-          rst2sobp --version
-          gd2dat --version
-          gd2agr --version
-          bevlet2oer --version
-          rst_plot --version
-
-test_ubuntu_1604_testing_py3:
-  box: ubuntu:16.04
+test_ubuntu_2004_testing_py3:
+  box: ubuntu:20.04
 
   steps:
     - script:
@@ -207,7 +135,7 @@ test_ubuntu_1604_testing_py3:
         name: package_install
         code: |
           pip3 install setuptools
-          pip3 install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp38-cp38-linux_x86_64.whl
 
     - script:
         name: test
@@ -228,10 +156,10 @@ test_ubuntu_1604_testing_py3:
           gd2agr --version
           bevlet2oer --version
           rst_plot --version
-# ---------------------------------- debian 8 jessie -----------------------------------------------
+# ---------------------------------- debian 9 stretch -----------------------------------------------
 
-test_debian_8_jessie_py2:
-  box: debian:8
+test_debian_9_jessie_py2:
+  box: debian:9
 
   steps:
 
@@ -239,14 +167,14 @@ test_debian_8_jessie_py2:
         name: prerequisites
         code: |
           apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip python-pkg-resources python-dev gcc
+          apt-get install -qq -y --no-install-recommends python-pip
           python -V
           pip -V
+          pip install --only-binary :all: setuptools wheel subprocess32  # TODO improve installation
 
     - script:
         name: package_install
         code: |
-          easy_install -U pip
           python -c "import platform; print(platform.platform())"
           python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
 
@@ -272,8 +200,8 @@ test_debian_8_jessie_py2:
 
 
 
-test_debian_8_jessie_py3:
-  box: debian:8
+test_debian_9_jessie_py3:
+  box: debian:9
 
   steps:
     - script:
@@ -283,10 +211,8 @@ test_debian_8_jessie_py3:
           apt-get install -qq -y --no-install-recommends python3-pip
           python3 -V
           pip3 -V
-          easy_install3 -U pip
-          pip3 -V
           pip3 install setuptools
-          python3 -m pip install /pipeline/source/pytrip98-*-cp34m-manylinux1_x86_64.whl
+          python3 -m pip install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
         name: test

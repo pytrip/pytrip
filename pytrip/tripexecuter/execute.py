@@ -215,8 +215,8 @@ class Execute(object):
         """ Writes txt to all listeners, stripping any newlines.
         """
         txt = txt.replace("\n", "")
-        for l in self.listeners:
-            l.write(txt)
+        for listener in self.listeners:
+            listener.write(txt)
 
     def _run_trip(self, plan, _dir=""):
         """ Method for executing the attached exec.

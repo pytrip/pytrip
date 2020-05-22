@@ -17,8 +17,6 @@ matrix:
           env: TOXENV=py27
         - python: 3.7
           env: TOXENV=coverage
-        - python: 3.4
-          env: TOXENV=py34
         - python: 3.5
           env: TOXENV=py35
         - python: 3.6
@@ -40,7 +38,7 @@ matrix:
           services: docker
           sudo: true
         - python: 3.7
-          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp34-cp34m cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38"
+          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38"
           services: docker
           sudo: true
         - python: 3.7

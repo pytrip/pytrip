@@ -210,7 +210,7 @@ class SPC(object):
 
             ebins = {}
 
-            for l, specie in enumerate(dblock.species):
+            for specie_item_no, specie in enumerate(dblock.species):
                 # no 13, double Z, double A, long Z, long A;
                 tag = Tag(fd)
                 tag.code = SPCTagCode.ZA.value
@@ -257,7 +257,7 @@ class SPC(object):
                 # <nE>+1 double precision bin border values are stored.
                 compatible_ebins_index = [i for i in ebins if np.array_equal(specie.ebindata, ebins[i])]
                 if not compatible_ebins_index:
-                    ebins[l] = specie.ebindata
+                    ebins[specie_item_no] = specie.ebindata
 
                     # no 17, double; energy bin values
                     tag = Tag(fd)
