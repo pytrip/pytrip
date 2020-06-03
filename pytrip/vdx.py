@@ -100,7 +100,6 @@ class VdxCube:
         self.version = "2.0"
         if self.cube is not None:
             self.patient_id = cube.patient_id
-            self._dicom_study_instance_uid = self.cube.common_dicom_data.StudyInstanceUID
             logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
         else:
             import datetime
@@ -118,11 +117,6 @@ class VdxCube:
         out = "\n"
         out += "   VdxCube\n"
         out += "----------------------------------------------------------------------------\n"
-        out += "| UIDs\n"
-        out += "|   dicom_study_instance_uid            : {:s}\n".format(self._dicom_study_instance_uid)
-        out += "|   structs_dicom_series_instance_uid   : '{:s}'\n".format(self._structs_dicom_series_instance_uid)
-        out += "|   structs_sop_instance_uid            : '{:s}'\n".format(self._structs_sop_instance_uid)
-        out += "|   structs_rt_series_instance_uid      : '{:s}'\n".format(self._structs_rt_series_instance_uid)
         if self.vois:
             out += "+---VOIs\n"
             for _i, _v in enumerate(self.vois):
@@ -365,7 +359,12 @@ class VdxCube:
         # self._dicom_study_instance_uid may be either set in __init__ when creating new object
         #   or set when import a DICOM file
         #   Study Instance UID for structures is the same as Study Instance UID for CTs
-        ds.StudyInstanceUID = self._dicom_study_instance_uid
+        ds.StudyInstanceUID = None
+        if self.cube is not None:
+            if self.cube.hasattr('dicom_data'):
+                ds.StudyInstanceUID = None  # TODO get proper data
+        if ds.StudyInstanceUID is None:
+            ds.StudyInstanceUID = None  # TODO generate some value
 
         # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
         # self._rt_dicom_series_instance_uid may be either set in __init__ when creating new object
@@ -398,7 +397,13 @@ class VdxCube:
         # first we check if DICOM cube is loaded
         if self.cube is not None:
             rt_ref_series_data = Dataset()
-            rt_ref_series_data.SeriesInstanceUID = self.cube.common_dicom_data.SeriesInstanceUID
+
+            if self.cube is not None:
+                if self.cube.hasattr('dicom_data'):
+                    rt_ref_series_data.SeriesInstanceUID = None  # TODO get proper data
+            if rt_ref_series_data.SeriesInstanceUID is None:
+                rt_ref_series_data.SeriesInstanceUID = None  # TODO generate some value
+
             rt_ref_series_data.ContourImageSequence = Sequence([])
 
             # each CT slice corresponds to one DICOM file

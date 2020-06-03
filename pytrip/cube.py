@@ -85,15 +85,6 @@ class Cube(object):
             self._set_format_str()
             self._set_number_of_bytes()
 
-            # here are included tags with _common_ values in case
-            # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
-            self.common_meta_dicom_data = cube.common_meta_dicom_data
-            self.common_dicom_data = cube.common_dicom_data
-
-            # here are included tags with _specific_ values (different from file to file) in case
-            # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
-            self.file_specific_dicom_data = cube.file_specific_dicom_data
-
             self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
 
         else:
@@ -802,17 +793,6 @@ class Cube(object):
             if all([first_file_ds[tag] == current_file_ds[tag] for current_file_ds in dcm["images"][1:]]):
                 common_tags_and_values.add(tag)
 
-        # find tags with specific value
-        specific_tags = common_tags - common_tags_and_values
-
-        # print("specific_tags, slice 1", specific_tags)
-        # for tag in specific_tags:
-        #     print(dcm["images"][1][tag])
-        #
-        # print("specific_tags, slice 2", specific_tags)
-        # for tag in specific_tags:
-        #     print(dcm["images"][2][tag])
-        #
         self.version = "1.4"
         self.created_by = "pytrip"
         self.creation_info = "Created by PyTRiP98"
@@ -837,24 +817,6 @@ class Cube(object):
             for tag in problematic_tags:
                 print("Not all files share the same tag '{:s}' and its value".format(dictionary_description(tag)))
             raise Exception("Not all files are compatible")
-
-            # # here are included tags with _specific_ values (different from file to file) in case
-            # # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
-            # self.file_specific_dicom_data = None
-
-        self.common_dicom_data = Dataset()
-        for tag_name in common_tags_and_values:
-            self.common_dicom_data[tag_name] = first_file_ds[tag_name]
-
-        self.common_meta_dicom_data = Dataset()
-        for tag_name in common_meta_tags_and_values:
-            self.common_meta_dicom_data[tag_name] = first_file_ds.file_meta[tag_name]
-
-        self.file_specific_dicom_data = {}
-        for ds in dcm["images"]:
-            self.file_specific_dicom_data[ds.InstanceNumber] = Dataset()
-            for tag_name in specific_tags:
-                self.file_specific_dicom_data[ds.InstanceNumber][tag_name] = ds[tag_name]
 
         self.patient_name = first_file_ds.PatientName
         self.basename = first_file_ds.PatientID.replace(" ", "_")
@@ -1041,22 +1003,23 @@ class AccompanyingDicomData:
         TODO
         :return:
         """
-        all_header_datasets = list(x for x in
-                                   [list(self.headers_datasets.get(self.DataType.CT, {}).values()) +
-                                    self.headers_datasets.get(self.DataType.Struct, []) +
-                                    self.headers_datasets.get(self.DataType.Dose, [])]
-                                   if x)
 
-        all_data_datasets = list(x for x in
-                                 [list(self.data_datasets.get(self.DataType.CT, {}).values()) +
-                                  self.data_datasets.get(self.DataType.Struct, []) +
-                                  self.data_datasets.get(self.DataType.Dose, [])]
-                                 if x)
+        all_header_datasets = list(self.headers_datasets.get(self.DataType.CT, {}).values())
+        if self.DataType.Struct in self.headers_datasets.keys():
+            all_header_datasets.append(self.headers_datasets[self.DataType.Struct])
+        if self.DataType.Dose in self.headers_datasets.keys():
+            all_header_datasets.append(self.headers_datasets[self.DataType.Dose])
+
+        all_data_datasets = list(self.data_datasets.get(self.DataType.CT, {}).values())
+        if self.DataType.Struct in self.data_datasets.keys():
+            all_data_datasets.append(self.data_datasets[self.DataType.Struct])
+        if self.DataType.Dose in self.data_datasets.keys():
+            all_data_datasets.append(self.data_datasets[self.DataType.Dose])
 
         # list of common tags+values for all datasets (header and data file)
         self.all_datasets_header_common = self.find_common_tags_and_values(all_header_datasets)
         self.all_datasets_data_common = self.find_common_tags_and_values(all_data_datasets)
-        self.all_datasets_data_common.discard(Tag('PixelData'))
+        self.all_datasets_data_common.discard(Tag('PixelData'))  # TODO check if it is working
 
         # list of common tags+values for CT datasets (header and data file)
         self.ct_datasets_header_common = self.find_common_tags_and_values(
