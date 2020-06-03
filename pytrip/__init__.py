@@ -67,7 +67,10 @@ __version__ = 'unknown'
 module_name = 'pytrip98'
 if sys.version_info < (3, 0):  # Python 2.7
     import imp
-    init_location = os.path.join(imp.find_module(module_name)[1], module_name)
+    try:
+        init_location = os.path.join(imp.find_module(module_name)[1], module_name)
+    except ImportError:
+        init_location = None
 else:  # Python 3.x
     import importlib
     import importlib.util
