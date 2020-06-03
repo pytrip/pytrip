@@ -122,7 +122,6 @@ class CtxCube(Cube):
         logging.debug("all_ct_data_datasets len {:d}".format(len(all_ct_data_datasets)))
         logging.debug("all_ct_data_datasets keys {:s}".format(",".join(all_ct_data_datasets.keys())))
 
-
         from pydicom import uid
         data = []  # list of DICOM objects with data specific to the slice
         for i in range(len(self.cube)):
@@ -132,9 +131,6 @@ class CtxCube(Cube):
 
             current_ct_header_dataset = all_ct_header_datasets.get(str(_ds.InstanceNumber), {})
             current_ct_data_dataset = all_ct_data_datasets.get(str(_ds.InstanceNumber), {})
-
-            #logging.debug("current_ct_header_dataset len {:d}".format(len(current_ct_header_dataset)))
-            #logging.debug("current_ct_header_dataset keys {:s}".format(",".join([str(x) for x in current_ct_header_dataset.keys()])))
 
             # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
             for tag in ['ImplementationClassUID', 'ImplementationVersionName', 'MediaStorageSOPInstanceUID']:

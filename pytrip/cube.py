@@ -20,25 +20,24 @@
 This module provides the Cube class, which is used by the CTX, DOS, LET and VDX modules.
 A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
+from collections import defaultdict
+import datetime
 import copy
 import json
+import logging
 import os
+import pprint
 import re
 import sys
-import logging
-import datetime
-import pprint
-from collections import OrderedDict, defaultdict
-from enum import Enum, auto
+
+from enum import Enum
 
 import numpy as np
 
-import pydicom
 from pydicom import uid
-from pydicom.datadict import dictionary_description, dictionary_keyword, keyword_for_tag, dictionary_VR, \
-    dictionary_has_tag
+from pydicom.datadict import dictionary_description, dictionary_keyword, dictionary_has_tag
 from pydicom.dataset import Dataset, FileDataset
-from pydicom.tag import Tag, BaseTag
+from pydicom.tag import Tag
 
 from pytrip.error import InputError, FileNotFound
 from pytrip.util import TRiP98FilePath, TRiP98FileLocator
@@ -90,7 +89,6 @@ class Cube(object):
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
             self.common_meta_dicom_data = cube.common_meta_dicom_data
             self.common_dicom_data = cube.common_dicom_data
-
 
             # here are included tags with _specific_ values (different from file to file) in case
             # data comes from DICOM directory with multiple tags (i.e. directory with CT scan data)
@@ -789,7 +787,8 @@ class Cube(object):
         # find tags with common values
         common_meta_tags_and_values = set()
         for tag in common_meta_tags:
-            if all([first_file_ds.file_meta[tag] == current_file_ds.file_meta[tag] for current_file_ds in dcm["images"][1:]]):
+            if all([first_file_ds.file_meta[tag] == current_file_ds.file_meta[tag]
+                    for current_file_ds in dcm["images"][1:]]):
                 common_meta_tags_and_values.add(tag)
 
         # find common tags
@@ -991,12 +990,12 @@ class Cube(object):
 class AccompanyingDicomData:
 
     class DataType(Enum):
-        CT = auto()
-        Dose = auto()
-        Struct = auto()
-        LET = auto()
-        common_CT = auto()
-        common_all = auto()
+        CT = 1
+        Dose = 2
+        Struct = 3
+        LET = 4
+        common_CT = 5
+        common_all = 6
 
     def __init__(self, ct_datasets=[], dose_dataset=None, structure_dataset=None):
         logger.info("Creating Accompanying DICOM data")
@@ -1006,7 +1005,7 @@ class AccompanyingDicomData:
         if structure_dataset:
             logger.debug("Accessing structure datasets")
 
-        ######### save tag values
+        # save tag values
         self.headers_datasets = {}
         self.data_datasets = {}
         if dose_dataset:
@@ -1050,8 +1049,8 @@ class AccompanyingDicomData:
 
         all_data_datasets = list(x for x in
                                  [*list(self.data_datasets.get(self.DataType.CT, {}).values()),
-                                 self.data_datasets.get(self.DataType.Struct, None),
-                                 self.data_datasets.get(self.DataType.Dose, None)]
+                                  self.data_datasets.get(self.DataType.Struct, None),
+                                  self.data_datasets.get(self.DataType.Dose, None)]
                                  if x)
 
         # list of common tags+values for all datasets (header and data file)
@@ -1073,7 +1072,6 @@ class AccompanyingDicomData:
         self.ct_datasets_data_specific = self.find_tags_with_specific_values(
             list(self.data_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_specific.discard(Tag('PixelData'))
-
 
     @staticmethod
     def find_common_tags(list_of_datasets=[], access_method=lambda x: x):
@@ -1159,7 +1157,7 @@ class AccompanyingDicomData:
             )).to_json_dict()
 
             ct_json_dict['data']['specific'] = {}
-            for instance_id, dataset in  self.data_datasets[self.DataType.CT].items():
+            for instance_id, dataset in self.data_datasets[self.DataType.CT].items():
                 ct_json_dict['data']['specific'][instance_id] = \
                     Dataset(dict(
                         (tag_name, dataset[tag_name]) for tag_name in self.ct_datasets_data_specific
@@ -1214,7 +1212,7 @@ class AccompanyingDicomData:
 
     def from_comment(self, parsed_str):
 
-        re_exp = '#@(?P<type>.+)@ line (?P<line_no>.+) \/ (?P<line_total>.+) : (?P<content>.+)'
+        re_exp = "#@(?P<type>.+)@ line (?P<line_no>.+) \/ (?P<line_total>.+) : (?P<content>.+)"  # NOQA: W605
         regex = re.compile(re_exp)
 
         content_by_type = defaultdict(list)
@@ -1254,8 +1252,7 @@ class AccompanyingDicomData:
 
         self.update_common_tags_and_values()
 
-
-def __str__(self):
+    def __str__(self):
 
         def nice_tag_name(tag):
             if dictionary_has_tag(tag):

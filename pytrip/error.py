@@ -35,4 +35,3 @@ class FileNotFound(Exception):
 
     def __str__(self):
         return repr(self.msg)
-
