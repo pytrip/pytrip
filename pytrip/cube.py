@@ -1042,15 +1042,15 @@ class AccompanyingDicomData:
         :return:
         """
         all_header_datasets = list(x for x in
-                                   [*list(self.headers_datasets.get(self.DataType.CT, {}).values()),
-                                    self.headers_datasets.get(self.DataType.Struct, None),
-                                    self.headers_datasets.get(self.DataType.Dose, None)]
+                                   [list(self.headers_datasets.get(self.DataType.CT, {}).values()) +
+                                    self.headers_datasets.get(self.DataType.Struct, []) +
+                                    self.headers_datasets.get(self.DataType.Dose, [])]
                                    if x)
 
         all_data_datasets = list(x for x in
-                                 [*list(self.data_datasets.get(self.DataType.CT, {}).values()),
-                                  self.data_datasets.get(self.DataType.Struct, None),
-                                  self.data_datasets.get(self.DataType.Dose, None)]
+                                 [list(self.data_datasets.get(self.DataType.CT, {}).values()) +
+                                  self.data_datasets.get(self.DataType.Struct, []) +
+                                  self.data_datasets.get(self.DataType.Dose, [])]
                                  if x)
 
         # list of common tags+values for all datasets (header and data file)
