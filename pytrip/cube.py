@@ -730,7 +730,7 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
-        if self.dicom_data:
+        if getattr(self, 'dicom_data', None):
             output_str += self.dicom_data.to_comment()
 
         with open(path, "w+", newline='\n') as f:

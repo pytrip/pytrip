@@ -27,7 +27,6 @@ import unittest
 
 import numpy as np
 
-from pytrip import pytriplib
 from pytrip.dos import DosCube
 from pytrip.vdx import create_sphere
 from pytrip.volhist import VolHist
@@ -44,6 +43,7 @@ class TestDos(unittest.TestCase):
         logger.info("Testing cube from path " + self.cube000)
 
     def test_read(self):
+        from pytrip import pytriplib
         c = DosCube()
         c.read(self.cube000)
         self.assertEqual(c.cube.shape[0], 300)
