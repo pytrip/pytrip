@@ -34,11 +34,13 @@ from functools import cmp_to_key
 import numpy as np
 
 from pydicom import uid
+from pydicom._storage_sopclass_uids import CTImageStorage
 from pydicom.dataset import Dataset, FileDataset
 from pydicom.sequence import Sequence
-
+from pydicom.tag import Tag
 
 import pytrip
+from pytrip.cube import AccompanyingDicomData
 from pytrip.error import InputError
 from pytrip.dos import DosCube
 
@@ -73,9 +75,9 @@ class VdxCube:
     >>> v.read("tests/res/TST003/tst003000.vdx")
     """
 
-    # stictly, VDX does not have .hed companion. However, in practice, .vdx files are always
+    # strictly, VDX does not have .hed companion. However, in practice, .vdx files are always
     # associated with a .hed .ctx cube pair. In order to discover these, the header file
-    # extentions may be associated to this as a .vdx data file.
+    # extensions may be associated to this as a .vdx data file.
 
     header_file_extension = '.hed'
     data_file_extension = '.vdx'
@@ -119,8 +121,8 @@ class VdxCube:
         out += "----------------------------------------------------------------------------\n"
         if self.vois:
             out += "+---VOIs\n"
-            for _i, _v in enumerate(self.vois):
-                out += "|   |           #{:d}              : '{:s}'\n".format(_i, _v.name)
+            for voi in self.vois:
+                out += "|   |           #{:d}              : '{:s}'\n".format(voi.number, voi.name)
         return out
 
     def read_dicom(self, data, structure_ids=None):
@@ -145,7 +147,7 @@ class VdxCube:
             _contours = dcm.ROIContourSequence
         else:
             logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
-            sys.exit()
+            sys.exit()  # TODO replace exit() with proper exception
 
         for i, _roi_contour in enumerate(_contours):
             if structure_ids is None or _roi_contour.RefdROINumber in structure_ids:
@@ -156,15 +158,22 @@ class VdxCube:
 
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
-                    sys.exit()
+                    sys.exit()  # TODO replace exit() with proper exception
 
                 if hasattr(dcm, "StructureSetROISequence"):
                     _roi_name = dcm.StructureSetROISequence[i].ROIName  # REQUIRED by DICOM. At least an empty string.
                 else:
                     logger.error("No StructureSetROISequence found in dicom RTSTRUCT")
-                    sys.exit()
+                    sys.exit()  # TODO replace exit() with proper exception
+
+                if hasattr(dcm, "StructureSetROISequence"):
+                    _roi_number = dcm.StructureSetROISequence[i].ROINumber
+                else:
+                    logger.error("No StructureSetROISequence found in dicom RTSTRUCT")
+                    sys.exit()  # TODO replace exit() with proper exception
 
                 v = Voi(_roi_name, self.cube)
+                v.number = _roi_number
                 v.read_dicom(_roi_observation, _roi_contour, _roi_name)
 
                 self.add_voi(v)
@@ -256,11 +265,9 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
-
-
-#                TODO number_of_vois not used
-#                elif "number_of_vois" in line:
-#                    number_of_vois = int(line.split()[1])
+            #                TODO number_of_vois not used
+            #                elif "number_of_vois" in line:
+            #                    number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -270,9 +277,24 @@ class VdxCube:
                             i = v.read_vdx_old(content, i)
                 else:
                     i = v.read_vdx(content, i)
+                v.number = len(self.vois)
                 self.add_voi(v)
                 header_full = True
             i += 1
+
+        ctx_cube = getattr(self, 'cube', {})
+        dicom_data = getattr(ctx_cube, 'dicom_data', {})
+        data_datasets = getattr(dicom_data, 'data_datasets', {})
+        struct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.Struct, {})
+
+        structure_set_roi_sequence = struct_data_dataset.get(Tag('StructureSetROISequence'), [])
+        dicom_voi_names = set([item.ROIName for item in structure_set_roi_sequence])
+        if structure_set_roi_sequence and (structure_set_roi_sequence.VM == self.number_of_vois()):
+            if dicom_voi_names == set(self.voi_names()):
+                for voi in self.vois:
+                    matched_item = [item for item in structure_set_roi_sequence if item.ROIName == voi.name]
+                    if matched_item:
+                        voi.number = matched_item[0].ROINumber
 
     def concat_contour(self):
         """ Loop through all available VOIs and check whether any have multiple contours in a slice.
@@ -300,7 +322,7 @@ class VdxCube:
         fp.write("vdx_file_version 2.0\n")
         fp.write("all_indices_zero_based\n")
         fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
-        self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
+        self.vois = sorted(self.vois, key=lambda voi: voi.number)
         for voi in self.vois:
             logger.debug("writing VOI {}".format(voi.name))
             fp.write(voi.vdx_string())
@@ -328,12 +350,27 @@ class VdxCube:
 
         :returns: a Dicom RTSTRUCT object holding any VOIs.
         """
+
+        ctx_cube = getattr(self, 'cube', {})
+        dicom_data = getattr(ctx_cube, 'dicom_data', {})
+        headers_datasets = getattr(dicom_data, 'headers_datasets', {})
+        struct_header_dataset = headers_datasets.get(AccompanyingDicomData.DataType.Struct, {})
+        data_datasets = getattr(dicom_data, 'data_datasets', {})
+        struct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.Struct, {})
+        ct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
+
+        # RT Structure Set CIOD (from https://dicom.innolitics.com/ciods/rt-structure-set)
+        # The focus for this Radiotherapy Structure Set IOD (RT Structure Set IOD) is to address the requirements for
+        # transfer of Patient structures and related data defined on CT scanners, virtual simulation workstations,
+        # treatment planning systems and similar devices.
+
         meta = Dataset()
         meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage SOP Class
         # SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
         meta.MediaStorageSOPInstanceUID = self._structs_sop_instance_uid
         meta.ImplementationClassUID = "1.2.3.4"
         meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
             ds.PatientName = self.cube.patient_name
@@ -343,7 +380,7 @@ class VdxCube:
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.PatientID = self.patient_id  # patient_id of the VdxCube, from CtxCube during __init__.
-        ds.PatientSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        ds.PatientSex = 'O'  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
         ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
@@ -360,11 +397,6 @@ class VdxCube:
         #   or set when import a DICOM file
         #   Study Instance UID for structures is the same as Study Instance UID for CTs
         ds.StudyInstanceUID = None
-        if self.cube is not None:
-            if hasattr(self.cube, 'dicom_data'):
-                ds.StudyInstanceUID = None  # TODO get proper data
-        if ds.StudyInstanceUID is None:
-            ds.StudyInstanceUID = None  # TODO generate some value
 
         # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
         # self._rt_dicom_series_instance_uid may be either set in __init__ when creating new object
@@ -380,71 +412,347 @@ class VdxCube:
         ds.SeriesTime = '000000'  # !!!!!!!!!
         ds.StudyTime = '000000'  # !!!!!!!!!!
         ds.ContentTime = '000000'  # !!!!!!!!!
-        ds.StructureSetLabel = 'PyTRiP structs'  # Structure set label tag, 0x3006,0x0002 (type SH - Short String)
-        # Short string (SH) is limited to 16 characters !
-        ds.StructureSetDate = '19010101'
-        ds.StructureSetTime = '000000'
-        ds.StructureSetName = 'ROI'
         ds.Modality = 'RTSTRUCT'
-        ds.ROIGenerationAlgorithm = '0'  # ROI Generation Algorithm tag, 0x3006,0x0036 (type CS - Code String)
         ds.ReferringPhysicianName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
 
-        roi_label_list = []
-        roi_data_list = []
+        # Structure Set Module (from https://dicom.innolitics.com/ciods/rt-structure-set/structure-set)
+        # A structure set defines a set of areas of significance.
+        # Each area can be associated with a Frame of Reference and zero or more images.
+        # Information that can be transferred with each region of interest (ROI) includes geometrical and
+        # display parameters, and generation technique.
+
+        # Tag 0x3006,0x0002 (type SH - Short String)
+        # Note: User-defined label for Structure Set.
+        # Short string (SH) is limited to 16 characters !
+        ds.StructureSetLabel = 'PyTRiP structs'
+
+        # Tag (3006,0004) Optional
+        # User-defined name for Structure Set.
+        ds.StructureSetName = 'ROIs'
+
+        # Tag (3006,0008) Required, Empty if Unknown
+        # Date at which Structure Set was last modified
+        ds.StructureSetDate = ''
+
+        # Tag (3006,0009) Required, Empty if Unknown
+        # Time at which Structure Set was last modified
+        ds.StructureSetTime = ''
+
+        # Referenced Frame of Reference Sequence
+        #
+        # This section needs an DICOM data which can be present in one two location: CT file(s) or RTSTRUCT file
+        # If both files were loaded then data from RTSTRUCT will take precedence
+
+        # try reading full ReferencedFrameOfReferenceSequence Dataset from RTSTRUCT
+        if Tag('ReferencedFrameOfReferenceSequence') in struct_data_dataset:
+            ds.ReferencedFrameOfReferenceSequence = struct_data_dataset[Tag('ReferencedFrameOfReferenceSequence')]
+        else:
+            # try getting SOPInstanceUIDs and SeriesInstanceUID from CT data
+
+            sop_instance_uids = [slice_ds.SOPInstanceUID for slice_ds in ct_data_dataset.values()]
+            series_instance_uid = None
+            for tag, value in dicom_data.ct_datasets_data_common:
+                if tag == Tag('SeriesInstanceUID'):
+                    series_instance_uid = value
+
+            # TODO: if none of the DICOM files were loaded, use the information from generated DICOM from CTXCube
+
+            if sop_instance_uids and series_instance_uid:
+                # See https://dicom.innolitics.com/ciods/rt-structure-set/structure-set/30060010
+                # Sequence describing Frames of Reference in which the ROIs are defined.
+                # One or more Items are permitted in this Sequence
+                # The Referenced Frame of Reference Sequence (3006,0010) describes a set of frames of reference
+                # in which some or all of the ROIs are expressed.
+                # Since the Referenced Frame of Reference UID (3006,0024) is required for each ROI,
+                # each Frame of Reference used to express the coordinates of an ROI shall be listed
+                # in the Referenced Frame of Reference Sequence (3006,0010) once and only once.
+                # Note: As an example, a set of ROIs defined using a single image Series would list
+                # the image Series in a single Referenced Frame of Reference Sequence (3006,0010) Item,
+                # providing the UID for this referenced Frame of Reference (obtained from the source images),
+                # and listing all pertinent images in the Contour Image Sequence (3006,0016).
+
+                # ReferencedFrameOfReferenceSequence      (Sequence with single item)
+                #   -> FrameOfReferenceUID                (Unique Identifier)
+                #   -> RTReferencedStudySequence          (Sequence with single item)
+                #      -> ReferencedSOPClassUID           (Unique Identifier)
+                #      -> ReferencedSOPInstanceUID        (Unique Identifier)
+                #      -> RTReferencedSeriesSequence      (Sequence with single item)
+                #         -> SeriesInstanceUID            (Unique Identifier)
+                #         -> ContourImageSequence         (Sequence with many items)
+                #           -> ReferencedSOPClassUID      (Unique Identifier)
+                #           -> ReferencedSOPInstanceUID   (Unique Identifier)
+
+                # each CT slice corresponds to one DICOM file
+                cont_image_sequence = Sequence([])
+                for sop_instance_uid in sop_instance_uids:
+                    contour_image_item = Dataset()
+
+                    # Tag (0008,1150) Required
+                    # Uniquely identifies the referenced SOP Class.
+                    # here: CT Image Storage SOP Class
+                    contour_image_item.ReferencedSOPClassUID = CTImageStorage
+
+                    # Tag (0008,1155) Required
+                    # Uniquely identifies the referenced SOP Instance.
+                    # here: CT Slice ID
+                    contour_image_item.ReferencedSOPInstanceUID = sop_instance_uid
+
+                    cont_image_sequence.append(contour_image_item)
+
+                rt_ref_series_sequence = Sequence([Dataset()])
+
+                # Tag (0020,000E) Required
+                # Unique identifier for the Series containing the images.
+                rt_ref_series_sequence[0].SeriesInstanceUID = series_instance_uid
+
+                # Tag (3006,0016) Required
+                # Sequence of Items describing images in a given Series used in defining the Structure Set
+                # (typically CT or MR images).
+                # One or more Items shall be included in this Sequence
+                rt_ref_series_sequence[0].ContourImageSequence = cont_image_sequence
+
+                rt_ref_study_sequence = Sequence([Dataset()])
+
+                # Tag (0008,1150) Required
+                # Uniquely identifies the referenced SOP Class.
+                # Here: Study Component Management Class
+                rt_ref_study_sequence[0].ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'
+
+                # Tag (0008,1155) Required
+                # Uniquely identifies the referenced SOP Instance.
+                rt_ref_study_sequence[0].ReferencedSOPInstanceUID = '1.2.3'
+
+                # Tag (3006,0014) Required
+                # Sequence describing Series of images within the referenced Study
+                # that are used in defining the Structure Set.
+                # One or more Items shall be included in this Sequence
+                rt_ref_study_sequence[0].RTReferencedSeriesSequence = rt_ref_series_sequence
+
+                # Tag (3006,0010) Optional
+                ds.ReferencedFrameOfReferenceSequence = Sequence([Dataset()])
+
+                # Tag (0020,0052) Required
+                # Uniquely identifies Frame of Reference within Structure Set.
+                ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID = '1.2.3'
+
+                # Tag (3006, 0012) Optional
+                # Sequence of Studies containing Series to be referenced.
+                # One or more Items are permitted in this Sequence.
+                ds.ReferencedFrameOfReferenceSequence[0].RTReferencedStudySequence = rt_ref_study_sequence
+
+        # end of Referenced Frame of Reference Sequence
+
+        # Structure Set ROI Sequence
+
+        # StructureSetROISequence
+        #   -> DefinitionSourceSequence
+        #   -> DerivationCodeSequence
+        #   -> ROINumber (Required)
+        #   -> ReferencedFrameOfReferenceUID (Required)
+        #   -> ROIName (Required, Empty if Unknown)
+        #   -> ROIDescription
+        #   -> ROIVolume
+        #   -> ROIGenerationAlgorithm (Required, Empty if Unknown)
+        #   -> ROIDerivationAlgorithmIdentificationSequence
+        #   -> ROIGenerationDescription
         roi_structure_roi_list = []
-
-        # to get DICOM which can be loaded in Eclipse we need to store information about UIDs of all slices in CT
-        # first we check if DICOM cube is loaded
-        if self.cube is not None:
-            rt_ref_series_data = Dataset()
-
-            if self.cube is not None:
-                if hasattr(self.cube, 'dicom_data'):
-                    rt_ref_series_data.SeriesInstanceUID = None  # TODO get proper data
-            if rt_ref_series_data.SeriesInstanceUID is None:
-                rt_ref_series_data.SeriesInstanceUID = None  # TODO generate some value
-
-            rt_ref_series_data.ContourImageSequence = Sequence([])
-
-            # each CT slice corresponds to one DICOM file
-            for slice_dicom in self.cube.create_dicom():
-                slice_dataset = Dataset()
-                slice_dataset.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
-                slice_dataset.ReferencedSOPInstanceUID = slice_dicom.SOPInstanceUID  # most important - slice UID
-                rt_ref_series_data.ContourImageSequence.append(slice_dataset)
-
-            rt_ref_study_seq_data = Dataset()
-            rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
-            rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3'
-            rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
-
-            rt_ref_frame_study_data = Dataset()
-            rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
-            rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
-            # (3006, 0010) 'Referenced Frame of Reference Sequence'
-            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
-
-        for i in range(self.number_of_vois()):
-            logger.debug("Write ROI #{:d} to DICOM object".format(i))
-            roi_label = self.vois[i].create_dicom_label()
-            roi_label.ObservationNumber = str(i + 1)
-            roi_label.ReferencedROINumber = str(i + 1)
-            roi_label.RefdROINumber = str(i + 1)
-            roi_contours = self.vois[i].create_dicom_contour_data(i)
-            roi_contours.RefdROINumber = str(i + 1)
-            roi_contours.ReferencedROINumber = str(i + 1)
-
-            roi_structure_roi = self.vois[i].create_dicom_structure_roi()
-            roi_structure_roi.ROINumber = str(i + 1)
+        for voi in self.vois:
+            roi_structure_roi = voi.create_dicom_structure_roi()
 
             # (3006, 0024) Referenced Frame of Reference UID   (UI)
-            roi_structure_roi.ReferencedFrameOfReferenceUID = rt_ref_frame_study_data.FrameOfReferenceUID
+            # Uniquely identifies Frame of Reference in which ROI is defined,
+            # specified by Frame of Reference UID (0020,0052) in Referenced Frame of Reference Sequence (3006,0010).
+            roi_structure_roi.ReferencedFrameOfReferenceUID = \
+                ds.ReferencedFrameOfReferenceSequence[0].FrameOfReferenceUID
+
             roi_structure_roi_list.append(roi_structure_roi)
+
+        # sort items in StructureSetROISequence according to the order as they appear in the original DICOM file
+        # here ROI parameters other than its number will be updated
+        # if DICOM was never loaded, no sorting will be done
+        sorted_roi_structure_roi_list = []
+
+        # loop over ROIs imported from DICOM
+        for dicom_imported_roi in struct_data_dataset.get(Tag('StructureSetROISequence'), {}):
+
+            # check list of ROIs with the same number present in DICOM imported data
+            matched_roi = [item for item in roi_structure_roi_list if item.ROINumber == dicom_imported_roi.ROINumber]
+
+            # if ROI with the same number was present in DICOM let us add it to the sorted sequence
+            # and update its tags with values stored in the DICOM imported ROI
+            if matched_roi:
+                for tag in ['ROIGenerationAlgorithm', 'ROIDescription', 'ROIVolume', 'ROIGenerationAlgorithm',
+                            'ROIName']:
+                    if Tag(tag) in dicom_imported_roi:
+                        matched_roi[0][tag] = dicom_imported_roi[tag]
+                sorted_roi_structure_roi_list.append(matched_roi[0])
+                roi_structure_roi_list.remove(matched_roi[0])
+        sorted_roi_structure_roi_list.extend(roi_structure_roi_list)
+
+        # Tag (3006,0020) Required
+        # ROIs for current Structure Set.
+        ds.StructureSetROISequence = Sequence(sorted_roi_structure_roi_list)
+
+        # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+        for tag in ['ImplementationClassUID', 'ImplementationVersionName', 'MediaStorageSOPInstanceUID']:
+            if Tag(tag) in struct_header_dataset:
+                ds.file_meta[tag] = struct_header_dataset[tag]
+
+        for tag in ['InstanceCreationDate', 'InstanceCreationTime', 'StudyDate', 'StudyTime', 'AccessionNumber',
+                    'Manufacturer', 'ReferringPhysicianName', 'StudyDescription', 'SeriesDescription',
+                    'OperatorsName', 'ManufacturerModelName', 'PatientName', 'PatientID', 'PatientBirthDate',
+                    'PatientSex', 'SoftwareVersions', 'FrameOfReferenceUID', 'PositionReferenceIndicator',
+                    'StructureSetLabel', 'StructureSetDate', 'StructureSetTime', 'SOPInstanceUID', 'StudyInstanceUID',
+                    'SeriesInstanceUID', 'StudyID', 'ApprovalStatus']:
+            if Tag(tag) in struct_data_dataset:
+                ds[tag] = struct_data_dataset[tag]
+
+        # ROI Contour Module
+        # In general, a ROI can be defined by either a sequence of overlays or a sequence of contours.
+        # This Module, if present, is used to define the ROI as a set of contours.
+        # Each ROI contains a sequence of one or more contours,
+        # where a contour is either a single point (for a point ROI) or
+        # more than one point (representing an open or closed polygon).
+
+        # ROIContourSequence [like sequence of Vois]
+        #   -> RecommendedDisplayGrayscaleValue
+        #   -> RecommendedDisplayCIELabValue
+        #   -> ROIDisplayColor
+        #   -> ReferencedROINumber (Required)
+        #   -> ContourSequence [like sequence of Slices]
+        #     -> ContourGeometricType
+        #     -> ContourSlabThickness
+        #     -> ContourOffsetVector
+        #     -> NumberOfContourPoints (Required)
+        #     -> ContourNumber
+        #     -> AttachedContours
+        #     -> ContourData (Required)
+        #     -> ContourImageSequence
+        #       -> ReferencedSOPClassUID (Required)
+        #       -> ReferencedSOPInstanceUID (Required) [uniquely identifies CT slice]
+        #       -> ReferencedFrameNumber (Conditionally Required)
+        #       -> ReferencedSegmentNumber (Conditionally Required)
+
+        # uid_mapping may be extracted from a CT data, if not available a RTSTRUCT data can be used
+        uid_mapping = {}
+        for slice_ds in ct_data_dataset.values():
+            uid_mapping[slice_ds.SliceLocation] = slice_ds.SOPInstanceUID
+
+        roi_datasets = []
+        for i, voi in enumerate(self.vois):
+            contour_dataset = voi.create_dicom_contour_data(i, uid_mapping)
+
+            # Tag (3006,0084)
+            # Uniquely identifies the referenced ROI described in the Structure Set ROI Sequence (3006,0020).
+            contour_dataset.ReferencedROINumber = voi.number
+
+            roi_datasets.append(contour_dataset)
+
+        sorted_roi_datasets = []
+        # loop over ROIs imported from DICOM
+        for dicom_imported_roi in struct_data_dataset.get(Tag('ROIContourSequence'), {}):
+
+            # check list of ROIs with the same number present in DICOM imported data
+            matched_roi = [_roi for _roi in roi_datasets if
+                           _roi.ReferencedROINumber == dicom_imported_roi.ReferencedROINumber]
+
+            # if ROI with the same number was present in DICOM let us add it to the sorted sequence
+            # and update its tags with values stored in the DICOM imported ROI
+            if matched_roi:
+
+                # update DICOM data in each ROI
+                for tag in ['ROIDisplayColor', 'RecommendedDisplayGrayscaleValue', 'RecommendedDisplayCIELabValue']:
+                    if Tag(tag) in dicom_imported_roi:
+                        matched_roi[0][tag] = dicom_imported_roi[tag]
+
+                # update DICOM data in each contour
+                for dicom_imported_contour in dicom_imported_roi.get(Tag('ContourSequence'), {}):
+                    # check list of contours with the same data
+                    matched_contour = None
+                    for _contour in matched_roi[0].get('ContourSequence', []):
+                        skip = False
+                        if Tag('ContourGeometricType') in dicom_imported_contour and \
+                                dicom_imported_contour.ContourGeometricType != _contour.ContourGeometricType:
+                            skip = True
+                        if Tag('NumberOfContourPoints') in dicom_imported_contour and \
+                                dicom_imported_contour.NumberOfContourPoints != _contour.NumberOfContourPoints:
+                            skip = True
+                        if Tag('ContourImageSequence') in dicom_imported_contour and \
+                                dicom_imported_contour.ContourImageSequence[0].ReferencedSOPInstanceUID \
+                                != _contour.ContourImageSequence[0].ReferencedSOPInstanceUID:
+                            skip = True
+                        if not skip:
+                            matched_contour = _contour
+                    if matched_contour:
+                        # update DICOM data in each Contour
+                        for tag in ['ContourNumber', ]:
+                            if Tag(tag) in dicom_imported_contour:
+                                matched_contour[tag] = dicom_imported_contour[tag]
+
+                def sorting_key(dataset):
+                    for j, cs in enumerate(dicom_imported_roi.get('ContourSequence', [])):
+                        if dataset.ContourImageSequence[0].ReferencedSOPInstanceUID == \
+                                cs.ContourImageSequence[0].ReferencedSOPInstanceUID:
+                            return j
+                    return -1
+                matched_roi[0].ContourSequence.sort(key=sorting_key)
+
+                sorted_roi_datasets.append(matched_roi[0])
+                roi_datasets.remove(matched_roi[0])
+        sorted_roi_datasets.extend(roi_datasets)
+
+        # Tag (3006,0039) Required
+        # Sequence of Contour Sequences defining ROIs.
+        ds.ROIContourSequence = Sequence(sorted_roi_datasets)
+
+        roi_label_list = []
+        for i, voi in enumerate(self.vois):
+            roi_label = voi.create_dicom_label()
+
+            # Tag (3006,0082) Required
+            # Identification number of the Observation.
+            # The value of Observation Number (3006,0082) shall be unique
+            # within the RT ROI Observations Sequence (3006,0080).
+            roi_label.ObservationNumber = voi.number
+
+            # Tag (3006,0084) Required
+            # Uniquely identifies the referenced ROI described in the Structure Set ROI Sequence (3006,0020).
+            roi_label.ReferencedROINumber = voi.number
+
             roi_label_list.append(roi_label)
-            roi_data_list.append(roi_contours)
-        ds.RTROIObservations = Sequence(roi_label_list)
-        ds.ROIContours = Sequence(roi_data_list)
-        ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+
+        for dicom_imported_observation in struct_data_dataset.get(Tag('RTROIObservationsSequence'), {}):
+
+            matched_observation = None
+            for observation in roi_label_list:
+                skip = False
+                if observation.ReferencedROINumber != dicom_imported_observation.ReferencedROINumber:
+                    skip = True
+                # if Tag('ROIObservationLabel') in dicom_imported_observation and \
+                #         dicom_imported_observation.ROIObservationLabel != observation.ROIObservationLabel:
+                #     skip = True
+                if not skip:
+                    matched_observation = observation
+            if matched_observation:
+                # update DICOM data in each Contour
+                for tag in ['ObservationNumber', 'RTROIInterpretedType', 'ROIInterpreter']:
+                    if Tag(tag) in dicom_imported_observation:
+                        matched_observation[tag] = dicom_imported_observation[tag]
+
+        # RT ROI Observations Module
+        # The RT ROI Observations Module specifies the identification and interpretation of an ROI specified
+        # in the This module and ROI Contour Module.
+        # Tag (3006,0080) Required
+        # Sequence of observations related to ROIs defined in the ROI Module.
+        ds.RTROIObservationsSequence = Sequence(roi_label_list)
+
+        def observation_sorting_key(dataset):
+            for j, cs in enumerate(struct_data_dataset.get(Tag('RTROIObservationsSequence'), [])):
+                if int(dataset.ObservationNumber) == int(cs.ObservationNumber):
+                    return j
+            return -1
+        ds.RTROIObservationsSequence.sort(key=observation_sorting_key)
+
         return ds
 
     def write_dicom(self, directory):
@@ -581,7 +889,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -616,6 +924,7 @@ class Voi:
     def __init__(self, name, cube=None):
         self.cube = cube
         self.name = name
+        self.number = 0
         self.is_concated = False
         self.type = 90
         self.slices = []
@@ -634,6 +943,7 @@ class Voi:
         out += "   Voi\n"
         out += "----------------------------------------------------------------------------\n"
         out += "|   Name                                : '{:s}'\n".format(self.name)
+        out += "|   Number                              : '{:d}'\n".format(self.number)
         out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
         out += "|   Type                                : {:d}\n".format(self.type)
         out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
@@ -643,17 +953,13 @@ class Voi:
 
         return out
 
-    def create_copy(self, margin=0):
+    def create_copy(self):
         """
         Returns an independent copy of the Voi object
 
-        :param margin: (unused)
         :returns: a deep copy of the Voi object
         """
-        voi = copy.deepcopy(self)
-        if margin != 0:
-            pass
-        return voi
+        return copy.deepcopy(self)
 
     def get_voi_cube(self, level=1000, recalc=False):
         """
@@ -869,8 +1175,17 @@ class Voi:
         :returns: a Dicom ROI_LABEL
         """
         roi_label = Dataset()
+
+        # Tag (3006,0085) Optional
+        # User-defined label for ROI Observation.
         roi_label.ROIObservationLabel = self.name
+
+        # Tag (3006,00A4) Required, Empty if Unknown
+        # Type of ROI. RT ROI Interpreted Type (3006,00A4) shall describe the class of ROI (e.g., CTV, PTV).
+        # Individual instances of each class of structure (e.g., CTV1, CTV2)
+        # can be distinguished using ROI Observation Label
         roi_label.RTROIInterpretedType = self.get_roi_type_name(self.type)
+
         return roi_label
 
     def create_dicom_structure_roi(self):
@@ -880,27 +1195,40 @@ class Voi:
         """
         roi = Dataset()
         roi.ROIName = self.name
+        roi.ROINumber = self.number
+        roi.ROIGenerationAlgorithm = 'MANUAL'
         return roi
 
-    def create_dicom_contour_data(self, i):
+    def create_dicom_contour_data(self, i, uid_mapping={}):
         """
         Based on self.slices, DICOM contours are generated for the DICOM ROI.
+        Responsible for generating an item in ContourSequence
 
         :returns: Dicom ROI_CONTOURS
         """
-        roi_contours = Dataset()
+
+        # ROIContourSequence [like sequence of Vois]
+        #   -> RecommendedDisplayGrayscaleValue
+        #   -> RecommendedDisplayCIELabValue
+        #   -> ROIDisplayColor
+        #   -> ReferencedROINumber (Required)
+        #   -> ContourSequence [like sequence of Slices]
+        #     -> (...)
+
         contours = []
-
-        dcmcube = None
-        if self.cube is not None:
-            dcmcube = self.cube.create_dicom()
-
         for _slice in self.slices:
-            logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
-            contours.extend(_slice.create_dicom_contours(dcmcube))
+            # logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
+            contours.extend(_slice.create_dicom_contours(uid_mapping))
 
-        roi_contours.Contours = Sequence(contours)
+        roi_contours = Dataset()
+
+        # Tag (3006,002A) 3 x Integer String (IS)
+        # RGB triplet color representation for ROI, specified using the range 0-255.
         roi_contours.ROIDisplayColor = self.get_color(i)
+
+        # Tag (3006,0040)
+        # Sequence of Contours defining ROI.
+        roi_contours.ContourSequence = Sequence(contours)
 
         return roi_contours
 
@@ -1028,6 +1356,76 @@ class Voi:
         """
         :returns: The type name of the ROI.
         """
+
+        # EXTERNAL
+        # external patient contour
+        #
+        # PTV
+        # Planning Target Volume (as defined in [ICRU Report 50])
+        #
+        # CTV
+        # Clinical Target Volume (as defined in [ICRU Report 50])
+        #
+        # GTV
+        # Gross Tumor Volume (as defined in [ICRU Report 50])
+        #
+        # TREATED_VOLUME
+        # Treated Volume (as defined in [ICRU Report 50])
+        #
+        # IRRAD_VOLUME
+        # Irradiated Volume (as defined in [ICRU Report 50])
+        #
+        # BOLUS
+        # patient bolus to be used for external beam therapy
+        #
+        # AVOIDANCE
+        # region in which dose is to be minimized
+        #
+        # ORGAN
+        # patient organ
+        #
+        # MARKER
+        # patient marker or marker on a localizer
+        #
+        # REGISTRATION
+        # registration ROI
+        #
+        # ISOCENTER
+        # treatment isocenter to be used for external beam therapy
+        #
+        # CONTRAST_AGENT
+        # volume into which a contrast agent has been injected
+        #
+        # CAVITY
+        # patient anatomical cavity
+        #
+        # BRACHY_CHANNEL
+        # brachytherapy channel
+        #
+        # BRACHY_ACCESSORY
+        # brachytherapy accessory device
+        #
+        # BRACHY_SRC_APP
+        # brachytherapy source applicator
+        #
+        # BRACHY_CHNL_SHLD
+        # brachytherapy channel shield
+        #
+        # SUPPORT
+        # external patient support device
+        #
+        # FIXATION
+        # external patient fixation or immobilization device
+        #
+        # DOSE_REGION
+        # ROI to be used as a dose reference
+        #
+        # CONTROL
+        # ROI to be used in control of dose optimization and calculation
+        #
+        # DOSE_MEASUREMENT
+        # ROI representing a dose measurement device, such as a chamber or TLD
+
         if type_id == 10:
             return "EXTERNAL"
         elif type_id == 2:
@@ -1141,7 +1539,7 @@ class Voi:
 
     def get_row_intersections(self, pos):
         """
-        For a given postion pos, returns a sorted list of x-coordinates where the y-coordinate intersects the contours.
+        For a given position pos, returns a sorted list of x-coordinates where the y-coordinate intersects the contours.
 
         :param pos: a 3D position in the form [x,y,z] (mm)
         :returns: a sorted list of all x coordinates of all contours intersecting with the contours.
@@ -1158,8 +1556,8 @@ class Voi:
         """
         Finds and returns a slice object found at position z [mm] (float).
 
-        :param float z: slice position in absolute coordiantes (i.e. including any offsets)
-        :returns: VOI slice at position z, z position may be approxiamte
+        :param float z: slice position in absolute coordinates (i.e. including any offsets)
+        :returns: VOI slice at position z, z position may be approximate
         """
 
         _slice = [item for item in self.slices if np.isclose(item.get_position(), z, atol=item.thickness * 0.5)]
@@ -1304,7 +1702,7 @@ class Slice:
             elif line.startswith("thickness"):
                 items = line.split()
                 self.thickness = float(items[1])
-                logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
+                # logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
 
                 if len(items) == 7:
                     self.start_pos = float(items[4])
@@ -1357,39 +1755,79 @@ class Slice:
 
         return i
 
-    def create_dicom_contours(self, dcmcube):
+    def create_dicom_contours(self, uid_mapping={}):
         """
         Creates and returns a list of Dicom CONTOUR objects from self.
 
-        :param dcmcube: TODO write me
+        Responsible of create individual dataset added later to ContourSequence
+
+        :param uid_mapping: dictionary mapping slice position (in mm) to slice UIDs
         """
+
+        # ROIContourSequence [like sequence of Vois]
+        #   -> (...)
+        #   -> ContourSequence [like sequence of Slices]
+        #     -> ContourGeometricType
+        #     -> ContourSlabThickness
+        #     -> ContourOffsetVector
+        #     -> NumberOfContourPoints (Required)
+        #     -> ContourNumber
+        #     -> AttachedContours
+        #     -> ContourData (Required)
+        #     -> ContourImageSequence [single item in a sequence !]
+        #       -> ReferencedSOPClassUID (Required)
+        #       -> ReferencedSOPInstanceUID (Required)
+        #       -> ReferencedFrameNumber (Conditionally Required)
+        #       -> ReferencedSegmentNumber (Conditionally Required)
 
         # in order to get DICOM readable by Eclipse we need to connect each contour with CT slice
         # CT slices are identified by SOPInstanceUID
         # first we assume some default value if we cannot figure out CT slice info (i.e. CT cube is not loaded)
         ref_sop_instance_uid = '1.2.3'
 
-        # then we check if CT cube is loaded
-        if dcmcube is not None:
-            candidates = [dcm for dcm in dcmcube if np.isclose(dcm.SliceLocation, self.get_position())]
-            if len(candidates) > 0:
-                # finally we extract CT slice SOP Instance UID
-                ref_sop_instance_uid = candidates[0].SOPInstanceUID
+        # TODO polish this approach, it looks isclose written in following way is much faster than np.isclose
+        rtol = 1.e-5
+        atol = 1.e-8
+        instance_uid_candidate = [_uid for z_mm, _uid in uid_mapping.items() if
+                                  abs(z_mm - self.get_position()) < atol + rtol * z_mm]
+        if instance_uid_candidate:
+            ref_sop_instance_uid = instance_uid_candidate[0]
 
         contour_list = []
         for item in self.contours:
+
             con = Dataset()
             contour = []
             for p in item.contour:
                 contour.extend([p[0], p[1], p[2]])
+
+            # Tag (3006,0050) Required
+            # Sequence of (x,y,z) triplets defining a contour in the Patient-Based Coordinate System (mm)
             con.ContourData = contour
-            con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = item.number_of_points()
-            cont_image_item = Dataset()
-            cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
-            cont_image_item.ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
-            con.ContourImageSequence = Sequence([cont_image_item])
+
+            # Tag (3006,0042) Required
+            # Geometric type of contour.
+            #   POINT - single point
+            #   OPEN_PLANAR - open contour containing coplanar points
+            #   OPEN_NONPLANAR - open contour containing non-coplanar points
+            #   CLOSED_PLANAR - closed contour (polygon) containing coplanar points
+            if item.number_of_points() == 1:
+                con.ContourGeometricType = 'POINT'
+            else:
+                con.ContourGeometricType = 'CLOSED_PLANAR'
+
+            # Tag (3006,0046)
+            # Number of points (triplets) in Contour Data (3006,0050).
+            con.NumberOfContourPoints = item.number_of_points()
+
+            # Tag (3006,0016)
+            # Sequence of images containing the contour.
+            con.ContourImageSequence = Sequence([Dataset()])
+            con.ContourImageSequence[0].ReferencedSOPClassUID = CTImageStorage
+            con.ContourImageSequence[0].ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
+
             contour_list.append(con)
+
         return contour_list
 
     def vdx_string(self):
@@ -1487,13 +1925,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:

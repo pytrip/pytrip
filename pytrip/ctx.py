@@ -72,7 +72,7 @@ class CtxCube(Cube):
             self.cube = self.cube[::-1]
         print("Input Cube Pixel", self.cube.flatten()[0])
 
-    def create_dicom(self):
+    def create_dicom(self, include_pixel_data=True):
         """ Creates a Dicom object from self.
 
         This function can be used to convert a TRiP98 CTX file to Dicom format.
@@ -124,8 +124,9 @@ class CtxCube(Cube):
 
         from pydicom import uid
         data = []  # list of DICOM objects with data specific to the slice
+        memo = {}
         for i in range(len(self.cube)):
-            _ds = copy.deepcopy(ds)
+            _ds = copy.deepcopy(ds, memo=memo)
 
             _ds.InstanceNumber = str(i + 1)
 
@@ -182,10 +183,11 @@ class CtxCube(Cube):
                                         "{:.3f}".format(self.yoffset),
                                         "{:.3f}".format(self.slice_pos[i])]
 
-            pixel_array_tmp = np.subtract(self.cube[i][:][:], _ds.RescaleIntercept, casting='safe')
-            pixel_array_tmp /= _ds.RescaleSlope
-            pixel_array = pixel_array_tmp.astype(self.pydata_type)
-            _ds.PixelData = pixel_array.tostring()
+            if include_pixel_data:
+                pixel_array_tmp = np.subtract(self.cube[i][:][:], _ds.RescaleIntercept, casting='safe')
+                pixel_array_tmp /= _ds.RescaleSlope
+                pixel_array = pixel_array_tmp.astype(self.pydata_type)
+                _ds.PixelData = pixel_array.tostring()
 
             data.append(_ds)
         print("Output raw pixel", data[0].pixel_array.flatten()[0])

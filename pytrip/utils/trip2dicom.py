@@ -44,9 +44,11 @@ def main(args=sys.argv[1:]):
     if parsed_args.verbosity == 1:
         logging.basicConfig(level=logging.INFO)
     elif parsed_args.verbosity > 1:
-        logging.basicConfig(format='%(asctime)s,%(msecs)d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
-                            datefmt='%Y-%m-%d:%H:%M:%S',
-                            level=logging.DEBUG)
+        logging.basicConfig(
+            format='%(asctime)s,%(msecs)d _%(relativeCreated)d_ %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
+            datefmt='%Y-%m-%d:%H:%M:%S',
+            level=logging.DEBUG
+        )
     else:
         logging.basicConfig()
 
@@ -62,7 +64,8 @@ def main(args=sys.argv[1:]):
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    c.write_dicom(output_dir)
+    # c.write_dicom(output_dir)
+    print("Not writing CT DICOMs (for debugging purpose)")
 
     ctx_dirname = os.path.dirname(parsed_args.ctx_data)
     ctx_path = os.path.join(ctx_dirname, c.basename + ".vdx")

@@ -440,8 +440,11 @@ class Cube(object):
             raise Exception("More than two arguments provided as path variable to Cube.read method")
 
         # finally read files
+        logger.debug("Preparing to read header data from {}".format(header_path))
         self._read_trip_header_file(header_path=header_path)
+        logger.debug("Preparing to read payload data from {} (header {})".format(datafile_path, header_path))
         self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
+        logger.debug("Reading finished")
 
     def _read_trip_header_file(self, header_path):  # TODO: could be made private? #126
         """ Reads a header file, accepts also if file is .gz compressed.
@@ -539,6 +542,7 @@ class Cube(object):
         self.z_table = False
         dicom_str = []
 
+        logger.debug("Trip header parsing started")
         while i < len(content):
             if re.match("version", content[i]):
                 self.version = content[i].split()[1]
@@ -591,6 +595,7 @@ class Cube(object):
             if re.match("#@", content[i]):
                 dicom_str.append(content[i])
             i += 1
+        logger.debug("Trip header loop parsing stopped")
 
         # zoffset from TRiP contains the integer amount of slice thicknesses as offset.
         # Here we convert to an actual offset in mm, which is stored in self
@@ -609,8 +614,11 @@ class Cube(object):
         self._set_format_str()
 
         if dicom_str:
+            logger.debug("DICOM data detected in parsed header")
             if not hasattr(self, 'dicom_data'):
+                logger.debug("DICOM not included in the cube, adding")
                 self.dicom_data = AccompanyingDicomData()
+                logger.debug("accompanying DICOM data object created")
             self.dicom_data.from_comment(dicom_str)
 
     def _set_format_str(self):
@@ -1173,7 +1181,9 @@ class AccompanyingDicomData:
 
         return result
 
+#    @jit
     def from_comment(self, parsed_str):
+        logger.debug("Starting to parse DICOM comment data")
 
         re_exp = "#@(?P<type>.+)@ line (?P<line_no>.+) \/ (?P<line_total>.+) : (?P<content>.+)"  # NOQA: W605
         regex = re.compile(re_exp)
@@ -1184,8 +1194,12 @@ class AccompanyingDicomData:
             if match:
                 content_by_type[match.group('type')].append(match.group('content').replace('\'', '\"'))
 
+        logger.debug("Stopped to parse DICOM comment data")
+
         if 'CT' in content_by_type:
+            logger.debug("Restructuring CT data, JSON loading")
             ct_dicts = json.loads("\n".join(content_by_type['CT']))
+            logger.debug("Restructuring CT data, JSON loaded")
             if ct_dicts['data']['specific']:
                 self.data_datasets[self.DataType.CT] = {}
             for instance_id, dataset_dict in ct_dicts['data']['specific'].items():
@@ -1193,6 +1207,8 @@ class AccompanyingDicomData:
                 self.data_datasets[self.DataType.CT][instance_id].update(
                     Dataset().from_json(ct_dicts['data']['common'])
                 )
+
+            logger.debug("data dictionaries loaded {}".format(len(ct_dicts['data']['specific'])))
 
             if ct_dicts['header']['specific']:
                 self.headers_datasets[self.DataType.CT] = {}
@@ -1202,13 +1218,16 @@ class AccompanyingDicomData:
                 self.headers_datasets[self.DataType.CT][instance_id].update(
                     Dataset().from_json(ct_dicts['header']['common'])
                 )
+            logger.debug("header dictionaries loaded")
 
         if 'Struct' in content_by_type:
+            logger.debug("Restructuring Struct data, JSON loading")
             struct_dicts = json.loads("\n".join(content_by_type['Struct']))
             self.headers_datasets[self.DataType.Struct] = Dataset().from_json(struct_dicts['header'])
             self.data_datasets[self.DataType.Struct] = Dataset().from_json(struct_dicts['data'])
 
         if 'Dose' in content_by_type:
+            logger.debug("Restructuring Dose data, JSON loading")
             dose_dicts = json.loads("\n".join(content_by_type['Dose']))
             self.headers_datasets[self.DataType.Dose] = Dataset().from_json(dose_dicts['header'])
             self.data_datasets[self.DataType.Dose] = Dataset().from_json(dose_dicts['data'])
