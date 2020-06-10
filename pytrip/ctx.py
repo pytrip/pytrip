@@ -143,6 +143,7 @@ class CtxCube(Cube):
             current_ct_data_dataset = all_ct_data_datasets.get(str(_ds.InstanceNumber), {})
 
             # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+
             for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionNumber', 'AcquisitionTime', 'BitsStored',
                         'BodyPartExamined', 'CTDIPhantomTypeCodeSequence', 'CTDIvol', 'CalciumScoringMassFactorDevice',
                         'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime', 'ConvolutionKernel',
@@ -167,7 +168,6 @@ class CtxCube(Cube):
                         'XRayTubeCurrent']:
                 if Tag(tag) in current_ct_data_dataset:
                     _ds[tag] = current_ct_data_dataset[tag]
-
             # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
             if Tag('SOPInstanceUID') in current_ct_data_dataset:
                 _ds.SOPInstanceUID = current_ct_data_dataset.SOPInstanceUID
@@ -179,9 +179,12 @@ class CtxCube(Cube):
             else:
                 _ds.SliceLocation = str(self.slice_pos[i])
 
-            _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
-                                        "{:.3f}".format(self.yoffset),
-                                        "{:.3f}".format(self.slice_pos[i])]
+            if Tag('ImagePositionPatient') in current_ct_data_dataset:
+                _ds.ImagePositionPatient = current_ct_data_dataset.ImagePositionPatient
+            else:
+                _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
+                                            "{:.3f}".format(self.yoffset),
+                                            "{:.3f}".format(self.slice_pos[i])]
 
             if include_pixel_data:
                 pixel_array_tmp = np.subtract(self.cube[i][:][:], _ds.RescaleIntercept, casting='safe')
