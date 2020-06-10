@@ -22,10 +22,11 @@ It is used for handling CT-data, both Voxelplan and Dicom.
 """
 import os
 import datetime
-import copy
 import logging
 
 import numpy as np
+
+from pydicom import Dataset, FileDataset
 from pydicom.tag import Tag
 
 from pytrip.error import InputError
@@ -124,19 +125,22 @@ class CtxCube(Cube):
 
         from pydicom import uid
         data = []  # list of DICOM objects with data specific to the slice
-        memo = {}
+
+        meta = Dataset()
+        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
+        meta.ImplementationClassUID = "1.2.3.4"
+        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+
         for i in range(len(self.cube)):
-            _ds = copy.deepcopy(ds, memo=memo)
+
+            # a copy of dataset
+            _ds = Dataset()
+            _ds.update(ds)
 
             _ds.InstanceNumber = str(i + 1)
 
             current_ct_header_dataset = all_ct_header_datasets.get(str(_ds.InstanceNumber), {})
             current_ct_data_dataset = all_ct_data_datasets.get(str(_ds.InstanceNumber), {})
-
-            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
-            for tag in ['ImplementationClassUID', 'ImplementationVersionName', 'MediaStorageSOPInstanceUID']:
-                if Tag(tag) in current_ct_header_dataset:
-                    _ds.file_meta[tag] = current_ct_header_dataset[tag]
 
             # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
             for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionNumber', 'AcquisitionTime', 'BitsStored',
@@ -170,10 +174,6 @@ class CtxCube(Cube):
             else:
                 _ds.SOPInstanceUID = uid.generate_uid(prefix=None)
 
-            # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
-            if Tag('MediaStorageSOPInstanceUID') not in _ds.file_meta:
-                _ds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
-
             if Tag('SliceLocation') in current_ct_data_dataset:
                 _ds.SliceLocation = current_ct_data_dataset.SliceLocation
             else:
@@ -189,8 +189,19 @@ class CtxCube(Cube):
                 pixel_array = pixel_array_tmp.astype(self.pydata_type)
                 _ds.PixelData = pixel_array.tostring()
 
-            data.append(_ds)
-        print("Output raw pixel", data[0].pixel_array.flatten()[0])
+            fds = FileDataset("file", _ds, file_meta=meta, preamble=b"\0" * 128)
+
+            # Media Storage SOP Instance UID tag 0x0002,0x0003 (type UI - Unique Identifier)
+            if Tag('MediaStorageSOPInstanceUID') not in fds.file_meta:
+                fds.file_meta.MediaStorageSOPInstanceUID = _ds.SOPInstanceUID
+
+            # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
+            for tag in ['ImplementationClassUID', 'ImplementationVersionName', 'MediaStorageSOPInstanceUID']:
+                if Tag(tag) in current_ct_header_dataset:
+                    fds.file_meta[tag] = current_ct_header_dataset[tag]
+
+            data.append(fds)
+
         return data
 
     def write_dicom(self, directory):
@@ -204,4 +215,6 @@ class CtxCube(Cube):
 
         dcm_list = self.create_dicom()
         for dcm_item in dcm_list:
-            dcm_item.save_as(os.path.join(directory, "CT.PYTRIP.{:d}.dcm".format(dcm_item.InstanceNumber)))
+            output_filename = "CT.PYTRIP.{:d}.dcm".format(dcm_item.InstanceNumber)
+            logger.info("Saving {}".format(output_filename))
+            dcm_item.save_as(os.path.join(directory, output_filename))

@@ -64,15 +64,14 @@ def main(args=sys.argv[1:]):
 
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    # c.write_dicom(output_dir)
-    print("Not writing CT DICOMs (for debugging purpose)")
+    c.write_dicom(output_dir)
 
     ctx_dirname = os.path.dirname(parsed_args.ctx_data)
-    ctx_path = os.path.join(ctx_dirname, c.basename + ".vdx")
-    if os.path.exists(ctx_path):
+    vdx_path = os.path.join(ctx_dirname, c.basename + ".vdx")
+    if os.path.exists(vdx_path):
         logger.info("Convert VDX structures...")
         v = pt.VdxCube(cube=c)
-        v.read(ctx_path)
+        v.read(vdx_path)
         v.write_dicom(output_dir)
     else:
         logger.info("No VDX data found for conversion.")

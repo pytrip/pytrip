@@ -34,9 +34,8 @@ from enum import Enum
 
 import numpy as np
 
-from pydicom import uid
 from pydicom.datadict import dictionary_description, dictionary_keyword, dictionary_has_tag
-from pydicom.dataset import Dataset, FileDataset
+from pydicom.dataset import Dataset
 from pydicom.tag import Tag
 
 from pytrip.error import InputError, FileNotFound
@@ -912,16 +911,7 @@ class Cube(object):
         if self.header_set is False:
             raise InputError("Header not loaded")
 
-        # TODO tags + code datatypes are described here:
-        # https://www.dabsoft.ch/dicom/6/6/#(0020,0012)
-        # datatype codes are described here:
-        # ftp://dicom.nema.org/medical/DICOM/2013/output/chtml/part05/sect_6.2.html
-
-        meta = Dataset()
-        meta.MediaStorageSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
-        meta.ImplementationClassUID = "1.2.3.4"
-        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
-        ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
+        ds = Dataset()
         ds.PatientName = self.patient_name
         if self.patient_id in (None, ''):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
