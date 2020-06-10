@@ -1789,7 +1789,7 @@ class Slice:
         rtol = 1.e-5
         atol = 1.e-8
         instance_uid_candidate = [_uid for z_mm, _uid in uid_mapping.items() if
-                                  abs(z_mm - self.get_position()) < atol + rtol * z_mm]
+                                  abs(z_mm - self.get_position()) < atol + rtol * abs(z_mm)]
         if instance_uid_candidate:
             ref_sop_instance_uid = instance_uid_candidate[0]
 
