@@ -286,7 +286,9 @@ class VdxCube:
         dicom_data = getattr(ctx_cube, 'dicom_data', {})
         data_datasets = getattr(dicom_data, 'data_datasets', {})
         struct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.Struct, {})
+        ct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
 
+        # update voi number based on DICOM data
         structure_set_roi_sequence = struct_data_dataset.get(Tag('StructureSetROISequence'), [])
         dicom_voi_names = set([item.ROIName for item in structure_set_roi_sequence])
         if structure_set_roi_sequence and (structure_set_roi_sequence.VM == self.number_of_vois()):
@@ -295,6 +297,25 @@ class VdxCube:
                     matched_item = [item for item in structure_set_roi_sequence if item.ROIName == voi.name]
                     if matched_item:
                         voi.number = matched_item[0].ROINumber
+
+        # update contour offsets based on DICOM data
+        # uid_mapping may be extracted from a CT data, if not available a RTSTRUCT data can be used
+        location_mapping = {}
+        for slice_ds in ct_data_dataset.values():
+            location_mapping[slice_ds.SliceLocation] = slice_ds.ImagePositionPatient
+        for voi in self.vois:
+            for slice in voi.slices:
+                rtol = 1.e-5
+                atol = 1.e-8
+                image_pos_candidate = [_uid for z_mm, _uid in location_mapping.items() if
+                                       abs(z_mm - slice.get_position()) < atol + rtol * abs(z_mm)]
+                if image_pos_candidate and self.cube:
+                    for contour in slice.contours:
+                        for point in contour.contour:
+                            point[0] -= self.cube.xoffset
+                            point[1] -= self.cube.yoffset
+                            point[0] += image_pos_candidate[0][0]
+                            point[1] += image_pos_candidate[0][1]
 
     def concat_contour(self):
         """ Loop through all available VOIs and check whether any have multiple contours in a slice.
@@ -1692,7 +1713,6 @@ class Slice:
         :returns: current line number, after parsing the VOI.
         """
         self.thickness = 0.1  # some small default value
-        line = content[i]
         number_of_contours = 0
         i += 1
         while i < len(content):
@@ -1995,6 +2015,8 @@ class Contour:
         set_point = False
         points = 0
         j = 0
+
+        # TODO in case ImagePositionPatient is not a full integer, then we need to recalculate offsets
         while i < len(content):
             line = content[i].strip()
 
