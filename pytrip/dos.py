@@ -25,10 +25,13 @@ import os
 import warnings
 
 import numpy as np
+from pydicom._storage_sopclass_uids import RTIonPlanStorage
+from pydicom.datadict import tag_for_keyword, dictionary_VR
+from pydicom.tag import Tag, BaseTag
 
 try:
     # as of version 1.0 pydicom package import has been renamed from dicom to pydicom
-    from pydicom import uid
+    from pydicom import uid, DataElement
     from pydicom.dataset import Dataset, FileDataset
     from pydicom.sequence import Sequence
     _dicom_loaded = True
@@ -42,7 +45,7 @@ except ImportError:
     except ImportError:
         _dicom_loaded = False
 
-from pytrip.cube import Cube
+from pytrip.cube import Cube, AccompanyingDicomData
 from pytrip.error import InputError
 
 
@@ -64,12 +67,13 @@ class DosCube(Cube):
         # UIDs unique for whole structure set
         # generation of UID is done here in init, the reason why we are not generating them in create_dicom
         # method is that subsequent calls to write method shouldn't changed UIDs
-        if cube is not None:
-            self._dicom_study_instance_uid = cube._dicom_study_instance_uid
-        else:
+        if not cube:
             self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
+
+        self.dicom_data = getattr(cube, "dicom_data", {})
         self._plan_dicom_series_instance_uid = uid.generate_uid(prefix=None)
         self._dose_dicom_series_instance_uid = uid.generate_uid(prefix=None)
+        self._dose_dicom_SOP_instance_uid = uid.generate_uid(prefix=None)
 
     def read_dicom(self, dcm):
         """ Imports the dose distribution from DICOM object.
@@ -172,8 +176,18 @@ class DosCube(Cube):
         meta.MediaStorageSOPInstanceUID = "1.2.3"
         meta.ImplementationClassUID = "1.2.3.4"
         meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
+        if self.cube is not None:
+            ds.PatientName = self.cube.patient_name
+            ds.Manufacturer = self.cube.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
+        else:
+            ds.PatientName = ''
+            ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
+
+
         ds.PatientsName = self.patient_name
+
         if self.patient_id in (None, ''):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
         else:
@@ -226,38 +240,66 @@ class DosCube(Cube):
         if not self.header_set:
             raise InputError("Header not loaded")
 
+
+        headers_datasets = getattr(self.dicom_data, 'headers_datasets', {})
+        ct_header_dataset = headers_datasets.get(AccompanyingDicomData.DataType.CT, {})
+        if ct_header_dataset:
+            first_ct_header = ct_header_dataset.get(list(ct_header_dataset.keys())[0], {})
+        else:
+            first_ct_header = {}
+
+
+        data_datasets = getattr(self.dicom_data, 'data_datasets', {})
+        ct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
+        if ct_data_dataset:
+            first_ct_dataset = ct_data_dataset.get(list(ct_data_dataset.keys())[0], {})
+        else:
+            first_ct_dataset = {}
+
         ds = self.create_dicom_base()
         ds.Modality = 'RTDOSE'
+
         ds.SamplesPerPixel = 1
         ds.BitsAllocated = self.num_bytes * 8
-        ds.BitsStored = self.num_bytes * 8
+        ds.BitsStored = ds.BitsAllocated
+        ds.HighBit = ds.BitsStored - 1
+        print("self.num_bytes", self.num_bytes)
+
+
         ds.AccessionNumber = ''
         ds.SeriesDescription = 'RT Dose'
         ds.DoseUnits = 'GY'
         ds.DoseType = 'PHYSICAL'
-        ds.DoseGridScaling = self.target_dose / 10**5
+
+        if self.pydata_type in {np.float32, np.float64}:
+            ds.DoseGridScaling = 1.0
+        else:
+            print("target dose", self.target_dose)
+            ds.DoseGridScaling = self.target_dose / 1000.0
+
         ds.DoseSummationType = 'PLAN'
-        ds.SliceThickness = ''
+        ds.SliceThickness = self.slice_distance
         ds.InstanceCreationDate = '19010101'
         ds.InstanceCreationTime = '000000'
         ds.NumberOfFrames = len(self.cube)
         ds.PixelRepresentation = 0
         ds.StudyID = '1'
-        ds.SeriesNumber = '14'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
+        ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
         ds.GridFrameOffsetVector = [x * self.slice_distance for x in range(self.dimz)]
         ds.InstanceNumber = ''
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
         ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size), "%.3f" % (self.yoffset * self.pixel_size),
                                    "%.3f" % (self.slice_pos[0])]
+        ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
-        ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'
+        ds.SOPInstanceUID = self._dose_dicom_SOP_instance_uid
 
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
         # self._dicom_study_instance_uid may be either set in __init__ when creating new object
         #   or set when import a DICOM file
         #   Study Instance UID for structures is the same as Study Instance UID for CTs
-        ds.StudyInstanceUID = self._dicom_study_instance_uid
+        # ds.StudyInstanceUID = self._dicom_study_instance_uid
 
         # Series Instance UID tag 0x0020,0x000E (type UI - Unique Identifier)
         # self._dose_dicom_series_instance_uid may be either set in __init__ when creating new object
@@ -266,13 +308,54 @@ class DosCube(Cube):
 
         # Bind to rtplan
         rt_set = Dataset()
-        rt_set.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
-        rt_set.RefdSOPInstanceUID = '1.2.3'
+        rt_set.ReferencedSOPInstanceUID = self._plan_dicom_series_instance_uid
+        rt_set.ReferencedSOPClassUID = RTIonPlanStorage
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
+        print("self.pydata_type", self.pydata_type)
+        print("self.cube.max()", self.cube.max())
+
+        print("max dose", self.cube.max() * ds.DoseGridScaling)
+
+        #index_with_max = np.unravel_index(ds.PixelData, )
+        index_with_max = np.unravel_index(self.cube.argmax(), self.cube.shape)
+        print("imax value", self.cube[index_with_max])
+
+        tags_to_be_imported = [tag_for_keyword(name) for name in
+                               ['StudyDate', 'StudyTime', 'StudyDescription', 'ImageOrientationPatient',
+                                'Manufacturer', 'ReferringPhysicianName', 'Manufacturer', 'ImagePositionPatient',
+                                'FrameOfReferenceUID', 'PositionReferenceIndicator', 'SeriesNumber', 'StudyInstanceUID',
+                                'PatientBirthDate', 'PatientID', 'PatientName']]
+
+        for tag_number, _ in self.dicom_data.ct_datasets_data_common:
+            if tag_number in tags_to_be_imported:
+                ds[tag_number] = first_ct_dataset[tag_number]
+
+        print("self.cube.shape", self.cube.shape)
+        print("nx * ny * nz", self.cube.shape[0] * self.cube.shape[1] * self.cube.shape[2])
+
+
+        if self.pydata_type in (np.int32, ):
+            pass
+
+        print("dtype", pixel_array.dtype)
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
-        return ds
+
+        meta = Dataset()
+        meta.MediaStorageSOPClassUID = RTIonPlanStorage
+        meta.MediaStorageSOPInstanceUID = self._dose_dicom_SOP_instance_uid
+        meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
+
+        tags_to_be_imported = [tag_for_keyword(name) for name in
+                               ['ImplementationClassUID', 'ImplementationVersionName']]
+        for tag_number in self.dicom_data.ct_datasets_header_common:
+            if tag_number in tags_to_be_imported:
+                ds[tag_number] = first_ct_header[tag_number]
+
+        fds = FileDataset("file", ds, file_meta=meta, preamble=b"\0" * 128)
+
+        return fds
 
     def write_dicom(self, directory):
         """ Write Dose-data to disk, in DICOM format.
@@ -283,6 +366,6 @@ class DosCube(Cube):
         :param str directory: Directory where 'rtdose.dcm' and 'trplan.dcm' will be stored.
         """
         dcm = self.create_dicom()
-        plan = self.create_dicom_plan()
-        dcm.save_as(os.path.join(directory, "rtdose.dcm"))
-        plan.save_as(os.path.join(directory, "rtplan.dcm"))
+        # plan = self.create_dicom_plan()
+        dcm.save_as(os.path.join(directory, "rtdose.dcm"), write_like_original=False)
+        # plan.save_as(os.path.join(directory, "rtplan.dcm"))

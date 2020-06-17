@@ -512,6 +512,7 @@ class Cube(object):
                 cube = np.require(tmpcube, dtype=data_dtype, requirements=['W', 'O'])
         else:
             cube = np.fromfile(datafile_path, dtype=data_dtype)
+        print("Reading", datafile_path, "min", cube.min(), "max", cube.max(), "dtype", data_dtype)
 
         if self.byte_order == "aix":
             logger.info("AIX big-endian data.")
