@@ -23,6 +23,7 @@ import datetime
 import logging
 import os
 import warnings
+from builtins import filter
 
 import numpy as np
 from pydicom._storage_sopclass_uids import RTIonPlanStorage
@@ -331,9 +332,19 @@ class DosCube(Cube):
             if tag_number in tags_to_be_imported:
                 ds[tag_number] = first_ct_dataset[tag_number]
 
+        patient_positions = []
+        for ct_ds in ct_data_dataset.values():
+            if 'ImagePositionPatient' in ct_ds:
+                patient_positions.append(ct_ds.ImagePositionPatient)
+        if patient_positions:
+            ds.ImagePositionPatient = patient_positions[0]
+            ds.ImagePositionPatient[2] = min(pos[2] for pos in patient_positions)
+
+        if tag_for_keyword('ImagePositionPatient') in first_ct_dataset:
+            print("first_ct_dataset IPP", first_ct_dataset.ImagePositionPatient)
+
         print("self.cube.shape", self.cube.shape)
         print("nx * ny * nz", self.cube.shape[0] * self.cube.shape[1] * self.cube.shape[2])
-
 
         if self.pydata_type in (np.int32, ):
             pass
