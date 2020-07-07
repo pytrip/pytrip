@@ -60,7 +60,6 @@ class CtxCube(Cube):
             self._set_header_from_dicom(dcm)
 
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=np.int16)
-        print("Input Raw Pixel", dcm["images"][0].pixel_array.flatten()[0])
 
         for i in range(len(dcm["images"])):
             intersect = float(dcm["images"][i].RescaleIntercept)
@@ -71,7 +70,6 @@ class CtxCube(Cube):
             self.slice_pos.reverse()
             self.zoffset = self.slice_pos[0]
             self.cube = self.cube[::-1]
-        print("Input Cube Pixel", self.cube.flatten()[0])
 
     def create_dicom(self, include_pixel_data=True):
         """ Creates a Dicom object from self.

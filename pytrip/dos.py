@@ -23,28 +23,14 @@ import datetime
 import logging
 import os
 import warnings
-from builtins import filter
 
 import numpy as np
-from pydicom._storage_sopclass_uids import RTIonPlanStorage
-from pydicom.datadict import tag_for_keyword, dictionary_VR
-from pydicom.tag import Tag, BaseTag
 
-try:
-    # as of version 1.0 pydicom package import has been renamed from dicom to pydicom
-    from pydicom import uid, DataElement
-    from pydicom.dataset import Dataset, FileDataset
-    from pydicom.sequence import Sequence
-    _dicom_loaded = True
-except ImportError:
-    try:
-        # fallback to old (<1.0) pydicom package version
-        from dicom import UID as uid  # old pydicom had UID instead of uid
-        from dicom.dataset import Dataset, FileDataset
-        from dicom.sequence import Sequence
-        _dicom_loaded = True
-    except ImportError:
-        _dicom_loaded = False
+from pydicom._storage_sopclass_uids import RTIonPlanStorage
+from pydicom.datadict import tag_for_keyword
+from pydicom import uid
+from pydicom.dataset import Dataset, FileDataset
+from pydicom.sequence import Sequence
 
 from pytrip.cube import Cube, AccompanyingDicomData
 from pytrip.error import InputError
@@ -264,7 +250,6 @@ class DosCube(Cube):
         ds.BitsAllocated = self.num_bytes * 8
         ds.BitsStored = ds.BitsAllocated
         ds.HighBit = ds.BitsStored - 1
-        print("self.num_bytes", self.num_bytes)
 
 
         ds.AccessionNumber = ''
@@ -275,7 +260,6 @@ class DosCube(Cube):
         if self.pydata_type in {np.float32, np.float64}:
             ds.DoseGridScaling = 1.0
         else:
-            print("target dose", self.target_dose)
             ds.DoseGridScaling = self.target_dose / 1000.0
 
         ds.DoseSummationType = 'PLAN'
@@ -313,14 +297,7 @@ class DosCube(Cube):
         rt_set.ReferencedSOPClassUID = RTIonPlanStorage
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
-        print("self.pydata_type", self.pydata_type)
-        print("self.cube.max()", self.cube.max())
-
-        print("max dose", self.cube.max() * ds.DoseGridScaling)
-
-        #index_with_max = np.unravel_index(ds.PixelData, )
         index_with_max = np.unravel_index(self.cube.argmax(), self.cube.shape)
-        print("imax value", self.cube[index_with_max])
 
         tags_to_be_imported = [tag_for_keyword(name) for name in
                                ['StudyDate', 'StudyTime', 'StudyDescription', 'ImageOrientationPatient',
@@ -340,16 +317,9 @@ class DosCube(Cube):
             ds.ImagePositionPatient = patient_positions[0]
             ds.ImagePositionPatient[2] = min(pos[2] for pos in patient_positions)
 
-        if tag_for_keyword('ImagePositionPatient') in first_ct_dataset:
-            print("first_ct_dataset IPP", first_ct_dataset.ImagePositionPatient)
-
-        print("self.cube.shape", self.cube.shape)
-        print("nx * ny * nz", self.cube.shape[0] * self.cube.shape[1] * self.cube.shape[2])
-
         if self.pydata_type in (np.int32, ):
             pass
 
-        print("dtype", pixel_array.dtype)
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
 

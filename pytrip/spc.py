@@ -65,7 +65,6 @@ class SPCCollection(object):
         for file in files:
             if file.endswith(".spc"):
                 energy = int(file.split('.')[-2][3:]) / 100
-                print("energy", energy)
                 self.data[energy] = SPC(os.path.join(self.dirname, file))
                 self.data[energy].read_spc()
 

@@ -97,7 +97,6 @@ class LETCube(Cube):
         :param str path: Full path of file to be written.
         """
         lvh, _, _, _, _ = self.calculate_lvh(voi)
-        print(lvh.shape)
         output = ""
         # TODO fix following line
         # lvh has shape (3000,0) and contains only let, not vol
