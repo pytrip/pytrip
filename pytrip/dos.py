@@ -166,8 +166,8 @@ class DosCube(Cube):
 
         ds = FileDataset("file", {}, file_meta=meta, preamble=b"\0" * 128)
         if self.cube is not None:
-            ds.PatientName = self.cube.patient_name
-            ds.Manufacturer = self.cube.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
+            ds.PatientName = self.patient_name
+            ds.Manufacturer = self.creation_info  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
         else:
             ds.PatientName = ''
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
@@ -226,14 +226,15 @@ class DosCube(Cube):
         if not self.header_set:
             raise InputError("Header not loaded")
 
-        headers_datasets = getattr(self.dicom_data, 'headers_datasets', {})
+        dicom_data = getattr(self, 'dicom_data', {})
+        headers_datasets = getattr(dicom_data, 'headers_datasets', {})
         ct_header_dataset = headers_datasets.get(AccompanyingDicomData.DataType.CT, {})
         if ct_header_dataset:
             first_ct_header = ct_header_dataset.get(list(ct_header_dataset.keys())[0], {})
         else:
             first_ct_header = {}
 
-        data_datasets = getattr(self.dicom_data, 'data_datasets', {})
+        data_datasets = getattr(dicom_data, 'data_datasets', {})
         ct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
         if ct_data_dataset:
             first_ct_dataset = ct_data_dataset.get(list(ct_data_dataset.keys())[0], {})
@@ -300,7 +301,8 @@ class DosCube(Cube):
                                 'FrameOfReferenceUID', 'PositionReferenceIndicator', 'SeriesNumber', 'StudyInstanceUID',
                                 'PatientBirthDate', 'PatientID', 'PatientName']]
 
-        for tag_number, _ in self.dicom_data.ct_datasets_data_common:
+        ct_datasets_data_common = getattr(dicom_data, 'ct_datasets_data_common', {})
+        for tag_number, _ in ct_datasets_data_common:
             if tag_number in tags_to_be_imported:
                 ds[tag_number] = first_ct_dataset[tag_number]
 
@@ -312,9 +314,6 @@ class DosCube(Cube):
             ds.ImagePositionPatient = patient_positions[0]
             ds.ImagePositionPatient[2] = min(pos[2] for pos in patient_positions)
 
-        if self.pydata_type in (np.int32, ):
-            pass
-
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
 
@@ -325,7 +324,8 @@ class DosCube(Cube):
 
         tags_to_be_imported = [tag_for_keyword(name) for name in
                                ['ImplementationClassUID', 'ImplementationVersionName']]
-        for tag_number in self.dicom_data.ct_datasets_header_common:
+        ct_datasets_header_common = getattr(dicom_data, 'ct_datasets_header_common', {})
+        for tag_number in ct_datasets_header_common:
             if tag_number in tags_to_be_imported:
                 ds[tag_number] = first_ct_header[tag_number]
 
@@ -339,9 +339,10 @@ class DosCube(Cube):
         This file will save the dose cube and a plan associated with that dose.
         Function call create_dicom() and create_dicom_plan() and then save these.
 
-        :param str directory: Directory where 'rtdose.dcm' and 'trplan.dcm' will be stored.
+        :param str directory: Directory where 'rtdose.dcm' and 'rtplan.dcm' will be stored.
         """
         dcm = self.create_dicom()
-        # plan = self.create_dicom_plan()
         dcm.save_as(os.path.join(directory, "rtdose.dcm"), write_like_original=False)
+        # TODO add support for saving the plan
+        # plan = self.create_dicom_plan()
         # plan.save_as(os.path.join(directory, "rtplan.dcm"))

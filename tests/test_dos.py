@@ -133,9 +133,11 @@ class TestDos(unittest.TestCase):
         outdir = tempfile.mkdtemp()
         c.write_dicom(outdir)
         self.assertTrue(os.path.exists(os.path.join(outdir, "rtdose.dcm")))
-        self.assertTrue(os.path.exists(os.path.join(outdir, "rtplan.dcm")))
         self.assertGreater(os.path.getsize(os.path.join(outdir, "rtdose.dcm")), 0)
-        self.assertGreater(os.path.getsize(os.path.join(outdir, "rtplan.dcm")), 0)
+
+        # RTPLAN generation temporarily disabled
+        #self.assertTrue(os.path.exists(os.path.join(outdir, "rtplan.dcm")))
+        #self.assertGreater(os.path.getsize(os.path.join(outdir, "rtplan.dcm")), 0)
         shutil.rmtree(outdir)
 
     def test_write(self):
