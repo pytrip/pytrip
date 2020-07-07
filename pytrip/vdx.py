@@ -40,7 +40,7 @@ from pydicom.sequence import Sequence
 from pydicom.tag import Tag
 
 import pytrip
-from pytrip.cube import AccompanyingDicomData
+from pytrip.dicom.common import AccompanyingDicomData
 from pytrip.error import InputError
 from pytrip.dos import DosCube
 
@@ -472,9 +472,13 @@ class VdxCube:
 
             sop_instance_uids = [slice_ds.SOPInstanceUID for slice_ds in ct_data_dataset.values()]
             series_instance_uid = None
-            for tag, value in dicom_data.ct_datasets_data_common:
+            ct_datasets_data_common = getattr(dicom_data, 'ct_datasets_data_common', {})
+            for tag, value in ct_datasets_data_common:
                 if tag == Tag('SeriesInstanceUID'):
                     series_instance_uid = value
+
+            if series_instance_uid is None:
+                raise Exception("Missing SeriesInstanceUID")
 
             # TODO: if none of the DICOM files were loaded, use the information from generated DICOM from CTXCube
 
