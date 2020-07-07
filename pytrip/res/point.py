@@ -33,15 +33,23 @@ def get_basis_from_angles(gantry, couch):
 
 
 def angles_from_trip(gantry, couch):
-    # gantry += 90
-    # couch = -(couch + 90)
-    return gantry + 90.0, -couch-90.0
+    """
+    TODO
+    :param gantry:
+    :param couch:
+    :return:
+    """
+    return gantry + 90.0, -couch - 90.0
 
 
 def angles_to_trip(gantry, couch):
-    # gantry -= 90
-    # couch = -couch - 90
-    return gantry-90.0, -couch - 90.0
+    """
+    TODO
+    :param gantry:
+    :param couch:
+    :return:
+    """
+    return gantry - 90.0, -couch - 90.0
 
 
 def vector_to_angles(vec):

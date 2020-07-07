@@ -172,7 +172,6 @@ class DosCube(Cube):
             ds.PatientName = ''
             ds.Manufacturer = ''  # Manufacturer tag, 0x0008,0x0070 (type LO - Long String)
 
-
         ds.PatientsName = self.patient_name
 
         if self.patient_id in (None, ''):
@@ -227,14 +226,12 @@ class DosCube(Cube):
         if not self.header_set:
             raise InputError("Header not loaded")
 
-
         headers_datasets = getattr(self.dicom_data, 'headers_datasets', {})
         ct_header_dataset = headers_datasets.get(AccompanyingDicomData.DataType.CT, {})
         if ct_header_dataset:
             first_ct_header = ct_header_dataset.get(list(ct_header_dataset.keys())[0], {})
         else:
             first_ct_header = {}
-
 
         data_datasets = getattr(self.dicom_data, 'data_datasets', {})
         ct_data_dataset = data_datasets.get(AccompanyingDicomData.DataType.CT, {})
@@ -250,7 +247,6 @@ class DosCube(Cube):
         ds.BitsAllocated = self.num_bytes * 8
         ds.BitsStored = ds.BitsAllocated
         ds.HighBit = ds.BitsStored - 1
-
 
         ds.AccessionNumber = ''
         ds.SeriesDescription = 'RT Dose'
@@ -297,7 +293,6 @@ class DosCube(Cube):
         rt_set.ReferencedSOPClassUID = RTIonPlanStorage
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
-        index_with_max = np.unravel_index(self.cube.argmax(), self.cube.shape)
 
         tags_to_be_imported = [tag_for_keyword(name) for name in
                                ['StudyDate', 'StudyTime', 'StudyDescription', 'ImageOrientationPatient',
