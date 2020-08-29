@@ -461,6 +461,13 @@ class Plan(object):
             line += " zsteps({:.3f})".format(_field.zsteps)
             line += ' proj({:s})'.format(_field.kernel.projectile.trip98_format())
             output.append(line)
+
+            if _field.save_bev_file:
+                bev_filename = _field.bev_filename
+                if not bev_filename:
+                    bev_filename = _field.basename + 'bev.gd'
+                line = "field {:d} /bev(*) file({:s}})".format(i + 1, bev_filename)
+                output.append(line)
         return output
 
     def _make_exec_oars(self):

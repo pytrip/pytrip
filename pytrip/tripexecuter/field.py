@@ -56,6 +56,12 @@ class Field(object):
         # However, we need to tell, that we provide the rst.
         self.use_raster_file = False
 
+        # write out beams-eye-view file
+        # if save_bev_file is True, then user can optionally provide a bev_filename
+        # if filename is None, then it will be constructed from basename of the field
+        self.save_bev_file = False
+        self.bev_filename = None
+
         self.zsteps = 1.0  # in [mm]
         self.kernel = kernel
 
@@ -87,6 +93,9 @@ class Field(object):
         out += "|  Dose extension               : {:.2f}\n".format(self.dose_extension)
         out += "|  Contour extension            : {:.2f}\n".format(self.contour_extension)
         out += "|  Use external .rst file       : {:s}\n".format(str(self.use_raster_file))
+        out += "|  Save .bev file               : {:s}\n".format(str(self.save_bev_file))
+        if self.save_bev_file and self.bev_filename:
+            out += "|  Beam eyes view filename      : {:s}\n".format(str(self.bev_filename))
         if self.isocenter:
             out += "|  Isocenter (x,y,z)            : {:.2f} {:.2f} {:.2f} mm\n".format(self.isocenter[0],
                                                                                         self.isocenter[1],
