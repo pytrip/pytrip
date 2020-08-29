@@ -9,9 +9,9 @@ environment:
     secure: Bq/BLSOSlZhPmHsWR1ML1A==
   PYPIUSER: grzanka
   matrix:
-    - platform: x64
-      PYTHON: "C:\\Python27-x64"
-
+#    - platform: x64
+#      PYTHON: "C:\\Python27-x64"
+#
     - platform: x64
       PYTHON: "C:\\Python34-x64"
 

@@ -29,16 +29,16 @@ matrix:
     # suffix mu -> Unicode format UCS-2 (2 bytes) used only in Python 2.7
     # suffix m -> Unicode format UCS-4 (4 bytes) used only in all python versions
     # documentation checks and PEP8 code quality checks included in packaging
-        - python: 3.7
-          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
-          services: docker
-          sudo: true
+#        - python: 3.7
+#          env: TOXENV=packaging PRECMD=linux32 TARGET="cp27-cp27m cp27-cp27mu"
+#          services: docker
+#          sudo: true
         - python: 3.7
           env: TOXENV=packaging PRECMD=linux32 TARGET="cp35-cp35m cp36-cp36m"
           services: docker
           sudo: true
         - python: 3.7
-          env: TOXENV=packaging TARGET="cp27-cp27m cp27-cp27mu cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38"
+          env: TOXENV=packaging TARGET="cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38"
           services: docker
           sudo: true
         - python: 3.7
