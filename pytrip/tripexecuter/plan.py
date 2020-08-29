@@ -465,8 +465,8 @@ class Plan(object):
             if _field.save_bev_file:
                 bev_filename = _field.bev_filename
                 if not bev_filename:
-                    bev_filename = _field.basename + 'bev.gd'
-                line = "field {:d} /bev(*) file({:s}})".format(i + 1, bev_filename)
+                    bev_filename = _field.basename + ".bev.gd"
+                line = "field {:d} /bev(*) file({:s})".format(i + 1, bev_filename)
                 output.append(line)
         return output
 
@@ -578,6 +578,13 @@ class Plan(object):
             for i, field in enumerate(fields):
                 output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
                 self._out_files.append(field.basename + ".rst")
+
+        for _field in fields:
+            if _field.save_bev_file:
+                if _field.bev_filename:
+                    self._out_files.append(_field.bev_filename)
+                else:
+                    self._out_files.append(_field.basename + ".bev.gd")
 
         # TODO: add various .gd files
         return output
