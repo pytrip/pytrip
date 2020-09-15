@@ -541,9 +541,9 @@ class Plan(object):
         window = self.window
         window_str = ""
         if len(window) == 6:
-            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f} ".format(window[0], window[1],  # Xmin/max
-                                                                                     window[2], window[3],  # Ymin/max
-                                                                                     window[4], window[5])  # Zmin/max
+            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}) ".format(window[0], window[1],  # Xmin/max
+                                                                                      window[2], window[3],  # Ymin/max
+                                                                                      window[4], window[5])  # Zmin/max
 
         self._out_files = []  # list of files generated which will be returned
 
