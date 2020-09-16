@@ -115,7 +115,7 @@ class DDD(object):
         p1.plot(self.data[:, 0], self.data[:, 1])
 
         if self.ngauss > 0:
-            p2.set(xlabel="z [g/cm**2]", ylabel="FWHM [g/cm**2]")
+            p2.set(xlabel="z [g/cm**2 * 10]", ylabel="FWHM [g/cm**2 * 10]")
             # p2.set_ylim([0, 2])
             p2.set_yscale('log')
             p2.grid(which="both")
@@ -161,7 +161,7 @@ def main(args=sys.argv[1:]):
         logging.basicConfig()
 
     for fn in parsed_args.ddd_files:
-        print("read file " + fn.name)
+        logger.info("read file " + fn.name)
         ddd = DDD()
         ddd.read(fn.name)
         ddd.savefig()
