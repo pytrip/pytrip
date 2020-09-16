@@ -37,6 +37,7 @@ class Rst:
     Raster scan data are stored in .rst file, and describe the amount of particles going into
     each spot in each energy layer. Each energy layer is called a 'submachine'.
     """
+
     def __init__(self):
         """ Creates an instance of an Rst class.
         """
@@ -151,6 +152,42 @@ class Rst:
         out = []
         for submachine in self.machines:
             out.append(submachine._generate_random_error_machine(sigma))
+
+    def manipulate(self, func):
+        """
+        Provides a way how a RST cube can be manipulated.
+        A user mader function func() will be applied to every spot in the RST class.
+
+        func(): a user made function of the form:
+            factor = userfunc(x, y, energy, ienergy)
+
+            x,y : are lateral x and y spot positions in [cm]
+            energy : is the energy of the spot [MeV/u]
+            ienergy : index of energy slice, as sorted in the original RST file, starting at index 0.
+
+            return value: a floating point factor which will be multiplied for each spot.
+
+        Example 1:
+        # reduce weights linearly by 10 % from 100 MeV to 400 MeV
+        def myfunc(x, y, energy, ienergy):
+            a = (1.0 - 0.9) / (100 - 400)
+            b = 1.0 - a * 100
+            return(a * energy  + b)
+
+        Example 2:
+        # nonlinear reduction individually per layer
+        def myfunc(x, y, energy, ienergy):
+            n = 32  # number of submachines
+            f = [1.0] * n  # Initialize all correcting layers to 100 % weight
+            # now only change the last two energy layers:
+            f[-1] = 0.90  # last layer should be 10 % less weight
+            f[-2] = 0.94  # second last layer is only 6 % less weight
+            return f[ienergy]
+        """
+
+        for ienergy, subm in enumerate(self.machines):
+            for xpos, ypos, part in subm.raster_points:
+                subm.raster_points.part = func(xpos, ypos, subm.energy, ienergy) * part
 
 
 class SubMachine:
