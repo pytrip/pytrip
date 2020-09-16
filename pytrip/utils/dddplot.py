@@ -95,15 +95,17 @@ class DDD(object):
             raise IOError("Invalid number of columns in DDD file: " + fn)
         self.ngauss = cols - 2  # number of gaussian fits donw
 
-    def savefig(self, type="png"):
+    def savefig(self, imgtype="png"):
         """
+        imgtype : string with the extension of the image type to be saved, as understood by matplotlib's savefig()
+                  method. May be e.g. "png", "svg", "pdf", ...
         """
         import matplotlib
         matplotlib.use('Agg')
         import matplotlib.pyplot as plt
 
         # add suffix
-        outfile = self.filename + "." + type
+        outfile = self.filename + "." + imgtype
 
         fig, (p1, p2) = plt.subplots(2, 1)
 
