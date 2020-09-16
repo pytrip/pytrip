@@ -181,6 +181,7 @@ setuptools.setup(
             'gd2dat=pytrip.utils.gd2dat:main',
             'gd2agr=pytrip.utils.gd2agr:main',
             'spc2pdf=pytrip.utils.spc2pdf:main',
+            'dddplot=pytrip.utils.dddplot:main',
         ],
     },
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*'
