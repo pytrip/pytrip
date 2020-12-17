@@ -269,22 +269,26 @@ class Execute(object):
             p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
         # fill standard input with configuration file content
-        # wait until process is finished and get standard output and error streams
-        stdout, stderr = p.communicate(plan._trip_exec.encode("ascii"))
+
+        p.stdin.write(plan._trip_exec.encode("ascii"))
+        p.stdin.flush()
+
+        with p.stdout:
+            for line in p.stdout:
+                logger.debug("Local answer stdout:" + line.decode("ascii"))
+                fp_stdout.write(line.decode("ascii"))
+                self.log(line.decode("ascii"))
+
+        p.wait()
         rc = p.returncode
         if rc != 0:
             logger.error("TRiP98 error: return code {:d}".format(rc))
         else:
             logger.debug("TRiP98 exited with status: {:d}".format(rc))
 
-        if stdout is not None:
-            logger.debug("Local answer stdout:" + stdout.decode("ascii"))
-            fp_stdout.write(stdout.decode("ascii"))
-            self.log(stdout.decode("ascii"))
-
-        if stderr is not None:
-            logger.debug("Local answer stderr:" + stderr.decode("ascii"))
-            fp_stderr.write(stderr.decode("ascii"))
+        if p.stderr is not None:
+            logger.debug("Local answer stderr:" + p.stderr.decode("ascii"))
+            fp_stderr.write(p.stderr.decode("ascii"))
 
         os.chdir(_pwd)
 
