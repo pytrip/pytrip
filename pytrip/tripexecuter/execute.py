@@ -163,7 +163,11 @@ class Execute(object):
 
         if not hasattr(plan, "_temp_dir"):
             import tempfile
-            plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=plan._working_dir)
+            from datetime import datetime
+            now = datetime.now()
+            prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
+            plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=plan._working_dir)
+            print(plan._temp_dir)
 
         plan._temp_dir = os.path.join(plan._working_dir,
                                       plan._temp_dir)
