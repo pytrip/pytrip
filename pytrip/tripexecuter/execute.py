@@ -272,6 +272,8 @@ class Execute(object):
         else:
             p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
+        os.chdir(_pwd)
+
         # fill standard input with configuration file content
 
         p.stdin.write(plan._trip_exec.encode("ascii"))
@@ -293,8 +295,6 @@ class Execute(object):
         if p.stderr is not None:
             logger.debug("Local answer stderr:" + p.stderr.decode("ascii"))
             fp_stderr.write(p.stderr.decode("ascii"))
-
-        os.chdir(_pwd)
 
         fp_stdout.close()
         fp_stderr.close()
