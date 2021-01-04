@@ -167,7 +167,6 @@ class Execute(object):
             now = datetime.now()
             prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
             plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=plan._working_dir)
-            print(plan._temp_dir)
 
         plan._temp_dir = os.path.join(plan._working_dir,
                                       plan._temp_dir)
