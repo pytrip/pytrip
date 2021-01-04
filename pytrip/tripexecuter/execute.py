@@ -163,7 +163,10 @@ class Execute(object):
 
         if not hasattr(plan, "_temp_dir"):
             import tempfile
-            plan._temp_dir = tempfile.mkdtemp(prefix='trip98_', dir=plan._working_dir)
+            from datetime import datetime
+            now = datetime.now()
+            prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
+            plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=plan._working_dir)
 
         plan._temp_dir = os.path.join(plan._working_dir,
                                       plan._temp_dir)
@@ -268,6 +271,8 @@ class Execute(object):
         else:
             p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
 
+        os.chdir(_pwd)
+
         # fill standard input with configuration file content
 
         p.stdin.write(plan._trip_exec.encode("ascii"))
@@ -289,8 +294,6 @@ class Execute(object):
         if p.stderr is not None:
             logger.debug("Local answer stderr:" + p.stderr.decode("ascii"))
             fp_stderr.write(p.stderr.decode("ascii"))
-
-        os.chdir(_pwd)
 
         fp_stdout.close()
         fp_stderr.close()
