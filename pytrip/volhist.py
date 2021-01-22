@@ -28,7 +28,6 @@ class VolHist:
     """
     Volume histogram class
     """
-
     def __init__(self, cube, voi=None, target_dose=None):
         """
         :params Cube cube: either LETCube, DosCube or similar object.
@@ -43,7 +42,8 @@ class VolHist:
         if voi:
             self.name = voi.name  # name of the VOI
 
-        logging.info("Processing ROI '{:s}' for '{}'...".format(self.name, self.cube_basename))
+        logging.info("Processing ROI '{:s}' for '{}'...".format(
+            self.name, self.cube_basename))
         self.x, self.y = self.volume_histogram(cube.cube, voi)  # x,y data
 
         if not self.x.any() or not self.y.any():
@@ -89,7 +89,8 @@ class VolHist:
             if header:
                 file.write("# Cube basename: {}\n".format(self.cube_basename))
                 if self.target_dose:
-                    file.write("# Cube target dose: {} [Gy]\n".format(self.target_dose))
+                    file.write("# Cube target dose: {} [Gy]\n".format(
+                        self.target_dose))
                 file.write("# Voi name: {}\n".format(self.name))
                 file.write("# X-axis: {}\n".format(self.xlabel))
                 file.write("# Y-axis: {}\n".format(self.ylabel))
@@ -119,17 +120,22 @@ class VolHist:
             vcube = voi.get_voi_cube()
             mask = (vcube.cube == 1000)
             if not mask.any():
-                warnings.warn("Given VOI has no extend and contains no voxels.",
-                              UserWarning)
+                warnings.warn(
+                    "Given VOI has no extend and contains no voxels.",
+                    UserWarning)
                 return None, None
 
         _xrange = (0.0, data_cube.max() * 1.1)
         _hist, x = np.histogram(data_cube[mask], bins=bins, range=_xrange)
-        _fhist = _hist[::-1]  # reverse histogram, so first element is for highest dose
+        _fhist = _hist[::
+                       -1]  # reverse histogram, so first element is for highest dose
         _fhist = np.cumsum(_fhist)
         _hist = _fhist[::-1]  # flip back again to normal representation
 
-        y = 100.0 * _hist / _hist[0]  # volume histograms always plot the right edge of bin, since V(D < x_pos).
-        y = np.insert(y, 0, 100.0, axis=0)  # but the leading bin edge is always at V = 100.0%
+        y = 100.0 * _hist / _hist[
+            0]  # volume histograms always plot the right edge of bin, since V(D < x_pos).
+        y = np.insert(
+            y, 0, 100.0,
+            axis=0)  # but the leading bin edge is always at V = 100.0%
 
         return x, y

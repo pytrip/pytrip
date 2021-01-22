@@ -41,29 +41,43 @@ class Plan(object):
     """
     # dicts are in the form of
     # "<valid trip tag>": (<enum>, "Short name", "Description, e.g. for alt tags")
-    opt_principles = {"H2Obased": (0, "Simple opt.", "Very simplified single field optimization"),
-                      "CTbased": (1, "Full opt.", "Full optimization, multiple fields")}
+    opt_principles = {
+        "H2Obased":
+        (0, "Simple opt.", "Very simplified single field optimization"),
+        "CTbased": (1, "Full opt.", "Full optimization, multiple fields")
+    }
 
-    opt_methods = {"phys": (0, "Physical", "Physical dose only [Gy]"),
-                   "bio": (1, "Biological", "Biological optimization [Gy(RBE)]")}
+    opt_methods = {
+        "phys": (0, "Physical", "Physical dose only [Gy]"),
+        "bio": (1, "Biological", "Biological optimization [Gy(RBE)]")
+    }
 
-    opt_algs = {"cl": (0, "Classic", ""),
-                "cg": (1, "Conjugate gradients", "(default)"),
-                "gr": (2, "Plain gradients", ""),
-                "bf": (3, "Bortfeld", "Bortfeld's algorithm"),
-                "fr": (4, "Fletcher-Reeves", "Fletcher-Reeves' algorithm")}
+    opt_algs = {
+        "cl": (0, "Classic", ""),
+        "cg": (1, "Conjugate gradients", "(default)"),
+        "gr": (2, "Plain gradients", ""),
+        "bf": (3, "Bortfeld", "Bortfeld's algorithm"),
+        "fr": (4, "Fletcher-Reeves", "Fletcher-Reeves' algorithm")
+    }
 
-    bio_algs = {"cl": (0, "Classic (default)", ""),
-                "ld": (1, "Lowdose (faster)", "")}
+    bio_algs = {
+        "cl": (0, "Classic (default)", ""),
+        "ld": (1, "Lowdose (faster)", "")
+    }
 
-    dose_algs = {"cl": (0, "Classic (default)", ""),
-                 "ap": (1, "Allpoints", ""),
-                 "ms": (2, "Multiple scatter", "")}
+    dose_algs = {
+        "cl": (0, "Classic (default)", ""),
+        "ap": (1, "Allpoints", ""),
+        "ms": (2, "Multiple scatter", "")
+    }
 
-    scanpaths = {"none": (0, "No path", "output as is"),
-                 "uw": (1, "U. Weber", "efficient"),
-                 "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
-                 "mk": (3, "M. Kraemer", "conservative")}
+    scanpaths = {
+        "none": (0, "No path", "output as is"),
+        "uw": (1, "U. Weber", "efficient"),
+        "uw2":
+        (2, "U. Weber2", "very efficient, works also for non-grid points"),
+        "mk": (3, "M. Kraemer", "conservative")
+    }
 
     def __init__(self, default_kernel=KernelModel(), basename="", comment=""):
         """
@@ -78,12 +92,14 @@ class Plan(object):
 
         self.__uuid__ = uuid.uuid4()  # for uniquely identifying this plan
         self.default_kernel = default_kernel
-        self.basename = basename.replace(" ", "_")  # TODO: also for Ctx and Vdx, issue when loading DICOMs.
+        self.basename = basename.replace(
+            " ", "_")  # TODO: also for Ctx and Vdx, issue when loading DICOMs.
         self.comment = comment
 
         self.fields = []  # list of Field() objects
         self.voi_target = None  # put target Voi() here. (Not needed if self.target_dose_cube is set (incube))
-        self.vois_oar = []  # list of Voi() objects which are considered as OARs
+        self.vois_oar = [
+        ]  # list of Voi() objects which are considered as OARs
 
         # results
         self.dosecubes = []  # list of DosCube() objects (i.e. results)
@@ -127,7 +143,8 @@ class Plan(object):
         self.want_rst = False
         self.want_tlet = False  # TODO: not implemented.
 
-        self.window = []  # window [xmin,xmax,ymin,ymax,zmin,zmax] in CTcoords [mm] for limited dose output.
+        self.window = [
+        ]  # window [xmin,xmax,ymin,ymax,zmin,zmax] in CTcoords [mm] for limited dose output.
         self.target_dose = 2.0  # target dose in Gray
         self.target_dose_percent = 100.0  # target dose in percent
 
@@ -135,7 +152,7 @@ class Plan(object):
         self.res_tissue_type = ""  # residual tissue types
         self.incube_basename = ""  # To enable incube optimization, set the basename of the cube to be loaded by TRiP
 
-        self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
+        self._trip_exec = ""  # placeholder for generated TRiP98 .exec commands.
         self._make_sis = ""  # placeholder for generate sistable command
 
     def __str__(self):
@@ -149,43 +166,52 @@ class Plan(object):
         out = "\n"
         out += "   Plan '{:s}'\n".format(self.basename)
         out += "----------------------------------------------------------------------------\n"
-        out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
+        out += "|  UUID                         : {:s}\n".format(
+            str(self.__uuid__))
         if self.voi_target:
-            out += "|  Target VOI                   : {:s}\n".format(self.voi_target.name)
+            out += "|  Target VOI                   : {:s}\n".format(
+                self.voi_target.name)
         else:
             out += "|  Target VOI                   : (none set)\n"
         if self.vois_oar:
             for _oar in self.vois_oar:
-                out += "|  Organs at Risk VOIs          : {:s}\n".format(_oar.name)
+                out += "|  Organs at Risk VOIs          : {:s}\n".format(
+                    _oar.name)
         else:
             out += "|  Organs at Risk VOIs          : (none set)\n"
 
         if self.fields:
             out += "+---Fields\n"
             for _field in self.fields:
-                out += "|   |           #{:d}              : '{:s}'\n".format(_field.number, _field.basename)
+                out += "|   |           #{:d}              : '{:s}'\n".format(
+                    _field.number, _field.basename)
         else:
             out += "|   Fields                      : (none set)\n"
 
         if self.dosecubes:
             out += "+---Dose cubes:\n"
             for _dosecube in self.dosecubes:
-                out += "|   |                              : {:s}\n".format(_dosecube.name)
+                out += "|   |                              : {:s}\n".format(
+                    _dosecube.name)
         else:
             out += "|  Dose cubes                   : (none set)\n"
 
         if self.letcubes:
             out += "+---LET cubes:\n"
             for _letcube in self.letcubes:
-                out += "|   |                              : {:s}\n".format(_letcube.name)
+                out += "|   |                              : {:s}\n".format(
+                    _letcube.name)
         else:
             out += "|  LET cubes                    : (none set)\n"
 
         out += "|\n"
         out += "| Directories\n"
-        out += "|   Working directory           : {:s}\n".format(self.working_dir)
-        out += "|   HLUT path                   : {:s}\n".format(self.hlut_path)
-        out += "|   dE/dx path                  : {:s}\n".format(self.dedx_path)
+        out += "|   Working directory           : {:s}\n".format(
+            self.working_dir)
+        out += "|   HLUT path                   : {:s}\n".format(
+            self.hlut_path)
+        out += "|   dE/dx path                  : {:s}\n".format(
+            self.dedx_path)
 
         out += "|\n"
         out += "| Sis table generation\n"
@@ -193,55 +219,74 @@ class Plan(object):
 
         out += "|\n"
         out += "| Optimization parameters\n"
-        out += "|   Optimization enabled        : {:s}\n".format(str(self.optimize))
-        out += "|   Optimization method         : '{:s}' {:s}\n".format(self.opt_method,
-                                                                        self.opt_methods[self.opt_method][1])
-        out += "|   Optimization principle      : '{:s}' {:s}\n".format(self.opt_principle,
-                                                                        self.opt_principles[self.opt_principle][1])
-        out += "|   Optimization algorithm      : '{:s}' {:s}\n".format(self.opt_alg,
-                                                                        self.opt_algs[self.opt_alg][1])
-        out += "|   Dose algorithm              : '{:s}' {:s}\n".format(self.dose_alg,
-                                                                        self.dose_algs[self.dose_alg][1])
-        out += "|   Biological algorithm        : '{:s}' {:s}\n".format(self.bio_alg,
-                                                                        self.bio_algs[self.bio_alg][1])
-        out += "|   Iterations                  : {:d}\n".format(self.iterations)
+        out += "|   Optimization enabled        : {:s}\n".format(
+            str(self.optimize))
+        out += "|   Optimization method         : '{:s}' {:s}\n".format(
+            self.opt_method, self.opt_methods[self.opt_method][1])
+        out += "|   Optimization principle      : '{:s}' {:s}\n".format(
+            self.opt_principle, self.opt_principles[self.opt_principle][1])
+        out += "|   Optimization algorithm      : '{:s}' {:s}\n".format(
+            self.opt_alg, self.opt_algs[self.opt_alg][1])
+        out += "|   Dose algorithm              : '{:s}' {:s}\n".format(
+            self.dose_alg, self.dose_algs[self.dose_alg][1])
+        out += "|   Biological algorithm        : '{:s}' {:s}\n".format(
+            self.bio_alg, self.bio_algs[self.bio_alg][1])
+        out += "|   Iterations                  : {:d}\n".format(
+            self.iterations)
         out += "|   eps                         : {:.2e}\n".format(self.eps)
         out += "|   geps                        : {:.2e}\n".format(self.geps)
 
         out += "|\n"
         out += "| Scanner capabilities (Scancap)\n"
-        out += "|   Bolus thickness             : {:.3f} [mm]\n".format(self.bolus)
-        out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
-        out += "|   Min particles               : {:d}\n".format(self.minparticles)
-        out += "|   Scanpath                    : '{:s} {}'\n".format(self.scanpath,
-                                                                      self.scanpaths[self.scanpath])
+        out += "|   Bolus thickness             : {:.3f} [mm]\n".format(
+            self.bolus)
+        out += "|   H2O offset                  : {:.3f} [mm]\n".format(
+            self.offh2o)
+        out += "|   Min particles               : {:d}\n".format(
+            self.minparticles)
+        out += "|   Scanpath                    : '{:s} {}'\n".format(
+            self.scanpath, self.scanpaths[self.scanpath])
         out += "|\n"
         out += "| Optimization target\n"
-        out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
-        out += "|   100.0 % target dose set to  : {:.2f} [Gy]\n".format(self.target_dose)
+        out += "|   Relative target dose        : {:.1f} %\n".format(
+            self.target_dose_percent)
+        out += "|   100.0 % target dose set to  : {:.2f} [Gy]\n".format(
+            self.target_dose)
         if self.incube_basename:
-            out += "|   Incube optimization         : {:s}\n".format(self.incube_basename + '.dos')
+            out += "|   Incube optimization         : {:s}\n".format(
+                self.incube_basename + '.dos')
         else:
             out += "|   Incube optimization         : (none set)\n"
 
         out += "|\n"
         out += "| Biological parameters\n"
-        out += "|   Target tissue type          : '{:s}'\n".format(self.target_tissue_type)
-        out += "|   Residual tissue type        : '{:s}'\n".format(self.res_tissue_type)
-        out += "|   Random seed #1              : {:d}\n".format(self.random_seed1)
+        out += "|   Target tissue type          : '{:s}'\n".format(
+            self.target_tissue_type)
+        out += "|   Residual tissue type        : '{:s}'\n".format(
+            self.res_tissue_type)
+        out += "|   Random seed #1              : {:d}\n".format(
+            self.random_seed1)
 
         out += "|\n"
         out += "| Requested output\n"
-        out += "|   Physical dose cube          : {:s}\n".format(str(self.want_phys_dose))
-        out += "|   Biological dose cube        : {:s}\n".format(str(self.want_bio_dose))
-        out += "|   Dose averaged LET cube      : {:s}\n".format(str(self.want_dlet))
-        out += "|   Track averaged LET cube     : {:s}\n".format(str(self.want_tlet))
-        out += "|   Raster scan files           : {:s}\n".format(str(self.want_rst))
+        out += "|   Physical dose cube          : {:s}\n".format(
+            str(self.want_phys_dose))
+        out += "|   Biological dose cube        : {:s}\n".format(
+            str(self.want_bio_dose))
+        out += "|   Dose averaged LET cube      : {:s}\n".format(
+            str(self.want_dlet))
+        out += "|   Track averaged LET cube     : {:s}\n".format(
+            str(self.want_tlet))
+        out += "|   Raster scan files           : {:s}\n".format(
+            str(self.want_rst))
         if self.window:
             out += "|   Cube output window\n"
-            out += "|      Xmin / Xmax              : {:.2f} / {:.2f}\n".format(self.window[0], self.window[1])
-            out += "|      Ymin / Ymax              : {:.2f} / {:.2f}\n".format(self.window[2], self.window[3])
-            out += "|      Zmin / Zmax              : {:.2f} / {:.2f}\n".format(self.window[4], self.window[5])
+            out += "|      Xmin / Xmax              : {:.2f} / {:.2f}\n".format(
+                self.window[0], self.window[1])
+            out += "|      Ymin / Ymax              : {:.2f} / {:.2f}\n".format(
+                self.window[2], self.window[3])
+            out += "|      Zmin / Zmax              : {:.2f} / {:.2f}\n".format(
+                self.window[4], self.window[5])
         else:
             out += "|   Cube output window          : (none set)\n"
         return out
@@ -282,10 +327,12 @@ class Plan(object):
         t.set_plan(self)
         t.save_data(path)
         for dos in self.dosecubes:
-            dos.write(path + "." + dos.get_type() + DosCube.data_file_extension)
+            dos.write(path + "." + dos.get_type() +
+                      DosCube.data_file_extension)
 
         for let in self.letcubes:
-            let.write(path + "." + dos.get_type() + DosCube.data_file_extension)
+            let.write(path + "." + dos.get_type() +
+                      DosCube.data_file_extension)
 
     def load_let(self, path):
         """ Load and append a new LET cube from path to self.letcubes.
@@ -339,7 +386,8 @@ class Plan(object):
 
         # for incube optimization
         if self.incube_basename:
-            logger.info("Incube optimization selected by {:s}.dos".format(self.incube_basename))
+            logger.info("Incube optimization selected by {:s}.dos".format(
+                self.incube_basename))
             output.extend(self._make_exec_plan(incube=self.incube_basename))
         else:
             output.extend(self._make_exec_plan())
@@ -366,8 +414,8 @@ class Plan(object):
         """
 
         output = []
-        output.append("* {:s} created by PyTRiP98 on the {:s}".format(self.basename + ".exec",
-                                                                      str(datetime.datetime.now())))
+        output.append("* {:s} created by PyTRiP98 on the {:s}".format(
+            self.basename + ".exec", str(datetime.datetime.now())))
         # TODO: add user and host
         # We can only check if dir exists, if this is supposed to run locally.
 
@@ -386,10 +434,12 @@ class Plan(object):
         output.append('ddd "{:s}" / read'.format(self.default_kernel.ddd_path))
 
         if self.default_kernel.spc_path:  # False for None and empty string.
-            output.append('spc "{:s}" / read'.format(self.default_kernel.spc_path))
+            output.append('spc "{:s}" / read'.format(
+                self.default_kernel.spc_path))
 
         if self.default_kernel.sis_path:
-            output.append('sis "{:s}" / read'.format(self.default_kernel.sis_path))
+            output.append('sis "{:s}" / read'.format(
+                self.default_kernel.sis_path))
         else:
             if not self._make_sis:
                 logger.error("No SIS table loaded or generated.")
@@ -398,7 +448,9 @@ class Plan(object):
 
         # Scancap:
         opt = "scancap / offh2o({:.3f})".format(self.offh2o)
-        opt += " rifi({:.3f})".format(self.default_kernel.rifi_thickness)  # rifi support is not fully implemented yet
+        opt += " rifi({:.3f})".format(
+            self.default_kernel.rifi_thickness
+        )  # rifi support is not fully implemented yet
         opt += " bolus({:.3f})".format(self.bolus)
         opt += " minparticles({:d})".format(self.minparticles)
         opt += " path({:s})".format(self.scanpath)
@@ -415,10 +467,10 @@ class Plan(object):
 
         output = []
         output.append("ct \"{:s}\" / read".format(self.basename))
-        output.append("voi \"{:s}\" / read select(\"{:s}\")".format(self.basename,
-                                                                    _name))
-        output.append("voi \"{:s}\" / maxdosefraction({:.3f})".format(_name,
-                                                                      self.target_dose_percent * 0.01))
+        output.append("voi \"{:s}\" / read select(\"{:s}\")".format(
+            self.basename, _name))
+        output.append("voi \"{:s}\" / maxdosefraction({:.3f})".format(
+            _name, self.target_dose_percent * 0.01))
         return output
 
     def _make_exec_fields(self):
@@ -437,7 +489,8 @@ class Plan(object):
                 line = "field {:d} / new".format(i + 1)
             else:
                 # or, there is a precalculated raster scan file which will be used instead:
-                line = "field {:d} / read file({:s})".format(i + 1, _field.rasterfile_path)
+                line = "field {:d} / read file({:s})".format(
+                    i + 1, _field.rasterfile_path)
 
             line += " fwhm({:.3f})".format(_field.fwhm)
 
@@ -451,7 +504,8 @@ class Plan(object):
             # set isocenter if specified in field
             _ic = _field.isocenter
             if len(_ic) >= 3:
-                line += " target({:.1f},{:.1f},{:.1f}) ".format(_ic[0], _ic[1], _ic[2])
+                line += " target({:.1f},{:.1f},{:.1f}) ".format(
+                    _ic[0], _ic[1], _ic[2])
 
             # set dose extension:
             # TODO: check number of decimals which make sense
@@ -459,7 +513,8 @@ class Plan(object):
             line += " doseext({:.4f})".format(_field.dose_extension)
             line += " contourext({:.2f})".format(_field.contour_extension)
             line += " zsteps({:.3f})".format(_field.zsteps)
-            line += ' proj({:s})'.format(_field.kernel.projectile.trip98_format())
+            line += ' proj({:s})'.format(
+                _field.kernel.projectile.trip98_format())
             output.append(line)
 
         return output
@@ -472,7 +527,8 @@ class Plan(object):
         output = []
         for oar in self.vois_oar:
             _out = "voi " + oar.name.replace(" ", "_")
-            _out += " / maxdosefraction({.3f}) oarset".format(oar.max_dose_fraction)
+            _out += " / maxdosefraction({.3f}) oarset".format(
+                oar.max_dose_fraction)
             output.append(_out)
         return output
 
@@ -501,19 +557,23 @@ class Plan(object):
         opt = "opt / field(*)"
 
         if self.opt_principle not in self.opt_principles:
-            logger.error("Unknown optimization principle {:s}".format(self.plan.opt_principle))
+            logger.error("Unknown optimization principle {:s}".format(
+                self.plan.opt_principle))
         opt += " {:s}".format(self.opt_principle)  # ctbased or H2Obased
 
         if self.opt_method not in self.opt_methods:
-            logger.error("Unknown optimization method {:s}".format(self.plan.opt_method))
+            logger.error("Unknown optimization method {:s}".format(
+                self.plan.opt_method))
         opt += " {:s}".format(self.opt_method)  # "phys" or "bio"
 
         if self.dose_alg not in self.dose_algs:
-            logger.error("Unknown optimization dose algorithm{:s}".format(self.plan.dose_alg))
+            logger.error("Unknown optimization dose algorithm{:s}".format(
+                self.plan.dose_alg))
         opt += " dosealg({:s})".format(self.dose_alg)  # "ap",..
 
         if self.opt_alg not in self.opt_algs:
-            logger.error("Unknown optimization method {:s}".format(self.plan.opt_alg))
+            logger.error("Unknown optimization method {:s}".format(
+                self.plan.opt_alg))
         opt += " optalg({:s})".format(self.opt_alg)  # "cl"...
 
         # TODO: sanity check numbers
@@ -535,9 +595,13 @@ class Plan(object):
         window = self.window
         window_str = ""
         if len(window) == 6:
-            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}) ".format(window[0], window[1],  # Xmin/max
-                                                                                      window[2], window[3],  # Ymin/max
-                                                                                      window[4], window[5])  # Zmin/max
+            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}) ".format(
+                window[0],
+                window[1],  # Xmin/max
+                window[2],
+                window[3],  # Ymin/max
+                window[4],
+                window[5])  # Zmin/max
 
         self._out_files = []  # list of files generated which will be returned
 
@@ -570,7 +634,9 @@ class Plan(object):
 
         if self.want_rst and self.optimize:
             for i, field in enumerate(fields):
-                output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
+                output.append(
+                    'field {:d} / write file({:s}.rst) reverseorder '.format(
+                        i + 1, field.basename))
                 self._out_files.append(field.basename + ".rst")
 
         for _field in fields:
@@ -578,7 +644,8 @@ class Plan(object):
                 bev_filename = _field.bev_filename
                 if not bev_filename:
                     bev_filename = _field.basename + ".bev.gd"
-                line = "field {:d} /bev(*) file({:s})".format(i + 1, bev_filename)
+                line = "field {:d} /bev(*) file({:s})".format(
+                    i + 1, bev_filename)
                 output.append(line)
 
                 self._out_files.append(bev_filename)
@@ -595,7 +662,8 @@ class Plan(object):
 
         output.append("ct {:s} / read".format(self._plan_name))  # loads CTX
         output.append("voi {:s} / read".format(self._plan_name))  # loads VDX
-        output.append("voi * /list")  # display all loaded VOIs. Helps for debugging.
+        output.append(
+            "voi * /list")  # display all loaded VOIs. Helps for debugging.
 
         # TODO: consider moving RBE file to DDD/SPC/SIS/RBE set
         # TODO: check rbe.get_rbe_by_name method
@@ -609,7 +677,13 @@ class Plan(object):
 
         return output
 
-    def make_sis(self, projectile, focus=(), intensity=(), position=(), path="", write=False):
+    def make_sis(self,
+                 projectile,
+                 focus=(),
+                 intensity=(),
+                 position=(),
+                 path="",
+                 write=False):
         """
         Creates a SIS table based on path, focus, intensity and position.
         example:
@@ -631,7 +705,8 @@ class Plan(object):
         if intensity:
             self._make_sis += " intensity({:s})".format(intensity)
         if position:
-            self._make_sis += " position({:.2f} TO {:.2f} BY {:.2f})".format(position[0], position[1], position[2])
+            self._make_sis += " position({:.2f} TO {:.2f} BY {:.2f})".format(
+                position[0], position[1], position[2])
 
         if write:
             self._make_sis += "sis \n{:s} / write".format(path)

@@ -112,11 +112,14 @@ class VdxCube:
         if self.cube is not None:
             self.patient_id = cube.patient_id
             self._dicom_study_instance_uid = self.cube._dicom_study_instance_uid
-            logger.debug("VDX class inherited patient_id {}".format(self.patient_id))
+            logger.debug("VDX class inherited patient_id {}".format(
+                self.patient_id))
         else:
             import datetime
-            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
-            logger.debug("VDX class creates new patient_id {}".format(self.patient_id))
+            self.patient_id = datetime.datetime.today().strftime(
+                '%Y%m%d-%H%M%S')
+            logger.debug("VDX class creates new patient_id {}".format(
+                self.patient_id))
 
     def __str__(self):
         """ str output handler
@@ -130,14 +133,19 @@ class VdxCube:
         out += "   VdxCube\n"
         out += "----------------------------------------------------------------------------\n"
         out += "| UIDs\n"
-        out += "|   dicom_study_instance_uid            : {:s}\n".format(self._dicom_study_instance_uid)
-        out += "|   structs_dicom_series_instance_uid   : '{:s}'\n".format(self._structs_dicom_series_instance_uid)
-        out += "|   structs_sop_instance_uid            : '{:s}'\n".format(self._structs_sop_instance_uid)
-        out += "|   structs_rt_series_instance_uid      : '{:s}'\n".format(self._structs_rt_series_instance_uid)
+        out += "|   dicom_study_instance_uid            : {:s}\n".format(
+            self._dicom_study_instance_uid)
+        out += "|   structs_dicom_series_instance_uid   : '{:s}'\n".format(
+            self._structs_dicom_series_instance_uid)
+        out += "|   structs_sop_instance_uid            : '{:s}'\n".format(
+            self._structs_sop_instance_uid)
+        out += "|   structs_rt_series_instance_uid      : '{:s}'\n".format(
+            self._structs_rt_series_instance_uid)
         if self.vois:
             out += "+---VOIs\n"
             for _i, _v in enumerate(self.vois):
-                out += "|   |           #{:d}              : '{:s}'\n".format(_i, _v.name)
+                out += "|   |           #{:d}              : '{:s}'\n".format(
+                    _i, _v.name)
         return out
 
     def read_dicom(self, data, structure_ids=None):
@@ -161,7 +169,8 @@ class VdxCube:
         if hasattr(dcm, 'ROIContourSequence'):
             _contours = dcm.ROIContourSequence
         else:
-            logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
+            logger.error(
+                "No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
             exit()
 
         for i, _roi_contour in enumerate(_contours):
@@ -172,13 +181,17 @@ class VdxCube:
                     # kept for future use.
 
                 else:
-                    logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
+                    logger.error(
+                        "No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT"
+                    )
                     exit()
 
                 if hasattr(dcm, "StructureSetROISequence"):
-                    _roi_name = dcm.StructureSetROISequence[i].ROIName  # REQUIRED by DICOM. At least an empty string.
+                    _roi_name = dcm.StructureSetROISequence[
+                        i].ROIName  # REQUIRED by DICOM. At least an empty string.
                 else:
-                    logger.error("No StructureSetROISequence found in dicom RTSTRUCT")
+                    logger.error(
+                        "No StructureSetROISequence found in dicom RTSTRUCT")
                     exit()
 
                 v = Voi(_roi_name, self.cube)
@@ -191,9 +204,10 @@ class VdxCube:
         :returns: a list of available voi names.
         :warning: deprecated method, use voi_names() instead.
         """
-        warnings.warn("Call to deprecated method get_voi_names(). Use voi_names() instead.",
-                      category=DeprecationWarning,
-                      stacklevel=2)
+        warnings.warn(
+            "Call to deprecated method get_voi_names(). Use voi_names() instead.",
+            category=DeprecationWarning,
+            stacklevel=2)
         return self.voi_names()
 
     def voi_names(self):
@@ -272,6 +286,8 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
+
+
 #                TODO number_of_vois not used
 #                elif "number_of_vois" in line:
 #                    number_of_vois = int(line.split()[1])
@@ -421,13 +437,16 @@ class VdxCube:
             rt_ref_study_seq_data = Dataset()
             rt_ref_study_seq_data.ReferencedSOPClassUID = '1.2.840.10008.3.1.2.3.2'  # Study Component Management Class
             rt_ref_study_seq_data.ReferencedSOPInstanceUID = '1.2.3'
-            rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence([rt_ref_series_data])
+            rt_ref_study_seq_data.RTReferencedSeriesSequence = Sequence(
+                [rt_ref_series_data])
 
             rt_ref_frame_study_data = Dataset()
-            rt_ref_frame_study_data.RTReferencedStudySequence = Sequence([rt_ref_study_seq_data])
+            rt_ref_frame_study_data.RTReferencedStudySequence = Sequence(
+                [rt_ref_study_seq_data])
             rt_ref_frame_study_data.FrameOfReferenceUID = '1.2.3'
             # (3006, 0010) 'Referenced Frame of Reference Sequence'
-            ds.ReferencedFrameOfReferenceSequence = Sequence([rt_ref_frame_study_data])
+            ds.ReferencedFrameOfReferenceSequence = Sequence(
+                [rt_ref_frame_study_data])
 
         for i in range(self.number_of_vois()):
             logger.debug("Write ROI #{:d} to DICOM object".format(i))
@@ -519,7 +538,8 @@ def create_voi_from_cube(cube, name, value=100):
     # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
     from pytrip import _cntr
     for i in range(cube.dimz):
-        x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])), np.arange(len(cube.cube[0])))
+        x, y = np.meshgrid(np.arange(len(cube.cube[0, 0])),
+                           np.arange(len(cube.cube[0])))
         isodose_obj = _cntr.Cntr(x, y, cube.cube[i])
         contour = isodose_obj.trace(value)
         s = Slice(cube)
@@ -551,7 +571,8 @@ def create_cylinder(cube, name, center, radius, depth):
     """
     v = Voi(name, cube)
     t = np.linspace(start=0, stop=2.0 * pi, num=99, endpoint=False)
-    p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
+    p = list(
+        zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
 
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
@@ -579,8 +600,9 @@ def create_sphere(cube, name, center, radius):
     """
     v = Voi(name, cube)
 
-    t = np.linspace(start=0, stop=2.0 * pi,
-                    num=99, endpoint=False)  # num: sets the number of corners in sphere per slice.
+    t = np.linspace(
+        start=0, stop=2.0 * pi, num=99,
+        endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
 
     points = []
@@ -593,8 +615,9 @@ def create_sphere(cube, name, center, radius):
             s.thickness = cube.slice_distance
             _contour_closed = True
             if r2 > 0.0:
-                points = [[center[0] + x[0] * sqrt(r2),
-                           center[1] + x[1] * sqrt(r2), z] for x in p]
+                points = [[
+                    center[0] + x[0] * sqrt(r2), center[1] + x[1] * sqrt(r2), z
+                ] for x in p]
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
@@ -641,13 +664,17 @@ class Voi:
         out = "\n"
         out += "   Voi\n"
         out += "----------------------------------------------------------------------------\n"
-        out += "|   Name                                : '{:s}'\n".format(self.name)
-        out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
-        out += "|   Type                                : {:d}\n".format(self.type)
-        out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
-        out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(hex(self.color[0].strip('0x')),
-                                                                                  hex(self.color[1].strip('0x')),
-                                                                                  hex(self.color[2].strip('0x')))
+        out += "|   Name                                : '{:s}'\n".format(
+            self.name)
+        out += "|   Is concated                         : {:s}\n".format(
+            str(self.is_concated))
+        out += "|   Type                                : {:d}\n".format(
+            self.type)
+        out += "|   Number of slices in VOI             : {:d}\n".format(
+            len(self.slices))
+        out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(
+            hex(self.color[0].strip('0x')), hex(self.color[1].strip('0x')),
+            hex(self.color[2].strip('0x')))
 
         return out
 
@@ -755,11 +782,13 @@ class Voi:
                 points[(point[0], point[1], point[2])].append(point2)
                 points[(point2[0], point2[1], point2[2])].append(point)
                 if next_contour is not None:
-                    point3 = pytrip.res.point.get_nearest_point(point, next_contour)
+                    point3 = pytrip.res.point.get_nearest_point(
+                        point, next_contour)
                     points[(point[0], point[1], point[2])].append(point3)
                     points[(point3[0], point3[1], point3[2])].append(point)
                 if last_contour is not None:
-                    point4 = pytrip.res.point.get_nearest_point(point, last_contour)
+                    point4 = pytrip.res.point.get_nearest_point(
+                        point, last_contour)
                     if point4 not in points[(point[0], point[1], point[2])]:
                         points[(point[0], point[1], point[2])].append(point4)
                         points[(point4[0], point4[1], point4[2])].append(point)
@@ -803,13 +832,13 @@ class Voi:
         points2 = []
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
-                point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                    key=lambda x: x[1])
+                point = sorted(pytriplib.slice_on_plane(
+                    np.array(_slice.contours[0].contour), plane, depth),
+                               key=lambda x: x[1])
             elif plane is self.coronal:
-                point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                    key=lambda x: x[0])
+                point = sorted(pytriplib.slice_on_plane(
+                    np.array(_slice.contours[0].contour), plane, depth),
+                               key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -905,7 +934,8 @@ class Voi:
             dcmcube = self.cube.create_dicom()
 
         for _slice in self.slices:
-            logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
+            logger.info("Get contours from slice at {:10.3f} mm".format(
+                _slice.get_position()))
             contours.extend(_slice.create_dicom_contours(dcmcube))
 
         roi_contours.Contours = Sequence(contours)
@@ -923,7 +953,8 @@ class Voi:
         # applied to DICOM contours.
 
         if len(self.slices) > 0 and hasattr(self.slices[0], "slice_in_frame"):
-            self.slices.sort(key=lambda _slice: _slice.slice_in_frame, reverse=True)
+            self.slices.sort(key=lambda _slice: _slice.slice_in_frame,
+                             reverse=True)
 
     def read_vdx_old(self, content, i):
         """
@@ -947,16 +978,20 @@ class Voi:
                 break
             if line.startswith("slice#"):
                 s = Slice(cube=self.cube)
-                i = s.read_vdx_old(content, i)  # Slices in .vdx files start at 0
+                i = s.read_vdx_old(content,
+                                   i)  # Slices in .vdx files start at 0
                 if self.cube is not None:
                     for cont1 in s.contours:
                         for cont2 in cont1.contour:
                             _slice_number = int(cont2[2])
                             # bound checking
                             if _slice_number > self.cube.dimz:
-                                logger.error("VDX slice number# {:d} exceeds dimension of CTX "
-                                             "cube zmax={:d}".format(_slice_number, self.cube.dimz))
-                                raise Exception("VDX file not compatible with CTX cube")
+                                logger.error(
+                                    "VDX slice number# {:d} exceeds dimension of CTX "
+                                    "cube zmax={:d}".format(
+                                        _slice_number, self.cube.dimz))
+                                raise Exception(
+                                    "VDX file not compatible with CTX cube")
 
                             # cont2[2] holds slice number (starting in 1), translate it to absolute position in [mm]
                             cont2[2] = self.cube.slice_to_z(int(cont2[2]))
@@ -996,7 +1031,9 @@ class Voi:
                 self.type = int(line.split()[1])
             elif line.startswith("number_of_slices"):
                 number_of_slices = int(line.split()[1])
-            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
+            elif line.startswith(
+                    "slice "
+            ):  # need that extra space to discriminate from "slice_in_frame"
                 s = Slice(cube=self.cube)
                 i = s.read_vdx(content, i)
                 if s.get_position() is None:
@@ -1055,8 +1092,10 @@ class Voi:
         """
 
         if not hasattr(roi_cont, "ContourSequence"):
-            logger.warning("No DICOM (3006,0050) Contour Data found in "
-                           "(3006,0039) ROIContourSequence[] for ROI:'{}'".format(roi_name))
+            logger.warning(
+                "No DICOM (3006,0050) Contour Data found in "
+                "(3006,0039) ROIContourSequence[] for ROI:'{}'".format(
+                    roi_name))
             return
 
         _roi_type_name = roi_obs.RTROIInterpretedType
@@ -1071,12 +1110,15 @@ class Voi:
 
             # if we have a new z_position, add a new slice object to self.slices
             if _z_pos not in [_slice.get_position() for _slice in self.slices]:
-                logger.debug("VOI {}: Append new slice at z = {:f} cm to slices list:".format(self.name, _z_pos))
+                logger.debug(
+                    "VOI {}: Append new slice at z = {:f} cm to slices list:".
+                    format(self.name, _z_pos))
                 sl = Slice(cube=self.cube)
                 self.slices.append(sl)
             else:
                 # lookup proper slice (just to be sure, should the contours come in random order)
-                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(self.name, _z_pos))
+                logger.debug("VOI {}: Found multi-contour at z = {} cm".format(
+                    self.name, _z_pos))
                 sl = self.get_slice_at_pos(_z_pos)
 
             # append the contour data to the contour list of this slice
@@ -1139,9 +1181,9 @@ class Voi:
             pos = sl.get_position()
             out += "slice {:d}\n".format(i)
             out += "slice_in_frame {:.3f}\n".format(pos)
-            out += "thickness {:.3f} reference start_pos {:.3f} stop_pos {:.3f}\n".format(sl.thickness,
-                                                                                          pos - 0.5 * sl.thickness,
-                                                                                          pos + 0.5 * sl.thickness)
+            out += "thickness {:.3f} reference start_pos {:.3f} stop_pos {:.3f}\n".format(
+                sl.thickness, pos - 0.5 * sl.thickness,
+                pos + 0.5 * sl.thickness)
             out += "number_of_contours {:d}\n".format(sl.number_of_contours())
             out += sl.vdx_string()
             i += 1
@@ -1170,13 +1212,19 @@ class Voi:
         :returns: VOI slice at position z, z position may be approxiamte
         """
 
-        _slice = [item for item in self.slices if np.isclose(item.get_position(), z,
-                                                             atol=item.thickness * 0.5)]
+        _slice = [
+            item for item in self.slices
+            if np.isclose(item.get_position(), z, atol=item.thickness * 0.5)
+        ]
         if len(_slice) == 0:
-            logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
+            logger.debug(
+                "could not find slice in get_slice_at_pos() at position {}".
+                format(z))
             return None
         else:
-            logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
+            logger.debug(
+                "found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".
+                format(z, _slice[0].thickness))
             return _slice[0]
 
     def number_of_slices(self):
@@ -1218,7 +1266,6 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
-
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1246,8 +1293,10 @@ class Slice:
         # do not apply any offset here, since everything is written in real world coordinates.
         _offset = [0.0, 0.0, 0.0]
         self.contours.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
-                    self.cube))
+            Contour(
+                pytrip.res.point.array_to_point_array(
+                    np.array(dcm.ContourData, dtype=float), _offset),
+                self.cube))
         # add the slice position to slice_in_frame which is needed later for sorting.
         self.slice_in_frame = self.contours[-1].contour[0][2]
 
@@ -1276,7 +1325,8 @@ class Slice:
         for c in self.contours:
             # do not include open contours.
             if c.contour_closed:
-                intersections.extend(pytrip.res.point.get_x_intersection(pos[1], c.contour))
+                intersections.extend(
+                    pytrip.res.point.get_x_intersection(pos[1], c.contour))
         return intersections
 
     def calculate_center(self):
@@ -1315,7 +1365,8 @@ class Slice:
             elif line.startswith("thickness"):
                 items = line.split()
                 self.thickness = float(items[1])
-                logger.debug("Read VDX: thickness = {:f}".format(self.thickness))
+                logger.debug("Read VDX: thickness = {:f}".format(
+                    self.thickness))
 
                 if len(items) == 7:
                     self.start_pos = float(items[4])
@@ -1331,7 +1382,9 @@ class Slice:
                 i = c.read_vdx(content, i)
                 self.add_contour(c)
                 # TODO: not sure if multiple contours for the same ROI/VOI are allowed in VDX format.
-            elif line.startswith("slice "):  # need that extra space to discriminate from "slice_in_frame"
+            elif line.startswith(
+                    "slice "
+            ):  # need that extra space to discriminate from "slice_in_frame"
                 break
             elif len(self.contours) >= number_of_contours:
                 break
@@ -1363,7 +1416,8 @@ class Slice:
         self.slice_in_frame = float(line1.split()[1])
 
         c = Contour([], self.cube)
-        c.read_vdx_old(slice_number=self.slice_in_frame, xy_line=line3.split()[1:])
+        c.read_vdx_old(slice_number=self.slice_in_frame,
+                       xy_line=line3.split()[1:])
         self.add_contour(c)
 
         return i
@@ -1382,8 +1436,10 @@ class Slice:
 
         # then we check if CT cube is loaded
         if dcmcube is not None:
-            candidates = [dcm for dcm in dcmcube if np.isclose(dcm.SliceLocation,
-                                                               self.get_position())]
+            candidates = [
+                dcm for dcm in dcmcube
+                if np.isclose(dcm.SliceLocation, self.get_position())
+            ]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
@@ -1419,7 +1475,8 @@ class Slice:
             if cnt.number_of_points() == 1:  # Handle POIs
                 out += "number_of_points {:d}\n".format(cnt.number_of_points())
             else:  # Handle ROIs
-                out += "number_of_points {:d}\n".format(cnt.number_of_points() + 1)
+                out += "number_of_points {:d}\n".format(
+                    cnt.number_of_points() + 1)
             out += cnt.vdx_string()
             out += "\n"
         return out
@@ -1469,7 +1526,6 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
-
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1495,7 +1551,9 @@ class Contour:
 
         :returns: Center of the contour [x,y,z] in [mm], area [mm**2] (TODO: to be confirmed)
         """
-        points = np.array(self.contour + [self.contour[0]])  # connect the contour first and last point
+        points = np.array(
+            self.contour +
+            [self.contour[0]])  # connect the contour first and last point
         # its needed only for calculation of dxdy in Green's theorem below
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
@@ -1510,13 +1568,14 @@ class Contour:
         total_path = np.sum(paths)
 
         if total_path > 0:
-            center = np.array([np.dot(points[:-1, 0], paths) / total_path,
-                               np.dot(points[:-1, 1], paths) / total_path,
-                               points[0, 2]])
+            center = np.array([
+                np.dot(points[:-1, 0], paths) / total_path,
+                np.dot(points[:-1, 1], paths) / total_path, points[0, 2]
+            ])
         else:
-            center = np.array([np.sum(points[:-1, 0]),
-                               np.sum(points[:-1, 1]),
-                               points[0, 2]])
+            center = np.array(
+                [np.sum(points[:-1, 0]),
+                 np.sum(points[:-1, 1]), points[0, 2]])
 
         return center, area
 
@@ -1545,17 +1604,15 @@ class Contour:
         # However, z may be mapped directly as found in the dicom file by using z_tables in .hed
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0] - self.cube.xoffset,
-                                                         cnt[1] - self.cube.yoffset,
-                                                         cnt[2],
-                                                         0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (
+                cnt[0] - self.cube.xoffset, cnt[1] - self.cube.yoffset, cnt[2],
+                0, 0, 0)
 
         # repeat the first point, to close the contour, if needed
         if self.contour_closed and len(self.contour) > 1:
-            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
-                                                         self.contour[0][1] - self.cube.yoffset,
-                                                         self.contour[0][2],
-                                                         0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (
+                self.contour[0][0] - self.cube.xoffset, self.contour[0][1] -
+                self.cube.yoffset, self.contour[0][2], 0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
@@ -1589,12 +1646,17 @@ class Contour:
                     break
 
                 con_dat = line.split()
-                if len(con_dat) < 3:  # point must be at least three dimensional
-                    logger.warning(".vdx line {:d}: ignored, expected <x> <y> <z> positions".format(i))
+                if len(con_dat
+                       ) < 3:  # point must be at least three dimensional
+                    logger.warning(
+                        ".vdx line {:d}: ignored, expected <x> <y> <z> positions"
+                        .format(i))
                 else:
-                    self.contour.append([float(con_dat[0]) + self.cube.xoffset,
-                                         float(con_dat[1]) + self.cube.yoffset,
-                                         float(con_dat[2])])
+                    self.contour.append([
+                        float(con_dat[0]) + self.cube.xoffset,
+                        float(con_dat[1]) + self.cube.yoffset,
+                        float(con_dat[2])
+                    ])
                     j += 1  # increment point counter
 
             else:  # in case we do not have a point, some keyword may be found
@@ -1607,7 +1669,8 @@ class Contour:
 
         # check if the contour is closed
         # self.contour[:] holds the actual data points
-        if len(self.contour) > 1:  # check if this is an actual contour, and not a POI
+        if len(self.contour
+               ) > 1:  # check if this is an actual contour, and not a POI
             # if first data point is the same as the last data point we have closed contour
             if self.contour[0] == self.contour[-1]:
                 self.contour_closed = True
@@ -1638,18 +1701,21 @@ class Contour:
             _pixel_size = self.cube.pixel_size
 
         # and example of xy_line: 3021 4761 2994 4899 2916 5015
-        xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]  # make list of pairs
+        xy_pairs = [xy_line[i:i + 2]
+                    for i in range(0, len(xy_line), 2)]  # make list of pairs
         for x, y in xy_pairs:
             # TRiP98 saves X,Y coordinates as integers, to get [mm] they needs to be divided by 16
-            self.contour.append([_pixel_size * float(x) / 16.0,
-                                 _pixel_size * float(y) / 16.0,
-                                 float(slice_number)])
+            self.contour.append([
+                _pixel_size * float(x) / 16.0, _pixel_size * float(y) / 16.0,
+                float(slice_number)
+            ])
 
         # The legacy 1.2 VDX format does not discriminate between open or closed contours.
         # Therefore all contours read will be closed, except for POIs.
         # I checked VDX 1.2 files generated by TRiP and converted from dcm2trip, the last point
         # is not repeated here.
-        if len(self.contour) > 1:  # check if this is an actual contour, and not a POI
+        if len(self.contour
+               ) > 1:  # check if this is an actual contour, and not a POI
             logging.debug("VDX 1.2 read, contour is closed")
             self.contour_closed = True
         else:
@@ -1698,7 +1764,9 @@ class Contour:
         """
         :returns: True if contour in argument is contained inside self.
         """
-        return pytrip.res.point.point_in_polygon(contour.contour[0][0], contour.contour[0][1], self.contour)
+        return pytrip.res.point.point_in_polygon(contour.contour[0][0],
+                                                 contour.contour[0][1],
+                                                 self.contour)
 
     def concat(self):
         """
@@ -1742,7 +1810,8 @@ class Contour:
         if len(self.contour) == 0:
             self.contour = contour.contour
             return
-        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
+        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(
+            self.contour, contour.contour)
         con = []
         for i in range(i1 + 1):
             con.append(self.contour[i])

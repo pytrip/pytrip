@@ -78,7 +78,8 @@ def load_data_cube(filename):
         dmin = d.cube.min()
         logging.info("Data min, max values: {:g} {:g}".format(dmin, dmax))
     else:
-        logging.warning("Filename " + filename + " is neither valid DOS nor LET cube")
+        logging.warning("Filename " + filename +
+                        " is neither valid DOS nor LET cube")
 
     basename_cube = d.basename
 
@@ -123,18 +124,51 @@ def main(args=sys.argv[1:]):
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("--data", help="data cube(dose, LET etc)", type=str, nargs='?')
+    parser.add_argument("--data",
+                        help="data cube(dose, LET etc)",
+                        type=str,
+                        nargs='?')
     parser.add_argument("--ct", help="CT cube", type=str, nargs='?')
-    parser.add_argument(
-        "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=1)
-    parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
-    parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
-    parser.add_argument("-m", "--max", type=float, dest='csmax', metavar='csmax',
+    parser.add_argument("-f",
+                        "--from",
+                        type=int,
+                        dest='sstart',
+                        metavar='N',
+                        help="Output from slice number N",
+                        default=1)
+    parser.add_argument("-t",
+                        "--to",
+                        type=int,
+                        dest='sstop',
+                        metavar='M',
+                        help="Output up to slice number M")
+    parser.add_argument("-H",
+                        "--HUbar",
+                        dest='HUbar',
+                        default=False,
+                        action='store_true',
+                        help="Add HU colour bar")
+    parser.add_argument("-m",
+                        "--max",
+                        type=float,
+                        dest='csmax',
+                        metavar='csmax',
                         help="Maximum colorscale value for plotting data")
-    parser.add_argument("-o", "--outputdir", dest='outputdir',
-                        help="Directory for output files.", type=str, default=None)
-    parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("-o",
+                        "--outputdir",
+                        dest='outputdir',
+                        help="Directory for output files.",
+                        type=str,
+                        default=None)
+    parser.add_argument('-v',
+                        '--verbosity',
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     parsed_args = parser.parse_args(args)
 
     if parsed_args.verbosity == 1:
@@ -151,7 +185,8 @@ def main(args=sys.argv[1:]):
     # Check if different output path was requested. If yes, then check if it exists.
     if parsed_args.outputdir:
         if not os.path.isdir(parsed_args.outputdir):
-            logging.warning("Output directory " + parsed_args.outputdir + " does not exist, creating.")
+            logging.warning("Output directory " + parsed_args.outputdir +
+                            " does not exist, creating.")
             os.makedirs(parsed_args.outputdir)
 
     data_cube, data_basename = load_data_cube(parsed_args.data)
@@ -163,11 +198,15 @@ def main(args=sys.argv[1:]):
         if not data_cube.is_compatible(ct_cube):
             logging.error("Cubes don't match")
             logging.info("Cube 1 " + parsed_args.data + " : ")
-            logging.info("\tshape {:d} x {:d} x {:d}".format(data_cube.dimx, data_cube.dimy, data_cube.dimz))
-            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(data_cube.pixel_size, data_cube.slice_distance))
+            logging.info("\tshape {:d} x {:d} x {:d}".format(
+                data_cube.dimx, data_cube.dimy, data_cube.dimz))
+            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(
+                data_cube.pixel_size, data_cube.slice_distance))
             logging.info("Cube 2 " + parsed_args.ct + " : ")
-            logging.info("\tshape {:d} x {:d} x {:d}".format(ct_cube.dimx, ct_cube.dimy, ct_cube.dimz))
-            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(ct_cube.pixel_size, ct_cube.slice_distance))
+            logging.info("\tshape {:d} x {:d} x {:d}".format(
+                ct_cube.dimx, ct_cube.dimy, ct_cube.dimz))
+            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(
+                ct_cube.pixel_size, ct_cube.slice_distance))
             return 2
 
     cube = None
@@ -190,10 +229,13 @@ def main(args=sys.argv[1:]):
     # xmin_center, ymin_center, zmin_center = 0.5, 0.5, 0
     # xmax_center, ymax_center, zmax_center = 4.5, 4.5, 4
     xmin_center, ymin_center, zmin_center = cube.indices_to_pos([0, 0, 0])
-    xmax_center, ymax_center, zmax_center = cube.indices_to_pos([cube.dimx - 1, cube.dimy - 1, cube.dimz - 1])
+    xmax_center, ymax_center, zmax_center = cube.indices_to_pos(
+        [cube.dimx - 1, cube.dimy - 1, cube.dimz - 1])
 
-    logging.info("First bin center: {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmin_center, ymin_center, zmin_center))
-    logging.info("Last bin center : {:10.2f} {:10.2f} {:10.2f} [mm]".format(xmax_center, ymax_center, zmax_center))
+    logging.info("First bin center: {:10.2f} {:10.2f} {:10.2f} [mm]".format(
+        xmin_center, ymin_center, zmin_center))
+    logging.info("Last bin center : {:10.2f} {:10.2f} {:10.2f} [mm]".format(
+        xmax_center, ymax_center, zmax_center))
 
     # get lowest corner of leftmost lowest bin
     xmin_lowest, ymin_lowest = xmin_center - 0.5 * cube.pixel_size, ymin_center - 0.5 * cube.pixel_size
@@ -206,7 +248,9 @@ def main(args=sys.argv[1:]):
     data_im = None
 
     if parsed_args.sstart <= 0:
-        logging.error("Invalid slice number {:d}. First slice must be 1 or greater.".format(parsed_args.sstart))
+        logging.error(
+            "Invalid slice number {:d}. First slice must be 1 or greater.".
+            format(parsed_args.sstart))
         return 1
 
     # if user hasn't provided number of first slice, then argument parsing method will set it to zero
@@ -253,19 +297,21 @@ def main(args=sys.argv[1:]):
         slice_str = str(slice_id) + "/" + str(cube.dimz)
         if parsed_args.outputdir is not None:
             # use os.path.join() in order to add slash if it is missing.
-            output_filename = os.path.join(parsed_args.outputdir, os.path.basename(output_filename))
+            output_filename = os.path.join(parsed_args.outputdir,
+                                           os.path.basename(output_filename))
         if parsed_args.verbosity == 0:
             print("Write slice number: " + slice_str)
         elif parsed_args.verbosity > 0:
-            logging.info("Write slice number: " + slice_str + " to " + output_filename)
+            logging.info("Write slice number: " + slice_str + " to " +
+                         output_filename)
 
-        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
-                                                                              cube.dimz,
-                                                                              cube.slice_to_z(slice_id))
+        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(
+            slice_id, cube.dimz, cube.slice_to_z(slice_id))
         text_slice.set_text(slice_str)
 
         if ct_cube is not None:
-            ct_slice = ct_cube.cube[slice_id - 1, :, :]  # extract 2D slice from 3D cube
+            ct_slice = ct_cube.cube[slice_id -
+                                    1, :, :]  # extract 2D slice from 3D cube
 
             # remove CT image from the current plot (if present) and replace later with new data
             if ct_im is not None:
@@ -274,36 +320,45 @@ def main(args=sys.argv[1:]):
             ct_im = ax.imshow(
                 ct_slice,
                 cmap=plt.cm.gray,
-                interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
+                interpolation=
+                'nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
                 #  dataset of lower resolution than the output image
                 #  see http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html
                 origin="lower",  # ['upper' | 'lower']:
                 # Place the [0,0] index of the array in the upper left or lower left corner of the axes.
-                extent=[xmin_lowest, xmax_highest, ymin_lowest, ymax_highest]  # scalars (left, right, bottom, top) :
+                extent=[xmin_lowest, xmax_highest, ymin_lowest,
+                        ymax_highest]  # scalars (left, right, bottom, top) :
                 # the location, in data-coordinates, of the lower-left and upper-right corners
             )
 
             # optionally add HU bar
             if parsed_args.HUbar and ct_cb is None:
-                ct_cb = fig.colorbar(ct_im, ax=ax, ticks=arange(-1000, 3000, 200), orientation='horizontal')
+                ct_cb = fig.colorbar(ct_im,
+                                     ax=ax,
+                                     ticks=arange(-1000, 3000, 200),
+                                     orientation='horizontal')
                 ct_cb.set_label('HU')
 
         if data_cube is not None:
-            data_slice = data_cube.cube[slice_id - 1, :, :]  # extract 2D slice from 3D cube
+            data_slice = data_cube.cube[
+                slice_id - 1, :, :]  # extract 2D slice from 3D cube
 
             # remove data cube image from the current plot (if present) and replace later with new data
             if data_im is not None:
                 data_im.remove()
 
             cmap1 = plt.cm.jet
-            cmap1.set_under("k", alpha=0.0)  # seems to be broken! :-( -- Sacrificed goat, now working - David
+            cmap1.set_under(
+                "k", alpha=0.0
+            )  # seems to be broken! :-( -- Sacrificed goat, now working - David
             cmap1.set_over("k", alpha=0.0)
             cmap1.set_bad("k", alpha=0.0)  # Sacrificial knife here
             dmin = data_cube.cube.min()
             dmax = data_cube.cube.max() * 1.1
             if data_colorscale_max is not None and data_cube is not None:
                 dmax = data_colorscale_max * 1.1
-            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
+            tmpdat = ma.masked_where(data_slice <= dmin,
+                                     data_slice)  # Sacrificial goat
 
             # plot new data cube
             data_im = ax.imshow(
@@ -311,20 +366,21 @@ def main(args=sys.argv[1:]):
                 cmap=cmap1,
                 norm=colors.Normalize(vmin=0, vmax=dmax, clip=False),
                 alpha=0.7,
-                interpolation='nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
+                interpolation=
+                'nearest',  # each pixel will get colour of nearest neighbour, useful when displaying
                 #  dataset of lower resolution than the output image
                 #  see http://matplotlib.org/examples/images_contours_and_fields/interpolation_methods.html
                 origin="lower",  # ['upper' | 'lower']:
                 # Place the [0,0] index of the array in the upper left or lower left corner of the axes.
-                extent=[xmin_lowest, xmax_highest, ymin_lowest, ymax_highest]  # scalars (left, right, bottom, top) :
+                extent=[xmin_lowest, xmax_highest, ymin_lowest,
+                        ymax_highest]  # scalars (left, right, bottom, top) :
                 # the location, in data-coordinates, of the lower-left and upper-right corners
             )
 
             if data_cb is None:
-                data_cb = fig.colorbar(
-                    data_im,
-                    orientation='vertical',
-                    shrink=0.8)
+                data_cb = fig.colorbar(data_im,
+                                       orientation='vertical',
+                                       shrink=0.8)
                 if isinstance(data_cube, pt.LETCube):
                     data_cb.set_label("LET [keV/um]")
                 elif isinstance(data_cube, pt.DosCube):

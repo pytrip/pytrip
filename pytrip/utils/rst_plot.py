@@ -36,12 +36,31 @@ def main(args=sys.argv[1:]):
     from pylab import plt, ylabel, grid, xlabel, array
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("rst_file", help="location of rst file in TRiP98 format", type=str)
-    parser.add_argument("output_file", help="location of PNG file to save", type=str)
-    parser.add_argument("-s", "--submachine", help="Select submachine to plot.", type=int, default=1)
-    parser.add_argument("-f", "--factor", help="Factor for scaling the blobs. Default is 1000.", type=int, default=1000)
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("rst_file",
+                        help="location of rst file in TRiP98 format",
+                        type=str)
+    parser.add_argument("output_file",
+                        help="location of PNG file to save",
+                        type=str)
+    parser.add_argument("-s",
+                        "--submachine",
+                        help="Select submachine to plot.",
+                        type=int,
+                        default=1)
+    parser.add_argument("-f",
+                        "--factor",
+                        help="Factor for scaling the blobs. Default is 1000.",
+                        type=int,
+                        default=1000)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     args = parser.parse_args(args)
 
     file = args.rst_file
@@ -62,7 +81,8 @@ def main(args=sys.argv[1:]):
         y.append(_y)
         z.append(_z)
 
-    title = "Submachine: {:d} / {:d} - Energy: {:.3f} MeV/u".format(sm, len(a.machines), b.energy)
+    title = "Submachine: {:d} / {:d} - Energy: {:.3f} MeV/u".format(
+        sm, len(a.machines), b.energy)
     print(title)
     cc = array(z)
 

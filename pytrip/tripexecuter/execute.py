@@ -37,7 +37,8 @@ logger = logging.getLogger(__name__)
 try:
     import paramiko
 except ImportError:
-    logger.warning("Paramiko package not installed, only local TRiP access possible")
+    logger.warning(
+        "Paramiko package not installed, only local TRiP access possible")
 
 
 class Execute(object):
@@ -62,7 +63,8 @@ class Execute(object):
 
         logger.debug("Initializing TripExecuter()")
 
-        self.__uuid__ = uuid.uuid4()  # for uniquely identifying this execute object
+        self.__uuid__ = uuid.uuid4(
+        )  # for uniquely identifying this execute object
 
         self.ctx = ctx
         self._ctx_path = ctx_path
@@ -103,20 +105,31 @@ class Execute(object):
         out += "   Executer\n"
         out += "----------------------------------------------------------------------------\n"
         out += "| General configuration\n"
-        out += "|   UUID                        : {:s}\n".format(str(self.__uuid__))
-        out += "|   CtxCube.basename            : '{:s}'\n".format(self.ctx.basename)
-        out += "|   VdxCube.basename            : '{:s}'\n".format(self.vdx.basename)
-        out += "|   STDOUT prefix               : '{:s}'\n".format(self.logfile_prefix_stdout)
-        out += "|   STDERR prefix               : '{:s}'\n".format(self.logfile_prefix_stderr)
-        out += "|   TRiP98 command              : '{:s}'\n".format(self.trip_bin_path)
-        out += "|   Cleanup                     : {:s}\n".format(str(self._cleanup))
+        out += "|   UUID                        : {:s}\n".format(
+            str(self.__uuid__))
+        out += "|   CtxCube.basename            : '{:s}'\n".format(
+            self.ctx.basename)
+        out += "|   VdxCube.basename            : '{:s}'\n".format(
+            self.vdx.basename)
+        out += "|   STDOUT prefix               : '{:s}'\n".format(
+            self.logfile_prefix_stdout)
+        out += "|   STDERR prefix               : '{:s}'\n".format(
+            self.logfile_prefix_stderr)
+        out += "|   TRiP98 command              : '{:s}'\n".format(
+            self.trip_bin_path)
+        out += "|   Cleanup                     : {:s}\n".format(
+            str(self._cleanup))
 
         out += "|\n"
         out += "| Remote access\n"
-        out += "|   Remote execution            : {:s}\n".format(str(self.remote))
-        out += "|   Server                      : '{:s}'\n".format(self.servername)
-        out += "|   Username                    : '{:s}'\n".format(self.username)
-        out += "|   Password                    : '{:s}'\n".format("*" * len(self.password))
+        out += "|   Remote execution            : {:s}\n".format(
+            str(self.remote))
+        out += "|   Server                      : '{:s}'\n".format(
+            self.servername)
+        out += "|   Username                    : '{:s}'\n".format(
+            self.username)
+        out += "|   Password                    : '{:s}'\n".format(
+            "*" * len(self.password))
 
         return out
 
@@ -135,7 +148,8 @@ class Execute(object):
             self._norun = True
 
         self._callback = _callback  # TODO: check if GUI really needs this.
-        self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
+        self._pre_execute(
+            plan)  # prepare directory where all will be run, put files in it.
         plan.save_exec(plan._exec_path)  # add the .exec as well
         rc = self._run_trip(plan)  # run TRiP
         self._finish(plan)
@@ -151,7 +165,9 @@ class Execute(object):
 
         # attach working dir to plan, but expanded for environment variables
         if not plan.working_dir:
-            logger.warning("No working directory was specified for plan. Setting it to ./")
+            logger.warning(
+                "No working directory was specified for plan. Setting it to ./"
+            )
             plan.working_dir = "./"
         plan._working_dir = os.path.expandvars(plan.working_dir)
 
@@ -166,25 +182,28 @@ class Execute(object):
             from datetime import datetime
             now = datetime.now()
             prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
-            plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=plan._working_dir)
+            plan._temp_dir = tempfile.mkdtemp(prefix=prefix,
+                                              dir=plan._working_dir)
 
-        plan._temp_dir = os.path.join(plan._working_dir,
-                                      plan._temp_dir)
+        plan._temp_dir = os.path.join(plan._working_dir, plan._temp_dir)
 
-        plan._exec_path = os.path.join(plan._temp_dir,
-                                       plan.basename + ".exec")
+        plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
-        logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
+        logger.debug("Created temporary working directory {:s}".format(
+            plan._temp_dir))
 
         _flist = []  # list of files which must be copied to the package.
 
         if plan.incube_basename:
-            _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
-            _flist.append(os.path.join(plan._working_dir, plan.incube_basename + ".hed"))
+            _flist.append(
+                os.path.join(plan._working_dir, plan.incube_basename + ".dos"))
+            _flist.append(
+                os.path.join(plan._working_dir, plan.incube_basename + ".hed"))
 
         for _field in plan.fields:
             if _field.use_raster_file:
-                _flist.append(os.path.join(plan._working_dir, _field.basename + ".rst"))
+                _flist.append(
+                    os.path.join(plan._working_dir, _field.basename + ".rst"))
 
         # once the file list _flist is complete, copy it to the package location
         for _fn in _flist:
@@ -197,17 +216,24 @@ class Execute(object):
         # This is necessary as long as PyTRiP has trouble to produce TRiP98 readable files reliably.
         if self._ctx_path:
             _ctx_base, _ = os.path.splitext(self._ctx_path)
-            logger.info("Copying {:s} to tmp dir, instead of writing from Ctx object.".format(self._ctx_path))
+            logger.info(
+                "Copying {:s} to tmp dir, instead of writing from Ctx object.".
+                format(self._ctx_path))
             shutil.copy(self._ctx_path, plan._temp_dir)  # copy .ctx
             shutil.copy(_ctx_base + ".hed", plan._temp_dir)  # copy.hed
         else:
-            self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
+            self.ctx.write(
+                os.path.join(plan._temp_dir, self.ctx.basename +
+                             ".ctx"))  # will also make the hed
 
         if self._vdx_path:
-            logger.info("Copying {:s} to tmp dir, instead of writing from Vdx object.".format(self._vdx_path))
+            logger.info(
+                "Copying {:s} to tmp dir, instead of writing from Vdx object.".
+                format(self._vdx_path))
             shutil.copy(self._vdx_path, plan._temp_dir)
         else:
-            self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
+            self.vdx.write(
+                os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
 
     def add_log_listener(self, listener):
         """ A listener is something which has a .write(txt) method.
@@ -248,14 +274,17 @@ class Execute(object):
 
         trip, ver = self.test_local_trip()
         if trip is None:
-            logger.error("Could not find TRiP98 using path \"{:s}\"".format(self.trip_bin_path))
+            logger.error("Could not find TRiP98 using path \"{:s}\"".format(
+                self.trip_bin_path))
             raise EnvironmentError
         else:
             logger.info("Found {:s} version {:s}".format(trip, ver))
 
         # stdout and stderr are always written locally
-        _stdout_path = os.path.join(plan._working_dir, self.logfile_prefix_stdout + plan.basename)
-        _stderr_path = os.path.join(plan._working_dir, self.logfile_prefix_stderr + plan.basename)
+        _stdout_path = os.path.join(plan._working_dir,
+                                    self.logfile_prefix_stdout + plan.basename)
+        _stderr_path = os.path.join(plan._working_dir,
+                                    self.logfile_prefix_stderr + plan.basename)
         logger.debug("Write stdout to {:s}".format(_stdout_path))
         logger.debug("Write stderr to {:s}".format(_stderr_path))
 
@@ -309,19 +338,25 @@ class Execute(object):
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
-        tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
+        tar_path = self._compress_files(
+            plan._temp_dir)  # make a tarball out of the TRiP98 package
 
         # prepare relevant dirs and paths
         _, tgz_filename = os.path.split(tar_path)
         remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
         local_tgz_path = os.path.join(plan._working_dir, tgz_filename)
-        remote_run_dir = os.path.join(self.remote_base_dir, tgz_filename.rstrip(".tar.gz"))  # TODO: os.path.splitext
+        remote_run_dir = os.path.join(
+            self.remote_base_dir,
+            tgz_filename.rstrip(".tar.gz"))  # TODO: os.path.splitext
         remote_exec_fn = plan.basename + ".exec"
-        remote_rel_run_dir = tgz_filename.rstrip(".tar.gz")  # TODO: os.path.splitext
+        remote_rel_run_dir = tgz_filename.rstrip(
+            ".tar.gz")  # TODO: os.path.splitext
 
         # stdout and stderr are always written locally
-        _stdout_path = os.path.join(plan._working_dir, self.logfile_prefix_stdout + plan.basename)
-        _stderr_path = os.path.join(plan._working_dir, self.logfile_prefix_stderr + plan.basename)
+        _stdout_path = os.path.join(plan._working_dir,
+                                    self.logfile_prefix_stdout + plan.basename)
+        _stderr_path = os.path.join(plan._working_dir,
+                                    self.logfile_prefix_stderr + plan.basename)
         logger.debug("Write stdout to {:s}".format(_stdout_path))
         logger.debug("Write stderr to {:s}".format(_stderr_path))
 
@@ -337,20 +372,26 @@ class Execute(object):
         # then .bashrc_profile is checked. (However, not .bashrc)
         _tripcmd = "bash -l -c \"" + self.trip_bin_path + " < " + remote_exec_fn + "\""
 
-        commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
-                    "cd " + remote_run_dir + ";" + norun + _tripcmd,
-                    "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
-                    "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
+        commands = [
+            "cd " + self.remote_base_dir + ";" + "tar -zxvf " +
+            remote_tgz_path,  # unpack tarball
+            "cd " + remote_run_dir + ";" + norun + _tripcmd,
+            "cd " + self.remote_base_dir + ";" + "tar -zcvf " +
+            remote_tgz_path + " " + remote_rel_run_dir,
+            "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir
+        ]
 
         # test if TRiP is installed
         logger.debug("Test if TRiP98 can be reached remotely...")
         trip, ver = self.test_remote_trip()
         if trip is None:
-            logger.error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername,
-                                                                                    self.trip_bin_path))
+            logger.error(
+                "Could not find TRiP98 on {:s} using path \"{:s}\"".format(
+                    self.servername, self.trip_bin_path))
             raise EnvironmentError
         else:
-            logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
+            logger.info("Found {:s} version {:s} on {:s}".format(
+                trip, ver, self.servername))
 
         fp_stdout = open(_stdout_path, "w")
         fp_stderr = open(_stderr_path, "w")
@@ -361,7 +402,8 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.log(_cmd)
             stdin, stdout, stderr = ssh.exec_command(_cmd)
-            rc = int(stdout.channel.recv_exit_status())  # recv_exit_status() returns an string type
+            rc = int(stdout.channel.recv_exit_status()
+                     )  # recv_exit_status() returns an string type
             if rc != 0:
                 logger.error("TRiP98 error: return code {:d}".format(rc))
             else:
@@ -395,9 +437,11 @@ class Execute(object):
 
             # only copy files back, if we actually have been running TRiP
             if self._norun:
-                logger.info("dummy run: would now copy {:s} to {:s}".format(_path, plan._working_dir))
+                logger.info("dummy run: would now copy {:s} to {:s}".format(
+                    _path, plan._working_dir))
             else:
-                logger.info("copy {:s} to {:s}".format(_path, plan._working_dir))
+                logger.info("copy {:s} to {:s}".format(_path,
+                                                       plan._working_dir))
                 shutil.copy(_path, plan._working_dir)
 
         for _file_name in plan._out_files:
@@ -421,7 +465,9 @@ class Execute(object):
                     plan.letcubes.append(_let_cube)
 
             if ".rst" in _file_name:
-                logger.warning("attaching fields to class not implemented yet {:s}".format(_path))
+                logger.warning(
+                    "attaching fields to class not implemented yet {:s}".
+                    format(_path))
                 # TODO
                 # need to access the RstClass here for each rst file. This will then need to be attached
                 # to the proper field in the list of fields.
@@ -456,7 +502,8 @@ class Execute(object):
         _cwd = os.getcwd()
         os.chdir(_pardir)
 
-        logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_filename))
+        logger.debug("Compressing files in {:s} to {:s}".format(
+            _source_dir, _target_filename))
 
         with tarfile.open(_target_filename, "w:gz") as tar:
             tar.add(_basedir, arcname=_basedir)
@@ -549,23 +596,31 @@ class Execute(object):
             if not os.path.isfile(rsa_keypath):
                 # login with provided username + empty password
                 try:
-                    ssh.connect(self.servername, username=self.username, password="")
+                    ssh.connect(self.servername,
+                                username=self.username,
+                                password="")
                 except Exception:
                     logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username, password or key in " + self.rsakey_local_path)
+                    logger.error("Check username, password or key in " +
+                                 self.rsakey_local_path)
                     raise
             else:
                 # login with provided username + private key
                 rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
                 try:
-                    ssh.connect(self.servername, username=self.username, pkey=rsa_key)
+                    ssh.connect(self.servername,
+                                username=self.username,
+                                pkey=rsa_key)
                 except Exception:
                     logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username and your key in " + self.rsakey_local_path)
+                    logger.error("Check username and your key in " +
+                                 self.rsakey_local_path)
                     raise
         else:
             # login with provided username + password
-            ssh.connect(self.servername, username=self.username, password=self.password)
+            ssh.connect(self.servername,
+                        username=self.username,
+                        password=self.password)
 
         return ssh
 
@@ -585,7 +640,8 @@ class Execute(object):
                     transport.connect(username=self.username, password="")
                 except Exception:
                     logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username, password or key in " + self.rsakey_local_path)
+                    logger.error("Check username, password or key in " +
+                                 self.rsakey_local_path)
                     raise
             else:
                 # login with provided username + private key
@@ -594,7 +650,8 @@ class Execute(object):
                     transport.connect(username=self.username, pkey=rsa_key)
                 except Exception:
                     logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username and your key in " + self.rsakey_local_path)
+                    logger.error("Check username and your key in " +
+                                 self.rsakey_local_path)
                     raise
         else:
             # login with provided username + password

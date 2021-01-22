@@ -49,7 +49,8 @@ class TestRst(unittest.TestCase):
         self.assertEqual(r.submachines, '17')
         self.assertEqual(r.machines[0].points, 323)
         self.assertEqual(r.machines[0].energy, 120.2)
-        self.assertEqual(r.machines[0].raster_points[0], [27.0, -24.0, 2844850.0])
+        self.assertEqual(r.machines[0].raster_points[0],
+                         [27.0, -24.0, 2844850.0])
 
 
 class TestRst2Sobp(unittest.TestCase):

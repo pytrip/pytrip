@@ -100,7 +100,9 @@ class TestLocalExec(unittest.TestCase):
         t.trip_bin_path = self.trip_path
         print(self.trip_path)
         if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
-            t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
+            t.execute(
+                plan, False
+            )  # setup and make a dry-run, since TRiP98 is not installed.
 
         executer_str = str(t)
         self.assertGreater(len(executer_str), 1)

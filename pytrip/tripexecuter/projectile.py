@@ -94,9 +94,13 @@ class Projectile(object):
         out = "\n"
         out += "   Projectile '{:s}'\n".format(self.name)
         out += "----------------------------------------------------------------------------\n"
-        out += "|  Projectile Z                      : {:s}\n".format(str(self.z))
-        out += "|  Projectile A                      : {:s}\n".format(str(self.a))
-        out += "|  Projectile IUPAC                  : {:s}\n".format(str(self.iupac))
-        out += "|  Symbol used in Trip exec file     : {:s}\n".format(self.trip98_format())
+        out += "|  Projectile Z                      : {:s}\n".format(
+            str(self.z))
+        out += "|  Projectile A                      : {:s}\n".format(
+            str(self.a))
+        out += "|  Projectile IUPAC                  : {:s}\n".format(
+            str(self.iupac))
+        out += "|  Symbol used in Trip exec file     : {:s}\n".format(
+            self.trip98_format())
         out += "----------------------------------------------------------------------------\n"
         return out

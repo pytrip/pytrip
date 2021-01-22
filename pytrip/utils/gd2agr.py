@@ -33,9 +33,19 @@ def main(args=sys.argv[1:]):
     """
     parser = argparse.ArgumentParser()
     parser.add_argument("gd_file", help="location of gd file", type=str)
-    parser.add_argument("dat_file", help="location of .dat to write", type=str, nargs='?')
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("dat_file",
+                        help="location of .dat to write",
+                        type=str,
+                        nargs='?')
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     args = parser.parse_args(args)
 
     gd_data = ReadGd(args.gd_file, let=False, exp=True, agr=True)

@@ -48,6 +48,7 @@ import pytrip as pt
 
 class ReadGd(object):
     """This class reads .gd files."""
+
     # TODO: this class could go into main pytrip/ as well.
 
     def __init__(self, gd_filename, exp=False, agr=False, let=False):
@@ -179,7 +180,8 @@ class ReadGd(object):
             out_file_name = self.filename[:len_file_name - 2]
             if self.agr:
                 out_file_name += "agr"
-                print('# Writing data in a ".agr" file fragment: ' + out_file_name)
+                print('# Writing data in a ".agr" file fragment: ' +
+                      out_file_name)
             else:
                 out_file_name += "dat"
                 print('# Writing data in a ".dat" file: ' + out_file_name)
@@ -273,10 +275,12 @@ class ReadGd(object):
                 str_out += '@    s' + str(counter)
                 str_out += ' comment "' + self.filename + ' "\n'
                 for i, ele in enumerate(self.indata):
-                    str_out += self.xdata[i] + ' ' + str((float(ele[num]) * float(ele[num - 1]))) + '\n'
+                    str_out += self.xdata[i] + ' ' + str(
+                        (float(ele[num]) * float(ele[num - 1]))) + '\n'
                 out_file.write(str_out)
 
                 counter += 1
+
 
 # end special handling for 'm'
 
@@ -284,9 +288,19 @@ class ReadGd(object):
 def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("gd_file", help="location of gd file", type=str)
-    parser.add_argument("dat_file", help="location of .dat to write", type=str, nargs='?')
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("dat_file",
+                        help="location of .dat to write",
+                        type=str,
+                        nargs='?')
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     args = parser.parse_args(args)
 
     gd_data = ReadGd(args.gd_file, let=False, exp=True)

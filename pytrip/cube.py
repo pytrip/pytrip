@@ -95,7 +95,8 @@ class Cube(object):
             # unique for each CT slice
             self._ct_sop_instance_uid = cube._ct_sop_instance_uid
 
-            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+            self.cube = np.zeros((self.dimz, self.dimy, self.dimx),
+                                 dtype=cube.pydata_type)
 
         else:
             import getpass
@@ -105,13 +106,15 @@ class Cube(object):
             self.version = "2.0"
             self.modality = "CT"
             self.created_by = getpass.getuser()
-            self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
+            self.creation_info = "Created with PyTRiP98 {:s}".format(
+                _ptversion)
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
             self.num_bytes = ""
             self.byte_order = "vms"  # aix or vms
             self.patient_name = ""
-            self.patient_id = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')  # create a new patient ID if absent
+            self.patient_id = datetime.datetime.today().strftime(
+                '%Y%m%d-%H%M%S')  # create a new patient ID if absent
             self.slice_dimension = ""  # eg. 256 meaning 256x256 pixels.
             self.pixel_size = ""  # size in [mm]
             self.slice_distance = ""  # distance between slices in [mm]
@@ -233,12 +236,9 @@ class Cube(object):
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
                (indices[1] + 0.5) * self.pixel_size + self.yoffset,
                self.slice_pos[indices[2]]]
-        logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(indices[0],
-                                                                                         indices[1],
-                                                                                         indices[2],
-                                                                                         pos[0],
-                                                                                         pos[1],
-                                                                                         pos[2]))
+        logger.debug(
+            "Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".
+            format(indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
 
     def slice_to_z(self, slice_number):
@@ -260,8 +260,10 @@ class Cube(object):
         # eq = util.evaluator(equation)
         # TODO why data not being used ?
         # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
-        x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
-        y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
+        x = np.linspace(0.5, self.dimx - 0.5,
+                        self.dimx) * self.pixel_size - center[0]
+        y = np.linspace(self.dimx - 0.5, 0.5,
+                        self.dimx) * self.pixel_size - center[1]
         xv, yv = np.meshgrid(x, y)
 
     def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
@@ -276,7 +278,8 @@ class Cube(object):
 
         TODO: this needs some faster implementation.
         """
-        data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)), dtype=data_type)
+        data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)),
+                        dtype=data_type)
         if preset != 0:
             for i_z in range(self.dimz):
                 for i_y in range(self.dimy):
@@ -285,14 +288,16 @@ class Cube(object):
                     # If the number is odd, then the point is inside the VOI.
                     # If the number is even, then the point is outisde the VOI.
                     # This algorithm also works with multiple disconnected contours.
-                    intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                    intersection = voi.get_row_intersections(
+                        self.indices_to_pos([0, i_y, i_z]))
                     if intersection is None:
                         break
                     if len(intersection) > 0:
                         k = 0
                         for i_x in range(self.dimx):
                             # count the number of intersections k along y, where intersection_x < current x position
-                            if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
+                            if self.indices_to_pos([i_x, 0, 0
+                                                    ])[0] > intersection[k]:
                                 k += 1
                                 if k >= len(intersection):
                                     break
@@ -300,7 +305,14 @@ class Cube(object):
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
-    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, slice_offset=0.0):
+    def create_empty_cube(self,
+                          value,
+                          dimx,
+                          dimy,
+                          dimz,
+                          pixel_size,
+                          slice_distance,
+                          slice_offset=0.0):
         """ Creates an empty Cube object.
 
         Values are stored as 2-byte integers.
@@ -325,7 +337,9 @@ class Cube(object):
         self.num_bytes = 2
         self.data_type = "integer"
         self.pydata_type = np.int16
-        self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
+        self.slice_pos = [
+            slice_distance * i + slice_offset for i in range(dimz)
+        ]
         self.header_set = True
         self.patient_id = ''
         # UIDs unique for whole structure set
@@ -347,13 +361,15 @@ class Cube(object):
         """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
-                intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                intersection = voi.get_row_intersections(
+                    self.indices_to_pos([0, i_y, i_z]))
                 if intersection is None:
                     break
                 if len(intersection) > 0:
                     k = 0
                     for i_x in range(self.dimx):
-                        if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
+                        if self.indices_to_pos([i_x, 0, 0
+                                                ])[0] > intersection[k]:
                             k += 1
                             if k >= (len(intersection)):
                                 break
@@ -371,13 +387,15 @@ class Cube(object):
         """
         for i_z in range(self.dimz):
             for i_y in range(self.dimy):
-                intersection = voi.get_row_intersections(self.indices_to_pos([0, i_y, i_z]))
+                intersection = voi.get_row_intersections(
+                    self.indices_to_pos([0, i_y, i_z]))
                 if intersection is None:
                     break
                 if len(intersection) > 0:
                     k = 0
                     for i_x in range(self.dimx):
-                        if self.indices_to_pos([i_x, 0, 0])[0] > intersection[k]:
+                        if self.indices_to_pos([i_x, 0, 0
+                                                ])[0] > intersection[k]:
                             k += 1
                             if k >= (len(intersection)):
                                 break
@@ -420,11 +438,14 @@ class Cube(object):
         # let us check if path is a string in a way python 2 and 3 will like it
         # based on https://stackoverflow.com/questions/4843173/how-to-check-if-type-of-a-variable-is-string
         running_python2 = sys.version_info.major == 2
-        path_string = isinstance(path, (str, bytes) if not running_python2 else basestring)  # NOQA: F821
+        path_string = isinstance(
+            path,
+            (str, bytes) if not running_python2 else basestring)  # NOQA: F821
 
         # single argument of string type, i.e. filename without extension
         if path_string:
-            self.basename = os.path.basename(TRiP98FilePath(path, self).basename)
+            self.basename = os.path.basename(
+                TRiP98FilePath(path, self).basename)
 
             path_locator = TRiP98FileLocator(path, self)
 
@@ -432,7 +453,8 @@ class Cube(object):
             datafile_path = path_locator.datafile
 
             if not datafile_path or not header_path:
-                raise FileNotFound("Loading {:s} failed, file not found".format(path))
+                raise FileNotFound(
+                    "Loading {:s} failed, file not found".format(path))
 
         # tuple with path to header and datafile
         elif len(path) == 2:
@@ -441,41 +463,54 @@ class Cube(object):
             # security checks for header file
             # first check - validity of the path
             if not TRiP98FilePath(header_path, self).is_valid_header_path():
-                logger.warning("Loading {:s} which doesn't look like valid header path".format(header_path))
+                logger.warning(
+                    "Loading {:s} which doesn't look like valid header path".
+                    format(header_path))
 
             # second check - if file exists
             if not os.path.exists(header_path):
                 header_path_locator = TRiP98FileLocator(header_path, self)
                 if header_path_locator.header is not None:
-                    logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(header_path_locator.header,
-                                                                                          header_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(header_path))
+                    logger.warning(
+                        "Did you meant to load {:s}, instead of {:s} ?".format(
+                            header_path_locator.header, header_path))
+                raise FileNotFound(
+                    "Loading {:s} failed, file not found".format(header_path))
 
             # security checks for datafile path
             # first check - validity of the path
-            if not TRiP98FilePath(datafile_path, self).is_valid_datafile_path():
-                logger.warning("Loading {:s} which doesn't look like valid datafile path".format(datafile_path))
+            if not TRiP98FilePath(datafile_path,
+                                  self).is_valid_datafile_path():
+                logger.warning(
+                    "Loading {:s} which doesn't look like valid datafile path".
+                    format(datafile_path))
 
             # second check - if file exists
             if not os.path.exists(datafile_path):
                 datafile_path_locator = TRiP98FileLocator(datafile_path, self)
                 if datafile_path_locator.datafile is not None:
                     logger.warning(
-                        "Did you meant to load {:s}, instead of {:s} ?".format(datafile_path_locator.datafile,
-                                                                               datafile_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(datafile_path))
+                        "Did you meant to load {:s}, instead of {:s} ?".format(
+                            datafile_path_locator.datafile, datafile_path))
+                raise FileNotFound(
+                    "Loading {:s} failed, file not found".format(
+                        datafile_path))
 
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
 
         else:
-            raise Exception("More than two arguments provided as path variable to Cube.read method")
+            raise Exception(
+                "More than two arguments provided as path variable to Cube.read method"
+            )
 
         # finally read files
         self._read_trip_header_file(header_path=header_path)
-        self._read_trip_data_file(datafile_path=datafile_path, header_path=header_path)
+        self._read_trip_data_file(datafile_path=datafile_path,
+                                  header_path=header_path)
 
-    def _read_trip_header_file(self, header_path):  # TODO: could be made private? #126
+    def _read_trip_header_file(
+            self, header_path):  # TODO: could be made private? #126
         """ Reads a header file, accepts also if file is .gz compressed.
         First the un-zipped files will be attempted to read.
         Should these not exist, then the .gz are attempted.
@@ -504,8 +539,11 @@ class Cube(object):
         self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def _read_trip_data_file(self, datafile_path, header_path,
-                             multiply_by_2=False):  # TODO: could be made private? #126
+    def _read_trip_data_file(
+            self,
+            datafile_path,
+            header_path,
+            multiply_by_2=False):  # TODO: could be made private? #126
         """Read TRiP98 formatted data.
 
         If header file was not previously loaded, it will be attempted first.
@@ -537,7 +575,9 @@ class Cube(object):
                 s = f.read(data_dtype.itemsize * data_count)
                 tmpcube = np.frombuffer(s, dtype=data_dtype, count=data_count)
                 # frombuffer returns read-only array, so we need to make it writable
-                cube = np.require(tmpcube, dtype=data_dtype, requirements=['W', 'O'])
+                cube = np.require(tmpcube,
+                                  dtype=data_dtype,
+                                  requirements=['W', 'O'])
         else:
             cube = np.fromfile(datafile_path, dtype=data_dtype)
 
@@ -551,15 +591,14 @@ class Cube(object):
             logger.error("Header size and cube size dont match.")
             logger.error("Cube data points : {:d}".format(len(cube)))
             logger.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
-                self.dimx * self.dimy * self.dimz,
-                self.dimx,
-                self.dimy,
+                self.dimx * self.dimy * self.dimz, self.dimx, self.dimy,
                 self.dimz))
             raise IOError("Header data and dose cube size are not consistent.")
 
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
         if multiply_by_2:
-            logger.warning("Cube was previously rescaled to 50%. Now multiplying with 2.")
+            logger.warning(
+                "Cube was previously rescaled to 50%. Now multiplying with 2.")
             cube *= 2
         self.cube = cube
 
@@ -579,7 +618,8 @@ class Cube(object):
                 self.created_by = content[i].replace("created_by ", "", 1)
                 self.created_by = self.created_by.rstrip()
             if re.match("creation_info", content[i]):
-                self.creation_info = content[i].replace("creation_info ", "", 1)
+                self.creation_info = content[i].replace(
+                    "creation_info ", "", 1)
                 self.creation_info = self.creation_info.rstrip()
             if re.match("primary_view", content[i]):
                 self.primary_view = content[i].split()[1]
@@ -597,7 +637,8 @@ class Cube(object):
                 self.pixel_size = float(content[i].split()[1])
             if re.match("slice_distance", content[i]):
                 self.slice_distance = float(content[i].split()[1])
-                self.slice_thickness = float(content[i].split()[1])  # TRiP format only. See #342
+                self.slice_thickness = float(
+                    content[i].split()[1])  # TRiP format only. See #342
             if re.match("slice_number", content[i]):
                 self.slice_number = int(content[i].split()[1])
             if re.match("xoffset", content[i]):
@@ -627,14 +668,18 @@ class Cube(object):
         self.yoffset *= self.pixel_size
         self.zoffset *= self.slice_distance
 
-        logger.debug("TRiP loaded offsets: {:f} {:f} {:f}".format(self.xoffset, self.yoffset, self.zoffset))
+        logger.debug("TRiP loaded offsets: {:f} {:f} {:f}".format(
+            self.xoffset, self.yoffset, self.zoffset))
 
         # generate slice position tables, if absent in header file
         # Note:
         # - ztable in .hed is _without_ offset
         # - self.slice_pos however holds values _including_ offset.
         if not self.z_table:
-            self.slice_pos = [self.zoffset + _i * self.slice_distance for _i in range(self.slice_number)]
+            self.slice_pos = [
+                self.zoffset + _i * self.slice_distance
+                for _i in range(self.slice_number)
+            ]
         self._set_format_str()
 
     def _set_format_str(self):
@@ -682,7 +727,9 @@ class Cube(object):
         """
 
         running_python2 = sys.version_info.major == 2
-        path_string = isinstance(path, (str, bytes) if not running_python2 else basestring)  # NOQA: F821
+        path_string = isinstance(
+            path,
+            (str, bytes) if not running_python2 else basestring)  # NOQA: F821
 
         if path_string:
             header_path = self.header_file_name(path)
@@ -694,14 +741,21 @@ class Cube(object):
             # security checks for header file
             # first check - validity of the path
             if not TRiP98FilePath(header_path, self).is_valid_header_path():
-                logger.warning("Loading {:s} which doesn't look like valid header path".format(header_path))
+                logger.warning(
+                    "Loading {:s} which doesn't look like valid header path".
+                    format(header_path))
 
             # security checks for datafile path
             # first check - validity of the path
-            if not TRiP98FilePath(datafile_path, self).is_valid_datafile_path():
-                logger.warning("Loading {:s} which doesn't look like valid datafile path".format(datafile_path))
+            if not TRiP98FilePath(datafile_path,
+                                  self).is_valid_datafile_path():
+                logger.warning(
+                    "Loading {:s} which doesn't look like valid datafile path".
+                    format(datafile_path))
         else:
-            raise Exception("More than two arguments provided as path variable to Cube.read method")
+            raise Exception(
+                "More than two arguments provided as path variable to Cube.read method"
+            )
 
         # finally write files
         self._write_trip_header(header_path)
@@ -735,9 +789,11 @@ class Cube(object):
         output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
         output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
         output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
+        output_str += "xoffset {:d}\n".format(
+            int(round(self.xoffset / self.pixel_size)))
         output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
+        output_str += "yoffset {:d}\n".format(
+            int(round(self.yoffset / self.pixel_size)))
         output_str += "dimy {:d}\n".format(self.dimy)
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
@@ -749,8 +805,8 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
-                                                                          self.slice_thickness, 0)  # 0 gantry tilt
+                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(
+                    i + 1, item, self.slice_thickness, 0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
@@ -800,7 +856,8 @@ class Cube(object):
         self.patient_name = ds.PatientName
         self.basename = ds.PatientID.replace(" ", "_")
         self.slice_dimension = int(ds.Rows)  # should be changed ?
-        self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
+        self.pixel_size = float(
+            ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
         self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
         # slice_distance != SliceThickness. One may have overlapping slices. See #342
         self.slice_number = len(dcm["images"])
@@ -808,7 +865,8 @@ class Cube(object):
         self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
         self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
-        self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
+        self.zoffset = float(ds.ImagePositionPatient[2]
+                             )  # note that zoffset should not be used.
         self.dimz = len(dcm["images"])
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
@@ -816,17 +874,23 @@ class Cube(object):
         # Fix for bug #342
         # TODO: slice_distance should probably be a list of distances,
         # but for now we will just use the distance between the first two slices.
-        if len(self.slice_pos) > 1:  # _set_z_table_from_dicom() must be called before
+        if len(self.slice_pos
+               ) > 1:  # _set_z_table_from_dicom() must be called before
             self.slice_distance = abs(self.slice_pos[1] - self.slice_pos[0])
-            logger.debug("Slice distance set to {:.2f}".format(self.slice_distance))
+            logger.debug("Slice distance set to {:.2f}".format(
+                self.slice_distance))
         else:
-            logger.warning("Only a single slice found. Setting slice_distance to slice_thickness.")
+            logger.warning(
+                "Only a single slice found. Setting slice_distance to slice_thickness."
+            )
             self.slice_distance = self.slice_thickness
 
         if self.slice_thickness > self.slice_distance:
             # TODO: this is probably valid dicom format, however let's print a warning for now
             # as it may indicate some problem with the input dicom, as it is rather unusual.
-            logger.warning("Overlapping slices found: slice thickness is larger than the slice distance.")
+            logger.warning(
+                "Overlapping slices found: slice thickness is larger than the slice distance."
+            )
 
         self.set_byteorder()
         self.data_type = "integer"
@@ -855,7 +919,8 @@ class Cube(object):
         elif endian == 'big':
             self.byte_order = "aix"
         else:
-            raise ValueError("set_byteorder error: unknown endian " + str(endian))
+            raise ValueError("set_byteorder error: unknown endian " +
+                             str(endian))
 
     def set_data_type(self, type):
         """ Sets the data type for the TRiP98 header files.

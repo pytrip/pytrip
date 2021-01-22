@@ -55,7 +55,8 @@ class TestProton(unittest.TestCase):
         rbe1 = rbe_carabe(10.0, 10.0, 5.0)
         rbe2 = rbe_carabe(10.0, 17.0, 5.0)
         self.assertGreater(rbe2, rbe1)
-        self.assertGreater(rbe2, 1.0)  # Carabe can actually return values below 1.0 for RBE
+        self.assertGreater(
+            rbe2, 1.0)  # Carabe can actually return values below 1.0 for RBE
         self.assertGreater(10.0, rbe2)  # Sanity check
 
     def test_wedenberg(self):

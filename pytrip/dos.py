@@ -97,22 +97,23 @@ class DosCube(Cube):
 
         warnings.warn(
             "The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+            DeprecationWarning)
         z_pos = 0  # z position
-        voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
+        voxel_size = np.array(
+            [self.pixel_size, self.pixel_size, self.slice_distance])
         # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)
         maximum_dose = 1500  # do not change, same value is hardcoded in filter_point.c (calculate_dvh_slice method)
-        dose_bins = np.zeros(maximum_dose)  # placeholder for DVH, filled with zeros
+        dose_bins = np.zeros(
+            maximum_dose)  # placeholder for DVH, filled with zeros
         voi_and_cube_intersect = False
         for i in range(self.dimz):
             z_pos += self.slice_distance
             slice = voi.get_slice_at_pos(z_pos)
-            if slice is not None:   # VOI intersects with this slice
+            if slice is not None:  # VOI intersects with this slice
                 voi_and_cube_intersect = True
-                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i],
-                                                           np.array(slice.contours[0].contour),
-                                                           voxel_size)
+                dose_bins += pytriplib.calculate_dvh_slice(
+                    self.cube[i], np.array(slice.contours[0].contour),
+                    voxel_size)
 
         if voi_and_cube_intersect:
             sum_of_doses = sum(dose_bins)
@@ -132,7 +133,8 @@ class DosCube(Cube):
             mean_dose = np.dot(dose_bins, dvh_x) / sum_of_doses
 
             # if full voi is irradiated with target dose, then it should be equal to VOI volume
-            mean_volume = sum_of_doses * voxel_size[0] * voxel_size[1] * voxel_size[2]
+            mean_volume = sum_of_doses * voxel_size[0] * voxel_size[
+                1] * voxel_size[2]
 
             # TRiP98 target dose is 1000, we renormalize to 1.0
             min_dose /= 1000.0
@@ -152,8 +154,7 @@ class DosCube(Cube):
         """
         warnings.warn(
             "The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+            DeprecationWarning)
         dvh_tuple = self.calculate_dvh(voi)
         if dvh_tuple is None:
             logging.warning("Voi {:s} outside the cube".format(voi.get_name()))
@@ -246,12 +247,17 @@ class DosCube(Cube):
         ds.PixelRepresentation = 0
         ds.StudyID = '1'
         ds.SeriesNumber = '14'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
-        ds.GridFrameOffsetVector = [x * self.slice_distance for x in range(self.dimz)]
+        ds.GridFrameOffsetVector = [
+            x * self.slice_distance for x in range(self.dimz)
+        ]
         ds.InstanceNumber = ''
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
-        ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size), "%.3f" % (self.yoffset * self.pixel_size),
-                                   "%.3f" % (self.slice_pos[0])]
+        ds.ImagePositionPatient = [
+            "%.3f" % (self.xoffset * self.pixel_size),
+            "%.3f" % (self.yoffset * self.pixel_size),
+            "%.3f" % (self.slice_pos[0])
+        ]
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
         ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'
 
@@ -271,7 +277,8 @@ class DosCube(Cube):
         rt_set.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
         rt_set.RefdSOPInstanceUID = '1.2.3'
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
-        pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
+        pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns),
+                               dtype=self.pydata_type)
         pixel_array[:][:][:] = self.cube[:][:][:]
         ds.PixelData = pixel_array.tostring()
         return ds

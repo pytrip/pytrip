@@ -110,7 +110,12 @@ class TestVdx(unittest.TestCase):
         c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating and adding cube VOI")
-        v = create_cube(c, name="cube1", center=[10, 10, 10], width=4, height=4, depth=8)
+        v = create_cube(c,
+                        name="cube1",
+                        center=[10, 10, 10],
+                        width=4,
+                        height=4,
+                        depth=8)
         self.assertEqual(v.number_of_slices(), 3)
 
     def test_create_voi_cyl(self):
@@ -118,7 +123,11 @@ class TestVdx(unittest.TestCase):
         c = pt.CtxCube()
         c.read(self.cube000)
         logger.info("Generating and adding cylinder VOI")
-        v = create_cylinder(c, name="cube2", center=[10, 10, 10], radius=4, depth=8)
+        v = create_cylinder(c,
+                            name="cube2",
+                            center=[10, 10, 10],
+                            radius=4,
+                            depth=8)
         self.assertEqual(v.number_of_slices(), 3)
 
     def test_create_voi_sphere(self):
@@ -165,7 +174,8 @@ class TestVdx(unittest.TestCase):
         self.assertEqual(contour.number_of_points(), 99)
 
         logger.info("Checking Contour has_childs method")
-        self.assertFalse(contour.has_childs())  # TODO why doesn't have children ?
+        self.assertFalse(
+            contour.has_childs())  # TODO why doesn't have children ?
         contour.print_child(level=0)
 
         logger.info("Test of Voi get_min_max method")
@@ -176,7 +186,9 @@ class TestVdx(unittest.TestCase):
         self.assertEqual(s_max[2], 18.0)
         self.assertEqual(s_min[2], 3.0)
 
-        logger.info("Subsequent test of Voi get_min_max method, as it modifies the object")
+        logger.info(
+            "Subsequent test of Voi get_min_max method, as it modifies the object"
+        )
         s_min, s_max = v.get_min_max()
         self.assertIsNotNone(s_min)
         self.assertIsNotNone(s_max)

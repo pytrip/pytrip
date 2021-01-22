@@ -27,7 +27,8 @@ import pytrip as pt
 import pytrip.tripexecuter as pte
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)  # give some output on what is going on.
+logging.basicConfig(
+    level=logging.INFO)  # give some output on what is going on.
 
 # Please adjust these paths according to location of the patient data (CT and contouring) and TRiP98 installation.
 # Fist we specify the directory where all our files are:
@@ -82,14 +83,17 @@ plan.bolus = 0.0  # No bolus is applied here. Set this to some value, if you are
 plan.offh2o = 1.873  # Some offset mimicing the monitoring ionization chambers and exit window of the beam nozzle.
 
 # Next we need to specify at least one field, and add that field to the plan.
-field = pte.Field(kernel=mykernel)  # The ion speicies is selected by passing the corresponding kernel to the field.
+field = pte.Field(
+    kernel=mykernel
+)  # The ion speicies is selected by passing the corresponding kernel to the field.
 field.basename = patient_name  # This name will be used for output filenames, if any field specific output is saved.
 field.gantry = 10.0  # degrees
 field.couch = 90.0  # degrees
 field.fwhm = 4.0  # spot size in [mm]
 
 print(field)  # We can print all parameters of this field, for checking.
-plan.fields.append(field)  # attach field to plan. You may attach multiple fields.
+plan.fields.append(
+    field)  # attach field to plan. You may attach multiple fields.
 
 # Next, set the flags for what output should be generated, when the plan has completed.
 plan.want_phys_dose = True  # We want a physical dose cube, "TST000000.dos"
@@ -99,7 +103,8 @@ plan.want_rst = False  # Print the raster scan files (.rst) for all fields.
 
 # print(plan)  # this will print all plan parameters
 
-te = pte.Execute(c, v)  # get the executer object, based on the given Ctx and Vdx cube.
+te = pte.Execute(
+    c, v)  # get the executer object, based on the given Ctx and Vdx cube.
 
 # in the case that TRiP98 is not installed locally, you may have to enable remote execution:
 # te.remote = True

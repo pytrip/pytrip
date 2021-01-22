@@ -26,8 +26,13 @@ from math import pi, sin, cos, acos, asin
 def get_basis_from_angles(gantry, couch):
     gantry /= 180.0 / pi
     couch /= -180.0 / pi
-    a = -np.array([sin(gantry) * cos(couch), -cos(gantry), sin(couch) * sin(gantry)])
-    c = -np.array([sin(gantry + pi / 2) * cos(couch), -cos(gantry + pi / 2), sin(couch) * sin(gantry + pi / 2)])
+    a = -np.array(
+        [sin(gantry) * cos(couch), -cos(gantry),
+         sin(couch) * sin(gantry)])
+    c = -np.array([
+        sin(gantry + pi / 2) * cos(couch), -cos(gantry + pi / 2),
+        sin(couch) * sin(gantry + pi / 2)
+    ])
     b = np.cross(a, c)
     return [a, b, c]
 
@@ -94,8 +99,10 @@ def min_list(a, b):
 
 
 def array_to_point_array(points, offset):
-    point = [[points[3 * i] - offset[0], points[3 * i + 1] - offset[1], points[3 * i + 2] - offset[2]]
-             for i in range(int(len(points) / 3))]
+    point = [[
+        points[3 * i] - offset[0], points[3 * i + 1] - offset[1],
+        points[3 * i + 2] - offset[2]
+    ] for i in range(int(len(points) / 3))]
     return point
 
 
@@ -103,8 +110,10 @@ def get_area_contour(polygon):
     points = np.zeros((len(polygon), 2))
     points[0:len(polygon)] = np.array(polygon)[:, 0:2]
     points[-1] = np.array(polygon[0])
-    dx_dy = np.array([points[i + 1] - points[i] for i in range(len(points) - 1)])
-    points = np.array([(points[i + 1] + points[i]) / 2 for i in range(len(points) - 1)])
+    dx_dy = np.array(
+        [points[i + 1] - points[i] for i in range(len(points) - 1)])
+    points = np.array([(points[i + 1] + points[i]) / 2
+                       for i in range(len(points) - 1)])
     area = -sum(points[:, 1] * dx_dy[:, 0])
     return area
 
@@ -126,7 +135,8 @@ def get_x_intersection(y, polygon):
 
     # walk along all sides of the 2D polygon
     for i in range(n + 1):
-        x2 = polygon[i % n][0]  # modulus operator will make last point to 0, i.e. start index.
+        x2 = polygon[i % n][
+            0]  # modulus operator will make last point to 0, i.e. start index.
         y2 = polygon[i % n][1]
         # test if y is between y1 and y2
         if y > min(y1, y2):

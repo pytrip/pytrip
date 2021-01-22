@@ -231,9 +231,11 @@ class TestCubeSlicer(unittest.TestCase):
             self.assertEqual(e.code, 2)
 
     def test_convert_all(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+        working_dir = tempfile.mkdtemp(
+        )  # make temp working dir for converter output files
 
-        pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-o', working_dir])
+        pytrip.utils.cubeslice.main(
+            args=['--data', self.dos, '--ct', self.ctx, '-o', working_dir])
         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
 
         logger.info("Checking if number of output files is sufficient")
@@ -247,13 +249,13 @@ class TestCubeSlicer(unittest.TestCase):
         shutil.rmtree(working_dir)
 
     def test_convert_one(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+        working_dir = tempfile.mkdtemp(
+        )  # make temp working dir for converter output files
 
-        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos,
-                                                     '--ct', self.ctx,
-                                                     '-f', '5',
-                                                     '-t', '5',
-                                                     '-o', working_dir])
+        ret_code = pytrip.utils.cubeslice.main(args=[
+            '--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '5', '-o',
+            working_dir
+        ])
         self.assertEqual(ret_code, 0)
 
         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))

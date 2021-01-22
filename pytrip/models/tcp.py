@@ -57,6 +57,7 @@ def tcp_voi(sf, voi=None, ncells=1.0, fractions=1):
         if ncells.shape == sf.shape:
             tcp = np.exp(-sum(ncells[mask] * sf[mask]**fractions))
         else:
-            logger.error("ncells array shape does not match surviving fraction shape.")
+            logger.error(
+                "ncells array shape does not match surviving fraction shape.")
 
     return tcp

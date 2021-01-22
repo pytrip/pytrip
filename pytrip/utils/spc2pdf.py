@@ -52,18 +52,43 @@ def main(args=sys.argv[1:]):
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("spc_file", help="location of input SPC file", type=argparse.FileType('r'))
-    parser.add_argument("pdf_file", help="location of output PDF file", type=argparse.FileType('w'))
-    parser.add_argument('-d', '--depth', help="Plot spectra at depths",
-                        type=float, nargs='+')
-    parser.add_argument('-l', '--logscale', help="Enable plotting particle number on logarithmic scale",
-                        action='store_true')
-    parser.add_argument('-s', '--style', help="Line style", choices=['points', 'lines'], default='lines')
-    parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
-                                                 'for list of possible options (default: gnuplot2)',
-                        default='gnuplot2', type=str)
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("spc_file",
+                        help="location of input SPC file",
+                        type=argparse.FileType('r'))
+    parser.add_argument("pdf_file",
+                        help="location of output PDF file",
+                        type=argparse.FileType('w'))
+    parser.add_argument('-d',
+                        '--depth',
+                        help="Plot spectra at depths",
+                        type=float,
+                        nargs='+')
+    parser.add_argument(
+        '-l',
+        '--logscale',
+        help="Enable plotting particle number on logarithmic scale",
+        action='store_true')
+    parser.add_argument('-s',
+                        '--style',
+                        help="Line style",
+                        choices=['points', 'lines'],
+                        default='lines')
+    parser.add_argument(
+        '-c',
+        '--colormap',
+        help='image color map, see http://matplotlib.org/users/colormaps.html '
+        'for list of possible options (default: gnuplot2)',
+        default='gnuplot2',
+        type=str)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     parsed_args = parser.parse_args(args)
 
     if parsed_args.verbosity == 1:
@@ -85,15 +110,14 @@ def main(args=sys.argv[1:]):
     logging.info("Total number of entries in SPC file {}".format(n))
 
     # allocate empty numpy array to store SPC data
-    data = np.recarray(
-        shape=(int(n), ),
-        dtype=[('depth', np.float64),
-               ('z', np.int8),
-               ('a', np.int8),
-               ('energy_left_edge', np.float64),
-               ('energy_bin_width', np.float64),
-               ('tot_part_number', np.float64)])
-    logging.debug("Temporary numpy array to store SPC data has shape {}".format(data.shape))
+    data = np.recarray(shape=(int(n), ),
+                       dtype=[('depth', np.float64), ('z', np.int8),
+                              ('a', np.int8), ('energy_left_edge', np.float64),
+                              ('energy_bin_width', np.float64),
+                              ('tot_part_number', np.float64)])
+    logging.debug(
+        "Temporary numpy array to store SPC data has shape {}".format(
+            data.shape))
 
     # fill numpy array with spectral data, assuming that no references are used to store bin centers
     n = 0
@@ -102,12 +126,15 @@ def main(args=sys.argv[1:]):
             data.depth[n:n + int(sb.ne)] = db.depth
             data.z[n:n + int(sb.ne)] = sb.z
             data.a[n:n + int(sb.ne)] = sb.a
-            data.energy_left_edge[n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
-            data.energy_bin_width[n:n + int(sb.ne)] = np.diff(sb.ebindata)  # bin widths
+            data.energy_left_edge[
+                n:n + int(sb.ne)] = sb.ebindata[:-1]  # left edges of bins
+            data.energy_bin_width[n:n + int(sb.ne)] = np.diff(
+                sb.ebindata)  # bin widths
             data.tot_part_number[n:n + int(sb.ne)] = sb.histdata
             n += int(sb.ne)
 
-    logging.debug("Temporary numpy array filled with data, size {}".format(data.size))
+    logging.debug("Temporary numpy array filled with data, size {}".format(
+        data.size))
 
     # find particle species, depth steps and energy bins
     az_uniq = np.unique(data[['a', 'z']])
@@ -115,14 +142,16 @@ def main(args=sys.argv[1:]):
 
     depth_uniq = np.unique(data.depth)
     if np.unique(np.diff(depth_uniq)).size == 1:
-        logging.info("{} of depth steps from {} to {}".format(len(depth_uniq), depth_uniq.min(), depth_uniq.max()))
+        logging.info("{} of depth steps from {} to {}".format(
+            len(depth_uniq), depth_uniq.min(), depth_uniq.max()))
     else:
         logging.info("Depth steps {}".format(depth_uniq))
 
     energy_uniq = np.unique(data.energy_left_edge)
     if np.unique(np.diff(energy_uniq)).size == 1:
-        logging.info("{} of depth energy bins from {} to {} (left edges)".format(
-            len(energy_uniq), energy_uniq.min(), energy_uniq.max()))
+        logging.info(
+            "{} of depth energy bins from {} to {} (left edges)".format(
+                len(energy_uniq), energy_uniq.min(), energy_uniq.max()))
     else:
         logging.info("Energy steps {}".format(energy_uniq))
 
@@ -143,22 +172,32 @@ def main(args=sys.argv[1:]):
 
         # first a summary plot of particle number vs depth, several series corresponding to Z species
         fig, ax = plt.subplots()
-        ax.set_title("Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(spc_object.peakpos,
-                                                                                 spc_object.energy))
+        ax.set_title(
+            "Peak position {:3.3f} [cm], beam energy {} MeV/amu".format(
+                spc_object.peakpos, spc_object.energy))
         ax.set_xlabel("Depth [cm]")
         ax.set_ylabel("Particle number / primary [(none)]")
         if parsed_args.logscale:
             ax.set_yscale('log')
         for az in az_uniq:
             a, z = az
-            az_data = data[(data.z == z) & (data.a == a)]  # this may cover depth only partially
+            az_data = data[(data.z == z) &
+                           (data.a
+                            == a)]  # this may cover depth only partially
             if az_data.tot_part_number.any():
-                depth_steps = az_data.depth[az_data.energy_left_edge == az_data.energy_left_edge[0]]
-                energy_bin_widths = az_data.energy_bin_width[az_data.depth == az_data.depth[0]]
-                zlist = az_data.tot_part_number.reshape(depth_steps.size, energy_bin_widths.size).T
-                part_number_at_depth = (zlist.T * energy_bin_widths).sum(axis=1)
-                ax.plot(depth_steps, part_number_at_depth,
-                        marker=marker, linestyle=linestyle, label="A = {}, Z = {}".format(a, z))
+                depth_steps = az_data.depth[az_data.energy_left_edge ==
+                                            az_data.energy_left_edge[0]]
+                energy_bin_widths = az_data.energy_bin_width[az_data.depth ==
+                                                             az_data.depth[0]]
+                zlist = az_data.tot_part_number.reshape(
+                    depth_steps.size, energy_bin_widths.size).T
+                part_number_at_depth = (zlist.T *
+                                        energy_bin_widths).sum(axis=1)
+                ax.plot(depth_steps,
+                        part_number_at_depth,
+                        marker=marker,
+                        linestyle=linestyle,
+                        label="A = {}, Z = {}".format(a, z))
         plt.legend(loc=0)
         pdf.savefig(fig)
         plt.close()
@@ -169,10 +208,14 @@ def main(args=sys.argv[1:]):
             depths_to_plot = parsed_args.depth
             if any(math.isnan(d) for d in parsed_args.depth):
                 depths_to_plot = depth_uniq
-                logging.info("Plotting spectrum at all {} depths requested".format(len(depths_to_plot)))
+                logging.info(
+                    "Plotting spectrum at all {} depths requested".format(
+                        len(depths_to_plot)))
             for depth_requested in depths_to_plot:
-                depth_step = data.depth[np.abs(data.depth - depth_requested).argmin()]
-                logging.info("Depth step {}, depth requested {}".format(depth_step, depth_requested))
+                depth_step = data.depth[np.abs(data.depth -
+                                               depth_requested).argmin()]
+                logging.info("Depth step {}, depth requested {}".format(
+                    depth_step, depth_requested))
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum @ {:3.3f} cm".format(depth_step))
                 ax.set_xlabel("Energy [MeV/amu]")
@@ -184,10 +227,12 @@ def main(args=sys.argv[1:]):
                     az_data = data[(data.z == z) & (data.a == a)]
                     if az_data.tot_part_number.any():
                         mask1 = (az_data.depth == depth_step)
-                        energy_bin_centers = az_data.energy_left_edge[mask1] + 0.5 * az_data.energy_bin_width[mask1]
+                        energy_bin_centers = az_data.energy_left_edge[
+                            mask1] + 0.5 * az_data.energy_bin_width[mask1]
                         tot_part_number = az_data.tot_part_number[mask1]
                         if np.any(mask1):
-                            ax.plot(energy_bin_centers, tot_part_number,
+                            ax.plot(energy_bin_centers,
+                                    tot_part_number,
                                     linestyle=linestyle,
                                     marker=marker,
                                     label="Z = {:d} A = {:d}".format(z, a))
@@ -201,20 +246,26 @@ def main(args=sys.argv[1:]):
             a, z = az
             az_data = data[(data.z == z) & (data.a == a)]
             if az_data.tot_part_number.any():
-                depth_steps = az_data.depth[az_data.energy_left_edge == az_data.energy_left_edge[0]]
-                energy_left_edges = az_data.energy_left_edge[az_data.depth == az_data.depth[0]]
-                energy_bin_widths = az_data.energy_bin_width[az_data.depth == az_data.depth[0]]
+                depth_steps = az_data.depth[az_data.energy_left_edge ==
+                                            az_data.energy_left_edge[0]]
+                energy_left_edges = az_data.energy_left_edge[az_data.depth ==
+                                                             az_data.depth[0]]
+                energy_bin_widths = az_data.energy_bin_width[az_data.depth ==
+                                                             az_data.depth[0]]
 
-                zlist = az_data.tot_part_number.reshape(depth_steps.size, energy_left_edges.size).T
+                zlist = az_data.tot_part_number.reshape(
+                    depth_steps.size, energy_left_edges.size).T
                 if parsed_args.logscale:
-                    norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(), vmax=zlist.max())
+                    norm = colors.LogNorm(vmin=zlist[zlist > 0.0].min(),
+                                          vmax=zlist.max())
                 else:
                     norm = colors.Normalize(vmin=0.0, vmax=zlist.max())
                 fig, ax = plt.subplots()
                 ax.set_title("Spectrum for Z = {} A = {}".format(z, a))
                 ax.set_xlabel("Depth [cm]")
                 ax.set_ylabel("Energy [MeV/amu]")
-                max_energy_nonzero_part_no = energy_left_edges[zlist.mean(axis=1) > 0].max()
+                max_energy_nonzero_part_no = energy_left_edges[zlist.mean(
+                    axis=1) > 0].max()
                 ax.set_ylim(0, 1.2 * max_energy_nonzero_part_no)
 
                 # in case depth or energy steps form arithmetic progress, then pcolorfast expects
@@ -224,18 +275,32 @@ def main(args=sys.argv[1:]):
                 # here we check if latter is the case and add one element to X and Y sequences
                 energy_steps = energy_left_edges
                 depth_steps_widths = np.diff(depth_steps)
-                if np.unique(depth_steps_widths).size > 1 or np.unique(energy_bin_widths).size > 1:
-                    depth_steps = np.append(depth_steps, depth_steps[-1] + depth_steps_widths.min())
-                    energy_steps = np.append(energy_left_edges, energy_left_edges[-1] + energy_bin_widths[-1])
+                if np.unique(depth_steps_widths).size > 1 or np.unique(
+                        energy_bin_widths).size > 1:
+                    depth_steps = np.append(
+                        depth_steps,
+                        depth_steps[-1] + depth_steps_widths.min())
+                    energy_steps = np.append(
+                        energy_left_edges,
+                        energy_left_edges[-1] + energy_bin_widths[-1])
 
-                im = ax.pcolorfast(depth_steps, energy_steps, zlist, norm=norm, cmap=parsed_args.colormap)
+                im = ax.pcolorfast(depth_steps,
+                                   energy_steps,
+                                   zlist,
+                                   norm=norm,
+                                   cmap=parsed_args.colormap)
                 cbar = plt.colorbar(im)
-                cbar.set_label("Particle number / primary [1/MeV/amu]", rotation=270, verticalalignment='bottom')
+                cbar.set_label("Particle number / primary [1/MeV/amu]",
+                               rotation=270,
+                               verticalalignment='bottom')
                 pdf.savefig(fig)
                 plt.close()
-                logging.debug("Particle number / primary map for Z = {} saved".format(z))
+                logging.debug(
+                    "Particle number / primary map for Z = {} saved".format(z))
             else:
-                logging.warning("Skipped generation of particle number map for Z = {}, no data !".format(z))
+                logging.warning(
+                    "Skipped generation of particle number map for Z = {}, no data !"
+                    .format(z))
 
         # File metadata
         d = pdf.infodict()

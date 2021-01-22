@@ -83,7 +83,6 @@ class RegularInterpolator(object):
         xp=exp_data_x, yp=exp_data_y, zp=exp_data_z, kind='spline')
 
     """
-
     def __init__(self, x, y, z=None, kind='spline'):
         """
         Initialisation responsible also for finding coefficients of interpolation function.
@@ -120,12 +119,14 @@ class RegularInterpolator(object):
 
                 def applicator(x, y, *args, **kwargs):
                     return executor_1d(y)
+
                 self._interp_function = applicator
             elif len(y) == 1:  # data with shape N x 1
                 executor_1d = self.__get_1d_function(x=x, y=z, kind=kind)
 
                 def applicator(x, y, *args, **kwargs):
                     return executor_1d(x)
+
                 self._interp_function = applicator
             else:
                 # 3-rd degree spline interpolation, passing through all points
@@ -177,7 +178,8 @@ class RegularInterpolator(object):
         if xp is None or yp is None:
             logger.error("Provide valid training data points")
             raise Exception("Invalid training data points")
-        interpolating_class = cls(xp, yp, zp, kind)  # find interpolating function
+        interpolating_class = cls(xp, yp, zp,
+                                  kind)  # find interpolating function
         return interpolating_class(x, y)  # call interpolating function
 
     @staticmethod
@@ -194,8 +196,11 @@ class RegularInterpolator(object):
 
         # input consistency check
         if len(x) != len(y):
-            logger.error("len(x) = {:d}, len(y) = {:d}. Both should be equal".format(len(x), len(y)))
-            raise Exception("1-D interpolation: X and Y should have the same shape")
+            logger.error(
+                "len(x) = {:d}, len(y) = {:d}. Both should be equal".format(
+                    len(x), len(y)))
+            raise Exception(
+                "1-D interpolation: X and Y should have the same shape")
         # 1-element data set, return fixed value
         if len(y) == 1:
             # define constant
@@ -210,6 +215,7 @@ class RegularInterpolator(object):
                 except TypeError:
                     result = y[0]  # t is a scalar
                 return result
+
             result = fun_const
         # 2-element data set, use linear interpolation from numpy
         elif len(y) == 2:
@@ -220,10 +226,14 @@ class RegularInterpolator(object):
                 try:
                     from scipy.interpolate import InterpolatedUnivariateSpline
                 except ImportError as e:
-                    logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
+                    logger.error(
+                        "Please install scipy on your platform to be able to use spline-based interpolation"
+                    )
                     raise e
                 k = 3
-                if len(y) == 3:  # fall back to 2-nd degree spline if only 3 points are present
+                if len(
+                        y
+                ) == 3:  # fall back to 2-nd degree spline if only 3 points are present
                     k = 2
                 result = InterpolatedUnivariateSpline(x, y, k=k)
             elif kind == 'linear':
@@ -245,7 +255,9 @@ class RegularInterpolator(object):
         try:
             from scipy.interpolate import RectBivariateSpline
         except ImportError as e:
-            logger.error("Please install scipy on your platform to be able to use spline-based interpolation")
+            logger.error(
+                "Please install scipy on your platform to be able to use spline-based interpolation"
+            )
             raise e
         if len(x) == 2:  # fall-back to linear interpolation
             kx = 1
@@ -268,5 +280,10 @@ class RegularInterpolator(object):
             y_array = np.asarray(y)
         if not isinstance(z, np.ndarray):
             z_array = np.asarray(z)
-        result = RectBivariateSpline(x_array, y_array, z_array, kx=kx, ky=ky, s=0)
+        result = RectBivariateSpline(x_array,
+                                     y_array,
+                                     z_array,
+                                     kx=kx,
+                                     ky=ky,
+                                     s=0)
         return result

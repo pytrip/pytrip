@@ -34,10 +34,21 @@ def main(args=sys.argv[1:]):
     """
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("dicom_dir", help="location of directory with DICOM files", type=str)
-    parser.add_argument("ctx_basename", help="basename of output file in TRiP98 format", type=str)
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("dicom_dir",
+                        help="location of directory with DICOM files",
+                        type=str)
+    parser.add_argument("ctx_basename",
+                        help="basename of output file in TRiP98 format",
+                        type=str)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     parsed_args = parser.parse_args(args)
 
     if parsed_args.verbosity == 1:
@@ -55,10 +66,13 @@ def main(args=sys.argv[1:]):
     if 'images' in dcm:
         c = pt.CtxCube()
         c.read_dicom(dcm)
-        logger.info("Write CtxCube ... '{:s}'".format(basename + pt.CtxCube.data_file_extension))
+        logger.info(
+            "Write CtxCube ... '{:s}'".format(basename +
+                                              pt.CtxCube.data_file_extension))
         c.write(basename)
     else:
-        logger.warning("No CT data found in {:s}".format(parsed_args.dicom_dir))
+        logger.warning("No CT data found in {:s}".format(
+            parsed_args.dicom_dir))
         c = None
 
     if 'rtss' in dcm:
@@ -67,7 +81,8 @@ def main(args=sys.argv[1:]):
         vdx_cube.read_dicom(dcm)
         vdx_cube.write_trip(basename + ".vdx")
     else:
-        logger.warning("No RTSTRUCT data found in {:s}".format(parsed_args.dicom_dir))
+        logger.warning("No RTSTRUCT data found in {:s}".format(
+            parsed_args.dicom_dir))
 
     return 0
 

@@ -28,7 +28,6 @@ logger = logging.getLogger(__name__)
 class TestProton(unittest.TestCase):
     """ TODO
     """
-
     def setUp(self):
         """ Prepare files for tests
         """
@@ -42,7 +41,6 @@ class TestProton(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
-
 
 # from pytrip.paths import *
 # import time

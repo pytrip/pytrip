@@ -31,10 +31,22 @@ def main(args=sys.argv[1:]):
     """ Main function of the rst2sobp script.
     """
     parser = argparse.ArgumentParser()
-    parser.add_argument("rst_file", help="path to .rst input file in TRiP98 format", type=str)
-    parser.add_argument("sobp_file", help="path to the SHIELD-HIT12A/FLUKA sobp.dat output file", type=str)
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("rst_file",
+                        help="path to .rst input file in TRiP98 format",
+                        type=str)
+    parser.add_argument(
+        "sobp_file",
+        help="path to the SHIELD-HIT12A/FLUKA sobp.dat output file",
+        type=str)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     args = parser.parse_args(args)
 
     rst = pt.Rst()
@@ -44,8 +56,10 @@ def main(args=sys.argv[1:]):
         fout.writelines("*ENERGY(GEV) X(CM)  Y(CM)     FWHM(cm)  WEIGHT\n")
         for subm in rst.machines:
             for xpos, ypos, part in subm.raster_points:
-                fout.writelines("{:<10.6f}{:<10.2f}{:<10.2f}{:<10.2f}{:<10.4e}\n".format(
-                    subm.energy / 1000.0, xpos / 10.0, ypos / 10.0, subm.focus / 10.0, part))
+                fout.writelines(
+                    "{:<10.6f}{:<10.2f}{:<10.2f}{:<10.2f}{:<10.4e}\n".format(
+                        subm.energy / 1000.0, xpos / 10.0, ypos / 10.0,
+                        subm.focus / 10.0, part))
     return 0
 
 

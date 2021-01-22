@@ -38,20 +38,58 @@ def main(args=sys.argv[1:]):
 
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("cube", help="path to input cube. May also be a .dos or dosemlet.dos cube", type=str)
-    parser.add_argument("vdx", help="path to .vdx file holding the structures", type=str)
-    parser.add_argument("rois", nargs="?", help="comma-seperated list for ROIs to be analyzed. If not set, print list.",
-                        type=str, default=None)
-    parser.add_argument("-d", "--dose", type=float, dest='dose', metavar='dose',
-                        help="target dose in [Gy] (if target_dose is unavailable in cube)", default=None)
-    parser.add_argument("-o", "--output", type=str, dest='output', metavar='filename',
-                        help="don't open GUI, save figure to <filename> instead.", default=None)
-    parser.add_argument("-t", "--tofile", type=str, dest='tofile', metavar='filename',
-                        help="save histogram data to <filename>.", default=None)
-    parser.add_argument("-l", "--legend", dest='legend', default=False, action='store_true',
+    parser.add_argument(
+        "cube",
+        help="path to input cube. May also be a .dos or dosemlet.dos cube",
+        type=str)
+    parser.add_argument("vdx",
+                        help="path to .vdx file holding the structures",
+                        type=str)
+    parser.add_argument(
+        "rois",
+        nargs="?",
+        help=
+        "comma-seperated list for ROIs to be analyzed. If not set, print list.",
+        type=str,
+        default=None)
+    parser.add_argument(
+        "-d",
+        "--dose",
+        type=float,
+        dest='dose',
+        metavar='dose',
+        help="target dose in [Gy] (if target_dose is unavailable in cube)",
+        default=None)
+    parser.add_argument(
+        "-o",
+        "--output",
+        type=str,
+        dest='output',
+        metavar='filename',
+        help="don't open GUI, save figure to <filename> instead.",
+        default=None)
+    parser.add_argument("-t",
+                        "--tofile",
+                        type=str,
+                        dest='tofile',
+                        metavar='filename',
+                        help="save histogram data to <filename>.",
+                        default=None)
+    parser.add_argument("-l",
+                        "--legend",
+                        dest='legend',
+                        default=False,
+                        action='store_true',
                         help="print legend box")
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     parsed_args = parser.parse_args(args)
 
     if parsed_args.verbosity == 1:

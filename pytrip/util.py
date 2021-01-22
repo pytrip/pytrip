@@ -64,7 +64,6 @@ class TRiP98FilePath(object):
     See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html for more details.
 
     """
-
     def __init__(self, name, cube_type):
         """
         Creates a helper class to deal with TRiP98 filenames.
@@ -148,8 +147,9 @@ class TRiP98FilePath(object):
             return False
 
         # check lower and uppercase extensions
-        correct_extension = self._ungzipped_filename.endswith((self.data_file_extension.lower(),
-                                                               self.data_file_extension.upper()))
+        correct_extension = self._ungzipped_filename.endswith(
+            (self.data_file_extension.lower(),
+             self.data_file_extension.upper()))
 
         # check if cube type can be identified using suffix part
         compatible_suffix = self.is_valid_cube_type()
@@ -255,7 +255,8 @@ class TRiP98FilePath(object):
         if not self.allowed_suffix:
             return None
         for suffix in self.allowed_suffix:
-            if _filename_without_extension.endswith((suffix.lower(), suffix.upper())):
+            if _filename_without_extension.endswith(
+                (suffix.lower(), suffix.upper())):
                 return _filename_without_extension[-len(suffix):]
         return None
 
@@ -410,8 +411,10 @@ class TRiP98FileLocator(object):
         self.list_of_suffixes_to_check = []
         for optional_dot in ('', '.'):
             for suffix in self.trip98path.allowed_suffix:
-                self.list_of_suffixes_to_check.append(optional_dot + suffix.lower())
-                self.list_of_suffixes_to_check.append(optional_dot + suffix.upper())
+                self.list_of_suffixes_to_check.append(optional_dot +
+                                                      suffix.lower())
+                self.list_of_suffixes_to_check.append(optional_dot +
+                                                      suffix.upper())
         self.list_of_suffixes_to_check.append("")
 
     @property
@@ -448,19 +451,22 @@ class TRiP98FileLocator(object):
         """
         dir_basename = self.trip98path.dir_basename
         files_tried = []
-        logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
+        logger.info("Locating : " + self.trip98path.name + " as " +
+                    str(self.trip98path.cube_type))
 
         for suffix in self.list_of_suffixes_to_check:
             for gzip_extension in ("", ".gz", ".GZ"):
-                for header_extension in (self.trip98path.header_file_extension.lower(),
-                                         self.trip98path.header_file_extension.upper()):
+                for header_extension in (
+                        self.trip98path.header_file_extension.lower(),
+                        self.trip98path.header_file_extension.upper()):
                     candidate_path = dir_basename + suffix + header_extension + gzip_extension
                     if os.path.exists(candidate_path):
                         logger.info("Found " + candidate_path)
                         return candidate_path
                     else:
                         files_tried.append(candidate_path)
-        logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
+        logger.warning("Checking following files: " + " , ".join(files_tried) +
+                       ". None of them exists.")
         return None
 
     @property
@@ -473,17 +479,20 @@ class TRiP98FileLocator(object):
         """
         dir_basename = self.trip98path.dir_basename
         files_tried = []
-        logger.info("Locating : " + self.trip98path.name + " as " + str(self.trip98path.cube_type))
+        logger.info("Locating : " + self.trip98path.name + " as " +
+                    str(self.trip98path.cube_type))
         for suffix in self.list_of_suffixes_to_check:
             for gzip_extension in ("", ".gz", ".GZ"):
-                for datafile_extension in (self.trip98path.data_file_extension.lower(),
-                                           self.trip98path.data_file_extension.upper()):
+                for datafile_extension in (
+                        self.trip98path.data_file_extension.lower(),
+                        self.trip98path.data_file_extension.upper()):
                     candidate_path = dir_basename + suffix + datafile_extension + gzip_extension
                     if os.path.exists(candidate_path):
                         return candidate_path
                     else:
                         files_tried.append(candidate_path)
-        logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
+        logger.warning("Checking following files: " + " , ".join(files_tried) +
+                       ". None of them exists.")
         return None
 
 

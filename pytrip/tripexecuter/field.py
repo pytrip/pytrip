@@ -33,7 +33,6 @@ class Field(object):
     :params str basename: basename of field without file extension (input or output will be suffixed with
     proper file extension)
     """
-
     def __init__(self, kernel=KernelModel(), basename=""):
         """ Create an instance of the Field class.
         :params str basename" The name of this field, will be used as basename for .rst files.
@@ -81,25 +80,34 @@ class Field(object):
         out = "\n"
         out += "   Field {:d} '{:s}'\n".format(self.number, self.basename)
         out += "----------------------------------------------------------------------------\n"
-        out += "|  UUID                         : {:s}\n".format(str(self.__uuid__))
-        out += "|  Couch angle                  : {:.2f} deg\n".format(self.couch)
-        out += "|  Gantry angle                 : {:.2f} deg\n".format(self.gantry)
+        out += "|  UUID                         : {:s}\n".format(
+            str(self.__uuid__))
+        out += "|  Couch angle                  : {:.2f} deg\n".format(
+            self.couch)
+        out += "|  Gantry angle                 : {:.2f} deg\n".format(
+            self.gantry)
         out += "|\n"
-        out += "|  Spot size (FWHM)             : {:.2f} mm\n".format(self.fwhm)
-        out += "|  Raster step size (x,y)       : {:.2f}, {:.2f} mm\n".format(self.raster_step[0],
-                                                                              self.raster_step[1])
-        out += "|  Z-steps                      : {:.2f} mm\n".format(self.zsteps)
+        out += "|  Spot size (FWHM)             : {:.2f} mm\n".format(
+            self.fwhm)
+        out += "|  Raster step size (x,y)       : {:.2f}, {:.2f} mm\n".format(
+            self.raster_step[0], self.raster_step[1])
+        out += "|  Z-steps                      : {:.2f} mm\n".format(
+            self.zsteps)
         out += "|\n"
-        out += "|  Dose extension               : {:.2f}\n".format(self.dose_extension)
-        out += "|  Contour extension            : {:.2f}\n".format(self.contour_extension)
-        out += "|  Use external .rst file       : {:s}\n".format(str(self.use_raster_file))
-        out += "|  Save .bev file               : {:s}\n".format(str(self.save_bev_file))
+        out += "|  Dose extension               : {:.2f}\n".format(
+            self.dose_extension)
+        out += "|  Contour extension            : {:.2f}\n".format(
+            self.contour_extension)
+        out += "|  Use external .rst file       : {:s}\n".format(
+            str(self.use_raster_file))
+        out += "|  Save .bev file               : {:s}\n".format(
+            str(self.save_bev_file))
         if self.save_bev_file and self.bev_filename:
-            out += "|  Beam eyes view filename      : {:s}\n".format(str(self.bev_filename))
+            out += "|  Beam eyes view filename      : {:s}\n".format(
+                str(self.bev_filename))
         if self.isocenter:
-            out += "|  Isocenter (x,y,z)            : {:.2f} {:.2f} {:.2f} mm\n".format(self.isocenter[0],
-                                                                                        self.isocenter[1],
-                                                                                        self.isocenter[2])
+            out += "|  Isocenter (x,y,z)            : {:.2f} {:.2f} {:.2f} mm\n".format(
+                self.isocenter[0], self.isocenter[1], self.isocenter[2])
         else:
             out += "|  Isocenter (x,y,z)            : (not set)\n"
         out += "----------------------------------------------------------------------------\n"
@@ -122,7 +130,13 @@ class Field(object):
         _target = isocenter_str.split(",")
         if len(_target) == 3:
             try:
-                self.isocenter = [float(_target[0]), float(_target[1]), float(_target[2])]
+                self.isocenter = [
+                    float(_target[0]),
+                    float(_target[1]),
+                    float(_target[2])
+                ]
                 return
             except Exception:
-                logger.error("Expected a 'X,Y,Z' formatted string for Field().set_isocenter_from_string")
+                logger.error(
+                    "Expected a 'X,Y,Z' formatted string for Field().set_isocenter_from_string"
+                )

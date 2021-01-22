@@ -51,11 +51,23 @@ class DensityProjections:
         """
         self.cube = cube
 
-    def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+    def calculate_quality_grid(self,
+                               voi,
+                               gantry,
+                               couch,
+                               calculate_from=0,
+                               stepsize=1.0,
+                               avoid=[],
+                               gradient=True):
         """ TODO: Documentation
         """
-        result = self.calculate_quality_list(voi, gantry, couch, calculate_from, stepsize,
-                                             avoid=avoid, gradient=gradient)
+        result = self.calculate_quality_list(voi,
+                                             gantry,
+                                             couch,
+                                             calculate_from,
+                                             stepsize,
+                                             avoid=avoid,
+                                             gradient=gradient)
         result = sorted(result, key=cmp_to_key(cmp_sort))
         grid_data = []
         for x in result:
@@ -63,7 +75,14 @@ class DensityProjections:
         result = np.reshape(grid_data, (len(gantry), len(couch)))
         return result
 
-    def calculate_quality_list(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+    def calculate_quality_list(self,
+                               voi,
+                               gantry,
+                               couch,
+                               calculate_from=0,
+                               stepsize=1.0,
+                               avoid=[],
+                               gradient=True):
         """ TODO: Documentation
         """
         q = Queue(32767)
@@ -73,9 +92,9 @@ class DensityProjections:
         voi_cube = DensityProjections(d)
         result = []
         for gantry_angle in gantry:
-            p = Process(
-                target=self.calculate_angle_quality_thread,
-                args=(voi, gantry_angle, couch, calculate_from, stepsize, q, avoid, voi_cube, gradient))
+            p = Process(target=self.calculate_angle_quality_thread,
+                        args=(voi, gantry_angle, couch, calculate_from,
+                              stepsize, q, avoid, voi_cube, gradient))
             p.start()
             p.deamon = True
             process.append(p)
@@ -90,14 +109,21 @@ class DensityProjections:
             result.append(tmp)
         return result
 
-    def calculate_best_angles(self, voi, fields, min_dist=20, gantry_limits=[-90, 90], couch_limits=[0, 359], avoid=[]):
+    def calculate_best_angles(self,
+                              voi,
+                              fields,
+                              min_dist=20,
+                              gantry_limits=[-90, 90],
+                              couch_limits=[0, 359],
+                              avoid=[]):
         """ TODO: Documentation
         """
-        grid = self.calculate_quality_list(
-            voi,
-            range(gantry_limits[0], gantry_limits[1], 20),
-            range(couch_limits[0], couch_limits[1], 20),
-            avoid=avoid)
+        grid = self.calculate_quality_list(voi,
+                                           range(gantry_limits[0],
+                                                 gantry_limits[1], 20),
+                                           range(couch_limits[0],
+                                                 couch_limits[1], 20),
+                                           avoid=avoid)
         grid = sorted(grid, key=lambda x: x["data"][0])
         best_angles = []
         i = 0
@@ -108,7 +134,13 @@ class DensityProjections:
                 if np.linalg.norm(angle - point) < 2 * min_dist:
                     is_ok = False
             if is_ok:
-                best_angles.append(self.optimize_angle(voi, point[0], point[1], 20, 3, avoid=avoid))
+                best_angles.append(
+                    self.optimize_angle(voi,
+                                        point[0],
+                                        point[1],
+                                        20,
+                                        3,
+                                        avoid=avoid))
             i += 1
         return best_angles
 
@@ -117,10 +149,19 @@ class DensityProjections:
         """
         if iteration == 0:
             return [gantry, couch]
-        grid = self.calculate_quality_list(
-            voi, np.linspace(gantry, gantry + margin, 3), np.linspace(couch, couch + margin, 3), avoid=avoid)
+        grid = self.calculate_quality_list(voi,
+                                           np.linspace(gantry, gantry + margin,
+                                                       3),
+                                           np.linspace(couch, couch + margin,
+                                                       3),
+                                           avoid=avoid)
         min_item = min(grid, key=lambda x: x["data"][0])
-        return self.optimize_angle(voi, min_item["gantry"], min_item["couch"], margin / 2, iteration - 1, avoid=avoid)
+        return self.optimize_angle(voi,
+                                   min_item["gantry"],
+                                   min_item["couch"],
+                                   margin / 2,
+                                   iteration - 1,
+                                   avoid=avoid)
 
     def calculate_angle_quality_thread(self,
                                        voi,
@@ -136,8 +177,9 @@ class DensityProjections:
         """
         os.nice(1)
         for couch_angle in couch:
-            qual = self.calculate_angle_quality(voi, gantry, couch_angle, calculate_from, stepsize, avoid, voi_cube,
-                                                gradient)
+            qual = self.calculate_angle_quality(voi, gantry, couch_angle,
+                                                calculate_from, stepsize,
+                                                avoid, voi_cube, gradient)
             q.put({"couch": couch_angle, "gantry": gantry, "data": qual})
 
     def calculate_angle_quality(self,
@@ -160,8 +202,11 @@ class DensityProjections:
             d.cube = np.array(d.cube, dtype=np.float32)
             voi_cube = DensityProjections(d)
 
-        data, start, basis = self.calculate_projection(voi, gantry, couch, calculate_from, stepsize)
-        voi_proj, t1, t2 = voi_cube.calculate_projection(voi, gantry, couch, 1, stepsize)
+        data, start, basis = self.calculate_projection(voi, gantry, couch,
+                                                       calculate_from,
+                                                       stepsize)
+        voi_proj, t1, t2 = voi_cube.calculate_projection(
+            voi, gantry, couch, 1, stepsize)
 
         if gradient:
             gradient = np.gradient(data)
@@ -176,7 +221,12 @@ class DensityProjections:
             mean_quality = abs(quality / area)
         return mean_quality, quality, area
 
-    def calculate_projection(self, voi, gantry, couch, calculate_from=0, stepsize=1.0):
+    def calculate_projection(self,
+                             voi,
+                             gantry,
+                             couch,
+                             calculate_from=0,
+                             stepsize=1.0):
         """
         TODO: documentation
 
@@ -201,20 +251,28 @@ class DensityProjections:
         c = basis[2]
         min_window, max_window = voi.get_min_max()
         size = np.array(max_window) - np.array(min_window)
-        window_size = np.array([((sin(couch) * size[1])**2 + (cos(couch) * size[2])**2)**0.5, (
-            (sin(gantry) * size[0])**2 + (cos(gantry) * size[1])**2 + (sin(couch) * size[2])**2)**0.5]) * 2
+        window_size = np.array([((sin(couch) * size[1])**2 +
+                                 (cos(couch) * size[2])**2)**0.5,
+                                ((sin(gantry) * size[0])**2 +
+                                 (cos(gantry) * size[1])**2 +
+                                 (sin(couch) * size[2])**2)**0.5]) * 2
 
         dimension = window_size / self.cube.pixel_size
         dimension = np.int16(dimension)
-        start = center - self.cube.pixel_size * 0.5 * np.array(dimension[0] * b + dimension[1] * c)
+        start = center - self.cube.pixel_size * 0.5 * np.array(
+            dimension[0] * b + dimension[1] * c)
         if calculate_from == 1:
             start = self.calculate_back_start_voi(voi, start, step_vec)
         elif calculate_from == 2:
             start = self.calculate_front_start_voi(voi, start, step_vec)
 
         data = pytriplib.calculate_wepl(
-            self.cube.cube, np.array(start), np.array(basis) * step_length, dimension,
-            np.array([self.cube.pixel_size, self.cube.pixel_size, self.cube.slice_distance]))
+            self.cube.cube, np.array(start),
+            np.array(basis) * step_length, dimension,
+            np.array([
+                self.cube.pixel_size, self.cube.pixel_size,
+                self.cube.slice_distance
+            ]))
         data *= step_length
         return data, start, [b, c]
 
@@ -246,7 +304,6 @@ class DensityProjections:
 class DensityCube(Cube):
     """ Class for working with density cubes [g/cm3]
     """
-
     def __init__(self, ctxcube, hlut_path="/data/hlut_den.dat"):
         """ Creates a DensityCube based on a CTX cube and a Hounsfield lookup table.
 
@@ -289,4 +346,6 @@ class DensityCube(Cube):
             if len(a):
                 x_data.append(float(a[0]))
                 y_data.append(float(a[3]))
-        self.hlut_data = RegularInterpolator(np.array(x_data), np.array(y_data), kind='linear')
+        self.hlut_data = RegularInterpolator(np.array(x_data),
+                                             np.array(y_data),
+                                             kind='linear')

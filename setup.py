@@ -54,7 +54,8 @@ def git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env).communicate()[0]
+        out = subprocess.Popen(cmd, stdout=subprocess.PIPE,
+                               env=env).communicate()[0]
         return out
 
     try:
@@ -67,7 +68,8 @@ def git_version():
             if no_of_commits_since_last_tag == 0:
                 version = tag_name
             else:
-                version = '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
+                version = '{}+rev{}'.format(tag_name,
+                                            no_of_commits_since_last_tag)
         else:
             version = "Unknown"
     except OSError:
@@ -94,20 +96,16 @@ write_version_py()
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-extensions = [setuptools.Extension(
-    'pytriplib',
-    sources=[os.path.join('pytrip', 'lib', 'core.c')],
-    extra_compile_args=['-fpic']),
-    setuptools.Extension(
-        '_cntr',
-        sources=[os.path.join('pytrip', 'lib', 'cntr.c')],
-        extra_compile_args=['-fpic'])
+extensions = [
+    setuptools.Extension('pytriplib',
+                         sources=[os.path.join('pytrip', 'lib', 'core.c')],
+                         extra_compile_args=['-fpic']),
+    setuptools.Extension('_cntr',
+                         sources=[os.path.join('pytrip', 'lib', 'cntr.c')],
+                         extra_compile_args=['-fpic'])
 ]
 
-install_requires = [
-    "matplotlib",
-    "pydicom"
-]
+install_requires = ["matplotlib", "pydicom"]
 
 # packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
 # which needs to provide header files (via numpy.get_include()) required to build C extension
@@ -115,7 +113,8 @@ install_requires = [
 setup_requires = []
 if sys.version_info[0] == 3 and sys.version_info[1] == 5:
     setup_requires += ["numpy<1.19"]
-elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
+elif (sys.version_info[0] == 3
+      and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
     setup_requires += ["numpy<1.16"]
 else:
     setup_requires += ["numpy"]
@@ -183,5 +182,4 @@ setuptools.setup(
             'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*'
-)
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*')

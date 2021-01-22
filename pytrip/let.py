@@ -39,13 +39,15 @@ class LETCube(Cube):
     data_file_extension = '.dos'
     allowed_suffix = ('dosemlet', 'mlet')
 
-    let_types = {"unknown": "unknown LET type",
-                 "DLET": "dose-averaged LET",
-                 "DLET*": "dose-averaged LET, all secondaries",
-                 "DLETP": "dose-averaged LET, protons only",
-                 "TLET": "track-averaged LET",
-                 "TLET*": "track-averaged LET, all secondaries",
-                 "TLETP": "track-averaged LET, protons only"}
+    let_types = {
+        "unknown": "unknown LET type",
+        "DLET": "dose-averaged LET",
+        "DLET*": "dose-averaged LET, all secondaries",
+        "DLETP": "dose-averaged LET, protons only",
+        "TLET": "track-averaged LET",
+        "TLET*": "track-averaged LET, all secondaries",
+        "TLETP": "track-averaged LET, protons only"
+    }
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
@@ -71,16 +73,17 @@ class LETCube(Cube):
         """
         warnings.warn(
             "The method calculate_lvh() is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+            DeprecationWarning)
         pos = 0
-        size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
+        size = np.array(
+            [self.pixel_size, self.pixel_size, self.slice_distance])
         lv = np.zeros(3000)
         for i in range(self.dimz):
             pos += self.slice_distance
             slice = voi.get_slice_at_pos(pos)
             if slice is not None:
-                lv += pytriplib.calculate_lvh_slice(self.cube[i], np.array(slice.contours[0].contour), size)
+                lv += pytriplib.calculate_lvh_slice(
+                    self.cube[i], np.array(slice.contours[0].contour), size)
 
         cubes = sum(lv)
         lvh = np.cumsum(lv[::-1])[::-1] / cubes

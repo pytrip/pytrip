@@ -24,7 +24,6 @@ import logging
 
 from pytrip.tripexecuter import Field
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -33,100 +32,118 @@ class ExecParser(object):
     """
 
     # map trip commands onto method names
-    _trip_commands = {"ct": "_parse_ct",
-                      # TODO: "voi": "_parse_voi",
-                      "field": "_parse_field",
-                      "plan": "_parse_plan",
-                      "opt": "_parse_opt",
-                      "optimize": "_parse_opt",
-                      "scancap": "_parse_scancap"}
+    _trip_commands = {
+        "ct": "_parse_ct",
+        # TODO: "voi": "_parse_voi",
+        "field": "_parse_field",
+        "plan": "_parse_plan",
+        "opt": "_parse_opt",
+        "optimize": "_parse_opt",
+        "scancap": "_parse_scancap"
+    }
 
     # Here follows a several trip parameters/arguments which can be modified.
     # All parameters which are not supported are mapped to the _na() method,
     # which does nothing but displays a warning.
 
     # scancap arguments. {<trip_parameter> : (<handler_method>, <format_specifier>)}
-    _scancap_args = {"offh2o": ("_update_obj", "f"),
-                     "bolus": ("_update_obj", "f"),
-                     "focus2stepsizefactor": ("_na", "s"),            # not implemented
-                     "calbibration": ("_na", "s"),                    # not implemented
-                     "path": ("_update_obj", "s", "scanpath"),
-                     "rifi": ("_update_obj", "f"),
-                     "couchangle": ("_na", "s"),                      # not implemented
-                     "gantryangle": ("_na", "s"),                     # not implemented
-                     "minparticles": ("_update_obj", "i")}
+    _scancap_args = {
+        "offh2o": ("_update_obj", "f"),
+        "bolus": ("_update_obj", "f"),
+        "focus2stepsizefactor": ("_na", "s"),  # not implemented
+        "calbibration": ("_na", "s"),  # not implemented
+        "path": ("_update_obj", "s", "scanpath"),
+        "rifi": ("_update_obj", "f"),
+        "couchangle": ("_na", "s"),  # not implemented
+        "gantryangle": ("_na", "s"),  # not implemented
+        "minparticles": ("_update_obj", "i")
+    }
 
     # <attribute_name> must only be added if it is different from the name of <trip_parameter>
     # generic plan arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
-    _plan_args = {"dose": ("_update_obj", "f", "target_dose"),
-                  "targettissue": ("_update_obj", "s", "target_tissue_type"),
-                  "residualtissue": ("_update_obj", "s", "res_tissue_type"),
-                  "partialbiodose": ("_na", "s"),                     # not implemented
-                  "incube": ("_update_obj", "s", "incube_basename"),  # TODO: may need special handler for suffix
-                  "outcube": ("_na", "s"),                            # not implemented
-                  "debug": ("_na", "s")}                              # not implemented
+    _plan_args = {
+        "dose": ("_update_obj", "f", "target_dose"),
+        "targettissue": ("_update_obj", "s", "target_tissue_type"),
+        "residualtissue": ("_update_obj", "s", "res_tissue_type"),
+        "partialbiodose": ("_na", "s"),  # not implemented
+        "incube":
+        ("_update_obj", "s",
+         "incube_basename"),  # TODO: may need special handler for suffix
+        "outcube": ("_na", "s"),  # not implemented
+        "debug": ("_na", "s")
+    }  # not implemented
 
     # optimization arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
-    _opt_args = {"iter": ("_update_obj", "i", "iterations"),
-                 "graceiter": ("_na", "s"),                           # not implemented
-                 "bio": ("_update_obj", "s", "opt_method"),
-                 "phys": ("_update_obj", "s", "opt_method"),
-                 "H2Obased": ("_update_obj", "s", "opt_principle"),
-                 "CTbased": ("_update_obj", "s", "opt_principle"),
-                 "singly": ("_na", "s"),                              # not implemented
-                 "matchonly": ("_na", "s"),                           # not implemented
-                 "dosealgorithm": ("_update_obj", "s", "dose_alg"),
-                 "dosealg": ("_update_obj", "s", "dose_alg"),
-                 "bioalgorithm": ("_update_obj", "s", "bio_alg"),
-                 "bioalg": ("_update_obj", "s", "bio_alg"),
-                 "optalgorithm": ("_update_obj", "s", "opt_alg"),
-                 "optalg": ("_update_obj", "s", "opt_alg"),
-                 "events": ("_na", "s"),                              # not implemented
-                 "eps": ("_update_obj", "f"),
-                 "geps": ("_update_obj", "f"),
-                 "myfac": ("_na", "s"),                               # not implemented
-                 "doseweightfactor": ("_update_obj", "f", "target_dose_percent"),  # TODO: may check 10 % or 0.1
-                 "field": ("_na", "s"),                               # not implemented
-                 "debug": ("_na", "s")}                               # not implemented
+    _opt_args = {
+        "iter": ("_update_obj", "i", "iterations"),
+        "graceiter": ("_na", "s"),  # not implemented
+        "bio": ("_update_obj", "s", "opt_method"),
+        "phys": ("_update_obj", "s", "opt_method"),
+        "H2Obased": ("_update_obj", "s", "opt_principle"),
+        "CTbased": ("_update_obj", "s", "opt_principle"),
+        "singly": ("_na", "s"),  # not implemented
+        "matchonly": ("_na", "s"),  # not implemented
+        "dosealgorithm": ("_update_obj", "s", "dose_alg"),
+        "dosealg": ("_update_obj", "s", "dose_alg"),
+        "bioalgorithm": ("_update_obj", "s", "bio_alg"),
+        "bioalg": ("_update_obj", "s", "bio_alg"),
+        "optalgorithm": ("_update_obj", "s", "opt_alg"),
+        "optalg": ("_update_obj", "s", "opt_alg"),
+        "events": ("_na", "s"),  # not implemented
+        "eps": ("_update_obj", "f"),
+        "geps": ("_update_obj", "f"),
+        "myfac": ("_na", "s"),  # not implemented
+        "doseweightfactor":
+        ("_update_obj", "f",
+         "target_dose_percent"),  # TODO: may check 10 % or 0.1
+        "field": ("_na", "s"),  # not implemented
+        "debug": ("_na", "s")
+    }  # not implemented
 
     # field specific arguments. {<trip_parameter> : (<handler_method>, <format_specifier>, [<attribute_name>])}
-    _field_args = {"file": ("_update_obj", "s", "use_raster_file"),
-                   "import": ("_na", "s"),                            # not implemented
-                   "export": ("_na", "s"),                            # not implemented
-                   "read": ("_na", "s"),                              # not implemented
-                   "write": ("_na", "s"),                             # not implemented
-                   "list": ("_na", "s"),                              # not implemented
-                   "delete": ("_na", "s"),                            # not implemented
-                   "display": ("_na", "s"),                           # not implemented
-                   "inspect": ("_na", "s"),                           # not implemented
-                   "reset": ("_na", "s"),                             # not implemented
-                   "new": ("_na", "s"),                               # special case
-                   "reverseorder": ("_na", "s"),                      # not implemented
-                   "target": ("_na", "s"),                            # not implemented
-                   "gantry": ("_update_obj", "f"),
-                   "couch": ("_update_obj", "f"),
-                   "chair": ("_update_obj", "f"),
-                   "stereotacticcoordinates": ("_na", "s"),           # not implemented
-                   "fwhm": ("_update_obj", "f"),                      # not implemented
-                   "rastersteps": ("_update_obj", "[f,f]", "raster_step"),
-                   "raster": ("_update_obj", "[f,f]", "raster_step"),
-                   "zsteps": ("_update_obj", "f"),                    # either "zsteps" (as in TRiP98 manual)..
-                   "zstep": ("_update_obj", "f", "zsteps"),           # .. or "zstep" (which is used)
-                   "beam": ("_na", "s"),                              # not implemented
-                   "weight": ("_na", "s"),                            # not implemented
-                   "contourextension": ("_update_obj", "f", "contour_extension"),
-                   "contourext": ("_update_obj", "f", "contour_extension"),
-                   "doseextension": ("_update_obj", "f", "dose_extension"),
-                   "doseext": ("_update_obj", "f", "dose_extension"),
-                   "projectile": ("_update_obj", "s"),                # TODO: needs special handling
-                   "proj": ("_na", "s"),                              # abbreviated of the above
-                   "bev": ("_na", "s"),                               # not implemented
-                   "nolateral": ("_na", "s"),                         # not implemented
-                   "raw": ("_na", "s"),                               # not implemented
-                   "dosemeanlet": ("_na", "s"),                       # not implemented
-                   "algorithm": ("_na", "s"),                         # not implemented (used for .bev files only)
-                   "bioalgorithm": ("_na", "s"),                      # not implemented (used for .bev files only)
-                   "debug": ("_na", "s")}                             # not implemented
+    _field_args = {
+        "file": ("_update_obj", "s", "use_raster_file"),
+        "import": ("_na", "s"),  # not implemented
+        "export": ("_na", "s"),  # not implemented
+        "read": ("_na", "s"),  # not implemented
+        "write": ("_na", "s"),  # not implemented
+        "list": ("_na", "s"),  # not implemented
+        "delete": ("_na", "s"),  # not implemented
+        "display": ("_na", "s"),  # not implemented
+        "inspect": ("_na", "s"),  # not implemented
+        "reset": ("_na", "s"),  # not implemented
+        "new": ("_na", "s"),  # special case
+        "reverseorder": ("_na", "s"),  # not implemented
+        "target": ("_na", "s"),  # not implemented
+        "gantry": ("_update_obj", "f"),
+        "couch": ("_update_obj", "f"),
+        "chair": ("_update_obj", "f"),
+        "stereotacticcoordinates": ("_na", "s"),  # not implemented
+        "fwhm": ("_update_obj", "f"),  # not implemented
+        "rastersteps": ("_update_obj", "[f,f]", "raster_step"),
+        "raster": ("_update_obj", "[f,f]", "raster_step"),
+        "zsteps":
+        ("_update_obj", "f"),  # either "zsteps" (as in TRiP98 manual)..
+        "zstep":
+        ("_update_obj", "f", "zsteps"),  # .. or "zstep" (which is used)
+        "beam": ("_na", "s"),  # not implemented
+        "weight": ("_na", "s"),  # not implemented
+        "contourextension": ("_update_obj", "f", "contour_extension"),
+        "contourext": ("_update_obj", "f", "contour_extension"),
+        "doseextension": ("_update_obj", "f", "dose_extension"),
+        "doseext": ("_update_obj", "f", "dose_extension"),
+        "projectile": ("_update_obj", "s"),  # TODO: needs special handling
+        "proj": ("_na", "s"),  # abbreviated of the above
+        "bev": ("_na", "s"),  # not implemented
+        "nolateral": ("_na", "s"),  # not implemented
+        "raw": ("_na", "s"),  # not implemented
+        "dosemeanlet": ("_na", "s"),  # not implemented
+        "algorithm":
+        ("_na", "s"),  # not implemented (used for .bev files only)
+        "bioalgorithm":
+        ("_na", "s"),  # not implemented (used for .bev files only)
+        "debug": ("_na", "s")
+    }  # not implemented
 
     def __init__(self, plan):
         self.plan = plan
@@ -145,7 +162,8 @@ class ExecParser(object):
             _key = line.split(" ")[0]  # get first word of line
             if _key in self._trip_commands:
                 # lookup and call corresponding method
-                logger.debug("Calling self {:s}".format(self._trip_commands[_key]))
+                logger.debug("Calling self {:s}".format(
+                    self._trip_commands[_key]))
                 getattr(self, self._trip_commands[_key])(line)
 
     @staticmethod
@@ -170,7 +188,8 @@ class ExecParser(object):
 
         """
         if "(" in _arg:
-            _val = _arg[_arg.find("(") + 1:_arg.find(")")].strip("\"").strip("\'").strip()
+            _val = _arg[_arg.find("(") +
+                        1:_arg.find(")")].strip("\"").strip("\'").strip()
             _arg = _arg[0:_arg.find("(")].strip()
         else:
             _val = ""
@@ -246,7 +265,8 @@ class ExecParser(object):
                 field = Field()
                 field.number = _number
                 self.plan.fields.append(field)
-                self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
+                self._parse_extra_args(line, self._field_args,
+                                       self.plan.fields[-1])
 
     def _parse_scancap(self, line):
         """
@@ -303,4 +323,5 @@ class ExecParser(object):
 
         This method simply prints a N/A warning and exits.
         """
-        logger.warning("Not implemented: '{:s}={:s} format={:s}'".format(_arg1, _arg2, _format))
+        logger.warning("Not implemented: '{:s}={:s} format={:s}'".format(
+            _arg1, _arg2, _format))

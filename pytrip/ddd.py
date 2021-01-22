@@ -50,10 +50,15 @@ class DDD:
         try:
             from scipy import interpolate
         except ImportError as e:
-            logger.error("Please install scipy to be able to use spline-based interpolation")
+            logger.error(
+                "Please install scipy to be able to use spline-based interpolation"
+            )
             raise e
         ev_point = np.array([points, [energy] * len(points)])
-        return interpolate.griddata(self.points, self.ddd_list, np.transpose(ev_point), method='linear')
+        return interpolate.griddata(self.points,
+                                    self.ddd_list,
+                                    np.transpose(ev_point),
+                                    method='linear')
 
     def get_ddd_grid(self, energy_list, n):
         """ TODO: documentation
@@ -76,7 +81,8 @@ class DDD:
 
             offset = 1 / (ddd_e[idx + 1] - ddd_e[idx]) * (e - ddd_e[idx + 1])
             x_offset = (d_upper[0, upper_idx] - d_lower[0, lower_idx]) * offset
-            y_offset = 1 + (1 - d_upper[1, upper_idx] / d_lower[1, lower_idx]) * offset
+            y_offset = 1 + (
+                1 - d_upper[1, upper_idx] / d_lower[1, lower_idx]) * offset
 
             depth = d_upper[0, :] + x_offset
             ddd = d_upper[1, :] * y_offset

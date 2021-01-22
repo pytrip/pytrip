@@ -95,10 +95,12 @@ class TestDvhPlot(unittest.TestCase):
             self.assertEqual(e.code, 2)
 
     def test_relative_dos_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+        working_dir = tempfile.mkdtemp(
+        )  # make temp working dir for output file
         output_file = os.path.join(working_dir, "foo.png")
 
-        pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-o', output_file])
+        pytrip.utils.dvhplot.main(
+            args=[self.dos, self.vdx, 'target', '-l', '-v', '-o', output_file])
 
         logger.info("Checking if " + output_file + " is PNG")
         self.assertEqual(imghdr.what(output_file), 'png')
@@ -107,10 +109,14 @@ class TestDvhPlot(unittest.TestCase):
         shutil.rmtree(working_dir)
 
     def test_absolute_dos_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+        working_dir = tempfile.mkdtemp(
+        )  # make temp working dir for output file
         output_file = os.path.join(working_dir, "foo.png")
 
-        pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-d 2.0', '-o', output_file])
+        pytrip.utils.dvhplot.main(args=[
+            self.dos, self.vdx, 'target', '-l', '-v', '-d 2.0', '-o',
+            output_file
+        ])
 
         logger.info("Checking if " + output_file + " is PNG")
         self.assertEqual(imghdr.what(output_file), 'png')
@@ -119,10 +125,12 @@ class TestDvhPlot(unittest.TestCase):
         shutil.rmtree(working_dir)
 
     def test_let_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+        working_dir = tempfile.mkdtemp(
+        )  # make temp working dir for output file
         output_file = os.path.join(working_dir, "foo.png")
 
-        pytrip.utils.dvhplot.main(args=[self.let, self.vdx, 'target', '-l', '-v', '-o', output_file])
+        pytrip.utils.dvhplot.main(
+            args=[self.let, self.vdx, 'target', '-l', '-v', '-o', output_file])
 
         logger.info("Checking if " + output_file + " is PNG")
         self.assertEqual(imghdr.what(output_file), 'png')

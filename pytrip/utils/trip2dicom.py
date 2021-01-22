@@ -35,10 +35,22 @@ def main(args=sys.argv[1:]):
     """
     # parse arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument("ctx_data", help="location of CT file (header or data) in TRiP98 format", type=str)
-    parser.add_argument("outputdir", help="write resulting DICOM files to this directory", type=str)
-    parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
-    parser.add_argument('-V', '--version', action='version', version=pt.__version__)
+    parser.add_argument(
+        "ctx_data",
+        help="location of CT file (header or data) in TRiP98 format",
+        type=str)
+    parser.add_argument("outputdir",
+                        help="write resulting DICOM files to this directory",
+                        type=str)
+    parser.add_argument("-v",
+                        "--verbosity",
+                        action='count',
+                        help="increase output verbosity",
+                        default=0)
+    parser.add_argument('-V',
+                        '--version',
+                        action='version',
+                        version=pt.__version__)
     parsed_args = parser.parse_args(args)
 
     if parsed_args.verbosity == 1:
