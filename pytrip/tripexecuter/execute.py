@@ -168,11 +168,9 @@ class Execute(object):
             prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
             plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=plan._working_dir)
 
-        plan._temp_dir = os.path.join(plan._working_dir,
-                                      plan._temp_dir)
+        plan._temp_dir = os.path.join(plan._working_dir, plan._temp_dir)
 
-        plan._exec_path = os.path.join(plan._temp_dir,
-                                       plan.basename + ".exec")
+        plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
 
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
 
@@ -337,10 +335,12 @@ class Execute(object):
         # then .bashrc_profile is checked. (However, not .bashrc)
         _tripcmd = "bash -l -c \"" + self.trip_bin_path + " < " + remote_exec_fn + "\""
 
-        commands = ["cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
-                    "cd " + remote_run_dir + ";" + norun + _tripcmd,
-                    "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
-                    "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir]
+        commands = [
+            "cd " + self.remote_base_dir + ";" + "tar -zxvf " + remote_tgz_path,  # unpack tarball
+            "cd " + remote_run_dir + ";" + norun + _tripcmd,
+            "cd " + self.remote_base_dir + ";" + "tar -zcvf " + remote_tgz_path + " " + remote_rel_run_dir,
+            "cd " + self.remote_base_dir + ";" + "rm -r " + remote_run_dir
+        ]
 
         # test if TRiP is installed
         logger.debug("Test if TRiP98 can be reached remotely...")
