@@ -380,7 +380,7 @@ class Execute(object):
         ssh.close()
 
         self._move_file_from_server(remote_tgz_path, local_tgz_path)
-        self._extract_tarball(remote_tgz_path, plan._working_dir)
+        self._extract_tarball(local_tgz_path, plan._working_dir)
         logger.debug("Locally remove {:s}".format(local_tgz_path))
         os.remove(local_tgz_path)
 
