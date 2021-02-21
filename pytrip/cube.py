@@ -754,7 +754,7 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
-        with open(path, "w+") as f:
+        with open(path, "w+", newline='\n') as f:
             f.write(output_str)
 
     def _write_trip_data(self, path):

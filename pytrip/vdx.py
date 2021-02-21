@@ -310,7 +310,7 @@ class VdxCube:
 
         :param str path: Full path, including file extension (.vdx).
         """
-        fp = open(path, "w")
+        fp = open(path, "w", newline='\n')
         fp.write("vdx_file_version 2.0\n")
         fp.write("all_indices_zero_based\n")
         fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
