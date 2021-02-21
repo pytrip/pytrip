@@ -230,15 +230,10 @@ class Cube(object):
         :params [int] indices: tuple or list of integer indices (i,j,k) or [i,j,k]
         :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
-        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
-               (indices[1] + 0.5) * self.pixel_size + self.yoffset,
+        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset, (indices[1] + 0.5) * self.pixel_size + self.yoffset,
                self.slice_pos[indices[2]]]
-        logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(indices[0],
-                                                                                         indices[1],
-                                                                                         indices[2],
-                                                                                         pos[0],
-                                                                                         pos[1],
-                                                                                         pos[2]))
+        logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(
+            indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
 
     def slice_to_z(self, slice_number):
@@ -447,8 +442,8 @@ class Cube(object):
             if not os.path.exists(header_path):
                 header_path_locator = TRiP98FileLocator(header_path, self)
                 if header_path_locator.header is not None:
-                    logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(header_path_locator.header,
-                                                                                          header_path))
+                    logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
+                        header_path_locator.header, header_path))
                 raise FileNotFound("Loading {:s} failed, file not found".format(header_path))
 
             # security checks for datafile path
@@ -460,9 +455,8 @@ class Cube(object):
             if not os.path.exists(datafile_path):
                 datafile_path_locator = TRiP98FileLocator(datafile_path, self)
                 if datafile_path_locator.datafile is not None:
-                    logger.warning(
-                        "Did you meant to load {:s}, instead of {:s} ?".format(datafile_path_locator.datafile,
-                                                                               datafile_path))
+                    logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
+                        datafile_path_locator.datafile, datafile_path))
                 raise FileNotFound("Loading {:s} failed, file not found".format(datafile_path))
 
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
@@ -504,7 +498,9 @@ class Cube(object):
         self._set_format_str()
         logger.debug("Format string:" + self.format_str)
 
-    def _read_trip_data_file(self, datafile_path, header_path,
+    def _read_trip_data_file(self,
+                             datafile_path,
+                             header_path,
                              multiply_by_2=False):  # TODO: could be made private? #126
         """Read TRiP98 formatted data.
 
@@ -550,11 +546,8 @@ class Cube(object):
         if len(cube) != self.dimx * self.dimy * self.dimz:
             logger.error("Header size and cube size dont match.")
             logger.error("Cube data points : {:d}".format(len(cube)))
-            logger.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(
-                self.dimx * self.dimy * self.dimz,
-                self.dimx,
-                self.dimy,
-                self.dimz))
+            logger.error("Header says      : {:d} = {:d} * {:d} * {:d}".format(self.dimx * self.dimy * self.dimz,
+                                                                               self.dimx, self.dimy, self.dimz))
             raise IOError("Header data and dose cube size are not consistent.")
 
         cube = np.reshape(cube, (self.dimz, self.dimy, self.dimx))
@@ -749,8 +742,8 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item,
-                                                                          self.slice_thickness, 0)  # 0 gantry tilt
+                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item, self.slice_thickness,
+                                                                          0)  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 

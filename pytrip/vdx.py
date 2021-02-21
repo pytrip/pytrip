@@ -272,6 +272,8 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
+
+
 #                TODO number_of_vois not used
 #                elif "number_of_vois" in line:
 #                    number_of_vois = int(line.split()[1])
@@ -492,10 +494,8 @@ def create_cube(cube, name, center, width, height, depth):
             s = Slice(cube)
             s.thickness = cube.slice_distance
             points = [  # 4 corners of cube in this slice
-                [center[0] - width / 2, center[1] - height / 2, z],
-                [center[0] + width / 2, center[1] - height / 2, z],
-                [center[0] + width / 2, center[1] + height / 2, z],
-                [center[0] - width / 2, center[1] + height / 2, z]
+                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
@@ -579,8 +579,8 @@ def create_sphere(cube, name, center, radius):
     """
     v = Voi(name, cube)
 
-    t = np.linspace(start=0, stop=2.0 * pi,
-                    num=99, endpoint=False)  # num: sets the number of corners in sphere per slice.
+    t = np.linspace(start=0, stop=2.0 * pi, num=99,
+                    endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
 
     points = []
@@ -593,8 +593,7 @@ def create_sphere(cube, name, center, radius):
             s.thickness = cube.slice_distance
             _contour_closed = True
             if r2 > 0.0:
-                points = [[center[0] + x[0] * sqrt(r2),
-                           center[1] + x[1] * sqrt(r2), z] for x in p]
+                points = [[center[0] + x[0] * sqrt(r2), center[1] + x[1] * sqrt(r2), z] for x in p]
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
@@ -803,13 +802,11 @@ class Voi:
         points2 = []
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
             if plane is self.sagittal:
-                point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                    key=lambda x: x[1])
+                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
+                               key=lambda x: x[1])
             elif plane is self.coronal:
-                point = sorted(
-                    pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                    key=lambda x: x[0])
+                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
+                               key=lambda x: x[0])
             if len(point) > 0:
                 points2.append(point[-1])
                 if len(point) > 1:
@@ -1139,9 +1136,8 @@ class Voi:
             pos = sl.get_position()
             out += "slice {:d}\n".format(i)
             out += "slice_in_frame {:.3f}\n".format(pos)
-            out += "thickness {:.3f} reference start_pos {:.3f} stop_pos {:.3f}\n".format(sl.thickness,
-                                                                                          pos - 0.5 * sl.thickness,
-                                                                                          pos + 0.5 * sl.thickness)
+            out += "thickness {:.3f} reference start_pos {:.3f} stop_pos {:.3f}\n".format(
+                sl.thickness, pos - 0.5 * sl.thickness, pos + 0.5 * sl.thickness)
             out += "number_of_contours {:d}\n".format(sl.number_of_contours())
             out += sl.vdx_string()
             i += 1
@@ -1170,8 +1166,7 @@ class Voi:
         :returns: VOI slice at position z, z position may be approxiamte
         """
 
-        _slice = [item for item in self.slices if np.isclose(item.get_position(), z,
-                                                             atol=item.thickness * 0.5)]
+        _slice = [item for item in self.slices if np.isclose(item.get_position(), z, atol=item.thickness * 0.5)]
         if len(_slice) == 0:
             logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
             return None
@@ -1218,7 +1213,6 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
-
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1246,8 +1240,7 @@ class Slice:
         # do not apply any offset here, since everything is written in real world coordinates.
         _offset = [0.0, 0.0, 0.0]
         self.contours.append(
-            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset),
-                    self.cube))
+            Contour(pytrip.res.point.array_to_point_array(np.array(dcm.ContourData, dtype=float), _offset), self.cube))
         # add the slice position to slice_in_frame which is needed later for sorting.
         self.slice_in_frame = self.contours[-1].contour[0][2]
 
@@ -1382,8 +1375,7 @@ class Slice:
 
         # then we check if CT cube is loaded
         if dcmcube is not None:
-            candidates = [dcm for dcm in dcmcube if np.isclose(dcm.SliceLocation,
-                                                               self.get_position())]
+            candidates = [dcm for dcm in dcmcube if np.isclose(dcm.SliceLocation, self.get_position())]
             if len(candidates) > 0:
                 # finally we extract CT slice SOP Instance UID
                 ref_sop_instance_uid = candidates[0].SOPInstanceUID
@@ -1469,7 +1461,6 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
-
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1510,13 +1501,11 @@ class Contour:
         total_path = np.sum(paths)
 
         if total_path > 0:
-            center = np.array([np.dot(points[:-1, 0], paths) / total_path,
-                               np.dot(points[:-1, 1], paths) / total_path,
-                               points[0, 2]])
+            center = np.array(
+                [np.dot(points[:-1, 0], paths) / total_path,
+                 np.dot(points[:-1, 1], paths) / total_path, points[0, 2]])
         else:
-            center = np.array([np.sum(points[:-1, 0]),
-                               np.sum(points[:-1, 1]),
-                               points[0, 2]])
+            center = np.array([np.sum(points[:-1, 0]), np.sum(points[:-1, 1]), points[0, 2]])
 
         return center, area
 
@@ -1545,17 +1534,13 @@ class Contour:
         # However, z may be mapped directly as found in the dicom file by using z_tables in .hed
         out = ""
         for i, cnt in enumerate(self.contour):
-            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0] - self.cube.xoffset,
-                                                         cnt[1] - self.cube.yoffset,
-                                                         cnt[2],
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0] - self.cube.xoffset, cnt[1] - self.cube.yoffset, cnt[2],
                                                          0, 0, 0)
 
         # repeat the first point, to close the contour, if needed
         if self.contour_closed and len(self.contour) > 1:
-            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset,
-                                                         self.contour[0][1] - self.cube.yoffset,
-                                                         self.contour[0][2],
-                                                         0, 0, 0)
+            out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (self.contour[0][0] - self.cube.xoffset, self.contour[0][1] -
+                                                         self.cube.yoffset, self.contour[0][2], 0, 0, 0)
         return out
 
     def read_vdx(self, content, i):
@@ -1592,9 +1577,11 @@ class Contour:
                 if len(con_dat) < 3:  # point must be at least three dimensional
                     logger.warning(".vdx line {:d}: ignored, expected <x> <y> <z> positions".format(i))
                 else:
-                    self.contour.append([float(con_dat[0]) + self.cube.xoffset,
-                                         float(con_dat[1]) + self.cube.yoffset,
-                                         float(con_dat[2])])
+                    self.contour.append([
+                        float(con_dat[0]) + self.cube.xoffset,
+                        float(con_dat[1]) + self.cube.yoffset,
+                        float(con_dat[2])
+                    ])
                     j += 1  # increment point counter
 
             else:  # in case we do not have a point, some keyword may be found
@@ -1641,9 +1628,7 @@ class Contour:
         xy_pairs = [xy_line[i:i + 2] for i in range(0, len(xy_line), 2)]  # make list of pairs
         for x, y in xy_pairs:
             # TRiP98 saves X,Y coordinates as integers, to get [mm] they needs to be divided by 16
-            self.contour.append([_pixel_size * float(x) / 16.0,
-                                 _pixel_size * float(y) / 16.0,
-                                 float(slice_number)])
+            self.contour.append([_pixel_size * float(x) / 16.0, _pixel_size * float(y) / 16.0, float(slice_number)])
 
         # The legacy 1.2 VDX format does not discriminate between open or closed contours.
         # Therefore all contours read will be closed, except for POIs.
@@ -1717,8 +1702,8 @@ class Contour:
                 if d == -1 or d_temp < d:
                     d = d_temp
                     child = i
-            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(
-                self.children[0].contour, self.contour)
+            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
+                                                                                   self.contour)
             if d_temp < d:
                 self._merge(self.children[0])
                 self.children.pop(0)
