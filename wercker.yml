@@ -69,7 +69,7 @@ build_manylinux_64:
           cd /io
           tar -zxvf pytrip98.tar.gz
           ls -al
-          /io/build_wheels.sh "cp36-cp36m cp37-cp37m cp38-cp38"
+          /io/build_wheels.sh "cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
 
     # copy binary to a location that gets passed along to next pipelines
     - script:
@@ -95,7 +95,47 @@ test_debian_testing_py3:
         name: package_install
         code: |
           pip3 install setuptools
-          pip3 install /pipeline/source/pytrip98-*-cp38-cp38-linux_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp39-cp39-linux_x86_64.whl
+
+    - script:
+        name: test
+        code: |
+          trip2dicom --help
+          dicom2trip --help
+          cubeslice --help
+          rst2sobp --help
+          gd2dat --help
+          gd2agr --help
+          bevlet2oer --help
+          rst_plot --help
+          trip2dicom --version
+          dicom2trip --version
+          cubeslice --version
+          rst2sobp --version
+          gd2dat --version
+          gd2agr --version
+          bevlet2oer --version
+          rst_plot --version
+
+# ---------------------------------- debian testing -----------------------------------------------
+
+test_debian_stable_py3:
+  box: debian:stable
+
+  steps:
+    - script:
+        name: prerequisites
+        code: |
+          apt-get update
+          apt-get install -qq -y --no-install-recommends python3-pip
+          python3 -V
+          pip3 -V
+
+    - script:
+        name: package_install
+        code: |
+          pip3 install setuptools
+          pip3 install /pipeline/source/pytrip98-*-cp39-cp39-linux_x86_64.whl
 
     - script:
         name: test
@@ -136,83 +176,6 @@ test_ubuntu_2004_testing_py3:
         code: |
           pip3 install setuptools
           pip3 install /pipeline/source/pytrip98-*-cp38-cp38-linux_x86_64.whl
-
-    - script:
-        name: test
-        code: |
-          trip2dicom --help
-          dicom2trip --help
-          cubeslice --help
-          rst2sobp --help
-          gd2dat --help
-          gd2agr --help
-          bevlet2oer --help
-          rst_plot --help
-          trip2dicom --version
-          dicom2trip --version
-          cubeslice --version
-          rst2sobp --version
-          gd2dat --version
-          gd2agr --version
-          bevlet2oer --version
-          rst_plot --version
-# ---------------------------------- debian 9 stretch -----------------------------------------------
-
-test_debian_9_jessie_py2:
-  box: debian:9
-
-  steps:
-
-    - script:
-        name: prerequisites
-        code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python-pip
-          python -V
-          pip -V
-          pip install --only-binary :all: setuptools wheel subprocess32  # TODO improve installation
-
-    - script:
-        name: package_install
-        code: |
-          python -c "import platform; print(platform.platform())"
-          python -m pip install /pipeline/source/pytrip98-*-cp27mu-manylinux1_x86_64.whl
-
-    - script:
-        name: test
-        code: |
-          trip2dicom --help
-          dicom2trip --help
-          cubeslice --help
-          rst2sobp --help
-          gd2dat --help
-          gd2agr --help
-          bevlet2oer --help
-          rst_plot --help
-          trip2dicom --version
-          dicom2trip --version
-          cubeslice --version
-          rst2sobp --version
-          gd2dat --version
-          gd2agr --version
-          bevlet2oer --version
-          rst_plot --version
-
-
-
-test_debian_9_jessie_py3:
-  box: debian:9
-
-  steps:
-    - script:
-        name: prerequisites
-        code: |
-          apt-get update
-          apt-get install -qq -y --no-install-recommends python3-pip
-          python3 -V
-          pip3 -V
-          pip3 install setuptools
-          python3 -m pip install /pipeline/source/pytrip98-*-cp35m-manylinux1_x86_64.whl
 
     - script:
         name: test
