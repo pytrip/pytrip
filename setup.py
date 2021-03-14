@@ -94,20 +94,12 @@ write_version_py()
 with open('README.rst') as readme_file:
     readme = readme_file.read()
 
-extensions = [setuptools.Extension(
-    'pytriplib',
-    sources=[os.path.join('pytrip', 'lib', 'core.c')],
-    extra_compile_args=['-fpic']),
-    setuptools.Extension(
-        '_cntr',
-        sources=[os.path.join('pytrip', 'lib', 'cntr.c')],
-        extra_compile_args=['-fpic'])
+extensions = [
+    setuptools.Extension('pytriplib', sources=[os.path.join('pytrip', 'lib', 'core.c')], extra_compile_args=['-fpic']),
+    setuptools.Extension('_cntr', sources=[os.path.join('pytrip', 'lib', 'cntr.c')], extra_compile_args=['-fpic'])
 ]
 
-install_requires = [
-    "matplotlib",
-    "pydicom"
-]
+install_requires = ["matplotlib", "pydicom"]
 
 # packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
 # which needs to provide header files (via numpy.get_include()) required to build C extension
@@ -185,5 +177,4 @@ setuptools.setup(
             'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*'
-)
+    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*')
