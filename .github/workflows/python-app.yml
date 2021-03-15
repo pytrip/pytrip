@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.8, 3.9]
+        python-version: [3.8]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
@@ -35,14 +35,14 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with tox
-      run: |         
-         tox -e py
+#     - name: Test with tox
+#       run: |         
+#          tox -e py
          
     - name: Python wheels manylinux build
       # You may pin to the exact commit or the version.
       # uses: RalfG/python-wheels-manylinux-build@34161e0af9394fc7b5140da1ae8fc861540bba8d
-      uses: RalfG/python-wheels-manylinux-build@v0.3.3
+      uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux1-x86_64
       with:
         # Python versions to target, space-separated
         python-versions: "cp36-cp36m cp37-cp37m cp38-cp38"
