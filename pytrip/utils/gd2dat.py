@@ -48,6 +48,7 @@ import pytrip as pt
 
 class ReadGd(object):
     """This class reads .gd files."""
+
     # TODO: this class could go into main pytrip/ as well.
 
     def __init__(self, gd_filename, exp=False, agr=False, let=False):
@@ -277,6 +278,7 @@ class ReadGd(object):
                 out_file.write(str_out)
 
                 counter += 1
+
 
 # end special handling for 'm'
 

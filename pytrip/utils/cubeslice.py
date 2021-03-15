@@ -125,14 +125,27 @@ def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", help="data cube(dose, LET etc)", type=str, nargs='?')
     parser.add_argument("--ct", help="CT cube", type=str, nargs='?')
-    parser.add_argument(
-        "-f", "--from", type=int, dest='sstart', metavar='N', help="Output from slice number N", default=1)
+    parser.add_argument("-f",
+                        "--from",
+                        type=int,
+                        dest='sstart',
+                        metavar='N',
+                        help="Output from slice number N",
+                        default=1)
     parser.add_argument("-t", "--to", type=int, dest='sstop', metavar='M', help="Output up to slice number M")
     parser.add_argument("-H", "--HUbar", dest='HUbar', default=False, action='store_true', help="Add HU colour bar")
-    parser.add_argument("-m", "--max", type=float, dest='csmax', metavar='csmax',
+    parser.add_argument("-m",
+                        "--max",
+                        type=float,
+                        dest='csmax',
+                        metavar='csmax',
                         help="Maximum colorscale value for plotting data")
-    parser.add_argument("-o", "--outputdir", dest='outputdir',
-                        help="Directory for output files.", type=str, default=None)
+    parser.add_argument("-o",
+                        "--outputdir",
+                        dest='outputdir',
+                        help="Directory for output files.",
+                        type=str,
+                        default=None)
     parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     parsed_args = parser.parse_args(args)
@@ -259,8 +272,7 @@ def main(args=sys.argv[1:]):
         elif parsed_args.verbosity > 0:
             logging.info("Write slice number: " + slice_str + " to " + output_filename)
 
-        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
-                                                                              cube.dimz,
+        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id, cube.dimz,
                                                                               cube.slice_to_z(slice_id))
         text_slice.set_text(slice_str)
 
@@ -321,10 +333,7 @@ def main(args=sys.argv[1:]):
             )
 
             if data_cb is None:
-                data_cb = fig.colorbar(
-                    data_im,
-                    orientation='vertical',
-                    shrink=0.8)
+                data_cb = fig.colorbar(data_im, orientation='vertical', shrink=0.8)
                 if isinstance(data_cube, pt.LETCube):
                     data_cb.set_label("LET [keV/um]")
                 elif isinstance(data_cube, pt.DosCube):

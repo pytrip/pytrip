@@ -35,7 +35,6 @@ class ReadGd(object):  # TODO: rename me
     """Reads a bevlet formatted file.
     TODO: must be renamed
     """
-
     def __init__(self, gd_filename, _dataset=0, dat_filename=None):
         """
         :params str gd_filename: full path to bevlet file, including file extension.
@@ -95,8 +94,12 @@ def main(args=sys.argv[1:]):
     parser = argparse.ArgumentParser()
     parser.add_argument("gd_file", help="location of .bevlet file", type=str)
     parser.add_argument("dat_file", help="location of OER .dat to write", type=str, nargs='?')
-    parser.add_argument('-m', '--model', help="OER model (0 - furusawa_V79_C12, 1 - furusawa_HSG_C12, 2 - barendsen)",
-                        type=int, choices=(0, 1, 2), default=2)
+    parser.add_argument('-m',
+                        '--model',
+                        help="OER model (0 - furusawa_V79_C12, 1 - furusawa_HSG_C12, 2 - barendsen)",
+                        type=int,
+                        choices=(0, 1, 2),
+                        default=2)
     parser.add_argument('-v', '--verbosity', action='count', help="increase output verbosity", default=0)
     parser.add_argument('-V', '--version', action='version', version=pt.__version__)
     args = parser.parse_args(args)

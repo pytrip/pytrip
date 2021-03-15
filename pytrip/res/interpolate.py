@@ -83,7 +83,6 @@ class RegularInterpolator(object):
         xp=exp_data_x, yp=exp_data_y, zp=exp_data_z, kind='spline')
 
     """
-
     def __init__(self, x, y, z=None, kind='spline'):
         """
         Initialisation responsible also for finding coefficients of interpolation function.
@@ -120,12 +119,14 @@ class RegularInterpolator(object):
 
                 def applicator(x, y, *args, **kwargs):
                     return executor_1d(y)
+
                 self._interp_function = applicator
             elif len(y) == 1:  # data with shape N x 1
                 executor_1d = self.__get_1d_function(x=x, y=z, kind=kind)
 
                 def applicator(x, y, *args, **kwargs):
                     return executor_1d(x)
+
                 self._interp_function = applicator
             else:
                 # 3-rd degree spline interpolation, passing through all points
@@ -210,6 +211,7 @@ class RegularInterpolator(object):
                 except TypeError:
                     result = y[0]  # t is a scalar
                 return result
+
             result = fun_const
         # 2-element data set, use linear interpolation from numpy
         elif len(y) == 2:

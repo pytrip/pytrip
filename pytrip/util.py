@@ -64,7 +64,6 @@ class TRiP98FilePath(object):
     See http://bio.gsi.de/DOCS/TRiP98/PRO/DOCS/trip98cmddose.html for more details.
 
     """
-
     def __init__(self, name, cube_type):
         """
         Creates a helper class to deal with TRiP98 filenames.
@@ -110,8 +109,7 @@ class TRiP98FilePath(object):
 
         # check lower and uppercase extensions
         return self._ungzipped_filename.endswith(
-            (self.header_file_extension.lower(),
-             self.header_file_extension.upper()))
+            (self.header_file_extension.lower(), self.header_file_extension.upper()))
 
     def is_valid_datafile_path(self):
         """
@@ -148,8 +146,8 @@ class TRiP98FilePath(object):
             return False
 
         # check lower and uppercase extensions
-        correct_extension = self._ungzipped_filename.endswith((self.data_file_extension.lower(),
-                                                               self.data_file_extension.upper()))
+        correct_extension = self._ungzipped_filename.endswith(
+            (self.data_file_extension.lower(), self.data_file_extension.upper()))
 
         # check if cube type can be identified using suffix part
         compatible_suffix = self.is_valid_cube_type()
@@ -218,14 +216,12 @@ class TRiP98FilePath(object):
         # check lower and uppercase extensions
         # check if header extension present, if yes, drop it
         if self.header_file_extension and _ungzipped_filename.endswith(
-            (self.header_file_extension.lower(),
-             self.header_file_extension.upper())):
+            (self.header_file_extension.lower(), self.header_file_extension.upper())):
             return self._ungzipped_filename[:-len(self.header_file_extension)]
 
         # check if datafile extension present, if yes, drop it
         elif self.data_file_extension and _ungzipped_filename.endswith(
-            (self.data_file_extension.lower(),
-             self.data_file_extension.upper())):
+            (self.data_file_extension.lower(), self.data_file_extension.upper())):
             return _ungzipped_filename[:-len(self.data_file_extension)]
 
         # no extensions found, return only unzipped filename

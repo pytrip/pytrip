@@ -113,9 +113,9 @@ class CtxCube(Cube):
         import uuid
         for i in range(len(self.cube)):
             _ds = copy.deepcopy(ds)
-            _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
-                                        "{:.3f}".format(self.yoffset),
-                                        "{:.3f}".format(self.slice_pos[i])]
+            _ds.ImagePositionPatient = [
+                "{:.3f}".format(self.xoffset), "{:.3f}".format(self.yoffset), "{:.3f}".format(self.slice_pos[i])
+            ]
 
             if ds.SOPInstanceUID.startswith('2.25.'):
                 # UUID based UIDs
@@ -123,10 +123,10 @@ class CtxCube(Cube):
                 uuid_part_str = ds.SOPInstanceUID[len('2.25.'):len('2.25.') + 32]  # extract 32bit fragment of
                 # last part of UID, as string
 
-                uuid_object = uuid.UUID(int=int(uuid_part_str))   # convert to UID object, to be able to manipulate it
-                uuid_list = list(uuid_object.fields)              # get list of fields, to be able to edit it
+                uuid_object = uuid.UUID(int=int(uuid_part_str))  # convert to UID object, to be able to manipulate it
+                uuid_list = list(uuid_object.fields)  # get list of fields, to be able to edit it
                 uuid_list[-1] = i + 1  # replace clock_seq part of uuid with sequential number
-                current_uuid = uuid.UUID(fields=uuid_list)        # create uuid object back from updated list
+                current_uuid = uuid.UUID(fields=uuid_list)  # create uuid object back from updated list
                 current_sop_uid = '2.25.{0}'.format(current_uuid.int)  # create back an UID
             else:
                 # ISO based UIDS

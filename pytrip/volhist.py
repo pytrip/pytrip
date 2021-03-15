@@ -28,7 +28,6 @@ class VolHist:
     """
     Volume histogram class
     """
-
     def __init__(self, cube, voi=None, target_dose=None):
         """
         :params Cube cube: either LETCube, DosCube or similar object.
@@ -119,8 +118,7 @@ class VolHist:
             vcube = voi.get_voi_cube()
             mask = (vcube.cube == 1000)
             if not mask.any():
-                warnings.warn("Given VOI has no extend and contains no voxels.",
-                              UserWarning)
+                warnings.warn("Given VOI has no extend and contains no voxels.", UserWarning)
                 return None, None
 
         _xrange = (0.0, data_cube.max() * 1.1)
