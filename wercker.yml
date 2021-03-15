@@ -135,7 +135,7 @@ test_debian_stable_py3:
         name: package_install
         code: |
           pip3 install setuptools
-          pip3 install /pipeline/source/pytrip98-*-cp39-cp39-linux_x86_64.whl
+          pip3 install /pipeline/source/pytrip98-*-cp37-cp37-linux_x86_64.whl
 
     - script:
         name: test
