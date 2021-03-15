@@ -4,10 +4,10 @@
 name: Python application
 
 on:
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+ push:
+   branches: '**'
+ pull_request:
+   branches: [ master ]
 
 jobs:
   build:
@@ -37,3 +37,22 @@ jobs:
     - name: Test with tox
       run: |         
          tox
+         
+    - name: Python wheels manylinux build
+      # You may pin to the exact commit or the version.
+      # uses: RalfG/python-wheels-manylinux-build@34161e0af9394fc7b5140da1ae8fc861540bba8d
+      uses: RalfG/python-wheels-manylinux-build@v0.3.3
+      with:
+        # Python versions to target, space-separated
+        python-versions: "cp36-cp36m cp37-cp37m cp38-cp38"
+        # pip packages required at build time, space-separated
+        #build-requirements: # optional, default is 
+        # yum packages to install, space-separated
+        #system-packages: # optional, default is 
+        # command to run before build, e.g. the execution of a script to perform additional build-environment setup
+        #pre-build-command: # optional, default is 
+        # path to python package to build, relative to repository root
+        #package-path: # optional, default is 
+        # extra arguments to pass to the `pip wheel` command, passed paths are relative to `package-path`
+        #pip-wheel-args: # optional, default is -w ./dist --no-deps         
+         
