@@ -19,7 +19,7 @@ Try if one of following commands (printing Python version) works::
 At the time of writing Python language interpreter has two popular versions: 2.x (Python 2) and 3.x (Python 3) families.
 Command ``python`` invokes either Python 2 or 3, while ``python3`` can invoke only Python 3.
 
-**pytrip** supports most of the modern Python versions, mainly: 2.7, 3.2, 3.3, 3.4, 3.5 and 3.6.
+**pytrip** supports most of the modern Python versions, mainly: 2.7, 3.5 - 3.9.
 Check if your interpreter version is supported.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
@@ -30,7 +30,7 @@ We suggest to use the newest version available (from 3.x family).
 Python installers can be found at the python web site
 (http://python.org/download/).
 
-PyTRiP aslo relies on these packages:
+PyTRiP also relies on these packages:
 
   * `NumPy <http://www.numpy.org/>`_ -- Better arrays and data processing.
   * `matplotlib <http://matplotlib.org/>`_ -- Needed for plotting.
