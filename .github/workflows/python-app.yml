@@ -25,6 +25,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
+        sudo apt-get -y install python3-dev
         python -m pip install --upgrade pip
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
         if [ -f tests/requirements-test.txt ]; then pip install -r tests/requirements-test.txt; fi
@@ -36,7 +37,7 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with tox
       run: |         
-         tox
+         tox -e py
          
     - name: Python wheels manylinux build
       # You may pin to the exact commit or the version.
