@@ -18,7 +18,9 @@ jobs:
       matrix:
         python-version: [3.8]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v2.3.4
+      with:
+        fetch-depth: 0
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
@@ -45,7 +47,7 @@ jobs:
       uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux1_x86_64
       with:
         # Python versions to target, space-separated
-        python-versions: "cp36-cp36m cp37-cp37m cp38-cp38"
+        python-versions: "cp37-cp37m cp38-cp38"
         # pip packages required at build time, space-separated
         #build-requirements: # optional, default is 
         # yum packages to install, space-separated
