@@ -1,13 +1,16 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: Python application
+name: Python tests and packaging
 
 on:
- push:
-   branches: '**'
- pull_request:
-   branches: [ master ]
+  push:
+    branches: [ master ]
+    tags: '*'
+  pull_request:
+    branches: [ master ]
+  release:
+    types: [published]
 
 jobs:
   run_tests:
@@ -36,9 +39,9 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-#     - name: Test with tox
-#       run: |         
-#          tox -e py
+    - name: Test with tox
+      run: |         
+         tox -e py
 
   make_and_upload_package:
     if: "github.repository == 'pytrip/pytrip' && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
@@ -61,27 +64,22 @@ jobs:
       with:
         # Python versions to target, space-separated
         python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
-        # pip packages required at build time, space-separated
-        #build-requirements: # optional, default is 
-        # yum packages to install, space-separated
-        #system-packages: # optional, default is 
-        # command to run before build, e.g. the execution of a script to perform additional build-environment setup
-        #pre-build-command: # optional, default is 
-        # path to python package to build, relative to repository root
-        #package-path: # optional, default is 
-        # extra arguments to pass to the `pip wheel` command, passed paths are relative to `package-path`
-        #pip-wheel-args: # optional, default is -w ./dist --no-deps   
+
+    - name: Extract packages
+      run: |
+        mkdir -p twine_upload
+        mv dist/pytrip98*manylinux1_x86_64.whl twine_upload/        
         
-    - name: publish package to pypi
+    - name: Publish packages to pypi
       uses: pypa/gh-action-pypi-publish@v1.4.2
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
       with:
         # Password for your PyPI user or an access token
         password: ${{ secrets.TWINE_PASSWORD }}
         # The repository URL to use
         repository_url: "https://upload.pypi.org/legacy/"
         # The target directory for distribution
-        #packages_dir: dist/
+        packages_dir: twine_upload/
         # Show verbose output.
         verbose: true              
 
