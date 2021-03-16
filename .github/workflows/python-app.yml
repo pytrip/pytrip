@@ -39,9 +39,9 @@ jobs:
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-#     - name: Test with tox
-#       run: |         
-#          tox -e py
+    - name: Test with tox
+      run: |         
+         tox -e py
 
   make_and_upload_package:
     if: "github.repository == 'pytrip/pytrip' && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
@@ -63,7 +63,7 @@ jobs:
       uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux1_x86_64
       with:
         # Python versions to target, space-separated
-        python-versions: "cp35-cp35m cp39-cp39" # cp36-cp36m cp37-cp37m cp38-cp38 
+        python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39" 
 
     - name: Extract packages
       run: |
