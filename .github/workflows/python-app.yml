@@ -58,5 +58,18 @@ jobs:
         # path to python package to build, relative to repository root
         #package-path: # optional, default is 
         # extra arguments to pass to the `pip wheel` command, passed paths are relative to `package-path`
-        #pip-wheel-args: # optional, default is -w ./dist --no-deps         
+        #pip-wheel-args: # optional, default is -w ./dist --no-deps   
+        
+    - name: publish package to pypi
+      uses: pypa/gh-action-pypi-publish@v1.4.2
+      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+      with:
+        # Password for your PyPI user or an access token
+        password: ${{ secrets.TWINE_PASSWORD }}
+        # The repository URL to use
+        repository_url: "https://upload.pypi.org/legacy/"
+        # The target directory for distribution
+        #packages_dir: dist/
+        # Show verbose output.
+        verbose: true              
          
