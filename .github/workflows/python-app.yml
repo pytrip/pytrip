@@ -36,18 +36,5 @@ jobs:
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with tox
       run: |         
-         tox
-         
-    - name: publish package to pypi
-      uses: pypa/gh-action-pypi-publish@v1.4.2
-      #if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-      with:
-        # Password for your PyPI user or an access token
-        password: ${{ secrets.TWINE_PASSWORD }}
-        # The repository URL to use
-        repository_url: "https://upload.pypi.org/legacy/"
-        # The target directory for distribution
-        #packages_dir: dist/
-        # Show verbose output.
-        verbose: true         
+         tox   
          
