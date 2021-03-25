@@ -107,7 +107,7 @@ install_requires = ["matplotlib", "pydicom"]
 # numpy is also added install_requires which is list of dependencies needed by pip when running `pip install`
 #
 # from time to time numpy is introducing new binary API
-# detailed list of API versions is here: https://github.com/numpy/numpy/blob/main/numpy/core/code_generators/cversions.txt
+# detailed list of API versions: https://github.com/numpy/numpy/blob/main/numpy/core/code_generators/cversions.txt
 # we are taking the approach to build pytrip wheel package with oldest available API version for given python version
 # here is table with corresponding numpy versions, numpy API version and supported python versions
 # ----------------------------------------------------------------|
@@ -142,7 +142,7 @@ elif sys.version_info[0] == 3 and sys.version_info[1] == 6:  # python 3.6
 elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5
     setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
     install_requires += ["numpy>1.11.0"]  # numpy 1.11 or newer, API v10 (0xa)
-elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):  # python 3.4 and python 2.7
+elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):  # python 3.4 + 2.7
     setup_requires += ["numpy==1.11.0"]  # numpy 1.13, API v11 (0xb)
     install_requires += ["numpy>1.11.0"]  # numpy 1.13 or newer, API v11 (0xb)
 else:  # others
