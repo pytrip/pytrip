@@ -35,6 +35,7 @@ class build_ext(_build_ext):
         # Prevent numpy from thinking it is still in its setup process:
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
+        print("Building package with numpy version {}".format(numpy.__version__))
         self.include_dirs.append(numpy.get_include())
 
 
@@ -104,14 +105,46 @@ install_requires = ["matplotlib", "pydicom"]
 # packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
 # which needs to provide header files (via numpy.get_include()) required to build C extension
 # numpy is also added install_requires which is list of dependencies needed by pip when running `pip install`
+#
+# from time to time numpy is introducing new binary API
+# detailed list of API versions is here: https://github.com/numpy/numpy/blob/main/numpy/core/code_generators/cversions.txt
+# we are taking the approach to build pytrip wheel package with oldest available API version for given python version
+# here is table with corresponding numpy versions, numpy API version and supported python versions
+# -----------------------------------------------
+# | numpy version | numpy API | python versions |
+# -----------------------------------------------
+# |      1.20     | 14 (0xe)  |    3.7 - 3.9    |
+# |      1.19     | 13 (0xd)  |    3.6 - 3.8    |
+# |      1.18     | 13 (0xd)  |    3.5 - 3.8    |
+# |      1.17     | 13 (0xd)  |    3.5 - 3.7    |
+# |      1.16     | 13 (0xd)  | 2.7,  3.5 - 3.7 |
+# |      1.15     | 12 (0xc)  | 2.7,  3.4 - 3.7 |
+# |      1.14     | 12 (0xc)  | 2.7,  3.4 - 3.6 |
+# |      1.13     | 11 (0xb)  | 2.7,  3.4 - 3.6 |
+# -----------------------------------------------
 setup_requires = []
-if sys.version_info[0] == 3 and sys.version_info[1] == 5:
-    setup_requires += ["numpy<1.19"]
+if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
+    setup_requires += ["numpy==1.20.0"] # numpy 1.20, API v14 (0xe)
+    install_requires += ["numpy>1.20.0"] # numpy 1.20 or newer, API v14 (0xe)
+elif sys.version_info[0] == 3 and sys.version_info[1] == 8:  # python 3.8
+    setup_requires += ["numpy==1.18.0"] # numpy 1.18, API v13 (0xd)
+    install_requires += ["numpy>1.18.0"] # numpy 1.18 or newer, API v13 (0xd)
+elif sys.version_info[0] == 3 and sys.version_info[1] == 7:  # python 3.7
+    setup_requires += ["numpy==1.15.0"] # numpy 1.15, API v12 (0xc)
+    install_requires += ["numpy>1.15.0"] # numpy 1.15 or newer, API v12 (0xc)
+elif sys.version_info[0] == 3 and sys.version_info[1] in 6:  # python 3.6
+    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
+elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5 TODO
+    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
 elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
-    setup_requires += ["numpy<1.16"]
+    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
 else:
-    setup_requires += ["numpy"]
-install_requires += setup_requires
+    setup_requires += ["numpy"]  # try newest version, this will probably fail
+    install_requires += ["numpy"]  # try newest version, this will probably fail
+
 
 setuptools.setup(
     name='pytrip98',
