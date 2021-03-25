@@ -124,27 +124,26 @@ install_requires = ["matplotlib", "pydicom"]
 # -----------------------------------------------
 setup_requires = []
 if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
-    setup_requires += ["numpy==1.20.0"] # numpy 1.20, API v14 (0xe)
-    install_requires += ["numpy>1.20.0"] # numpy 1.20 or newer, API v14 (0xe)
+    setup_requires += ["numpy==1.20.0"]  # numpy 1.20, API v14 (0xe)
+    install_requires += ["numpy>1.20.0"]  # numpy 1.20 or newer, API v14 (0xe)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 8:  # python 3.8
-    setup_requires += ["numpy==1.18.0"] # numpy 1.18, API v13 (0xd)
-    install_requires += ["numpy>1.18.0"] # numpy 1.18 or newer, API v13 (0xd)
+    setup_requires += ["numpy==1.18.0"]  # numpy 1.18, API v13 (0xd)
+    install_requires += ["numpy>1.18.0"]  # numpy 1.18 or newer, API v13 (0xd)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 7:  # python 3.7
-    setup_requires += ["numpy==1.15.0"] # numpy 1.15, API v12 (0xc)
-    install_requires += ["numpy>1.15.0"] # numpy 1.15 or newer, API v12 (0xc)
+    setup_requires += ["numpy==1.15.0"]  # numpy 1.15, API v12 (0xc)
+    install_requires += ["numpy>1.15.0"]  # numpy 1.15 or newer, API v12 (0xc)
 elif sys.version_info[0] == 3 and sys.version_info[1] in 6:  # python 3.6
-    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
+    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5 TODO
-    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
+    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
 elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
-    setup_requires += ["numpy==1.13.0"] # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"] # numpy 1.13 or newer, API v11 (0xb)
+    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
 else:
     setup_requires += ["numpy"]  # try newest version, this will probably fail
     install_requires += ["numpy"]  # try newest version, this will probably fail
-
 
 setuptools.setup(
     name='pytrip98',
