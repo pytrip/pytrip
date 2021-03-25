@@ -110,18 +110,22 @@ install_requires = ["matplotlib", "pydicom"]
 # detailed list of API versions is here: https://github.com/numpy/numpy/blob/main/numpy/core/code_generators/cversions.txt
 # we are taking the approach to build pytrip wheel package with oldest available API version for given python version
 # here is table with corresponding numpy versions, numpy API version and supported python versions
-# -----------------------------------------------
-# | numpy version | numpy API | python versions |
-# -----------------------------------------------
-# |      1.20     | 14 (0xe)  |    3.7 - 3.9    |
-# |      1.19     | 13 (0xd)  |    3.6 - 3.8    |
-# |      1.18     | 13 (0xd)  |    3.5 - 3.8    |
-# |      1.17     | 13 (0xd)  |    3.5 - 3.7    |
-# |      1.16     | 13 (0xd)  | 2.7,  3.5 - 3.7 |
-# |      1.15     | 12 (0xc)  | 2.7,  3.4 - 3.7 |
-# |      1.14     | 12 (0xc)  | 2.7,  3.4 - 3.6 |
-# |      1.13     | 11 (0xb)  | 2.7,  3.4 - 3.6 |
-# -----------------------------------------------
+# ----------------------------------------------------------------|
+# | numpy version | numpy API | python versions |    OS support   |
+# ----------------------------------------------------------------|
+# |      1.20     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
+# |      1.19     | 13 (0xd)  |    3.6 - 3.8    | linux, mac, win |
+# |      1.18     | 13 (0xd)  |    3.5 - 3.8    | linux, mac, win |
+# |      1.17     | 13 (0xd)  |    3.5 - 3.7    | linux, mac, win |
+# |      1.16     | 13 (0xd)  | 2.7,  3.5 - 3.7 | linux, mac, win |
+# |      1.15     | 12 (0xc)  | 2.7,  3.4 - 3.7 | linux, mac, win |
+# |      1.14     | 12 (0xc)  | 2.7,  3.4 - 3.6 | linux, mac, win |
+# |      1.13     | 11 (0xb)  | 2.7,  3.4 - 3.6 | linux, mac, win |
+# |      1.12     | 10 (0xa)  | 2.7,  3.4 - 3.6 | linux, mac, win |
+# |      1.11     | 10 (0xa)  | 2.7,  3.4 - 3.5 | linux, mac, win |
+# |      1.10     | 10 (0xa)  | 2.7,  3.3 - 3.5 |      linux      | 
+# |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
+# ----------------------------------------------------------------|
 setup_requires = []
 if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
     setup_requires += ["numpy==1.20.0"]  # numpy 1.20, API v14 (0xe)
@@ -132,16 +136,16 @@ elif sys.version_info[0] == 3 and sys.version_info[1] == 8:  # python 3.8
 elif sys.version_info[0] == 3 and sys.version_info[1] == 7:  # python 3.7
     setup_requires += ["numpy==1.15.0"]  # numpy 1.15, API v12 (0xc)
     install_requires += ["numpy>1.15.0"]  # numpy 1.15 or newer, API v12 (0xc)
-elif sys.version_info[0] == 3 and sys.version_info[1] in 6:  # python 3.6
-    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
-elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5 TODO
-    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
-elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):
-    setup_requires += ["numpy==1.13.0"]  # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>1.13.0"]  # numpy 1.13 or newer, API v11 (0xb)
-else:
+elif sys.version_info[0] == 3 and sys.version_info[1] == 6:  # python 3.6
+    setup_requires += ["numpy==1.12.0"]  # numpy 1.12, API v10 (0xa)
+    install_requires += ["numpy>1.12.0"]  # numpy 1.12 or newer, API v10 (0xa)
+elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5
+    setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
+    install_requires += ["numpy>1.11.0"]  # numpy 1.11 or newer, API v10 (0xa)
+elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):  # python 3.4 and python 2.7
+    setup_requires += ["numpy==1.11.0"]  # numpy 1.13, API v11 (0xb)
+    install_requires += ["numpy>1.11.0"]  # numpy 1.13 or newer, API v11 (0xb)
+else:  # others
     setup_requires += ["numpy"]  # try newest version, this will probably fail
     install_requires += ["numpy"]  # try newest version, this will probably fail
 
