@@ -89,7 +89,7 @@ class Execute(object):
         self.username = ""
         self.password = ""
         self.remote_base_dir = "./"
-        self.rsakey_local_path = "~/.ssh/id_rsa"
+        self.pkey_path = ""
 
     def __str__(self):
         """ str output handler
@@ -504,10 +504,9 @@ class Execute(object):
         _to_uri = self.servername + ":" + _to
         logger.debug("Copy {:s} to {:s}".format(_from, _to_uri))
 
-        sftp, transport = self._get_sftp_client()
+        sftp = self._get_sftp_client()
         sftp.put(localpath=_from, remotepath=_to)
         sftp.close()
-        transport.close()
 
     def _copy_file_from_server(self, _from, _to):
         """ Copies a single file from a server
@@ -517,10 +516,9 @@ class Execute(object):
         _from_uri = self.servername + ":" + _from
         logger.debug("Copy {:s} to {:s}".format(_from_uri, _to))
 
-        sftp, transport = self._get_sftp_client()
+        sftp = self._get_sftp_client()
         sftp.get(_from, _to)
         sftp.close()
-        transport.close()
 
     def _move_file_from_server(self, _from, _to):
         """ Copies a removes a single file from a server
@@ -530,11 +528,10 @@ class Execute(object):
         _from_uri = self.servername + ":" + _from
         logger.debug("Move {:s} to {:s}".format(_from_uri, _to))
 
-        sftp, transport = self._get_sftp_client()
+        sftp = self._get_sftp_client()
         sftp.get(_from, _to)
         sftp.remove(_from)
         sftp.close()
-        transport.close()
 
     def _get_ssh_client(self):
         """ returns an open ssh client
@@ -543,66 +540,22 @@ class Execute(object):
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
-        # If no password is supplied, try to look for a private key
-        if not self.password:
-            rsa_keypath = os.path.expanduser(self.rsakey_local_path)
-            if not os.path.isfile(rsa_keypath):
-                # login with provided username + empty password
-                try:
-                    ssh.connect(self.servername, username=self.username, password="")
-                except Exception:
-                    logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username, password or key in " + self.rsakey_local_path)
-                    raise
-            else:
-                # login with provided username + private key
-                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
-                try:
-                    ssh.connect(self.servername, username=self.username, pkey=rsa_key)
-                except Exception:
-                    logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username and your key in " + self.rsakey_local_path)
-                    raise
-        else:
-            # login with provided username + password
-            ssh.connect(self.servername, username=self.username, password=self.password)
+        try:
+            if not self.pkey_path:
+                self.pkey_path = None
+            ssh.connect(self.servername, username=self.username, password=self.password, key_filename=self.pkey_path)
+        except Exception:
+            logger.error("Cannot connect to " + self.servername)
+            raise
 
         return ssh
 
     def _get_sftp_client(self):
         """ returns a sftp client object and the corresponding transport socket.
-        Both must be closed after use.
         """
-        transport = paramiko.Transport((self.servername, 22))
-        # transport.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        sftp = self._get_ssh_client().open_sftp()
 
-        # If no password is supplied, try to look for a private key
-        if not self.password:
-            rsa_keypath = os.path.expanduser(self.rsakey_local_path)
-            if not os.path.isfile(rsa_keypath):
-                # login with provided username + empty password
-                try:
-                    transport.connect(username=self.username, password="")
-                except Exception:
-                    logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username, password or key in " + self.rsakey_local_path)
-                    raise
-            else:
-                # login with provided username + private key
-                rsa_key = paramiko.RSAKey.from_private_key_file(rsa_keypath)
-                try:
-                    transport.connect(username=self.username, pkey=rsa_key)
-                except Exception:
-                    logger.error("Cannot connect to " + self.servername)
-                    logger.error("Check username and your key in " + self.rsakey_local_path)
-                    raise
-        else:
-            # login with provided username + password
-            transport.connect(username=self.username, password=self.password)
-
-        sftp = paramiko.SFTPClient.from_transport(transport)
-
-        return sftp, transport
+        return sftp
 
     def test_local_trip(self):
         """ Test if TRiP98 can be reached locally.
