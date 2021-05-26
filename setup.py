@@ -138,13 +138,13 @@ elif sys.version_info[0] == 3 and sys.version_info[1] == 7:  # python 3.7
     install_requires += ["numpy>=1.15.0"]  # numpy 1.15 or newer, API v12 (0xc)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 6:  # python 3.6
     setup_requires += ["numpy==1.12.0"]  # numpy 1.12, API v10 (0xa)
-    install_requires += ["numpy>=1.12.0"]  # numpy 1.12 or newer, API v10 (0xa)
+    install_requires += ["numpy>=1.12.0,<1.20"]  # numpy 1.12 - 1.19, API v10 (0xa)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5
     setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
-    install_requires += ["numpy>=1.11.0"]  # numpy 1.11 or newer, API v10 (0xa)
+    install_requires += ["numpy>=1.11.0,<1.19"]  # numpy 1.11 - 1.18, API v10 (0xa)
 elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):  # python 3.4 + 2.7
-    setup_requires += ["numpy==1.11.0"]  # numpy 1.13, API v11 (0xb)
-    install_requires += ["numpy>=1.11.0"]  # numpy 1.13 or newer, API v11 (0xb)
+    setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
+    install_requires += ["numpy>=1.11.0,<1.15"]  # numpy 1.11 - 1.15, API v10 (0xa)
 else:  # others
     setup_requires += ["numpy"]  # try newest version, this will probably fail
     install_requires += ["numpy"]  # try newest version, this will probably fail
