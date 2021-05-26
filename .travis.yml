@@ -8,8 +8,6 @@ git:
 matrix:
     include:
     # Linux tests for various python versions
-        - python: 2.7
-          env: TOXENV=py27
         - python: 3.9
           env: TOXENV=py39
 
