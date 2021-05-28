@@ -56,7 +56,7 @@ class Cube(object):
 
     header_file_extension = '.hed'
     data_file_extension = None
-    allowed_suffix = tuple()
+    allowed_suffix = ()
 
     def __init__(self, cube=None):
         if cube is not None:  # copying constructor

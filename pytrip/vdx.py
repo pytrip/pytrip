@@ -91,7 +91,7 @@ class VdxCube:
 
     header_file_extension = '.hed'
     data_file_extension = '.vdx'
-    allowed_suffix = tuple()
+    allowed_suffix = ()
 
     def __init__(self, cube=None):
         """
