@@ -286,7 +286,7 @@ class DensityCube(Cube):
         y_data = []
         for line in lines:
             a = line.split()
-            if len(a):
+            if a:
                 x_data.append(float(a[0]))
                 y_data.append(float(a[3]))
         self.hlut_data = RegularInterpolator(np.array(x_data), np.array(y_data), kind='linear')

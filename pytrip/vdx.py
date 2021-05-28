@@ -524,7 +524,7 @@ def create_voi_from_cube(cube, name, value=100):
         contour = isodose_obj.trace(value)
         s = Slice(cube)
         s.thickness = cube.slice_distance
-        if not len(contour):
+        if not contour:
             continue
         points = np.zeros((len(contour[0]), 3))
         points[:, 0:2] = contour[0] * cube.pixel_size
