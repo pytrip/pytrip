@@ -218,7 +218,8 @@ class DensityProjections:
         data *= step_length
         return data, start, [b, c]
 
-    def calculate_back_start_voi(self, voi, start, beam_axis):
+    @staticmethod
+    def calculate_back_start_voi(voi, start, beam_axis):
         """ TODO: Documentation
 
         :params voi:
@@ -230,7 +231,8 @@ class DensityProjections:
         distance = min(np.dot(points, beam_axis))
         return start + distance * beam_axis
 
-    def calculate_front_start_voi(self, voi, start, beam_axis):
+    @staticmethod
+    def calculate_front_start_voi(voi, start, beam_axis):
         """ TODO: Documentation
 
         :params voi:

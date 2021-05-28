@@ -133,7 +133,8 @@ class TestInterpolate(unittest.TestCase):
             self.assertEqual(interp_2d(2, 0), 2.5)
             self.assertEqual(interp_2d(2, 2), 2.5)
 
-    def test_2d_2xnel(self):
+    @staticmethod
+    def test_2d_2xnel():
         """
         Should partially fallback to linear interpolation
         """
@@ -176,7 +177,8 @@ class TestInterpolate(unittest.TestCase):
             assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
             assert_allclose(interp_2d(2, 10), 2.5, atol=0.1)
 
-    def test_2d_nxnel(self):
+    @staticmethod
+    def test_2d_nxnel():
         for kind in ('linear', 'spline'):
             interp_2d = RegularInterpolator(x=(1., 3., 10.),
                                             y=(-2.0, 0.0, 2.0),
