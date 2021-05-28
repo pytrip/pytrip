@@ -73,12 +73,10 @@ class SPCCollection(object):
         if not os.path.exists(self.dirname):
             os.makedirs(self.dirname)
         for spc_object in self.data.values():
-            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(
-                pp=spc_object.projname,
-                tt=spc_object.targname,
-                uuu="MeV",
-                eeeee=int(100 * spc_object.energy)
-            )
+            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(pp=spc_object.projname,
+                                                                  tt=spc_object.targname,
+                                                                  uuu="MeV",
+                                                                  eeeee=int(100 * spc_object.energy))
             print(fname)
             spc_object.write_spc(os.path.join(self.dirname, fname))
 
@@ -95,12 +93,10 @@ class SPC(object):
     def write_spc(self, filename=None):
         fname = filename
         if fname is None:
-            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(
-                pp=self.projname,
-                tt=self.targname,
-                uuu="MeV",
-                eeeee=int(100 * self.energy)
-            )
+            fname = "{pp:s}.{tt:s}.{uuu:s}{eeeee:05d}.spc".format(pp=self.projname,
+                                                                  tt=self.targname,
+                                                                  uuu="MeV",
+                                                                  eeeee=int(100 * self.energy))
         fd = open(fname, "wb")
 
         # filetype 1
