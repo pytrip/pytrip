@@ -485,7 +485,7 @@ class Plan(object):
             plan += "target({:s}) ".format(self.target_tissue_type)
         if self.res_tissue_type:
             plan += "residual({:s}) ".format(self.res_tissue_type)
-        if not incube == "":
+        if incube != "":
             plan += "incube({:s})".format(self.incube_basename)
         output.append(plan)
         return output
