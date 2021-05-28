@@ -33,23 +33,23 @@ class TestInterpolate(unittest.TestCase):
         """Single data point
         """
         for kind in ('linear', 'spline'):
-            interp_1d = RegularInterpolator(x=(1.,), y=(2.,), kind=kind)
+            interp_1d = RegularInterpolator(x=(1., ), y=(2., ), kind=kind)
             self.assertEqual(interp_1d(1), 2)
-            self.assertEqual(RegularInterpolator.eval(x=1, xp=(1.,), yp=(2.,), kind=kind), 2)
+            self.assertEqual(RegularInterpolator.eval(x=1, xp=(1., ), yp=(2., ), kind=kind), 2)
 
             self.assertEqual(interp_1d(5), 2)  # value outside domain
-            self.assertEqual(RegularInterpolator.eval(x=5, xp=(1.,), yp=(2.,), kind=kind), 2)
+            self.assertEqual(RegularInterpolator.eval(x=5, xp=(1., ), yp=(2., ), kind=kind), 2)
 
             assert_allclose(interp_1d(x=(1, 1, 1)), (2, 2, 2))
             assert_allclose(interp_1d(x=(0, 1, 2)), (2, 2, 2))  # some values outside domain
             assert_allclose(interp_1d(np.array((1, 1, 1))), (2, 2, 2))  # numpy array
             assert_allclose(interp_1d(()), ())  # empty table
 
-            interp_2d = RegularInterpolator(x=(1.,), y=(2.,), z=(3.,), kind=kind)
+            interp_2d = RegularInterpolator(x=(1., ), y=(2., ), z=(3., ), kind=kind)
             self.assertEqual(interp_2d(1, 2), 3)
             self.assertEqual(interp_2d(5, 0), 3)  # value outside domain
             assert_allclose(interp_2d((1, 1, 1), (2, 2, 2)), (3, 3, 3))
-            test_y = RegularInterpolator.eval(x=(1, 1, 1), y=(2, 2, 2), xp=(1.,), yp=(2.,), zp=(3.,), kind=kind)
+            test_y = RegularInterpolator.eval(x=(1, 1, 1), y=(2, 2, 2), xp=(1., ), yp=(2., ), zp=(3., ), kind=kind)
             assert_allclose(test_y, (3, 3, 3))
             assert_allclose(interp_2d((0, 1, 2), (0, 1, 2)), (3, 3, 3))  # some values outside domain
             assert_allclose(interp_2d(np.array((1, 1, 1)), np.array((2, 2, 2))), (3, 3, 3))  # numpy array
