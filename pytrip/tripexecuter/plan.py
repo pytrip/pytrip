@@ -41,29 +41,34 @@ class Plan(object):
     """
     # dicts are in the form of
     # "<valid trip tag>": (<enum>, "Short name", "Description, e.g. for alt tags")
-    opt_principles = {"H2Obased": (0, "Simple opt.", "Very simplified single field optimization"),
-                      "CTbased": (1, "Full opt.", "Full optimization, multiple fields")}
+    opt_principles = {
+        "H2Obased": (0, "Simple opt.", "Very simplified single field optimization"),
+        "CTbased": (1, "Full opt.", "Full optimization, multiple fields")
+    }
 
-    opt_methods = {"phys": (0, "Physical", "Physical dose only [Gy]"),
-                   "bio": (1, "Biological", "Biological optimization [Gy(RBE)]")}
+    opt_methods = {
+        "phys": (0, "Physical", "Physical dose only [Gy]"),
+        "bio": (1, "Biological", "Biological optimization [Gy(RBE)]")
+    }
 
-    opt_algs = {"cl": (0, "Classic", ""),
-                "cg": (1, "Conjugate gradients", "(default)"),
-                "gr": (2, "Plain gradients", ""),
-                "bf": (3, "Bortfeld", "Bortfeld's algorithm"),
-                "fr": (4, "Fletcher-Reeves", "Fletcher-Reeves' algorithm")}
+    opt_algs = {
+        "cl": (0, "Classic", ""),
+        "cg": (1, "Conjugate gradients", "(default)"),
+        "gr": (2, "Plain gradients", ""),
+        "bf": (3, "Bortfeld", "Bortfeld's algorithm"),
+        "fr": (4, "Fletcher-Reeves", "Fletcher-Reeves' algorithm")
+    }
 
-    bio_algs = {"cl": (0, "Classic (default)", ""),
-                "ld": (1, "Lowdose (faster)", "")}
+    bio_algs = {"cl": (0, "Classic (default)", ""), "ld": (1, "Lowdose (faster)", "")}
 
-    dose_algs = {"cl": (0, "Classic (default)", ""),
-                 "ap": (1, "Allpoints", ""),
-                 "ms": (2, "Multiple scatter", "")}
+    dose_algs = {"cl": (0, "Classic (default)", ""), "ap": (1, "Allpoints", ""), "ms": (2, "Multiple scatter", "")}
 
-    scanpaths = {"none": (0, "No path", "output as is"),
-                 "uw": (1, "U. Weber", "efficient"),
-                 "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
-                 "mk": (3, "M. Kraemer", "conservative")}
+    scanpaths = {
+        "none": (0, "No path", "output as is"),
+        "uw": (1, "U. Weber", "efficient"),
+        "uw2": (2, "U. Weber2", "very efficient, works also for non-grid points"),
+        "mk": (3, "M. Kraemer", "conservative")
+    }
 
     def __init__(self, default_kernel=KernelModel(), basename="", comment=""):
         """
@@ -135,7 +140,7 @@ class Plan(object):
         self.res_tissue_type = ""  # residual tissue types
         self.incube_basename = ""  # To enable incube optimization, set the basename of the cube to be loaded by TRiP
 
-        self._trip_exec = ""   # placeholder for generated TRiP98 .exec commands.
+        self._trip_exec = ""  # placeholder for generated TRiP98 .exec commands.
         self._make_sis = ""  # placeholder for generate sistable command
 
     def __str__(self):
@@ -198,12 +203,9 @@ class Plan(object):
                                                                         self.opt_methods[self.opt_method][1])
         out += "|   Optimization principle      : '{:s}' {:s}\n".format(self.opt_principle,
                                                                         self.opt_principles[self.opt_principle][1])
-        out += "|   Optimization algorithm      : '{:s}' {:s}\n".format(self.opt_alg,
-                                                                        self.opt_algs[self.opt_alg][1])
-        out += "|   Dose algorithm              : '{:s}' {:s}\n".format(self.dose_alg,
-                                                                        self.dose_algs[self.dose_alg][1])
-        out += "|   Biological algorithm        : '{:s}' {:s}\n".format(self.bio_alg,
-                                                                        self.bio_algs[self.bio_alg][1])
+        out += "|   Optimization algorithm      : '{:s}' {:s}\n".format(self.opt_alg, self.opt_algs[self.opt_alg][1])
+        out += "|   Dose algorithm              : '{:s}' {:s}\n".format(self.dose_alg, self.dose_algs[self.dose_alg][1])
+        out += "|   Biological algorithm        : '{:s}' {:s}\n".format(self.bio_alg, self.bio_algs[self.bio_alg][1])
         out += "|   Iterations                  : {:d}\n".format(self.iterations)
         out += "|   eps                         : {:.2e}\n".format(self.eps)
         out += "|   geps                        : {:.2e}\n".format(self.geps)
@@ -213,8 +215,7 @@ class Plan(object):
         out += "|   Bolus thickness             : {:.3f} [mm]\n".format(self.bolus)
         out += "|   H2O offset                  : {:.3f} [mm]\n".format(self.offh2o)
         out += "|   Min particles               : {:d}\n".format(self.minparticles)
-        out += "|   Scanpath                    : '{:s} {}'\n".format(self.scanpath,
-                                                                      self.scanpaths[self.scanpath])
+        out += "|   Scanpath                    : '{:s} {}'\n".format(self.scanpath, self.scanpaths[self.scanpath])
         out += "|\n"
         out += "| Optimization target\n"
         out += "|   Relative target dose        : {:.1f} %\n".format(self.target_dose_percent)
@@ -415,10 +416,8 @@ class Plan(object):
 
         output = []
         output.append("ct \"{:s}\" / read".format(self.basename))
-        output.append("voi \"{:s}\" / read select(\"{:s}\")".format(self.basename,
-                                                                    _name))
-        output.append("voi \"{:s}\" / maxdosefraction({:.3f})".format(_name,
-                                                                      self.target_dose_percent * 0.01))
+        output.append("voi \"{:s}\" / read select(\"{:s}\")".format(self.basename, _name))
+        output.append("voi \"{:s}\" / maxdosefraction({:.3f})".format(_name, self.target_dose_percent * 0.01))
         return output
 
     def _make_exec_fields(self):
@@ -441,8 +440,7 @@ class Plan(object):
 
             line += " fwhm({:.3f})".format(_field.fwhm)
 
-            line += " raster({:.2f},{:.2f})".format(_field.raster_step[0],
-                                                    _field.raster_step[1])
+            line += " raster({:.2f},{:.2f})".format(_field.raster_step[0], _field.raster_step[1])
             # TODO: convert if Dicom angles were given
             # gantry, couch = angles_to_trip(_field.gantry(), _field.couch())
             line += " couch({:.1f})".format(_field.couch)
@@ -485,7 +483,7 @@ class Plan(object):
             plan += "target({:s}) ".format(self.target_tissue_type)
         if self.res_tissue_type:
             plan += "residual({:s}) ".format(self.res_tissue_type)
-        if not incube == "":
+        if incube != "":
             plan += "incube({:s})".format(self.incube_basename)
         output.append(plan)
         return output
@@ -535,9 +533,13 @@ class Plan(object):
         window = self.window
         window_str = ""
         if len(window) == 6:
-            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}) ".format(window[0], window[1],  # Xmin/max
-                                                                                      window[2], window[3],  # Ymin/max
-                                                                                      window[4], window[5])  # Zmin/max
+            window_str = " window({:.2f},{:.2f},{:.2f},{:.2f},{:.2f},{:.2f}) ".format(
+                window[0],
+                window[1],  # Xmin/max
+                window[2],
+                window[3],  # Ymin/max
+                window[4],
+                window[5])  # Zmin/max
 
         self._out_files = []  # list of files generated which will be returned
 

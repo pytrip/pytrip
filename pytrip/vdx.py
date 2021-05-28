@@ -659,7 +659,7 @@ class Voi:
         :returns: a deep copy of the Voi object
         """
         voi = copy.deepcopy(self)
-        if not margin == 0:
+        if margin != 0:
             pass
         return voi
 
