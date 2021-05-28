@@ -29,6 +29,7 @@ import os
 from enum import Enum
 import logging
 import numpy as np
+import sys
 
 
 class SPCTagCode(Enum):
@@ -614,7 +615,7 @@ class Tag(object):
                 self.fd.seek(-4, 1)  # rewind 4 bytes, retry
                 if code < 1 or code > 20:
                     print("Error: bad format in SPC file.")
-                    exit()
+                    sys.exit()
                 else:
                     # print("Found big-endian format.")
                     pass

@@ -27,6 +27,7 @@ import os
 import copy
 from math import pi, sqrt
 import logging
+import sys
 import warnings
 from functools import cmp_to_key
 
@@ -162,7 +163,7 @@ class VdxCube:
             _contours = dcm.ROIContourSequence
         else:
             logger.error("No ROIContours or ROIContourSequence found in dicom RTSTRUCT")
-            exit()
+            sys.exit()
 
         for i, _roi_contour in enumerate(_contours):
             if structure_ids is None or _roi_contour.RefdROINumber in structure_ids:
@@ -173,13 +174,13 @@ class VdxCube:
 
                 else:
                     logger.error("No RTROIObservations or RTROIObservationsSequence found in dicom RTSTRUCT")
-                    exit()
+                    sys.exit()
 
                 if hasattr(dcm, "StructureSetROISequence"):
                     _roi_name = dcm.StructureSetROISequence[i].ROIName  # REQUIRED by DICOM. At least an empty string.
                 else:
                     logger.error("No StructureSetROISequence found in dicom RTSTRUCT")
-                    exit()
+                    sys.exit()
 
                 v = Voi(_roi_name, self.cube)
                 v.read_dicom(_roi_observation, _roi_contour, _roi_name)
