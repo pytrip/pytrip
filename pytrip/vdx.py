@@ -238,7 +238,8 @@ class VdxCube:
         """
         self.read_vdx(path)
 
-    def vdx_version(self, content):
+    @staticmethod
+    def vdx_version(content):
         """ Test content for what VDX version this is.
         Since the VDX version is very undocumented, we are guessing here.
 
@@ -1012,7 +1013,8 @@ class Voi:
         self._sort_slices()
         return i - 1
 
-    def get_roi_type_number(self, type_name):
+    @staticmethod
+    def get_roi_type_number(type_name):
         """
         :returns: 1 if GTV or CTV, 10 for EXTERNAL, else 0.
         """
@@ -1029,7 +1031,8 @@ class Voi:
         else:
             return 0
 
-    def get_roi_type_name(self, type_id):
+    @staticmethod
+    def get_roi_type_name(type_id):
         """
         :returns: The type name of the ROI.
         """
