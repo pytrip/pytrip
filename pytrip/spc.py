@@ -590,7 +590,6 @@ class Tag(object):
         self.size = 0
         self.endian = -1  # 0 little endian, 1 big endian, -1 unknown
         self._ste = ''
-        pass
 
     def set_tag(self):
         if self.endian == 1:  # big endian (Motorola)

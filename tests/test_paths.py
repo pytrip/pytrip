@@ -32,7 +32,6 @@ class TestProton(unittest.TestCase):
     def setUp(self):
         """ Prepare files for tests
         """
-        pass
 
     def test_carabe(self):
         """ TODO

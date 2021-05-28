@@ -46,7 +46,6 @@ class TestProton(unittest.TestCase):
         self.vdx = os.path.join(testdir, "tst003000.vdx")
         logger.info("Cube path " + self.cube001)
         logger.info("VDX path " + self.vdx)
-        pass
 
     def test_carabe(self):
         """ Check if we are able to calculate a few RBE values
@@ -103,7 +102,6 @@ class TestRCR(unittest.TestCase):
     def setUp(self):
         """ Prepare files for tests
         """
-        pass
 
     def test_rcr(self):
         """ Test RCR model
