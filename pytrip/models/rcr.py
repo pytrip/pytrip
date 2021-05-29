@@ -46,7 +46,6 @@ def rbe_rcr(dose_ion, let, alpha_x, beta_x, oxy=None):
     # from pytrip.models.extra import rbe_from_sf
     # rbe_from_sf(_sf, dose_ion, alpha_x, beta_x)
     logger.warning("rcr_rbe not implemented yet.")
-    pass  # TODO: not implemented yet.
 
 
 def sf_rcr(dose, let, oxy=None):

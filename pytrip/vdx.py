@@ -707,7 +707,6 @@ class Voi:
         """
         (Not implemented.)
         """
-        pass
 
     def concat_to_3d_polygon(self):
         """ Concats all contours into a single contour, and writes all data points to self.polygon3d.
