@@ -1839,3 +1839,27 @@ class Contour:
             con.append(self.contour[i])
         self.contour = con
         return
+
+
+def is_cuboidal_voi_contained(cube_dims, voi_center, voi_dims):
+    """
+    Checks whether a cube (patient) fully contains a cuboidal VOI.
+
+    :params [float*3] cube_dims: dimensions of a cube [x,y,z] in [mm]
+    :params [float*3] voi_center: center coordinates of a VOI [x,y,z] in [mm]
+    :params [float*3] voi_dims: dimensions of a VOI [x,y,z] in [mm]
+    :returns: True if the VOI is contained within the cube
+    """
+    return all(voi_dims[i] / 2 <= voi_center[i] <= cube_dims[i] - voi_dims[i] / 2 for i in range(3))
+
+
+def is_spherical_voi_contained(cube_dims, voi_center, voi_radius):
+    """
+    Checks whether a cube (patient) fully contains a spherical VOI.
+
+    :params [float*3] cube_dims: dimensions of a cube [x,y,z] in [mm]
+    :params [float*3] voi_center: center coordinates of a VOI [x,y,z] in [mm]
+    :params float voi_radius: radius of a VOI in [mm]
+    :returns: True if the VOI is contained within the cube
+    """
+    return all(voi_radius <= voi_center[i] <= cube_dims[i] - voi_radius for i in range(3))
