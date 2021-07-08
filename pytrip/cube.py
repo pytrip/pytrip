@@ -319,6 +319,7 @@ class Cube(object):
         self.dimx = dimx
         self.dimy = dimy
         self.dimz = dimz
+        self.zoffset = slice_offset
         self.slice_number = dimz
         self.zoffset = slice_offset
         self.pixel_size = pixel_size
