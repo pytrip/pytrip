@@ -1211,8 +1211,11 @@ class Voi:
         return temp_min, temp_max
 
     def is_fully_contained(self):
-        print(self.get_min_max())
-        [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
+        try:
+            [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
+        except TypeError:
+            # get_min_max can return NoneTypes suggesting that a VOI is outside of the patient
+            return False
 
         return self.is_x_contained(min_pos_x, max_pos_x) and \
                self.is_y_contained(min_pos_y, max_pos_y) and \
