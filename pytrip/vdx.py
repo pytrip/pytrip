@@ -1216,6 +1216,7 @@ class Voi:
         except TypeError:
             # get_min_max can return NoneTypes suggesting that a VOI is outside of the patient
             return False
+        print(self.get_min_max())
 
         return self.is_x_contained(min_pos_x, max_pos_x) and \
                self.is_y_contained(min_pos_y, max_pos_y) and \
