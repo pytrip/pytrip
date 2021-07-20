@@ -1210,6 +1210,22 @@ class Voi:
         self.temp_max = temp_max
         return temp_min, temp_max
 
+    def is_fully_contained(self):
+        [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
+
+        return self.is_x_contained(min_pos_x, max_pos_x) and \
+               self.is_y_contained(min_pos_y, max_pos_y) and \
+               self.is_z_contained(min_pos_z, max_pos_z)
+
+    def is_x_contained(self, min_pos, max_pos):
+        return self.cube.xoffset <= min_pos and max_pos <= self.cube.dimx * self.cube.pixel_size + self.cube.xoffset
+
+    def is_y_contained(self, min_pos, max_pos):
+        return self.cube.yoffset <= min_pos and max_pos <= self.cube.dimy * self.cube.pixel_size + self.cube.yoffset
+
+    def is_z_contained(self, min_pos, max_pos):
+        return self.cube.zoffset <= min_pos and max_pos <= self.cube.dimz * self.cube.pixel_size + self.cube.zoffset
+
 
 class Slice:
     """
