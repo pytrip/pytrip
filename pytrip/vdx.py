@@ -1215,13 +1215,12 @@ class Voi:
         try:
             [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
         except TypeError:
-            # get_min_max can return NoneTypes suggesting that a VOI is outside of the patient
+            # get_min_max can return NoneTypes if a VOI is located outside of the patient
             return False
-        print(self.get_min_max())
-        if [min_pos_x, min_pos_y, min_pos_z] == [max_pos_x, max_pos_y, max_pos_z]:
-            # get_min_max can return equal min and max values if a VOI is partially contained in the patient
-            return False
-        print(self.get_min_max())
+
+        # if [min_pos_x, min_pos_y, min_pos_z] == [max_pos_x, max_pos_y, max_pos_z]:
+        #     # get_min_max can return equal min and max values if a VOI is partially contained in the patient
+        #     return False
 
         return self._is_x_contained(min_pos_x, max_pos_x) and \
                self._is_y_contained(min_pos_y, max_pos_y) and \
