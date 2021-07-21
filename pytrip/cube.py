@@ -312,6 +312,7 @@ class Cube(object):
         self.dimy = dimy
         self.dimz = dimz
         self.slice_number = dimz
+        self.zoffset = slice_offset
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
         self.slice_thickness = slice_distance  # use distance for thickness as default
