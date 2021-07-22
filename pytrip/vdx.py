@@ -1295,8 +1295,8 @@ class Voi:
             return False
 
         return self._is_x_contained(min_pos_x, max_pos_x) and \
-               self._is_y_contained(min_pos_y, max_pos_y) and \
-               self._is_z_contained(min_pos_z, max_pos_z)
+            self._is_y_contained(min_pos_y, max_pos_y) and \
+            self._is_z_contained(min_pos_z, max_pos_z)
 
     def _is_x_contained(self, min_pos, max_pos):
         return self.cube.xoffset <= min_pos and max_pos <= self.cube.dimx * self.cube.pixel_size + self.cube.xoffset
