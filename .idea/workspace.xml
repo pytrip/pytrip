@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="1fe85320-2b8e-4dee-bd2f-d14c13777cfb" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/pytrip/vdx.py" beforeDir="false" afterPath="$PROJECT_DIR$/pytrip/vdx.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -45,7 +46,10 @@
       <workItem from="1626102721617" duration="4000" />
       <workItem from="1626385136606" duration="3000" />
       <workItem from="1626642580565" duration="5000" />
-      <workItem from="1626796537088" duration="2974000" />
+      <workItem from="1626796537088" duration="6031000" />
+      <workItem from="1626864249912" duration="523000" />
+      <workItem from="1626864983034" duration="8521000" />
+      <workItem from="1626941337059" duration="3647000" />
     </task>
     <servers />
   </component>
@@ -69,9 +73,10 @@
       <screen x="0" y="0" width="2048" height="1152" />
     </state>
     <state width="1993" height="303" key="GridCell.Tab.0.right/0.0.2048.1152/-2560.0.2048.1152@0.0.2048.1152" timestamp="1623322856837" />
-    <state x="667" y="244" width="714" height="664" key="find.popup" timestamp="1623459961580">
-      <screen x="0" y="0" width="2048" height="1152" />
+    <state x="-1893" y="244" width="714" height="664" key="find.popup" timestamp="1626874545246">
+      <screen x="-2560" y="0" width="2048" height="1152" />
     </state>
+    <state x="-1893" y="244" width="714" height="664" key="find.popup/0.0.2048.1152/-2560.0.2048.1152@-2560.0.2048.1152" timestamp="1626874545246" />
     <state x="667" y="244" width="714" height="664" key="find.popup/0.0.2048.1152/-2560.0.2048.1152@0.0.2048.1152" timestamp="1623459961580" />
   </component>
   <component name="XDebuggerManager">

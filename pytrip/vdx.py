@@ -491,8 +491,8 @@ def create_cube(cube, name, center, width, height, depth):
     """
     v = Voi(name, cube)
     for i in range(0, cube.dimz):
-        z = i * cube.slice_distance
-        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
+        z = i * cube.slice_distance + cube.zoffset
+        if center[2] - depth / 2 + cube.zoffset <= z <= center[2] + depth / 2 + cube.zoffset:
             s = Slice(cube)
             s.thickness = cube.slice_distance
             points = [  # 4 corners of cube in this slice
@@ -531,7 +531,7 @@ def create_voi_from_cube(cube, name, value=100):
         points = np.zeros((len(contour[0]), 3))
         points[:, 0:2] = contour[0] * cube.pixel_size
 
-        points[:, 2] = i * cube.slice_distance
+        points[:, 2] = i * cube.slice_distance + cube.zoffset
         c = Contour(points.tolist(), cube)
         c.contour_closed = True  # TODO: Probably the last point is double here
         s.add_contour(c)
@@ -556,8 +556,8 @@ def create_cylinder(cube, name, center, radius, depth):
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
 
     for i in range(0, cube.dimz):
-        z = i * cube.slice_distance
-        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
+        z = i * cube.slice_distance + cube.zoffset
+        if center[2] - depth / 2 + cube.zoffset <= z <= center[2] + depth / 2 + cube.zoffset:
             s = Slice(cube)
             s.thickness = cube.slice_distance
             points = [[x[0], x[1], z] for x in p]
@@ -588,8 +588,8 @@ def create_sphere(cube, name, center, radius):
     points = []
 
     for i in range(0, cube.dimz):
-        z = i * cube.slice_distance
-        if center[2] - radius <= z <= center[2] + radius:
+        z = i * cube.slice_distance + cube.zoffset
+        if center[2] - radius + cube.zoffset <= z <= center[2] + radius + cube.zoffset:
             r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
@@ -1211,16 +1211,11 @@ class Voi:
         return temp_min, temp_max
 
     def is_fully_contained(self):
-        print(self.get_min_max())
         try:
             [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
         except TypeError:
             # get_min_max can return NoneTypes if a VOI is located outside of the patient
             return False
-
-        # if [min_pos_x, min_pos_y, min_pos_z] == [max_pos_x, max_pos_y, max_pos_z]:
-        #     # get_min_max can return equal min and max values if a VOI is partially contained in the patient
-        #     return False
 
         return self._is_x_contained(min_pos_x, max_pos_x) and \
                self._is_y_contained(min_pos_y, max_pos_y) and \
