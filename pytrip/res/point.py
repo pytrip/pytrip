@@ -67,10 +67,7 @@ def point_in_polygon(x, y, polygon):
                         intersects += 1
         x1 = x2
         y1 = y2
-    if intersects % 2 != 0:
-        return True
-    else:
-        return False
+    return intersects % 2 != 0
 
 
 def get_nearest_point(point, contour):
