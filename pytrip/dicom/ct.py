@@ -114,28 +114,28 @@ def create_dicom(cube, include_pixel_data=True):
 
         # overwrite some tags if the cube has some DICOM data stored (i.e. was previously imported from DICOM data)
 
-        for tag in ['AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionNumber', 'AcquisitionTime', 'BitsStored',
-                    'BodyPartExamined', 'CTDIPhantomTypeCodeSequence', 'CTDIvol', 'CalciumScoringMassFactorDevice',
-                    'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime', 'ConvolutionKernel',
-                    'DataCollectionCenterPatient', 'DataCollectionCenterPatient', 'DataCollectionCenterPatient',
-                    'DataCollectionDiameter', 'DateOfLastCalibration', 'DeviceSerialNumber',
-                    'DistanceSourceToDetector', 'DistanceSourceToPatient', 'EstimatedDoseSaving', 'Exposure',
-                    'ExposureModulationType', 'ExposureTime', 'FilterType', 'FocalSpots', 'FrameOfReferenceUID',
-                    'GantryDetectorTilt', 'GeneratorPower', 'HighBit', 'ImageComments', 'ImagePositionPatient',
-                    'ImagePositionPatient', 'ImageType', 'InstitutionAddress', 'InstitutionName',
-                    'IrradiationEventUID', 'KVP', 'LargestImagePixelValue', 'LargestImagePixelValue',
-                    'Manufacturer', 'ManufacturerModelName', 'OtherPatientNames', 'PatientAge', 'PatientBirthDate',
-                    'PatientID', 'PatientSex', 'PixelRepresentation', 'ProtocolName', 'ReconstructionDiameter',
-                    'ReconstructionTargetCenterPatient', 'ReconstructionTargetCenterPatient',
-                    'ReconstructionTargetCenterPatient', 'ReferencedImageSequence', 'ReferringPhysicianName',
-                    'RescaleIntercept', 'RescaleSlope', 'RescaleType', 'RotationDirection',
-                    'SequenceDelimitationItem', 'SeriesDate', 'SeriesDescription', 'SeriesInstanceUID',
-                    'SeriesNumber', 'SeriesTime', 'SingleCollimationWidth', 'SmallestImagePixelValue',
-                    'SmallestImagePixelValue', 'SoftwareVersions', 'SourceImageSequence', 'SpiralPitchFactor',
-                    'StationName', 'StudyDate', 'StudyDescription', 'StudyID', 'StudyInstanceUID', 'StudyTime',
-                    'TableFeedPerRotation', 'TableHeight', 'TableSpeed', 'TimeOfLastCalibration',
-                    'TotalCollimationWidth', 'WindowCenter', 'WindowCenterWidthExplanation', 'WindowWidth',
-                    'XRayTubeCurrent']:
+        for tag in [
+                'AcquisitionDate', 'AcquisitionDateTime', 'AcquisitionNumber', 'AcquisitionTime', 'BitsStored',
+                'BodyPartExamined', 'CTDIPhantomTypeCodeSequence', 'CTDIvol', 'CalciumScoringMassFactorDevice',
+                'CalciumScoringMassFactorDevice', 'ContentDate', 'ContentTime', 'ConvolutionKernel',
+                'DataCollectionCenterPatient', 'DataCollectionCenterPatient', 'DataCollectionCenterPatient',
+                'DataCollectionDiameter', 'DateOfLastCalibration', 'DeviceSerialNumber', 'DistanceSourceToDetector',
+                'DistanceSourceToPatient', 'EstimatedDoseSaving', 'Exposure', 'ExposureModulationType', 'ExposureTime',
+                'FilterType', 'FocalSpots', 'FrameOfReferenceUID', 'GantryDetectorTilt', 'GeneratorPower', 'HighBit',
+                'ImageComments', 'ImagePositionPatient', 'ImagePositionPatient', 'ImageType', 'InstitutionAddress',
+                'InstitutionName', 'IrradiationEventUID', 'KVP', 'LargestImagePixelValue', 'LargestImagePixelValue',
+                'Manufacturer', 'ManufacturerModelName', 'OtherPatientNames', 'PatientAge', 'PatientBirthDate',
+                'PatientID', 'PatientSex', 'PixelRepresentation', 'ProtocolName', 'ReconstructionDiameter',
+                'ReconstructionTargetCenterPatient', 'ReconstructionTargetCenterPatient',
+                'ReconstructionTargetCenterPatient', 'ReferencedImageSequence', 'ReferringPhysicianName',
+                'RescaleIntercept', 'RescaleSlope', 'RescaleType', 'RotationDirection', 'SequenceDelimitationItem',
+                'SeriesDate', 'SeriesDescription', 'SeriesInstanceUID', 'SeriesNumber', 'SeriesTime',
+                'SingleCollimationWidth', 'SmallestImagePixelValue', 'SmallestImagePixelValue', 'SoftwareVersions',
+                'SourceImageSequence', 'SpiralPitchFactor', 'StationName', 'StudyDate', 'StudyDescription', 'StudyID',
+                'StudyInstanceUID', 'StudyTime', 'TableFeedPerRotation', 'TableHeight', 'TableSpeed',
+                'TimeOfLastCalibration', 'TotalCollimationWidth', 'WindowCenter', 'WindowCenterWidthExplanation',
+                'WindowWidth', 'XRayTubeCurrent'
+        ]:
             if Tag(tag) in current_ct_data_dataset:
                 _ds[tag] = current_ct_data_dataset[tag]
         # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
@@ -152,9 +152,9 @@ def create_dicom(cube, include_pixel_data=True):
         if Tag('ImagePositionPatient') in current_ct_data_dataset:
             _ds.ImagePositionPatient = current_ct_data_dataset.ImagePositionPatient
         else:
-            _ds.ImagePositionPatient = ["{:.3f}".format(cube.xoffset),
-                                        "{:.3f}".format(cube.yoffset),
-                                        "{:.3f}".format(cube.slice_pos[i])]
+            _ds.ImagePositionPatient = [
+                "{:.3f}".format(cube.xoffset), "{:.3f}".format(cube.yoffset), "{:.3f}".format(cube.slice_pos[i])
+            ]
 
         if include_pixel_data:
             pixel_array_tmp = np.subtract(cube.cube[i][:][:], _ds.RescaleIntercept, casting='safe')

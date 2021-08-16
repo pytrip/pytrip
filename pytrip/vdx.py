@@ -307,8 +307,10 @@ class VdxCube:
             for slice in voi.slices:
                 rtol = 1.e-5
                 atol = 1.e-8
-                image_pos_candidate = [_uid for z_mm, _uid in location_mapping.items() if
-                                       abs(z_mm - slice.get_position()) < atol + rtol * abs(z_mm)]
+                image_pos_candidate = [
+                    _uid for z_mm, _uid in location_mapping.items()
+                    if abs(z_mm - slice.get_position()) < atol + rtol * abs(z_mm)
+                ]
                 if image_pos_candidate and self.cube:
                     for contour in slice.contours:
                         for point in contour.contour:
@@ -606,8 +608,9 @@ class VdxCube:
             # if ROI with the same number was present in DICOM let us add it to the sorted sequence
             # and update its tags with values stored in the DICOM imported ROI
             if matched_roi:
-                for tag in ['ROIGenerationAlgorithm', 'ROIDescription', 'ROIVolume', 'ROIGenerationAlgorithm',
-                            'ROIName']:
+                for tag in [
+                        'ROIGenerationAlgorithm', 'ROIDescription', 'ROIVolume', 'ROIGenerationAlgorithm', 'ROIName'
+                ]:
                     if Tag(tag) in dicom_imported_roi:
                         matched_roi[0][tag] = dicom_imported_roi[tag]
                 sorted_roi_structure_roi_list.append(matched_roi[0])
@@ -623,12 +626,14 @@ class VdxCube:
             if Tag(tag) in struct_header_dataset:
                 ds.file_meta[tag] = struct_header_dataset[tag]
 
-        for tag in ['InstanceCreationDate', 'InstanceCreationTime', 'StudyDate', 'StudyTime', 'AccessionNumber',
-                    'Manufacturer', 'ReferringPhysicianName', 'StudyDescription', 'SeriesDescription',
-                    'OperatorsName', 'ManufacturerModelName', 'PatientName', 'PatientID', 'PatientBirthDate',
-                    'PatientSex', 'SoftwareVersions', 'FrameOfReferenceUID', 'PositionReferenceIndicator',
-                    'StructureSetLabel', 'StructureSetDate', 'StructureSetTime', 'SOPInstanceUID', 'StudyInstanceUID',
-                    'SeriesInstanceUID', 'StudyID', 'ApprovalStatus']:
+        for tag in [
+                'InstanceCreationDate', 'InstanceCreationTime', 'StudyDate', 'StudyTime', 'AccessionNumber',
+                'Manufacturer', 'ReferringPhysicianName', 'StudyDescription', 'SeriesDescription', 'OperatorsName',
+                'ManufacturerModelName', 'PatientName', 'PatientID', 'PatientBirthDate', 'PatientSex',
+                'SoftwareVersions', 'FrameOfReferenceUID', 'PositionReferenceIndicator', 'StructureSetLabel',
+                'StructureSetDate', 'StructureSetTime', 'SOPInstanceUID', 'StudyInstanceUID', 'SeriesInstanceUID',
+                'StudyID', 'ApprovalStatus'
+        ]:
             if Tag(tag) in struct_data_dataset:
                 ds[tag] = struct_data_dataset[tag]
 
@@ -678,8 +683,9 @@ class VdxCube:
         for dicom_imported_roi in struct_data_dataset.get(Tag('ROIContourSequence'), {}):
 
             # check list of ROIs with the same number present in DICOM imported data
-            matched_roi = [_roi for _roi in roi_datasets if
-                           _roi.ReferencedROINumber == dicom_imported_roi.ReferencedROINumber]
+            matched_roi = [
+                _roi for _roi in roi_datasets if _roi.ReferencedROINumber == dicom_imported_roi.ReferencedROINumber
+            ]
 
             # if ROI with the same number was present in DICOM let us add it to the sorted sequence
             # and update its tags with values stored in the DICOM imported ROI
@@ -710,7 +716,9 @@ class VdxCube:
                             matched_contour = _contour
                     if matched_contour:
                         # update DICOM data in each Contour
-                        for tag in ['ContourNumber', ]:
+                        for tag in [
+                                'ContourNumber',
+                        ]:
                             if Tag(tag) in dicom_imported_contour:
                                 matched_contour[tag] = dicom_imported_contour[tag]
 
@@ -720,6 +728,7 @@ class VdxCube:
                                 cs.ContourImageSequence[0].ReferencedSOPInstanceUID:
                             return j
                     return -1
+
                 matched_roi[0].ContourSequence.sort(key=sorting_key)
 
                 sorted_roi_datasets.append(matched_roi[0])
@@ -776,6 +785,7 @@ class VdxCube:
                 if int(dataset.ObservationNumber) == int(cs.ObservationNumber):
                     return j
             return -1
+
         ds.RTROIObservationsSequence.sort(key=observation_sorting_key)
 
         return ds
@@ -914,7 +924,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius ** 2 - (z - center[2]) ** 2
+            r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -1812,8 +1822,9 @@ class Slice:
         # TODO polish this approach, it looks isclose written in following way is much faster than np.isclose
         rtol = 1.e-5
         atol = 1.e-8
-        instance_uid_candidate = [_uid for z_mm, _uid in uid_mapping.items() if
-                                  abs(z_mm - self.get_position()) < atol + rtol * abs(z_mm)]
+        instance_uid_candidate = [
+            _uid for z_mm, _uid in uid_mapping.items() if abs(z_mm - self.get_position()) < atol + rtol * abs(z_mm)
+        ]
         if instance_uid_candidate:
             ref_sop_instance_uid = instance_uid_candidate[0]
 
@@ -1949,13 +1960,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
+            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
         total_path = np.sum(paths)
 
         if total_path > 0:

@@ -83,10 +83,8 @@ class DosCube(Cube):
         min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
         """
 
-        warnings.warn(
-            "The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+        warnings.warn("The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
+                      DeprecationWarning)
         from pytrip import pytriplib
         z_pos = 0  # z position
         voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
@@ -97,10 +95,9 @@ class DosCube(Cube):
         for i in range(self.dimz):
             z_pos += self.slice_distance
             slice = voi.get_slice_at_pos(z_pos)
-            if slice is not None:   # VOI intersects with this slice
+            if slice is not None:  # VOI intersects with this slice
                 voi_and_cube_intersect = True
-                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i],
-                                                           np.array(slice.contours[0].contour),
+                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i], np.array(slice.contours[0].contour),
                                                            voxel_size)
 
         if voi_and_cube_intersect:
@@ -139,10 +136,8 @@ class DosCube(Cube):
         """
         Save DHV for given VOI to the file.
         """
-        warnings.warn(
-            "The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+        warnings.warn("The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+                      DeprecationWarning)
         dvh_tuple = self.calculate_dvh(voi)
         if dvh_tuple is None:
             logging.warning("Voi {:s} outside the cube".format(voi.get_name()))

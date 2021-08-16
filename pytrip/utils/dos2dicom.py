@@ -47,8 +47,7 @@ def main(args=sys.argv[1:]):
         logging.basicConfig(
             format='%(asctime)s,%(msecs)d _%(relativeCreated)d_ %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s',
             datefmt='%Y-%m-%d:%H:%M:%S',
-            level=logging.DEBUG
-        )
+            level=logging.DEBUG)
     else:
         logging.basicConfig()
 

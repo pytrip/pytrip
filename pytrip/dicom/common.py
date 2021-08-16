@@ -14,7 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class AccompanyingDicomData:
-
     class DataType(Enum):
         CT = 1
         Dose = 2
@@ -89,8 +88,7 @@ class AccompanyingDicomData:
         self.ct_datasets_header_common = self.find_common_tags_and_values(
             list(self.headers_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_common = self.find_common_tags_and_values(
-            list(self.data_datasets.get(self.DataType.CT, {}).values())
-        )
+            list(self.data_datasets.get(self.DataType.CT, {}).values()))
         self.ct_datasets_data_common.discard(Tag('PixelData'))
 
         # list of file specific tags (without values!) for CT datasets (header and data file)
@@ -162,10 +160,9 @@ class AccompanyingDicomData:
         if self.DataType.CT in self.headers_datasets:
             ct_json_dict['header'] = {}
             first_instance_id = list(self.headers_datasets[self.DataType.CT].keys())[0]
-            ct_json_dict['header']['common'] = Dataset(dict(
-                (tag_name, self.headers_datasets[self.DataType.CT][first_instance_id][tag_name])
-                for tag_name, _ in self.ct_datasets_header_common
-            )).to_json_dict()
+            ct_json_dict['header']['common'] = Dataset(
+                dict((tag_name, self.headers_datasets[self.DataType.CT][first_instance_id][tag_name])
+                     for tag_name, _ in self.ct_datasets_header_common)).to_json_dict()
 
             ct_json_dict['header']['specific'] = {}
             for instance_id, dataset in self.headers_datasets[self.DataType.CT].items():
@@ -178,10 +175,9 @@ class AccompanyingDicomData:
             ct_json_dict['data'] = {}
             first_instance_id = list(self.data_datasets[self.DataType.CT].keys())[0]
 
-            ct_json_dict['data']['common'] = Dataset(dict(
-                (tag_name, self.data_datasets[self.DataType.CT][first_instance_id][tag_name])
-                for tag_name, _ in self.ct_datasets_data_common
-            )).to_json_dict()
+            ct_json_dict['data']['common'] = Dataset(
+                dict((tag_name, self.data_datasets[self.DataType.CT][first_instance_id][tag_name])
+                     for tag_name, _ in self.ct_datasets_data_common)).to_json_dict()
 
             ct_json_dict['data']['specific'] = {}
             for instance_id, dataset in self.data_datasets[self.DataType.CT].items():
@@ -237,7 +233,9 @@ class AccompanyingDicomData:
 
         return result
 
+
 #    @jit
+
     def from_comment(self, parsed_str):
         logger.debug("Starting to parse DICOM comment data")
 
@@ -260,9 +258,8 @@ class AccompanyingDicomData:
                 self.data_datasets[self.DataType.CT] = {}
             for instance_id, dataset_dict in ct_dicts['data']['specific'].items():
                 self.data_datasets[self.DataType.CT][instance_id] = Dataset().from_json(dataset_dict)
-                self.data_datasets[self.DataType.CT][instance_id].update(
-                    Dataset().from_json(ct_dicts['data']['common'])
-                )
+                self.data_datasets[self.DataType.CT][instance_id].update(Dataset().from_json(
+                    ct_dicts['data']['common']))
 
             logger.debug("data dictionaries loaded {}".format(len(ct_dicts['data']['specific'])))
 
@@ -271,9 +268,8 @@ class AccompanyingDicomData:
             for instance_id, dataset_dict in ct_dicts['header']['specific'].items():
                 # instance_id : str
                 self.headers_datasets[self.DataType.CT][instance_id] = Dataset().from_json(dataset_dict)
-                self.headers_datasets[self.DataType.CT][instance_id].update(
-                    Dataset().from_json(ct_dicts['header']['common'])
-                )
+                self.headers_datasets[self.DataType.CT][instance_id].update(Dataset().from_json(
+                    ct_dicts['header']['common']))
             logger.debug("header dictionaries loaded")
 
         if 'Struct' in content_by_type:
@@ -291,7 +287,6 @@ class AccompanyingDicomData:
         self.update_common_tags_and_values()
 
     def __str__(self):
-
         def nice_tag_name(tag):
             if dictionary_has_tag(tag):
                 return dictionary_keyword(tag_name)

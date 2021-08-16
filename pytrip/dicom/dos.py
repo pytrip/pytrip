@@ -61,8 +61,11 @@ def create_dicom(cube):
     ds.InstanceNumber = ''
     ds.PositionReferenceIndicator = "RF"
     ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
-    ds.ImagePositionPatient = ["%.3f" % (cube.xoffset * cube.pixel_size), "%.3f" % (cube.yoffset * cube.pixel_size),
-                               "%.3f" % (cube.slice_pos[0])]
+    ds.ImagePositionPatient = [
+        "%.3f" % (cube.xoffset * cube.pixel_size),
+        "%.3f" % (cube.yoffset * cube.pixel_size),
+        "%.3f" % (cube.slice_pos[0])
+    ]
     ds.ImageOrientationPatient = ['1', '0', '0', '0', '1', '0']
     ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
     ds.SOPInstanceUID = cube._dose_dicom_SOP_instance_uid
@@ -85,11 +88,14 @@ def create_dicom(cube):
     ds.ReferencedRTPlanSequence = Sequence([rt_set])
     pixel_array = np.zeros((len(cube.cube), ds.Rows, ds.Columns), dtype=cube.pydata_type)
 
-    tags_to_be_imported = [tag_for_keyword(name) for name in
-                           ['StudyDate', 'StudyTime', 'StudyDescription', 'ImageOrientationPatient',
-                            'Manufacturer', 'ReferringPhysicianName', 'Manufacturer', 'ImagePositionPatient',
-                            'FrameOfReferenceUID', 'PositionReferenceIndicator', 'SeriesNumber', 'StudyInstanceUID',
-                            'PatientBirthDate', 'PatientID', 'PatientName']]
+    tags_to_be_imported = [
+        tag_for_keyword(name) for name in [
+            'StudyDate', 'StudyTime', 'StudyDescription', 'ImageOrientationPatient', 'Manufacturer',
+            'ReferringPhysicianName', 'Manufacturer', 'ImagePositionPatient', 'FrameOfReferenceUID',
+            'PositionReferenceIndicator', 'SeriesNumber', 'StudyInstanceUID', 'PatientBirthDate', 'PatientID',
+            'PatientName'
+        ]
+    ]
 
     ct_datasets_data_common = getattr(dicom_data, 'ct_datasets_data_common', {})
     for tag_number, _ in ct_datasets_data_common:
@@ -112,8 +118,7 @@ def create_dicom(cube):
     meta.MediaStorageSOPInstanceUID = cube._dose_dicom_SOP_instance_uid
     meta.TransferSyntaxUID = uid.ImplicitVRLittleEndian  # Implicit VR Little Endian - Default Transfer Syntax
 
-    tags_to_be_imported = [tag_for_keyword(name) for name in
-                           ['ImplementationClassUID', 'ImplementationVersionName']]
+    tags_to_be_imported = [tag_for_keyword(name) for name in ['ImplementationClassUID', 'ImplementationVersionName']]
     ct_datasets_header_common = getattr(dicom_data, 'ct_datasets_header_common', {})
     for tag_number in ct_datasets_header_common:
         if tag_number in tags_to_be_imported:

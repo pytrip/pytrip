@@ -45,8 +45,7 @@ except NameError:
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
 # it is taken to be the list of module names that should be imported when from package import * is encountered.
-__all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res',
-           'Rst']
+__all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'dicomhelper', 'res', 'Rst']
 
 # if an application using pytrip doesn't configure any logging level, then an error will occur
 # to prevent it, we add null logging handler, as suggested by Python documentation:
@@ -81,7 +80,6 @@ else:  # Python 3.x
         init_location = None
 if not init_location:
     init_location = os.path.dirname(os.path.realpath(__file__))
-
 
 # VERSION should sit next to __init__.py in the directory structure
 version_file = os.path.join(os.path.dirname(init_location), 'VERSION')

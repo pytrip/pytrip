@@ -779,8 +779,10 @@ class Cube(object):
         # find tags with common values
         common_meta_tags_and_values = set()
         for tag in common_meta_tags:
-            if all([first_file_ds.file_meta[tag] == current_file_ds.file_meta[tag]
-                    for current_file_ds in dcm["images"][1:]]):
+            if all([
+                    first_file_ds.file_meta[tag] == current_file_ds.file_meta[tag]
+                    for current_file_ds in dcm["images"][1:]
+            ]):
                 common_meta_tags_and_values.add(tag)
 
         # find common tags
@@ -803,16 +805,16 @@ class Cube(object):
 
         self.set_data_type(type(first_file_ds.pixel_array[0][0]))
 
-        self.dicom_data = AccompanyingDicomData(
-            ct_datasets=dcm.get("images"),
-            structure_dataset=dcm.get("rtss"),
-            dose_dataset=dcm.get("rtdose")
-        )
+        self.dicom_data = AccompanyingDicomData(ct_datasets=dcm.get("images"),
+                                                structure_dataset=dcm.get("rtss"),
+                                                dose_dataset=dcm.get("rtdose"))
 
         # check consistency of the files
-        required_common_tags = set(Tag(name) for name in ['PatientName', 'PatientID', 'Rows', 'PixelSpacing',
-                                                          'SliceThickness', 'Columns', 'StudyInstanceUID',
-                                                          'SeriesInstanceUID'])
+        required_common_tags = set(
+            Tag(name) for name in [
+                'PatientName', 'PatientID', 'Rows', 'PixelSpacing', 'SliceThickness', 'Columns', 'StudyInstanceUID',
+                'SeriesInstanceUID'
+            ])
         if not required_common_tags.issubset(common_tags_and_values):
             problematic_tags = required_common_tags.difference(common_tags_and_values)
             for tag in problematic_tags:

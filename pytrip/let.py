@@ -38,13 +38,15 @@ class LETCube(Cube):
     data_file_extension = '.dos'
     allowed_suffix = ('dosemlet', 'mlet')
 
-    let_types = {"unknown": "unknown LET type",
-                 "DLET": "dose-averaged LET",
-                 "DLET*": "dose-averaged LET, all secondaries",
-                 "DLETP": "dose-averaged LET, protons only",
-                 "TLET": "track-averaged LET",
-                 "TLET*": "track-averaged LET, all secondaries",
-                 "TLETP": "track-averaged LET, protons only"}
+    let_types = {
+        "unknown": "unknown LET type",
+        "DLET": "dose-averaged LET",
+        "DLET*": "dose-averaged LET, all secondaries",
+        "DLETP": "dose-averaged LET, protons only",
+        "TLET": "track-averaged LET",
+        "TLET*": "track-averaged LET, all secondaries",
+        "TLETP": "track-averaged LET, protons only"
+    }
 
     def __init__(self, cube=None):
         super(LETCube, self).__init__(cube)
@@ -68,10 +70,8 @@ class LETCube(Cube):
                   - max_lvh: array of LET values above 98%
                   - area: TODO - what is this?
         """
-        warnings.warn(
-            "The method calculate_lvh() is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+        warnings.warn("The method calculate_lvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+                      DeprecationWarning)
         from pytrip import pytriplib
         pos = 0
         size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
