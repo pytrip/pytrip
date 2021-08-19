@@ -166,7 +166,7 @@ class VdxCube:
             sys.exit()
 
         for i, _roi_contour in enumerate(_contours):
-            if structure_ids is None or _roi_contour.RefdROINumber in structure_ids:
+            if structure_ids is None or _roi_contour.ReferencedROINumber in structure_ids:
                 if hasattr(dcm, "RTROIObservationsSequence"):
                     _roi_observation = dcm.RTROIObservationsSequence[i]
                     # _roi_name = dcm.RTROIObservationsSequence[i].ROIObservationLabel  # OPTIONAL by DICOM
@@ -438,9 +438,9 @@ class VdxCube:
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
-            roi_label.RefdROINumber = str(i + 1)
+            # roi_label.RefdROINumber = str(i + 1)
             roi_contours = self.vois[i].create_dicom_contour_data(i)
-            roi_contours.RefdROINumber = str(i + 1)
+            # roi_contours.RefdROINumber = str(i + 1)
             roi_contours.ReferencedROINumber = str(i + 1)
 
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
@@ -451,9 +451,9 @@ class VdxCube:
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
-        ds.RTROIObservations = Sequence(roi_label_list)
-        ds.ROIContours = Sequence(roi_data_list)
-        ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+        ds.RTROIObservationsSequence = Sequence(roi_label_list)
+        ds.ROIContourSequence = Sequence(roi_data_list)
+        ds.StructureSetROISequence = Sequence(roi_structure_roi_list)
         return ds
 
     def write_dicom(self, directory):
@@ -906,7 +906,7 @@ class Voi:
             logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
             contours.extend(_slice.create_dicom_contours(dcmcube))
 
-        roi_contours.Contours = Sequence(contours)
+        roi_contours.ContourSequence = Sequence(contours)
         roi_contours.ROIDisplayColor = self.get_color(i)
 
         return roi_contours
@@ -1391,7 +1391,7 @@ class Slice:
                 contour.extend([p[0], p[1], p[2]])
             con.ContourData = contour
             con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = item.number_of_points()
+            con.NumberOfContourPoints = item.number_of_points()
             cont_image_item = Dataset()
             cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
             cont_image_item.ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
