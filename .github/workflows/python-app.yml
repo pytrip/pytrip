@@ -66,28 +66,15 @@ jobs:
        # Python versions to target, space-separated
        python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
 
-    - name: Extract packages
-      run: |
-       mkdir -p twine_upload
-       cp dist/pytrip98*manylinux1_x86_64.whl twine_upload/
-
-    - name: Publish packages to pypi
-      uses: pypa/gh-action-pypi-publish@v1.4.2
-      if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+    - uses: actions/upload-artifact@v2
       with:
-       # Password for your PyPI user or an access token
-       password: ${{ secrets.TWINE_PASSWORD }}
-       # The repository URL to use
-       repository_url: "https://upload.pypi.org/legacy/"
-       # The target directory for distribution
-       packages_dir: twine_upload/
-       # Show verbose output.
-       verbose: true
+          path: ./dist/pytrip98*manylinux1_x86_64.whl
+          if-no-files-found: error
 
    build_wheels_macOS:
     name: Wheels on macOS
     needs: [run_tests]
-    runs-on: 'macos-10.15'
+    runs-on: macos-10.15
 
     steps:
       - uses: actions/checkout@v2
@@ -119,19 +106,28 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: wheels_macos
-          path: ./wheelhouse/*.whl
+          path: ./dist/*.whl
           if-no-files-found: error
-
-      - name: Publish packages to pypi
-        uses: pypa/gh-action-pypi-publish@v1.4.2
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
-        with:
-           # Password for your PyPI user or an access token
-           password: ${{ secrets.TWINE_PASSWORD }}
-           # The repository URL to use
-           repository_url: "https://upload.pypi.org/legacy/"
-           # The target directory for distribution
-           packages_dir: wheelhouse/
-           # Show verbose output.
-           verbose: true
+   
+   upload_wheels:
+          name: Upload wheels
+          needs: [make_and_upload_package_linux, build_wheels_macOS]
+          runs-on: ubuntu-latest
+          steps:          
+          - uses: actions/download-artifact@v2
+            with:
+              name: artifact
+              path: dist
+          
+          - name: Publish packages to pypi
+            uses: pypa/gh-action-pypi-publish@v1.4.2
+            if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+            with:
+              # Password for your PyPI user or an access token
+              password: ${{ secrets.TWINE_PASSWORD }}
+              # The repository URL to use
+              repository_url: "https://upload.pypi.org/legacy/"
+              # The target directory for distribution
+              packages_dir: dist/
+              # Show verbose output.
+              verbose: true
