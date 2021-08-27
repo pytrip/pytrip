@@ -53,13 +53,6 @@ jobs:
           - os: macos-10.15
             name: mac
 
-          - os: macos-10.15
-            name: mac-arm
-            cibw:
-              arch: universal2
-              build: "cp37* cp38* cp39*"
-
-
     steps:
       - uses: actions/checkout@v2
         with:
@@ -89,11 +82,7 @@ jobs:
         # to supply options, put them in 'env', like:
         env:
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_MANYLINUX_X86_64_IMAGE: "${{ matrix.cibw.manylinux_image }}"
-          CIBW_MANYLINUX_I686_IMAGE: "${{ matrix.cibw.manylinux_image }}"
-          CIBW_MANYLINUX_AARCH64_IMAGE: "${{ matrix.cibw.manylinux_image }}"
-          CIBW_ARCHS_LINUX: "${{ matrix.cibw.arch || 'auto' }}"
-          CIBW_ARCHS_MACOS: "${{ matrix.cibw.arch || 'auto' }}"
+          CIBW_BUILD: "cp37-* cp38-* cp39-*"
 
       - uses: actions/upload-artifact@v2
         with:
