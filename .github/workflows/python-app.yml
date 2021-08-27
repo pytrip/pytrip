@@ -57,72 +57,8 @@ jobs:
             name: mac-arm
             cibw:
               arch: universal2
-              build: "cp39* cp310*"
+              build: "cp37* cp38* cp39*"
 
-          - os: ubuntu-20.04
-            name: manylinux1
-            cibw:
-              build: "cp36* cp37*"
-              manylinux_image: manylinux1
-
-          - os: ubuntu-20.04
-            name: manylinux2010
-            cibw:
-              build: "cp38* cp39* cp310* pp3*"
-              manylinux_image: manylinux2010
-
-          - os: ubuntu-20.04
-            name: cp36-manylinux_aarch64
-            cibw:
-              build: "cp36*"
-              manylinux_image: manylinux2014
-              arch: aarch64
-
-          - os: ubuntu-20.04
-            name: cp37-manylinux_aarch64
-            cibw:
-              build: "cp37*"
-              manylinux_image: manylinux2014
-              arch: aarch64
-
-          - os: ubuntu-20.04
-            name: cp38-manylinux_aarch64
-            cibw:
-              build: "cp38*"
-              manylinux_image: manylinux2014
-              arch: aarch64
-
-          - os: ubuntu-20.04
-            name: cp39-manylinux_aarch64
-            cibw:
-              build: "cp39*"
-              manylinux_image: manylinux2014
-              arch: aarch64
-
-          - os: ubuntu-20.04
-            name: cp310-manylinux_aarch64
-            cibw:
-              build: "cp310*"
-              manylinux_image: manylinux2014
-              arch: aarch64
-
-          - os: windows-2019
-            name: win32
-            architecture: x86
-            cibw:
-              build: "cp*win32"
-
-          - os: windows-2016
-            name: win-pypy
-            architecture: x64
-            cibw:
-              build: "pp*win_amd64"
-
-          - os: windows-2019
-            name: win_amd64
-            architecture: x64
-            cibw:
-              build: "cp*win_amd64"
 
     steps:
       - uses: actions/checkout@v2
@@ -132,7 +68,7 @@ jobs:
       # Used to host cibuildwheel
       - uses: actions/setup-python@v2
         with:
-          python-version: "3.8"
+          python-version: "3.9"
           architecture: ${{ matrix.architecture }}
 
       - name: install dependencies
