@@ -138,7 +138,7 @@ jobs:
       - name: install dependencies
         run: |
           pip install --upgrade setuptools pip wheel
-          pip install cibuildwheel=="${{ env.cibuildwheel }}" cython=="${{ env.cython }}"
+          pip install cibuildwheel
 
       - name: show environment
         run: |
