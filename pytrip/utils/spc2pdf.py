@@ -41,7 +41,7 @@ def main(args=sys.argv[1:]):
         logging.error("Python 3.2 is not supported, please use other version")
         return 1
 
-    # there are some cases (i.e. Travis CI) when this script is run on systems without DISPLAY variable being set
+    # there are some cases (i.e. continuous automation) when this script is run without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
     # we do it here and not in the top of the file, as interleaving imports with code lines is discouraged
     import matplotlib
@@ -59,7 +59,8 @@ def main(args=sys.argv[1:]):
     parser.add_argument('-l', '--logscale', help="Enable plotting particle number on logarithmic scale",
                         action='store_true')
     parser.add_argument('-s', '--style', help="Line style", choices=['points', 'lines'], default='lines')
-    parser.add_argument('-c', '--colormap', help='image color map, see http://matplotlib.org/users/colormaps.html '
+    parser.add_argument('-c', '--colormap', help='image color map, see '
+                                                 'https://matplotlib.org/stable/tutorials/colors/colormaps.html '
                                                  'for list of possible options (default: gnuplot2)',
                         default='gnuplot2', type=str)
     parser.add_argument("-v", "--verbosity", action='count', help="increase output verbosity", default=0)
@@ -131,7 +132,7 @@ def main(args=sys.argv[1:]):
         logging.debug("Saving PDF file {}".format(parsed_args.pdf_file.name))
         plt.rc('text', usetex=False)
 
-        # choose linestyle
+        # choose line style
         linestyle = '-'
         marker = ''
         if parsed_args.style == 'lines':
