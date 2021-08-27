@@ -4,5 +4,4 @@
   exclude pytrip/lib/unused.c
   prune appveyor
   prune docs
-  prune .travis
   prune tests

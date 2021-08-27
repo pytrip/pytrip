@@ -114,9 +114,9 @@ Now code can be run by typing::
 
 9. Submit a pull request through the GitHub website to the master branch of ``git@github.com:pytrip/pytrip.git`` repository.
 
-10. Check the status of automatic tests ran by Travis system.
+10. Check the status of automatic tests
 
-You can find them on the pull request webpage https://travis-ci.org/pytrip/pytrip/pull_requests.
+You can find them on the pull request webpage https://github.com/pytrip/pytrip/pulls.
 In case some of the tests fails, fix the problem. Then commit and push your changes (steps 5-8).
 
 
@@ -129,8 +129,8 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 2.7, 3.2, 3.3, 3.4 and 3.5. Check
-   https://travis-ci.org/pytrip/pytrip/pull_requests
+3. The pull request should work for Python 2.7, 3.5-3.9. Check
+   https://github.com/pytrip/pytrip/actions
    and make sure that the tests pass for all supported Python versions.
 
 

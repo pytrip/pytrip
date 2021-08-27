@@ -5,8 +5,6 @@ Technical documentation
 
 .. image:: https://img.shields.io/pypi/v/pytrip98.svg
         :target: https://pypi.python.org/pypi/pytrip98
-.. image:: https://img.shields.io/travis/pytrip/pytrip.svg
-        :target: https://travis-ci.org/pytrip/pytrip
 
 
 .. image:: https://readthedocs.org/projects/pytrip/badge/?version=latest
@@ -22,17 +20,13 @@ Technical documentation
     * - docs
       - |docs|
     * - tests
-      - |travis| |appveyor|
+      - |appveyor|
     * - package
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
 .. |docs| image:: https://readthedocs.org/projects/pytrip/badge/?style=flat
     :target: https://readthedocs.org/projects/pytrip
     :alt: Documentation Status
-
-.. |travis| image:: https://travis-ci.org/pytrip/pytrip.svg?branch=master
-    :alt: Travis-CI Build Status
-    :target: https://travis-ci.org/pytrip/pytrip
 
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/pytrip/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
