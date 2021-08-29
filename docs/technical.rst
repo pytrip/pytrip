@@ -20,7 +20,7 @@ Technical documentation
     * - docs
       - |docs|
     * - tests
-      - |appveyor|
+      - |ghactions| |appveyor|
     * - package
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
@@ -31,6 +31,10 @@ Technical documentation
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/pytrip/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/grzanka/pytrip
+
+.. |ghactions| image:: https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master
+    :alt: Github Action Build Status
+    :target: https://github.com/pytrip/pytrip/actions
 
 .. |version| image:: https://img.shields.io/pypi/v/pytrip98.svg?style=flat
     :alt: PyPI Package latest release
@@ -53,8 +57,6 @@ Technical documentation
     :target: https://pypi.python.org/pypi/pytrip98
 
 .. end-badges
-
-Overv.io issue board: https://overv.io/pytrip/pytrip/
 
 
 Documentation
