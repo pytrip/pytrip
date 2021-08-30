@@ -480,7 +480,7 @@ class VdxCube:
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
             # roi_label.RefdROINumber = str(i + 1)
-            roi_contours = self.vois[i].create_dicom_contour_data(i)
+            roi_contours = self.vois[i].create_dicom_contour_data()
             # roi_contours.RefdROINumber = str(i + 1)
             roi_contours.ReferencedROINumber = str(i + 1)
 
@@ -914,7 +914,7 @@ class Voi:
         roi.ROIName = self.name
         return roi
 
-    def create_dicom_contour_data(self, i):
+    def create_dicom_contour_data(self):
         """
         Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
