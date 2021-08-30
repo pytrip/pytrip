@@ -244,7 +244,7 @@ class VdxCube:
         # map HSV to RGB
         rgb_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
         # map 0.0-1.0 to 0-255
-        int_rgb_tuples = list(map(lambda x: (int(x[0]*255), int(x[1]*255), int(x[2]*255)), rgb_tuples))
+        int_rgb_tuples = list(map(lambda x: (int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)), rgb_tuples))
         # slice last k elements as spare ones
         self._spare_voi_colors = int_rgb_tuples[-k:]
         # slice first n element and set them as VOI colors
