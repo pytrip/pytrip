@@ -25,6 +25,7 @@ Each Slice holds one or more Contours.
 """
 import os
 import copy
+import colorsys
 from math import pi, sqrt
 import logging
 import sys
@@ -98,6 +99,8 @@ class VdxCube:
         :param cube: CtxCube type object
         """
         self.vois = []
+        # colors that will be assigned for VOIs added in runtime
+        self._spare_voi_colors = []
         self.cube = cube
         self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
 
@@ -187,6 +190,10 @@ class VdxCube:
 
                 self.add_voi(v)
 
+        # set colors for all added VOIs
+        self.assign_voi_colors()
+
+
     def get_voi_names(self):
         """
         :returns: a list of available voi names.
@@ -204,12 +211,44 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def add_voi(self, voi):
+    def add_voi(self, voi, added_manually: bool = False) -> None:
         """ Appends a new voi to this class.
+        If added_manually flag is True, sets voi color as one from spare ones.
+        If there is no spare colors, calls assign_voi_colors
 
         :param Voi voi: the voi to be appended to this class.
+        :param bool added_manually: flag that changes way VOI is added, default False
         """
-        self.vois.append(voi)
+        if added_manually:
+            if len(self._spare_voi_colors) > 0:
+                color = self._spare_voi_colors.pop()
+                voi.set_color(color)
+                self.vois.append(voi)
+            else:
+                self.assign_voi_colors(k=6)
+        else:
+            self.vois.append(voi)
+
+    def assign_voi_colors(self, k: int = 3) -> None:
+        """
+        Creates n+k colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
+        Should be called after ending series of add_voi calls.
+
+        :param int k: size of color buffer, default is 3
+        """
+        n = len(self.vois)
+        # create list of HSV tuples, where saturation and value in maxed, only hue is changing
+        # so there are n+k colors picked from HSV cone base circumference
+        hsv_tuples = [(x*1.0/(n+k), 1, 1) for x in range(n+k)]
+        # map HSV to RGB
+        rgb_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
+        # slice last k elements as spare ones
+        self._spare_voi_colors = rgb_tuples[-k:]
+        # slice first n element and set them as VOI colors
+        colors = rgb_tuples[:n]
+        for voi, color in zip(self.vois, colors):
+            voi.set_color(color)
+
 
     def get_voi_by_name(self, name):
         """ Returns a Voi object by its name.
@@ -291,6 +330,9 @@ class VdxCube:
                 self.add_voi(v)
                 header_full = True
             i += 1
+
+        # set colors for all added VOIs
+        self.assign_voi_colors()
 
     def concat_contour(self):
         """ Loop through all available VOIs and check whether any have multiple contours in a slice.
@@ -628,8 +670,7 @@ class Voi:
         self.is_concated = False
         self.type = 90
         self.slices = []
-        self.color = [0, 230, 0]  # default colour
-        self.define_colors()
+        self.color = [0.0, 1.0, 0.0]  # default colour
 
     def __str__(self):
         """ str output handler
@@ -821,18 +862,6 @@ class Voi:
 
         return s
 
-    def define_colors(self):
-        """
-        Creates a list of default colours [R,G,B] in self.colours.
-        """
-        self.colors = []
-        self.colors.append([0, 0, 255])
-        self.colors.append([0, 128, 0])
-        self.colors.append([0, 255, 0])
-        self.colors.append([255, 0, 0])
-        self.colors.append([0, 128, 128])
-        self.colors.append([255, 255, 0])
-
     def calculate_center(self):
         """
         Calculates the center of gravity for the VOI.
@@ -855,18 +884,15 @@ class Voi:
             self.center_pos = center_pos
             return center_pos
 
-    def get_color(self, i=None):
+    def get_color(self):
         """
-        :param int i: selects a colour, default if None.
         :returns: a [R,G,B] list.
         """
-        if i is None:
-            return self.color
-        return self.colors[i % len(self.colors)]
+        return self.color
 
     def set_color(self, color):
         """
-        :param [3*int]: set a color [R,G,B].
+        :param [3*float] color: set a color [R,G,B].
         """
         self.color = color
 
