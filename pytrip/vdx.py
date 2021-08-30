@@ -243,10 +243,12 @@ class VdxCube:
         hsv_tuples = [(x * 1.0 / (n + k), 1, 1) for x in range(n + k)]
         # map HSV to RGB
         rgb_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
+        # map 0.0-1.0 to 0-255
+        int_rgb_tuples = list(map(lambda x: (int(x[0]*255), int(x[1]*255), int(x[2]*255)), rgb_tuples))
         # slice last k elements as spare ones
-        self._spare_voi_colors = rgb_tuples[-k:]
+        self._spare_voi_colors = int_rgb_tuples[-k:]
         # slice first n element and set them as VOI colors
-        colors = rgb_tuples[:n]
+        colors = int_rgb_tuples[:n]
         for voi, color in zip(self.vois, colors):
             voi.set_color(color)
 
@@ -669,7 +671,7 @@ class Voi:
         self.is_concated = False
         self.type = 90
         self.slices = []
-        self.color = [0.0, 1.0, 0.0]  # default colour - green
+        self.color = [0, 255, 0]  # default colour - green
 
     def __str__(self):
         """ str output handler
@@ -891,7 +893,7 @@ class Voi:
 
     def set_color(self, color):
         """
-        :param [3*float] color: set a color [R,G,B].
+        :param [3*int] color: set a color [R,G,B].
         """
         self.color = color
 
