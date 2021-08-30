@@ -23,14 +23,14 @@ The Voi class represents a volume of interest 'VOI', also called region of inter
 Each Voi holds several Slice, which are normally synced with an associated CT-cube.
 Each Slice holds one or more Contours.
 """
-import os
-import copy
 import colorsys
-from math import pi, sqrt
+import copy
 import logging
+import os
 import sys
 import warnings
 from functools import cmp_to_key
+from math import pi, sqrt
 
 import numpy as np
 
@@ -39,6 +39,7 @@ try:
     from pydicom import uid
     from pydicom.dataset import Dataset, FileDataset
     from pydicom.sequence import Sequence
+
     _dicom_loaded = True
 except ImportError:
     try:
@@ -46,6 +47,7 @@ except ImportError:
         from dicom import UID as uid  # old pydicom had UID instead of uid
         from dicom.dataset import Dataset, FileDataset
         from dicom.sequence import Sequence
+
         _dicom_loaded = True
     except ImportError:
         _dicom_loaded = False
@@ -193,7 +195,6 @@ class VdxCube:
         # set colors for all added VOIs
         self.assign_voi_colors()
 
-
     def get_voi_names(self):
         """
         :returns: a list of available voi names.
@@ -211,7 +212,7 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def add_voi(self, voi, added_manually: bool = False) -> None:
+    def add_voi(self, voi, added_manually=False):
         """ Appends a new voi to this class.
         If added_manually flag is True, sets voi color as one from spare ones.
         If there is no spare colors, calls assign_voi_colors
@@ -225,11 +226,11 @@ class VdxCube:
                 voi.set_color(color)
                 self.vois.append(voi)
             else:
-                self.assign_voi_colors(k=6)
+                self.assign_voi_colors()
         else:
             self.vois.append(voi)
 
-    def assign_voi_colors(self, k: int = 3) -> None:
+    def assign_voi_colors(self, k=3):
         """
         Creates n+k colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
         Should be called after ending series of add_voi calls.
@@ -239,7 +240,7 @@ class VdxCube:
         n = len(self.vois)
         # create list of HSV tuples, where saturation and value in maxed, only hue is changing
         # so there are n+k colors picked from HSV cone base circumference
-        hsv_tuples = [(x*1.0/(n+k), 1, 1) for x in range(n+k)]
+        hsv_tuples = [(x * 1.0 / (n + k), 1, 1) for x in range(n + k)]
         # map HSV to RGB
         rgb_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
         # slice last k elements as spare ones
@@ -248,7 +249,6 @@ class VdxCube:
         colors = rgb_tuples[:n]
         for voi, color in zip(self.vois, colors):
             voi.set_color(color)
-
 
     def get_voi_by_name(self, name):
         """ Returns a Voi object by its name.
@@ -314,10 +314,9 @@ class VdxCube:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 
-
-#                TODO number_of_vois not used
-#                elif "number_of_vois" in line:
-#                    number_of_vois = int(line.split()[1])
+            #                TODO number_of_vois not used
+            #                elif "number_of_vois" in line:
+            #                    number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -632,7 +631,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -670,7 +669,7 @@ class Voi:
         self.is_concated = False
         self.type = 90
         self.slices = []
-        self.color = [0.0, 1.0, 0.0]  # default colour
+        self.color = [0.0, 1.0, 0.0]  # default colour - green
 
     def __str__(self):
         """ str output handler
@@ -933,7 +932,7 @@ class Voi:
             contours.extend(_slice.create_dicom_contours(dcmcube))
 
         roi_contours.ContourSequence = Sequence(contours)
-        roi_contours.ROIDisplayColor = self.get_color(i)
+        roi_contours.ROIDisplayColor = self.get_color()
 
         return roi_contours
 
@@ -1242,6 +1241,7 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1490,6 +1490,7 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1520,13 +1521,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
