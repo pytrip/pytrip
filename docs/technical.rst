@@ -32,7 +32,7 @@ Technical documentation
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/grzanka/pytrip
 
-.. |ghactions| image:: https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master
+.. |ghactions| image:: https://github.com/github/docs/actions/workflows/python-app.yml/badge.svg?branch=master
     :alt: Github Action Build Status
     :target: https://github.com/pytrip/pytrip/actions
 
