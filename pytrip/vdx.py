@@ -250,7 +250,8 @@ class VdxCube:
         # map HSV to RGB
         rgb_tuples = [colorsys.hsv_to_rgb(*color_tuple) for color_tuple in hsv_tuples]
         # map 0.0-1.0 to 0-255
-        int_rgb_tuples = [(int(x * 255), int(y * 255), int(z * 255)) for (x, y, z) in rgb_tuples]
+        # color MUST BE an array, CANNOT BE a tuple, because of DICOM standards
+        int_rgb_tuples = [[int(x * 255), int(y * 255), int(z * 255)] for (x, y, z) in rgb_tuples]
         # slice last k elements as spare ones
         self._spare_voi_colors = int_rgb_tuples[-k:]
         # slice first n element and set them as VOI colors
@@ -899,7 +900,7 @@ class Voi:
 
     def set_color(self, color):
         """
-        :param [3*int] color: set a color [R,G,B].
+        :param [3*int] color: set a color [R,G,B], MUST BE an array, CANNOT BE a tuple, because of DICOM standards
         """
         self.color = color
 
