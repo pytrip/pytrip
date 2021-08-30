@@ -212,27 +212,33 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def add_voi(self, voi, added_manually=False):
-        """ Appends a new voi to this class.
-        If added_manually flag is True, sets voi color as one from spare ones.
-        If there is no spare colors, calls assign_voi_colors
+    def add_voi(self, voi, set_color=False):
+        """
+        Appends a new VOI to this object.
+        When set_color flag is set to True, also sets distinct color for added VOI.
 
         :param Voi voi: the voi to be appended to this class.
-        :param bool added_manually: flag that changes way VOI is added, default False
+        :param bool set_color: whether added VOI color should be set, default False
         """
-        if added_manually:
+        if set_color:
+            # check if there are any spare colors
             if len(self._spare_voi_colors) > 0:
+                # take one of them
                 color = self._spare_voi_colors.pop()
+                # assign color to VOI and then add it to VOI list
                 voi.set_color(color)
                 self.vois.append(voi)
             else:
+                # if there are no spare colors:
+                #   reassign colors to all VOIs and create new list of spare colors
                 self.assign_voi_colors()
         else:
             self.vois.append(voi)
 
     def assign_voi_colors(self, k=3):
         """
-        Creates n+k colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
+        Creates n+k distinct colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
+        Assigns first n colors to VOIs stored in VOI list, exactly one color for each VOI.
         Should be called after ending series of add_voi calls.
 
         :param int k: size of color buffer, default is 3
@@ -242,9 +248,9 @@ class VdxCube:
         # so there are n+k colors picked from HSV cone base circumference
         hsv_tuples = [(x * 1.0 / (n + k), 1, 1) for x in range(n + k)]
         # map HSV to RGB
-        rgb_tuples = list(map(lambda x: colorsys.hsv_to_rgb(*x), hsv_tuples))
+        rgb_tuples = [colorsys.hsv_to_rgb(*color_tuple) for color_tuple in hsv_tuples]
         # map 0.0-1.0 to 0-255
-        int_rgb_tuples = list(map(lambda x: [int(x[0] * 255), int(x[1] * 255), int(x[2] * 255)], rgb_tuples))
+        int_rgb_tuples = [(int(x * 255), int(y * 255), int(z * 255)) for (x, y, z) in rgb_tuples]
         # slice last k elements as spare ones
         self._spare_voi_colors = int_rgb_tuples[-k:]
         # slice first n element and set them as VOI colors
@@ -633,7 +639,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -1243,6 +1249,7 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1491,6 +1498,7 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1521,13 +1529,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
