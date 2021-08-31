@@ -23,13 +23,14 @@ The Voi class represents a volume of interest 'VOI', also called region of inter
 Each Voi holds several Slice, which are normally synced with an associated CT-cube.
 Each Slice holds one or more Contours.
 """
-import os
+import colorsys
 import copy
-from math import pi, sqrt
 import logging
+import os
 import sys
 import warnings
 from functools import cmp_to_key
+from math import pi, sqrt
 
 import numpy as np
 
@@ -38,6 +39,7 @@ try:
     from pydicom import uid
     from pydicom.dataset import Dataset, FileDataset
     from pydicom.sequence import Sequence
+
     _dicom_loaded = True
 except ImportError:
     try:
@@ -45,6 +47,7 @@ except ImportError:
         from dicom import UID as uid  # old pydicom had UID instead of uid
         from dicom.dataset import Dataset, FileDataset
         from dicom.sequence import Sequence
+
         _dicom_loaded = True
     except ImportError:
         _dicom_loaded = False
@@ -98,6 +101,8 @@ class VdxCube:
         :param cube: CtxCube type object
         """
         self.vois = []
+        # colors that will be assigned for VOIs added in runtime
+        self._spare_voi_colors = []
         self.cube = cube
         self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
 
@@ -187,6 +192,9 @@ class VdxCube:
 
                 self.add_voi(v)
 
+        # set colors for all added VOIs
+        self.assign_voi_colors()
+
     def get_voi_names(self):
         """
         :returns: a list of available voi names.
@@ -204,12 +212,52 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def add_voi(self, voi):
-        """ Appends a new voi to this class.
+    def add_voi(self, voi, set_color=False):
+        """
+        Appends a new VOI to this object.
+        When set_color flag is set to True, also sets distinct color for added VOI.
 
         :param Voi voi: the voi to be appended to this class.
+        :param bool set_color: whether added VOI color should be set, default False
         """
-        self.vois.append(voi)
+        if set_color:
+            # check if there are any spare colors
+            if len(self._spare_voi_colors) > 0:
+                # take one of them
+                color = self._spare_voi_colors.pop()
+                # assign color to VOI and then add it to VOI list
+                voi.set_color(color)
+                self.vois.append(voi)
+            else:
+                # if there are no spare colors:
+                #   reassign colors to all VOIs and create new list of spare colors
+                self.assign_voi_colors()
+        else:
+            self.vois.append(voi)
+
+    def assign_voi_colors(self, k=3):
+        """
+        Creates n+k distinct colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
+        Assigns first n colors to VOIs stored in VOI list, exactly one color for each VOI.
+        Should be called after ending series of add_voi calls.
+
+        :param int k: size of color buffer, default is 3
+        """
+        n = len(self.vois)
+        # create list of HSV tuples, where saturation and value in maxed, only hue is changing
+        # so there are n+k colors picked from HSV cone base circumference
+        hsv_tuples = [(x * 1.0 / (n + k), 1, 1) for x in range(n + k)]
+        # map HSV to RGB
+        rgb_tuples = [colorsys.hsv_to_rgb(*color_tuple) for color_tuple in hsv_tuples]
+        # map 0.0-1.0 to 0-255
+        # color MUST BE an array, CANNOT BE a tuple, because of DICOM standards
+        int_rgb_tuples = [[int(x * 255), int(y * 255), int(z * 255)] for (x, y, z) in rgb_tuples]
+        # slice last k elements as spare ones
+        self._spare_voi_colors = int_rgb_tuples[-k:]
+        # slice first n element and set them as VOI colors
+        colors = int_rgb_tuples[:n]
+        for voi, color in zip(self.vois, colors):
+            voi.set_color(color)
 
     def get_voi_by_name(self, name):
         """ Returns a Voi object by its name.
@@ -275,10 +323,9 @@ class VdxCube:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 
-
-#                TODO number_of_vois not used
-#                elif "number_of_vois" in line:
-#                    number_of_vois = int(line.split()[1])
+            #                TODO number_of_vois not used
+            #                elif "number_of_vois" in line:
+            #                    number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -291,6 +338,9 @@ class VdxCube:
                 self.add_voi(v)
                 header_full = True
             i += 1
+
+        # set colors for all added VOIs
+        self.assign_voi_colors()
 
     def concat_contour(self):
         """ Loop through all available VOIs and check whether any have multiple contours in a slice.
@@ -439,7 +489,7 @@ class VdxCube:
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
             # roi_label.RefdROINumber = str(i + 1)
-            roi_contours = self.vois[i].create_dicom_contour_data(i)
+            roi_contours = self.vois[i].create_dicom_contour_data()
             # roi_contours.RefdROINumber = str(i + 1)
             roi_contours.ReferencedROINumber = str(i + 1)
 
@@ -628,8 +678,7 @@ class Voi:
         self.is_concated = False
         self.type = 90
         self.slices = []
-        self.color = [0, 230, 0]  # default colour
-        self.define_colors()
+        self.color = [0, 255, 0]  # default colour - green
 
     def __str__(self):
         """ str output handler
@@ -821,18 +870,6 @@ class Voi:
 
         return s
 
-    def define_colors(self):
-        """
-        Creates a list of default colours [R,G,B] in self.colours.
-        """
-        self.colors = []
-        self.colors.append([0, 0, 255])
-        self.colors.append([0, 128, 0])
-        self.colors.append([0, 255, 0])
-        self.colors.append([255, 0, 0])
-        self.colors.append([0, 128, 128])
-        self.colors.append([255, 255, 0])
-
     def calculate_center(self):
         """
         Calculates the center of gravity for the VOI.
@@ -855,18 +892,15 @@ class Voi:
             self.center_pos = center_pos
             return center_pos
 
-    def get_color(self, i=None):
+    def get_color(self):
         """
-        :param int i: selects a colour, default if None.
         :returns: a [R,G,B] list.
         """
-        if i is None:
-            return self.color
-        return self.colors[i % len(self.colors)]
+        return self.color
 
     def set_color(self, color):
         """
-        :param [3*int]: set a color [R,G,B].
+        :param [3*int] color: set a color [R,G,B], MUST BE an array, CANNOT BE a tuple, because of DICOM standards
         """
         self.color = color
 
@@ -889,7 +923,7 @@ class Voi:
         roi.ROIName = self.name
         return roi
 
-    def create_dicom_contour_data(self, i):
+    def create_dicom_contour_data(self):
         """
         Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
@@ -907,7 +941,7 @@ class Voi:
             contours.extend(_slice.create_dicom_contours(dcmcube))
 
         roi_contours.ContourSequence = Sequence(contours)
-        roi_contours.ROIDisplayColor = self.get_color(i)
+        roi_contours.ROIDisplayColor = self.get_color()
 
         return roi_contours
 
