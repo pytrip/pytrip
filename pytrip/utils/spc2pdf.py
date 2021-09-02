@@ -33,7 +33,9 @@ import pytrip as pt
 from pytrip import spc
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
 
     # matplotlib on python3.2 (which is already deprecated) won't handle this code
     # it is not worthy to hack it for this particular piece of the code
