@@ -348,8 +348,8 @@ class VdxCube:
 
         This is needed since TRiP98 cannot handle multiple contours in the same slice.
         """
-        for i in range(len(self.vois)):
-            self.vois[i].concat_contour()
+        for i, item in enumerate(self.vois):
+            item.concat_contour()
 
     def number_of_vois(self):
         """
@@ -1511,9 +1511,9 @@ class Contour:
 
         :param Contour contour: a Contour object.
         """
-        for i in range(len(self.children)):
-            if self.children[i].contains_contour(contour):
-                self.children[i].push(contour)
+        for i, item in enumerate(self.children):
+            if item.contains_contour(contour):
+                item.push(contour)
                 return
         self.add_child(contour)
 
@@ -1728,8 +1728,8 @@ class Contour:
         This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
-        for i in range(len(self.children)):
-            self.children[i].concat()
+        for i, item in enumerate(self.children):
+            item.concat()
         while len(self.children) > 1:
             d = -1
             child = 0
@@ -1754,8 +1754,8 @@ class Contour:
     def remove_inner_contours(self):
         """ (TODO: needs documentation)
         """
-        for i in range(len(self.children)):
-            self.children[i].children = []
+        for i, item in enumerate(self.children):
+            item.children = []
 
     def _merge(self, contour):
         """
