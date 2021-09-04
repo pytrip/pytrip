@@ -40,18 +40,20 @@ class Rst:
     def __init__(self):
         """ Creates an instance of an Rst class.
         """
-        self.var_dict = {"rstfile": "rstfile",
-                         "sistable": "sistable",
-                         "patient_id": "patient_name",
-                         "projectile": "projectile",
-                         "gantryangle": "gantryangle",
-                         "couchangle": "couchangle",
-                         "#submachines": "submachines",
-                         "bolus": "bolus",
-                         "ripplefilter": "ripplefilter",
-                         "mass": "mass",
-                         "charge": "charge",
-                         "#particles": "particles"}
+        self.var_dict = {
+            "rstfile": "rstfile",
+            "sistable": "sistable",
+            "patient_id": "patient_name",
+            "projectile": "projectile",
+            "gantryangle": "gantryangle",
+            "couchangle": "couchangle",
+            "#submachines": "submachines",
+            "bolus": "bolus",
+            "ripplefilter": "ripplefilter",
+            "mass": "mass",
+            "charge": "charge",
+            "#particles": "particles"
+        }
         self.machines = []
 
     def get_submachines(self):
@@ -175,8 +177,8 @@ class SubMachine:
         size = [(min_max[1] - min_max[0]) / self.stepsize[0] + 1, (min_max[3] - min_max[2]) / self.stepsize[1] + 1]
         grid = np.zeros(size)
         rasterpoints = np.array(self.raster_points)
-        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0], 'uint8'), np.array(
-            rasterpoints[:, 1] / self.stepsize[1] + zero[1], 'uint8')] = rasterpoints[:, 2]
+        grid[np.array(rasterpoints[:, 0] / self.stepsize[0] + zero[0], 'uint8'),
+             np.array(rasterpoints[:, 1] / self.stepsize[1] + zero[1], 'uint8')] = rasterpoints[:, 2]
         return grid
 
     def _generate_random_error_machine(self, sigma):
@@ -204,25 +206,30 @@ class SubMachine:
 
         # extend grid size a bit to cover positions going beyond the edges when applying an offset.
         # determine the new size:
-        size2 = [size[0] + 4 * int(sigma / self.stepsize[0]),  # width
-                 size[1] + 4 * int(sigma / self.stepsize[1])]
-        zero2 = [zero[0] + 2 * int(sigma / self.stepsize[0]),  # start positions
-                 zero[1] + 2 * int(sigma / self.stepsize[1])]
+        size2 = [
+            size[0] + 4 * int(sigma / self.stepsize[0]),  # width
+            size[1] + 4 * int(sigma / self.stepsize[1])
+        ]
+        zero2 = [
+            zero[0] + 2 * int(sigma / self.stepsize[0]),  # start positions
+            zero[1] + 2 * int(sigma / self.stepsize[1])
+        ]
 
         # make new grid with new size
         outgrid = np.zeros(size2)
 
         # calculate a few offset positions from a Gaussian.
         # offset holds offset indices. Mostly this will be just [-1,0,1] for x and y.
-        offset = np.array([[x, y]
-                           for x in range(-int(sigma / self.stepsize[0]), int(sigma / self.stepsize[0]) + 1)
-                           for y in range(-int(sigma / self.stepsize[1]), int(sigma / self.stepsize[1]) + 1)])
+        offset = np.array([[x, y] for x in range(-int(sigma / self.stepsize[0]),
+                                                 int(sigma / self.stepsize[0]) + 1)
+                           for y in range(-int(sigma / self.stepsize[1]),
+                                          int(sigma / self.stepsize[1]) + 1)])
 
         # Translate integer offsets to actual positions, squared.
         lengths = (offset[:, 0] * self.stepsize[0]) ** 2 + \
                   (offset[:, 1] * self.stepsize[1]) ** 2
 
-        gauss = np.exp(-0.5 * lengths / sigma ** 2)  # Array shaping a Gaussian distribution from lengths
+        gauss = np.exp(-0.5 * lengths / sigma**2)  # Array shaping a Gaussian distribution from lengths
         gauss = gauss / np.sum(gauss)  # Normalize it
 
         # extend number of offsets
@@ -240,9 +247,7 @@ class SubMachine:
             for j, _ in enumerate(outgrid[0]):  # run along y indices
                 # only append to result grid _l, if we have a reasonable number of particles in this spot.
                 if outgrid[i, j] > 2000:  # spot threshold is 2000 particles
-                    _l.append([(i - zero2[0]) * self.stepsize[0],
-                               (j - zero2[1]) * self.stepsize[1],
-                               outgrid[i, j]])
+                    _l.append([(i - zero2[0]) * self.stepsize[0], (j - zero2[1]) * self.stepsize[1], outgrid[i, j]])
         return _l
 
     def save_random_error_machine(self, fp, sigma):
@@ -253,8 +258,8 @@ class SubMachine:
         """
         rasterpoints = np.array(self._generate_random_error_machine(sigma))
         fp.write("submachine# %d %.2f %d %.1f\n" % (self.idx_energy, self.energy, self.idx_focus, self.focus))
-        fp.write("#particles %.5E %.5E %.5E\n" % (np.min(rasterpoints[:, 2]), np.max(rasterpoints[:, 2]),
-                                                  np.sum(rasterpoints[:, 2])))
+        fp.write("#particles %.5E %.5E %.5E\n" %
+                 (np.min(rasterpoints[:, 2]), np.max(rasterpoints[:, 2]), np.sum(rasterpoints[:, 2])))
         fp.write("stepsize %.0f %.0f\n" % (self.stepsize[0], self.stepsize[1]))
         fp.write("#points %d\n" % (len(rasterpoints)))
         for point in rasterpoints:
