@@ -641,18 +641,34 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     return PyArray_Return(vec_out);
 }
 
-
+/*******************************************************************************
+ * slice_on_place calculates intersection of given chain of points in 3D space along
+ * given plane.
+ * Intersection planes are limited to YZ (sagittal, represented as int 2)
+ * and XZ (coronal, represented as int 1)
+ * Input: closed chain of points in 3D space for which intersection is requested.
+ *   usually it is contained withing transversal plane (meaning the Z coordinate is fixed for all points)
+ *
+ * Output: list of points in 3D space contained within intersection plane.
+ *   if input chain is contained in transversal plane (as for most applications), then the output
+ *   will have two coordinates being fixed: Z (because input lies on transversal plane) and
+ *   either X (if sagittal intersection is requested) or Y (if coronal intersection is requested).
+ *   That means the list of output points lies on a straight line in 3D space
+ *
+ * TODO add support for input chains holding only one point !
+ * currently empty list if being returned if input chain holds a single point
+ ******************************************************************************/
 static PyObject * slice_on_plane(PyObject *self, PyObject *args)
 {
     int i;
-    double depth;
     int plane;
+    double depth;
     double factor;
 
     // array objects into which input will be unpacked and output packed into
-    PyArrayObject *vec_slice;
-    PyObject *list_out;
-    PyObject *list_item;
+    PyArrayObject *vec_slice; // input variable - list of points in 3D space
+    PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
+    PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
 
     // helper variables to read and operate on input data
     double first_point_x = 0.0;
@@ -662,7 +678,10 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     double first_point_z = 0.0;
     double second_point_z = 0.0;
 
-    /*Plane: 1 is coronal and 2 is sagittal*/
+    // digest arguments, we expect:
+    //    an object - vec_slice: input chain of points
+    //    plane - integer : intersection plane type (2 - sagittal YZ, 1 - coronal XZ)
+    //    depth - double : intersection plane location in mm
     if (!PyArg_ParseTuple(args, "Oid",&vec_slice,&plane,&depth))
         return NULL;
 
@@ -670,13 +689,22 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     // it will store list of points in 3D space, represented as 3-elements lists
     list_out = PyList_New(0);
 
+    // loop over all line segments in the input chain of points
+    // if input chain has only one element this loop won't be executed
     for(i = 0; i < PyArray_DIM(vec_slice, 0)-1; i++)
     {
 
+        // choose intersection plane type
         if(plane == 2) // sagittal, projection onto YZ
         {
+            // take X-coordinate of two subsequent points from input segment
+            // these two points form a line segment
             first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
             second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
+
+            // check if current line segment has intersection with given plane
+            // for YZ intersection, the plane is defined by equation `x == depth`,
+            // hence we check if requested depth is between those two coordinate values
             if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
             {
                 first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
@@ -687,7 +715,9 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
                 factor = (depth-first_point_x)/(second_point_x-first_point_x);
 
                 list_item = PyList_New(3);
+                // fix X coordinate on the intersection plane location
                 PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+                // calculate Y and Z coordinates from linear interpolation
                 PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
                 PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
                 PyList_Append(list_out, list_item);
@@ -695,10 +725,16 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         }
         else if(plane == 1) // coronal, projection onto XZ
         {
+            // take Y-coordinate of two subsequent points from input segment
+            // these two points form a line segment
             first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
             second_point_y = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+
+            // for XZ intersection, the plane is defined by equation `y == depth`,
             if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
             {
+
+                // similar approach as in sagittal intersection, but applied to X and Z coordinates
                 first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
                 second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
                 first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
@@ -715,6 +751,8 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         }
     }
 
+    // return empty list if no intersection was found, otherwise
+    // return chain of points with X
     return list_out;
 }
 

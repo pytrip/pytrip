@@ -692,7 +692,7 @@ class Voi:
         out += "   Voi\n"
         out += "----------------------------------------------------------------------------\n"
         out += "|   Name                                : '{:s}'\n".format(self.name)
-        out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
+        out += "|   Is concatenated                     : {:s}\n".format(str(self.is_concated))
         out += "|   Type                                : {:d}\n".format(self.type)
         out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
         out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(hex(self.color[0].strip('0x')),
@@ -768,7 +768,7 @@ class Voi:
 
     def get_3d_polygon(self):
         """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
-        sefl.polygon3d. If this attribute does not exist, create it.
+        self.polygon3d. If this attribute does not exist, create it.
         """
         if not hasattr(self, "polygon3d"):
             self.concat_to_3d_polygon()
@@ -840,33 +840,74 @@ class Voi:
 
     def get_2d_slice(self, plane, depth):
         """
-        Gets a 2d Slice object from the contour in either sagittal or coronal plane.
+        Gets a 2D Slice object from the contour in either sagittal or coronal plane.
         Contours will be concatenated.
 
         :param int plane: either self.sagittal or self.coronal
-        :param float depth: position of plane
+        :param float depth: position of plane in mm
         :returns: a Slice object.
         """
-        self.concat_contour()
-        points1 = []
-        points2 = []
-        for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
+        # concat_contour() merges all contours to one contour, as in TRiP98 standard
+        self.concat_contour()  # TODO: this is modifying current Voi, which is not nice, refactor it
+
+        # variables to store points that have same depth, but different X or Y coordinate depending on plane type
+        # lower chain contains points with higher coordinate value (X or Y)
+        lower_chain = []
+        # upper chain contains points with lower coordinate value (X or Y)
+        upper_chain = []
+
+        # in the code below we will deal with convex polygons
+        # ideally we should go around the input contour (i.e. first with ascending Z coordinate then with descending Z)
+        # unfortunately we take another approach: we loop over all slices with ascending Z only
+        # we use two temporary lists, one for "upper part" (where points are added in correct order with ascending Z)
+        # and another list for "lower part" which will be later reversed, for part of the contour for descending Z
+
+        # loop over all slices in Voi, each slice contains at least one contour
+        # which forms chain of points in transversal (XY) plane
+        for _slice in self.slices:  # TODO: slices must be sorted first, but wouldn't they always be ?
+
+            # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
+            contour = np.array(_slice.contours[0].contour)
+
+            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
+            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+
+            # get intersection points depending on plane type
             if plane is self.sagittal:
-                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                               key=lambda x: x[1])
+                point = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
             elif plane is self.coronal:
-                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                               key=lambda x: x[0])
+                point = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
+
+            # for chains forming convex polygon we are limited to 0, 1 or 2 intersection points
+            # TODO this code has no support for concave polygons
+            #  as only first and last intersection points are considered in the code below
+            #  this is a severe limitation, as the concave parts are approximated with straight lines
+            #  for sagittal and coronal projects of concave contours a convex hull is calculated
+            #   tl;dr:
+            #   when we look for intersection using a plane, we can have more than 2 points of intersection
+            #   f.e: we can chop liver contour in four points and those two middle points are not used at all
+            # in case we have a least one intersection point, take the point with highest X or Y
             if len(point) > 0:
-                points2.append(point[-1])
-                if len(point) > 1:
-                    points1.append(point[0])
+                upper_chain.append(point[-1])
+            # in case we have a least two intersection points, take the point with lowest X or Y
+            if len(point) > 1:
+                lower_chain.append(point[0])
+
+        # object to return if there is no intersection
         s = None
-        if len(points1) > 0:
-            points1.extend(reversed(points2))
-            points1.append(points1[0])
+
+        # check if list of "extreme" intersection points is not-empty
+        if len(lower_chain) > 0:
+
+            # concatenate lower and upper part of the chain of the points
+            contour = lower_chain + list(reversed(upper_chain))
+
+            # close the contour
+            contour.append(contour[0])
+
+            # create a slice object and add a contour data
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(points1, cube=self.cube))
+            s.add_contour(Contour(contour, cube=self.cube))
 
         return s
 
