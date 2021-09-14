@@ -1,22 +1,23 @@
 import math
-"""
-This file contains methods that create from a list of intersections (list of points).
-Algorithm steps:
-    1. Divide passed list of intersections into separate groups, that each represents a valid contour.
-    2. For each group create a contour.
-        2.1. Divide group of points into parts of contour, each part imitates discrete function (like in maths)
-        2.2. Connect parts of contour (taking into account direction of connection)
-    3. Return created contours.
-Basic heuristics are used:
-    1. searching for minimal distance between a part and a point and ensuring that relation is symmetrical
-        (if point A is the closest one to part B, check if part B is the closest one to point A)
-    2. limiting distance between parts and points based on previous distances
-        (next point cannot be too far away from parts)
-"""
+
+
+# This file contains methods that create from a list of intersections (list of points).
+# Algorithm steps:
+#     1. Divide passed list of intersections into separate groups, that each represents a valid contour.
+#     2. For each group create a contour.
+#         2.1. Divide group of points into parts of contour, each part imitates discrete function (like in maths)
+#         2.2. Connect parts of contour (taking into account direction of connection)
+#     3. Return created contours.
+# Basic heuristics are used:
+#     1. searching for minimal distance between a part and a point and ensuring that relation is symmetrical
+#         (if point A is the closest one to part B, check if part B is the closest one to point A)
+#     2. limiting distance between parts and points based on previous distances
+#         (next point cannot be too far away from parts)
 
 
 class ListEntry:
     """Special type to hold data and other useful information"""
+
     def __init__(self):
         self.data = []
         self.last_distance = float('inf')
@@ -24,6 +25,7 @@ class ListEntry:
 
 class SpecialPoint:
     """Special type to hold data and other useful information"""
+
     def __init__(self, point):
         self.point = point
         self.is_appended = False
@@ -38,7 +40,8 @@ def map_points_to_special_points(points):
 
 
 def calculate_distance(points_a, point_b):
-    return math.sqrt((points_a[0] - point_b[0])**2 + (points_a[1] - point_b[1])**2 + (points_a[2] - point_b[2])**2)
+    return math.sqrt(
+        (points_a[0] - point_b[0]) ** 2 + (points_a[1] - point_b[1]) ** 2 + (points_a[2] - point_b[2]) ** 2)
 
 
 def search_for_closest_part(closest_point, parts_of_contour):
@@ -66,7 +69,7 @@ def search_for_closest_point(current_part, current_points):
 
 def calculate_average_distance(parts_of_contour):
     average_distance = 3 * 2.0  # three times slice distance, but i dont know why - magic number
-    if len(parts_of_contour):
+    if parts_of_contour:
         average_distance = 0.0
         for part in parts_of_contour:
             average_distance += part.last_distance
@@ -163,16 +166,16 @@ def search_for_closest_parts(parts):
         reverse_b = False
         # search for closest part to part_a, from both sides - aka part_b
         for last_point_a, reverse_a in [(part_a.data[-1], True), (part_a.data[0], False)]:
-            for part in parts_without_a:
-                distance = calculate_distance(last_point_a, part.data[0])
+            for part_wo_a in parts_without_a:
+                distance = calculate_distance(last_point_a, part_wo_a.data[0])
                 if distance < closest_distance:
                     closest_distance = distance
-                    part_b = part
+                    part_b = part_wo_a
                     reverse_b = False
-                distance = calculate_distance(last_point_a, part.data[-1])
+                distance = calculate_distance(last_point_a, part_wo_a.data[-1])
                 if distance < closest_distance:
                     closest_distance = distance
-                    part_b = part
+                    part_b = part_wo_a
                     reverse_b = True
 
                 if reverse_b:
@@ -183,16 +186,16 @@ def search_for_closest_parts(parts):
                 # search for closest part to part_b, to make sure that relation is symmetrical
                 closest_distance = float('inf')
                 parts_without_b = [p for p in parts if p != part_b]
-                for part in parts_without_b:
-                    distance = calculate_distance(last_point_b, part.data[-1])
+                for part_wo_b in parts_without_b:
+                    distance = calculate_distance(last_point_b, part_wo_b.data[-1])
                     if distance < closest_distance:
                         closest_distance = distance
-                        closest_to_part_b = part
+                        closest_to_part_b = part_wo_b
                         reverse_to_part_b = True
-                    distance = calculate_distance(last_point_b, part.data[0])
+                    distance = calculate_distance(last_point_b, part_wo_b.data[0])
                     if distance < closest_distance:
                         closest_distance = distance
-                        closest_to_part_b = part
+                        closest_to_part_b = part_wo_b
                         reverse_to_part_b = False
             # if the closest part to part_b is the as part_a considering proper end of array
             if closest_to_part_b == part_a and reverse_to_part_b == reverse_a:
@@ -298,6 +301,5 @@ def create_contour(points_lists):
         contours.append(contour)
 
     return contours
-
 
 # -------------------- end block of wrapper methods --------------------
