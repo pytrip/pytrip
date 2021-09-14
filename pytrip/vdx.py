@@ -644,7 +644,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius ** 2 - (z - center[2]) ** 2
+            r2 = radius**2 - (z - center[2])**2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -1302,7 +1302,6 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
-
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1551,7 +1550,6 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
-
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1582,13 +1580,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
+            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
+            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
         total_path = np.sum(paths)
 
         if total_path > 0:

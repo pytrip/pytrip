@@ -1,5 +1,4 @@
 import math
-
 """
 This file contains methods that create from a list of intersections (list of points).
 Algorithm steps:
@@ -18,7 +17,6 @@ Basic heuristics are used:
 
 class ListEntry:
     """Special type to hold data and other useful information"""
-
     def __init__(self):
         self.data = []
         self.last_distance = float('inf')
@@ -26,7 +24,6 @@ class ListEntry:
 
 class SpecialPoint:
     """Special type to hold data and other useful information"""
-
     def __init__(self, point):
         self.point = point
         self.is_appended = False
@@ -41,8 +38,7 @@ def map_points_to_special_points(points):
 
 
 def calculate_distance(points_a, point_b):
-    return math.sqrt(
-        (points_a[0] - point_b[0]) ** 2 + (points_a[1] - point_b[1]) ** 2 + (points_a[2] - point_b[2]) ** 2)
+    return math.sqrt((points_a[0] - point_b[0])**2 + (points_a[1] - point_b[1])**2 + (points_a[2] - point_b[2])**2)
 
 
 def search_for_closest_part(closest_point, parts_of_contour):
@@ -80,8 +76,8 @@ def calculate_average_distance(parts_of_contour):
 
 # -------------------- end block of utility methods --------------------
 
-
 # -------------------- start block of logic methods --------------------
+
 
 def append_points_to_parts(current_points, parts_of_contour):
     """
@@ -302,4 +298,6 @@ def create_contour(points_lists):
         contours.append(contour)
 
     return contours
+
+
 # -------------------- end block of wrapper methods --------------------
