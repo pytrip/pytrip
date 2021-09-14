@@ -34,6 +34,8 @@ from math import pi, sqrt
 
 import numpy as np
 
+from pytrip.concave_tool import create_contour
+
 try:
     # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
     from pydicom import uid
@@ -642,7 +644,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -858,17 +860,8 @@ class Voi:
         # concat_contour() merges all contours to one contour, as in TRiP98 standard
         self.concat_contour()  # TODO: this is modifying current Voi, which is not nice, refactor it
 
-        # variables to store points that have same depth, but different X or Y coordinate depending on plane type
-        # lower chain contains points with higher coordinate value (X or Y)
-        lower_chain = []
-        # upper chain contains points with lower coordinate value (X or Y)
-        upper_chain = []
-
-        # in the code below we will deal with convex polygons
-        # ideally we should go around the input contour (i.e. first with ascending Z coordinate then with descending Z)
-        # unfortunately we take another approach: we loop over all slices with ascending Z only
-        # we use two temporary lists, one for "upper part" (where points are added in correct order with ascending Z)
-        # and another list for "lower part" which will be later reversed, for part of the contour for descending Z
+        # variable to collect all intersections found in for loop
+        all_intersections = []
 
         # loop over all slices in Voi, each slice contains at least one contour
         # which forms chain of points in transversal (XY) plane
@@ -880,42 +873,26 @@ class Voi:
             # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
             intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
 
-            # get intersection points depending on plane type
+            points = []
+            # sort intersection points depending on plane type
             if plane is self.sagittal:
-                point = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
+                points = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
             elif plane is self.coronal:
-                point = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
+                points = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
 
-            # for chains forming convex polygon we are limited to 0, 1 or 2 intersection points
-            # TODO this code has no support for concave polygons
-            #  as only first and last intersection points are considered in the code below
-            #  this is a severe limitation, as the concave parts are approximated with straight lines
-            #  for sagittal and coronal projects of concave contours a convex hull is calculated
-            #   tl;dr:
-            #   when we look for intersection using a plane, we can have more than 2 points of intersection
-            #   f.e: we can chop liver contour in four points and those two middle points are not used at all
-            # in case we have a least one intersection point, take the point with highest X or Y
-            if len(point) > 0:
-                upper_chain.append(point[-1])
-            # in case we have a least two intersection points, take the point with lowest X or Y
-            if len(point) > 1:
-                lower_chain.append(point[0])
+            all_intersections.append(points)
 
         # object to return if there is no intersection
         s = None
 
-        # check if list of "extreme" intersection points is not-empty
-        if len(lower_chain) > 0:
-
-            # concatenate lower and upper part of the chain of the points
-            contour = lower_chain + list(reversed(upper_chain))
-
-            # close the contour
-            contour.append(contour[0])
-
+        # check if list contains any intersections
+        if len(all_intersections) > 0:
+            # call method that return list of contours
+            contours = create_contour(all_intersections)
             # create a slice object and add a contour data
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(contour, cube=self.cube))
+            for contour in contours:
+                s.add_contour(Contour(contour, cube=self.cube))
 
         return s
 
@@ -1325,6 +1302,7 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1573,6 +1551,7 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1603,13 +1582,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
