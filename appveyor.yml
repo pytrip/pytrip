@@ -35,7 +35,7 @@ init:
 install:
   # If there is a newer build queued for the same PR, cancel this one.
   # The AppVeyor 'rollout builds' option is supposed to serve the same
-  # purpose but it is problematic because it tends to cancel builds pushed
+  # purpose, but it is problematic because it tends to cancel builds pushed
   # directly to master instead of just PR builds (or the converse).
   # credits: JuliaLang developers.
   - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
@@ -56,7 +56,6 @@ install:
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 # install usual requirements
   - python -m pip install --upgrade virtualenv pip setuptools tox wheel
-  - python -m pip install --upgrade -r tests/requirements-test.txt
   - python -m pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"
