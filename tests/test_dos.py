@@ -26,6 +26,7 @@ import tempfile
 import unittest
 
 import numpy as np
+import pytest
 
 from pytrip import pytriplib
 from pytrip.dos import DosCube
