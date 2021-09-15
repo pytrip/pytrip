@@ -44,7 +44,7 @@ jobs:
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
-     if: ${{ contains(github.event.head_commit.message, '[build]') || github.ref == 'refs/heads/master' }}
+     if: ${{ github.event.head_commit.message == 'build' || github.ref == 'refs/heads/master' }}
 
      runs-on:  ${{ matrix.platform }}
      needs: [smoke_test]
@@ -139,7 +139,7 @@ jobs:
    
    upload_wheels:
     # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: ${{ contains(github.event.head_commit.message, '[build]') || github.ref == 'refs/heads/master' }}
+    if: ${{ github.event.head_commit.message == 'build' || github.ref == 'refs/heads/master' }}
     name: Upload wheels
     needs: [make_and_upload_package_linux, build_wheels_macOS]
     runs-on: ubuntu-latest
