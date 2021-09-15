@@ -252,11 +252,8 @@ class TestCubeSlicer(unittest.TestCase):
     def test_convert_one(self):
         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
 
-        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos,
-                                                     '--ct', self.ctx,
-                                                     '-f', '5',
-                                                     '-t', '5',
-                                                     '-o', working_dir])
+        ret_code = pytrip.utils.cubeslice.main(
+            args=['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '5', '-o', working_dir])
         self.assertEqual(ret_code, 0)
 
         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
