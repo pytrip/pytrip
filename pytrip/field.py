@@ -157,14 +157,10 @@ class SubField:
         points = sorted(self.submachine.get_raster_points(), key=cmp_to_key(compare_raster_point))
         step = self.submachine.stepsize
         margin = 5
-        mat = [
-            [[x, y, 0]
-             for x in np.linspace(size[0] - margin * step[0], size[1] + margin * step[0], (size[1] - size[0]
-                                                                                           ) / step[0] + 1 + 2 * margin)
-             ]
-            for y in np.linspace(size[2] - margin * step[1], size[3] + margin * step[1], (size[3] - size[2]
-                                                                                          ) / step[1] + 1 + 2 * margin)
-        ]
+        mat = [[[x, y, 0] for x in np.linspace(size[0] - margin * step[0], size[1] +
+                                               margin * step[0], (size[1] - size[0]) / step[0] + 1 + 2 * margin)]
+               for y in np.linspace(size[2] - margin * step[1], size[3] +
+                                    margin * step[1], (size[3] - size[2]) / step[1] + 1 + 2 * margin)]
         for p in points:
             i = int(p[1] / step[1] - size[2] / step[1]) + margin
             j = int(p[0] / step[0] - size[0] / step[0]) + margin
