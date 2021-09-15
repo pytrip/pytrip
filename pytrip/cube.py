@@ -106,9 +106,9 @@ class Cube(object):
             self.modality = "CT"
             try:
                 self.created_by = getpass.getuser()
-            except ModuleNotFoundError:
+            except ImportError:
                 # it may happen that on Windows system `getpass.getuser` won't work
-                # this will manifest as "ModuleNotFoundError: No module named 'pwd'" exception
+                # this will manifest as "ModuleNotFoundError/ImportError: No module named 'pwd'" exception
                 # as the getpass is trying to get the login from the password database which relies
                 # on systems which support the pwd module
                 # in such case we set created_by field to a fixed value
