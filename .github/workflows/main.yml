@@ -67,7 +67,7 @@ jobs:
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
-     if: "contains(needs.initialise.outputs.commit_message, '[build]')"
+     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
 
      runs-on:  ${{ matrix.platform }}
      needs: [initialise, smoke_test]
@@ -94,10 +94,10 @@ jobs:
    make_and_upload_package_linux:
     name: Wheels on Linux
     # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: ${{ contains(github.event.head_commit.message, '[build]') || github.ref == 'refs/heads/master' }}
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
 
     runs-on: ubuntu-latest
-    needs: [run_tests]
+    needs: [initialise, run_tests]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -122,9 +122,9 @@ jobs:
 
    build_wheels_macOS:
     # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: ${{ contains(github.event.head_commit.message, '[build]') || github.ref == 'refs/heads/master' }}
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
     name: Wheels on macOS
-    needs: [run_tests]
+    needs: [initialise, run_tests]
     runs-on: macos-10.15
 
     steps:
@@ -162,9 +162,9 @@ jobs:
    
    upload_wheels:
     # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: ${{ github.event.head_commit.message == 'build' || github.ref == 'refs/heads/master' }}
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
     name: Upload wheels
-    needs: [make_and_upload_package_linux, build_wheels_macOS]
+    needs: [initialise, make_and_upload_package_linux, build_wheels_macOS]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
@@ -176,7 +176,7 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.4.2
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
         with:
-              # Password for your PyPI user or an access token
+              # Password for your PyPI user or access token
               password: ${{ secrets.TWINE_PASSWORD }}
               # The repository URL to use
               repository_url: "https://upload.pypi.org/legacy/"
