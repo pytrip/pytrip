@@ -40,7 +40,7 @@ jobs:
    smoke_test:
     if: "github.repository == 'pytrip/pytrip' && !contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
     runs-on:  ${{ matrix.platform }}
-    needs: [initialise, smoke_test]
+    needs: [initialise]
     strategy:
        matrix:
          python-version: [3.5, 3.9]
