@@ -13,6 +13,29 @@ on:
     types: [ published ]
 
 jobs:
+
+   initialise:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Project
+        uses: actions/checkout@v2
+        with:
+          # for pull_request so we can do HEAD^2
+          fetch-depth: 2
+
+      - name: Get commit message
+        id: get_commit_message
+        run: |
+          if   [[ '${{ github.event_name }}' == 'push' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD)
+          elif [[ '${{ github.event_name }}' == 'pull_request' ]]; then
+            echo ::set-output name=commit_message::$(git log --format=%B -n 1 HEAD^2)
+          fi
+
+    outputs:
+      commit_message:
+        echo "${{ steps.get_commit_message.outputs.commit_message }}"
+
    smoke_test:
     if: "github.repository == 'pytrip/pytrip' && !contains(github.event.head_commit.message, '[ci skip]') && !contains(github.event.head_commit.message, '[skip ci]')"
     runs-on:  ${{ matrix.platform }}
@@ -44,10 +67,10 @@ jobs:
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
-     if: ${{ github.event.head_commit.message == 'build' || github.ref == 'refs/heads/master' }}
+     if: "contains(needs.initialise.outputs.commit_message, '[build]')"
 
      runs-on:  ${{ matrix.platform }}
-     needs: [smoke_test]
+     needs: [initialise, smoke_test]
      strategy:
        matrix:
          python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
