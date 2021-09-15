@@ -27,7 +27,6 @@ import logging
 
 from pytrip.res.point import angles_from_trip, max_list, min_list
 from pytrip.res.point import get_basis_from_angles
-from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +143,7 @@ class SubField:
         return lateral
 
     def get_merge_raster_points(self, size):
+        from pytrip import pytriplib
         points = np.array(self.get_raster_matrixs(size))
         dim = [len(points[0]), len(points)]
 

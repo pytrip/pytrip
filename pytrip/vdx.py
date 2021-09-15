@@ -55,7 +55,6 @@ except ImportError:
 import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.dos import DosCube
-from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -819,6 +818,7 @@ class Voi:
         """
         (TODO: Documentation)
         """
+        from pytrip import pytriplib
         a = np.array(basis[0])
         b = np.array(basis[1])
         self.concat_contour()
@@ -847,6 +847,8 @@ class Voi:
         :param float depth: position of plane in mm
         :returns: a Slice object.
         """
+        from pytrip import pytriplib
+
         # concat_contour() merges all contours to one contour, as in TRiP98 standard
         self.concat_contour()  # TODO: this is modifying current Voi, which is not nice, refactor it
 
