@@ -249,6 +249,7 @@ class TestCubeSlicer(unittest.TestCase):
         logger.info("Removing " + working_dir)
         shutil.rmtree(working_dir)
 
+    @pytest.mark.smoke
     def test_convert_one(self):
         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
 

@@ -115,6 +115,7 @@ class TestCtx(unittest.TestCase):
             logger.info("Catching {:s}".format(str(e)))
             self.read_and_write_cube(self.cube000 + ".vdx")
 
+    @pytest.mark.smoke
     def test_addition(self):
         # read cube
         c = CtxCube()

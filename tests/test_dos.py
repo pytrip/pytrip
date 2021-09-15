@@ -138,6 +138,7 @@ class TestDos(unittest.TestCase):
         self.assertGreater(os.path.getsize(os.path.join(outdir, "rtplan.dcm")), 0)
         shutil.rmtree(outdir)
 
+    @pytest.mark.smoke
     def test_write(self):
         c = DosCube()
         c.read(self.cube000)

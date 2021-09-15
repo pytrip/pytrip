@@ -103,6 +103,7 @@ class TestVdx(unittest.TestCase):
         # TODO add some assertions
         target_voi.create_point_tree()
 
+    @pytest.mark.smoke
     def test_read_solo(self):
         logger.info("Checking reading VdxCube without CT cube loaded")
         v = pt.VdxCube()
