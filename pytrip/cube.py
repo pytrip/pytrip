@@ -104,7 +104,15 @@ class Cube(object):
             self.header_set = False
             self.version = "2.0"
             self.modality = "CT"
-            self.created_by = getpass.getuser()
+            try:
+                self.created_by = getpass.getuser()
+            except ModuleNotFoundError:
+                # it may happen that on Windows system `getpass.getuser` won't work
+                # this will manifest as "ModuleNotFoundError: No module named 'pwd'" exception
+                # as the getpass is trying to get the login from the password database which relies
+                # on systems which support the pwd module
+                # in such case we set created_by field to a fixed value
+                self.created_by = 'pytrip'
             self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
