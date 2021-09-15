@@ -81,13 +81,17 @@ The standard way to execute Python scripts WILL NOT WORK::
 
    $ python pytrip/utils/cubeslice.py --help
 
-To have the code working, two things are needed:
+It will probably give you a traceback like this one::
 
-* adjustment of PYTHONPATH variable.
+    Traceback (most recent call last):
+    File ".\pytrip\utils\cubeslice.py", line 29, in <module>
+        import pytrip as pt
+    ModuleNotFoundError: No module named 'pytrip'
 
-Now code can be run by typing::
+To have the code working (as a developer), you need to call the files as python modules.
+In this way python interpreter will set properly all directories needed for proper imports::
 
-   $ PYTHONPATH=. python pytrip/utils/cubeslice.py --help
+   $ python -m pytrip.utils.cubeslice --help
    usage: cubeslice.py [-h] [--data [DATA]] [--ct [CT]] [-v] [-f N] [-t M] [-H]
                     [-o OUTPUTDIR]
 
@@ -143,7 +147,7 @@ Get Started for non-GIT developers
 
 2. Follow steps 4-6 from the instruction for GIT-aware developers. To run code locally, prefix usual calls with ``PYTHONPATH=.``::
 
-   $ PYTHONPATH=. python pytrip/utils/cubeslice.py --help
+   $ python -m pytrip.utils.cubeslice --help
    usage: cubeslice.py [-h] [--data [DATA]] [--ct [CT]] [-v] [-f N] [-t M] [-H]
                     [-o OUTPUTDIR]
 
@@ -166,7 +170,7 @@ To run full tests type::
 
 To run only a single test type::
 
-   $ PYTHONPATH=. python tests/test_file_to_run.py
+   $ python -m pytest tests/test_file_to_run.py
 
 .. _`bugs`: https://github.com/pytrip/pytrip/issues
 .. _`features`: https://github.com/pytrip/pytrip/issues
