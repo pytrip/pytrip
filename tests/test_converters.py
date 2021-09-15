@@ -28,6 +28,8 @@ import glob
 import logging
 import shutil
 
+import pytest
+
 import pytrip.utils.trip2dicom
 import pytrip.utils.dicom2trip
 import pytrip.utils.cubeslice
@@ -230,6 +232,7 @@ class TestCubeSlicer(unittest.TestCase):
         except SystemExit as e:
             self.assertEqual(e.code, 2)
 
+    @pytest.mark.slow
     def test_convert_all(self):
         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
 

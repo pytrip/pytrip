@@ -26,6 +26,8 @@ import tempfile
 import unittest
 import logging
 
+import pytest
+
 import tests.base
 from pytrip.ctx import CtxCube
 from pytrip.error import FileNotFound
@@ -87,6 +89,7 @@ class TestCtx(unittest.TestCase):
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
+    @pytest.mark.slow
     def test_write(self):
         possible_names = [self.cube000,
                           self.cube000 + ".ctx", self.cube000 + ".hed",
