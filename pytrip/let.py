@@ -35,8 +35,8 @@ class LETCube(Cube):
     It is inherited from Cube, which contains many additional methods and attributes.
     """
 
-    data_file_extension = '.dos'
-    allowed_suffix = ('dosemlet', 'mlet')
+    data_file_extension = '.dos'  # skipcq: TYP-050
+    allowed_suffix = ('dosemlet', 'mlet')  # skipcq: TYP-050
 
     let_types = {
         "unknown": "unknown LET type",

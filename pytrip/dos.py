@@ -50,8 +50,8 @@ class DosCube(Cube):
     """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos/.DOS suffix.
     This class can also handle DICOM files.
     """
-    data_file_extension = '.dos'
-    allowed_suffix = ('phys', 'bio', 'rbe', 'svv', 'alpha', 'beta')
+    data_file_extension = '.dos'  # skipcq: TYP-050
+    allowed_suffix = ('phys', 'bio', 'rbe', 'svv', 'alpha', 'beta')  # skipcq: TYP-050
 
     def __init__(self, cube=None):
         """ Creates a DosCube instance.
