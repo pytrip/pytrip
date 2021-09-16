@@ -157,7 +157,7 @@ setuptools.setup(
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
-    author_email='leszek.grzanka@gmail.com',
+    author_email='leszek.grzanka@ifj.edu.pl',
     description='PyTRiP',
     long_description=readme + '\n',
     classifiers=[

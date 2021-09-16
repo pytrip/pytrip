@@ -23,6 +23,7 @@ import os
 import unittest
 import logging
 import numpy as np
+import pytest
 
 import pytrip as pt
 from pytrip.models.proton import rbe_carabe
@@ -57,6 +58,7 @@ class TestProton(unittest.TestCase):
         self.assertGreater(rbe2, 1.0)  # Carabe can actually return values below 1.0 for RBE
         self.assertGreater(10.0, rbe2)  # Sanity check
 
+    @pytest.mark.smoke
     def test_wedenberg(self):
         """ Check if we are able to calculate a few RBE values
         """

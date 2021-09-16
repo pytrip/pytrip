@@ -9,9 +9,6 @@ environment:
      secure: GgEHENWgbfFj3Y3ESLvQqfHXKyp2BPy65U8B21ACBOw57Yv/epOgh8bp5tsi4PUa9ZkAIRW8m4GZx5HHm4q36zkXZZaZUZYV3qMRNpoGe/EweEdg8dqjW5wAGQ/bDQgVgfbWzg9o2KwuSFd+j1wLcKEc4ZMcKZvgOQlQQXqVKNB3VpeZftjI14ss1QPFgY4TLpa+bfaH1xHVCT/BKAy7y8wKBfZBvpb4xWOyOKaRKDa1+NOxS8TGYRBThWK6R9/gvXvh9ySzFwUbjCbHdcpK/w==
   PYPIUSER: __token__
   matrix:
-#    - platform: x64
-#      PYTHON: "C:\\Python27-x64"
-#
     - platform: x64
       PYTHON: "C:\\Python35-x64"
 
@@ -38,7 +35,7 @@ init:
 install:
   # If there is a newer build queued for the same PR, cancel this one.
   # The AppVeyor 'rollout builds' option is supposed to serve the same
-  # purpose but it is problematic because it tends to cancel builds pushed
+  # purpose, but it is problematic because it tends to cancel builds pushed
   # directly to master instead of just PR builds (or the converse).
   # credits: JuliaLang developers.
   - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
@@ -59,11 +56,9 @@ install:
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 # install usual requirements
   - python -m pip install --upgrade virtualenv pip setuptools tox wheel
-  - python -m pip install --upgrade -r tests/requirements-test.txt
   - python -m pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"
-  - python -c "import scipy as sp;print(sp.version.version)"
 # check python and pip versions
   - python -V
   - python -m pip -V
@@ -79,17 +74,9 @@ test_script:
   - del setup.py
 # install wheel package via pip, as we do not know the wheel filename in advance, we loop over all *.whl files in dist directory
   - ps: cd C:\ ; Get-ChildItem -Path C:\projects\pytrip\dist\ -Recurse -Include *.whl | foreach-object { echo $_ | Out-Host ; pip install $_}
-# run tests (normal py.test command results in memory error on appveyor, so we run tests file-by-file)
-# exit in case of failure of a single test
-# exclude problematic tests on 32bit platform (see https://github.com/pytrip/pytrip/issues/320)
   - cd C:\\projects\\pytrip\
-  - ps: $exclude_tests = If ($env:platform -eq "x86") {"test_converters.py"} Else {""} ; Get-ChildItem -Path tests\ -Recurse -Include test*.py -Exclude $exclude_tests | foreach-object { $(echo $_ | Out-Host ; python -m pytest $_ | Out-Host; $?) -or $(break)}
 # deploy package
   - bash appveyor\deploy_package.sh
-
-# upload artifacts, disabling to save the space
-#artifacts:
-#  - path: dist\*whl
 
 # debugging RDP connection, uncomment to enable
 # more details here: https://www.appveyor.com/docs/how-to/rdp-to-build-worker/

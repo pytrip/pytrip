@@ -44,15 +44,14 @@ except ImportError:
 
 from pytrip.cube import Cube
 from pytrip.error import InputError, ModuleNotLoadedError
-from pytrip import pytriplib
 
 
 class DosCube(Cube):
     """ Class for handling Dose data. In TRiP98 these are stored in VOXELPLAN format with the .dos/.DOS suffix.
     This class can also handle DICOM files.
     """
-    data_file_extension = '.dos'
-    allowed_suffix = ('phys', 'bio', 'rbe', 'svv', 'alpha', 'beta')
+    data_file_extension = '.dos'  # skipcq: TYP-050
+    allowed_suffix = ('phys', 'bio', 'rbe', 'svv', 'alpha', 'beta')  # skipcq: TYP-050
 
     def __init__(self, cube=None):
         """ Creates a DosCube instance.
@@ -95,10 +94,9 @@ class DosCube(Cube):
         min_dose and max_dose, mean_dose - obvious, mean_volume - effective volume dose.
         """
 
-        warnings.warn(
-            "The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+        warnings.warn("The function calculate_dvh is deprecated, and is replaced with the pytrip.VolHist object.",
+                      DeprecationWarning)
+        from pytrip import pytriplib
         z_pos = 0  # z position
         voxel_size = np.array([self.pixel_size, self.pixel_size, self.slice_distance])
         # in TRiP98 dose is stored in relative numbers, target dose is set to 1000 (and stored as 2-bytes ints)
@@ -108,11 +106,10 @@ class DosCube(Cube):
         for i in range(self.dimz):
             z_pos += self.slice_distance
             slice = voi.get_slice_at_pos(z_pos)
-            if slice is not None:   # VOI intersects with this slice
+            if slice is not None:  # VOI intersects with this slice
                 voi_and_cube_intersect = True
-                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i],
-                                                           np.array(slice.contours[0].contour),
-                                                           voxel_size)
+                contour_array = np.array(slice.contours[0].contour)
+                dose_bins += pytriplib.calculate_dvh_slice(self.cube[i], contour_array, voxel_size)
 
         if voi_and_cube_intersect:
             sum_of_doses = sum(dose_bins)
@@ -150,10 +147,8 @@ class DosCube(Cube):
         """
         Save DHV for given VOI to the file.
         """
-        warnings.warn(
-            "The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
-            DeprecationWarning
-        )
+        warnings.warn("The method write_dvh() is deprecated, and is replaced with the pytrip.VolHist object.",
+                      DeprecationWarning)
         dvh_tuple = self.calculate_dvh(voi)
         if dvh_tuple is None:
             logging.warning("Voi {:s} outside the cube".format(voi.get_name()))
@@ -250,8 +245,11 @@ class DosCube(Cube):
         ds.InstanceNumber = ''
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
-        ds.ImagePositionPatient = ["%.3f" % (self.xoffset * self.pixel_size), "%.3f" % (self.yoffset * self.pixel_size),
-                                   "%.3f" % (self.slice_pos[0])]
+        ds.ImagePositionPatient = [
+            "%.3f" % (self.xoffset * self.pixel_size),
+            "%.3f" % (self.yoffset * self.pixel_size),
+            "%.3f" % (self.slice_pos[0])
+        ]
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
         ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'
 
