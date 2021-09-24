@@ -1839,4 +1839,3 @@ class Contour:
             con.append(self.contour[i])
         self.contour = con
         return
-    
