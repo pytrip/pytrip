@@ -539,15 +539,14 @@ def create_cube(cube, name, center, width, height, depth):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
-    for slice_pos in cube.slice_pos:
-        if center[2] - depth / 2 <= slice_pos <= center[2] + depth / 2:
+    for i in range(0, cube.dimz):
+        z = i * cube.slice_distance
+        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
             points = [  # 4 corners of cube in this slice
-                [center[0] - width / 2, center[1] - height / 2, slice_pos],
-                [center[0] + width / 2, center[1] - height / 2, slice_pos],
-                [center[0] + width / 2, center[1] + height / 2, slice_pos],
-                [center[0] - width / 2, center[1] + height / 2, slice_pos]
+                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
+                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
@@ -581,7 +580,7 @@ def create_voi_from_cube(cube, name, value=100):
         points = np.zeros((len(contour[0]), 3))
         points[:, 0:2] = contour[0] * cube.pixel_size
 
-        points[:, 2] = i * cube.slice_distance + cube.zoffset
+        points[:, 2] = i * cube.slice_distance
         c = Contour(points.tolist(), cube)
         c.contour_closed = True  # TODO: Probably the last point is double here
         s.add_contour(c)
@@ -605,11 +604,12 @@ def create_cylinder(cube, name, center, radius, depth):
     t = np.linspace(start=0, stop=2.0 * pi, num=99, endpoint=False)
     p = list(zip(center[0] + radius * np.cos(t), center[1] + radius * np.sin(t)))
 
-    for slice_pos in cube.slice_pos:
-        if center[2] - depth / 2 <= slice_pos <= center[2] + depth / 2:
+    for i in range(0, cube.dimz):
+        z = i * cube.slice_distance
+        if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [[x[0], x[1], slice_pos] for x in p]
+            points = [[x[0], x[1], z] for x in p]
             if points:
                 c = Contour(points, cube)
                 c.contour_closed = True
@@ -629,26 +629,35 @@ def create_sphere(cube, name, center, radius):
     :returns: A new Voi object.
     """
     v = Voi(name, cube)
+
     t = np.linspace(start=0, stop=2.0 * pi, num=99,
                     endpoint=False)  # num: sets the number of corners in sphere per slice.
     p = list(zip(np.cos(t), np.sin(t)))
 
-    for slice_pos in cube.slice_pos:
-        points = []
-        s = Slice(cube)
-        s.thickness = cube.slice_distance
-        _contour_closed = True
-        if center[2] - radius < slice_pos < center[2] + radius:
-            r2 = sqrt(radius**2 - (slice_pos - center[2])**2)
-            points = [[center[0] + x[0] * r2, center[1] + x[1] * r2, slice_pos] for x in p]
-        elif center[2] - radius == slice_pos or center[2] + radius == slice_pos:
-            points = [[center[0], center[1], slice_pos]]
-        if len(points) > 0:
-            c = Contour(points, cube)
-            c.contour_closed = _contour_closed
-            s.add_contour(c)
-            v.add_slice(s)
+    points = []
 
+    for i in range(0, cube.dimz):
+        z = i * cube.slice_distance
+        if center[2] - radius <= z <= center[2] + radius:
+            r2 = radius**2 - (z - center[2])**2
+            s = Slice(cube)
+            s.thickness = cube.slice_distance
+            _contour_closed = True
+            if r2 > 0.0:
+                points = [[center[0] + x[0] * sqrt(r2), center[1] + x[1] * sqrt(r2), z] for x in p]
+            # in case r2 == 0.0, the contour in this slice is a point.
+            # TODO: How should the sphere be treated with points in the end slices:
+            # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
+            # The former means the voi consists of contours and points, which I am not sure is valid.
+            # Here "  oOo  " is implemented.
+            # If you do not want the " .oOo. " version uncomment the next three lines.
+            else:
+                points = [[center[0], center[1], z]]
+            if len(points) > 0:
+                c = Contour(points, cube)
+                c.contour_closed = _contour_closed
+                s.add_contour(c)
+                v.add_slice(s)
     return v
 
 
