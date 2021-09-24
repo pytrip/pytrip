@@ -544,8 +544,10 @@ def create_cube(cube, name, center, width, height, depth):
             s = Slice(cube)
             s.thickness = cube.slice_distance
             points = [  # 4 corners of cube in this slice
-                [center[0] - width / 2, center[1] - height / 2, slice_pos], [center[0] + width / 2, center[1] - height / 2, slice_pos],
-                [center[0] + width / 2, center[1] + height / 2, slice_pos], [center[0] - width / 2, center[1] + height / 2, slice_pos]
+                [center[0] - width / 2, center[1] - height / 2, slice_pos],
+                [center[0] + width / 2, center[1] - height / 2, slice_pos],
+                [center[0] + width / 2, center[1] + height / 2, slice_pos],
+                [center[0] - width / 2, center[1] + height / 2, slice_pos]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
