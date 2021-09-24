@@ -1287,7 +1287,7 @@ class Voi:
         self.temp_max = temp_max
         return temp_min, temp_max
 
-    def is_fully_contained(self):
+	def is_fully_contained(self):
         try:
             [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
         except TypeError:
