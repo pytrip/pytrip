@@ -1292,7 +1292,7 @@ class Voi:
         Checks whether this VOI is fully contained in its Cube.
 
         :returns: true if this VOI's maximal/minimal coordinates in all axes are lesser/greater
-				  than its Cube's maximal/minimal coordinates.
+                  than its Cube's maximal/minimal coordinates.
         """
         try:
             [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
