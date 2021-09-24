@@ -24,6 +24,8 @@ import unittest
 import logging
 import tempfile
 
+import pytest
+
 import tests.base
 from pytrip.raster import Rst
 import pytrip.utils.rst2sobp
@@ -41,6 +43,7 @@ class TestRst(unittest.TestCase):
         self.rst000 = os.path.join(testdir, "tst003001.rst")
         logger.info("Testing .rst from path " + self.rst000)
 
+    @pytest.mark.smoke
     def test_read(self):
         """ Check if we are able to read a simple .rst file
         """
@@ -62,6 +65,7 @@ class TestRst2Sobp(unittest.TestCase):
         self.rst000 = os.path.join(testdir, "tst003001.rst")
         logger.info("Testing rst2sobp.py using .rst from path " + self.rst000)
 
+    @pytest.mark.smoke
     def test_generate(self):
         """ Execute rst2sobp.py and make sure a non-empty file exists.
         """

@@ -26,6 +26,8 @@ import tempfile
 import unittest
 import logging
 
+import pytest
+
 import tests.base
 from pytrip.ctx import CtxCube
 from pytrip.error import FileNotFound
@@ -66,11 +68,11 @@ class TestCtx(unittest.TestCase):
         # calculate temporary filename
         fd, outfile = tempfile.mkstemp()
         os.close(fd)
-        os.remove(outfile)          # we need only random name, not a descriptor
+        os.remove(outfile)  # we need only random name, not a descriptor
         logger.debug("Generated random file name " + outfile)
 
         # save cube and calculate hashsum
-        saved_header_path, saved_cubedata_path = c.write(outfile)   # this will write outfile+".ctx"  and outfile+".hed"
+        saved_header_path, saved_cubedata_path = c.write(outfile)  # this will write outfile+".ctx"  and outfile+".hed"
 
         # check if generated files exists
         self.assertTrue(os.path.exists(saved_header_path))
@@ -87,11 +89,12 @@ class TestCtx(unittest.TestCase):
         # compare checksums
         self.assertEqual(original_md5, generated_md5)
 
+    @pytest.mark.slow
     def test_write(self):
-        possible_names = [self.cube000,
-                          self.cube000 + ".ctx", self.cube000 + ".hed",
-                          self.cube000 + ".CTX", self.cube000 + ".HED",
-                          self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"]
+        possible_names = [
+            self.cube000, self.cube000 + ".ctx", self.cube000 + ".hed", self.cube000 + ".CTX", self.cube000 + ".HED",
+            self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"
+        ]
 
         for name in possible_names:
             self.read_and_write_cube(name)
@@ -112,6 +115,7 @@ class TestCtx(unittest.TestCase):
             logger.info("Catching {:s}".format(str(e)))
             self.read_and_write_cube(self.cube000 + ".vdx")
 
+    @pytest.mark.smoke
     def test_addition(self):
         # read cube
         c = CtxCube()

@@ -28,6 +28,8 @@ import glob
 import logging
 import shutil
 
+import pytest
+
 import pytrip.utils.trip2dicom
 import pytrip.utils.dicom2trip
 import pytrip.utils.cubeslice
@@ -230,6 +232,7 @@ class TestCubeSlicer(unittest.TestCase):
         except SystemExit as e:
             self.assertEqual(e.code, 2)
 
+    @pytest.mark.slow
     def test_convert_all(self):
         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
 
@@ -246,14 +249,12 @@ class TestCubeSlicer(unittest.TestCase):
         logger.info("Removing " + working_dir)
         shutil.rmtree(working_dir)
 
+    @pytest.mark.smoke
     def test_convert_one(self):
         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
 
-        ret_code = pytrip.utils.cubeslice.main(args=['--data', self.dos,
-                                                     '--ct', self.ctx,
-                                                     '-f', '5',
-                                                     '-t', '5',
-                                                     '-o', working_dir])
+        input_args = ['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '5', '-o', working_dir]
+        ret_code = pytrip.utils.cubeslice.main(args=input_args)
         self.assertEqual(ret_code, 0)
 
         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))

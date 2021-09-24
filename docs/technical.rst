@@ -5,8 +5,6 @@ Technical documentation
 
 .. image:: https://img.shields.io/pypi/v/pytrip98.svg
         :target: https://pypi.python.org/pypi/pytrip98
-.. image:: https://img.shields.io/travis/pytrip/pytrip.svg
-        :target: https://travis-ci.org/pytrip/pytrip
 
 
 .. image:: https://readthedocs.org/projects/pytrip/badge/?version=latest
@@ -22,7 +20,7 @@ Technical documentation
     * - docs
       - |docs|
     * - tests
-      - |travis| |appveyor|
+      - |ghactions| |appveyor|
     * - package
       - |version| |downloads| |wheel| |supported-versions| |supported-implementations|
 
@@ -30,13 +28,13 @@ Technical documentation
     :target: https://readthedocs.org/projects/pytrip
     :alt: Documentation Status
 
-.. |travis| image:: https://travis-ci.org/pytrip/pytrip.svg?branch=master
-    :alt: Travis-CI Build Status
-    :target: https://travis-ci.org/pytrip/pytrip
-
 .. |appveyor| image:: https://ci.appveyor.com/api/projects/status/github/pytrip/pytrip?branch=master&svg=true
     :alt: Appveyor Build Status
     :target: https://ci.appveyor.com/project/grzanka/pytrip
+
+.. |ghactions| image:: https://github.com/github/docs/actions/workflows/main.yml/badge.svg?branch=master
+    :alt: Github Action Build Status
+    :target: https://github.com/pytrip/pytrip/actions
 
 .. |version| image:: https://img.shields.io/pypi/v/pytrip98.svg?style=flat
     :alt: PyPI Package latest release
@@ -60,18 +58,9 @@ Technical documentation
 
 .. end-badges
 
-Overv.io issue board: https://overv.io/pytrip/pytrip/
-
 
 Documentation
 =============
 
 https://pytrip.readthedocs.io/
 
-Credits
--------
-
-This package was created with Cookiecutter_ and the `grzanka/cookiecutter-pip-docker-versioneer`_ project template.
-
-.. _Cookiecutter: https://github.com/audreyr/cookiecutter
-.. _`grzanka/cookiecutter-pip-docker-versioneer`: https://github.com/grzanka/cookiecutter-pip-docker-versioneer

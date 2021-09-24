@@ -24,6 +24,8 @@ import os
 import tempfile
 import unittest
 
+import pytest
+
 import pytrip as pt
 from pytrip.error import InputError
 from pytrip.vdx import create_cube, create_voi_from_cube, create_cylinder, create_sphere
@@ -33,6 +35,7 @@ import tests.base
 logger = logging.getLogger(__name__)
 
 
+@pytest.mark.smoke
 class TestVdx(unittest.TestCase):
     def setUp(self):
         testdir = tests.base.get_files()
@@ -100,6 +103,7 @@ class TestVdx(unittest.TestCase):
         # TODO add some assertions
         target_voi.create_point_tree()
 
+    @pytest.mark.smoke
     def test_read_solo(self):
         logger.info("Checking reading VdxCube without CT cube loaded")
         v = pt.VdxCube()

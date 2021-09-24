@@ -27,7 +27,6 @@ import logging
 
 from pytrip.res.point import angles_from_trip, max_list, min_list
 from pytrip.res.point import get_basis_from_angles
-from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +143,7 @@ class SubField:
         return lateral
 
     def get_merge_raster_points(self, size):
+        from pytrip import pytriplib
         points = np.array(self.get_raster_matrixs(size))
         dim = [len(points[0]), len(points)]
 
@@ -157,14 +157,13 @@ class SubField:
         points = sorted(self.submachine.get_raster_points(), key=cmp_to_key(compare_raster_point))
         step = self.submachine.stepsize
         margin = 5
-        mat = [
-            [[x, y, 0]
-             for x in np.linspace(size[0] - margin * step[0], size[1] + margin * step[0], (size[1] - size[0]
-                                                                                           ) / step[0] + 1 + 2 * margin)
-             ]
-            for y in np.linspace(size[2] - margin * step[1], size[3] + margin * step[1], (size[3] - size[2]
-                                                                                          ) / step[1] + 1 + 2 * margin)
-        ]
+        # TODO figure out logic behind algorithm below
+        min_x, max_x, min_y, max_y = size
+        n_x = (max_x - min_x) / min_x + 1 + 2 * margin
+        x_linspace = np.linspace(min_x - margin * min_x, max_x + margin * max_x, n_x)
+        n_y = (max_y - min_y) / min_y + 1 + 2 * margin
+        y_linspace = np.linspace(min_y - margin * min_y, max_y + margin * max_y, n_y)
+        mat = [[[x, y, 0] for x in x_linspace] for y in y_linspace]
         for p in points:
             i = int(p[1] / step[1] - size[2] / step[1]) + margin
             j = int(p[0] / step[0] - size[0] / step[0]) + margin

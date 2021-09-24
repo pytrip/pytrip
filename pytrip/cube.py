@@ -104,7 +104,15 @@ class Cube(object):
             self.header_set = False
             self.version = "2.0"
             self.modality = "CT"
-            self.created_by = getpass.getuser()
+            try:
+                self.created_by = getpass.getuser()
+            except ImportError:
+                # it may happen that on Windows system `getpass.getuser` won't work
+                # this will manifest as "ModuleNotFoundError/ImportError: No module named 'pwd'" exception
+                # as the getpass is trying to get the login from the password database which relies
+                # on systems which support the pwd module
+                # in such case we set created_by field to a fixed value
+                self.created_by = 'pytrip'
             self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
@@ -792,6 +800,7 @@ class Cube(object):
         self.primary_view = "transversal"
         self.set_data_type(type(ds.pixel_array[0][0]))
         self.patient_name = ds.PatientName
+        self.patient_id = ds.PatientID
         self.basename = ds.PatientID.replace(" ", "_")
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
@@ -921,7 +930,7 @@ class Cube(object):
         ds.SeriesInstanceUID = self._ct_dicom_series_instance_uid
 
         # Study Instance UID tag 0x0020,0x000D (type UI - Unique Identifier)
-        ds.FrameofReferenceUID = '1.2.3'  # !!!!!!!!!
+        ds.FrameOfReferenceUID = '1.2.3'  # !!!!!!!!!
         ds.StudyDate = datetime.datetime.today().strftime('%Y%m%d')
         ds.StudyTime = datetime.datetime.today().strftime('%H%M%S')
         ds.PhotometricInterpretation = 'MONOCHROME2'
@@ -934,7 +943,7 @@ class Cube(object):
 
         # Add eclipse friendly IDs
         ds.StudyID = '1'  # Study ID tag 0x0020,0x0010 (type SH - Short String)
-        ds.ReferringPhysiciansName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
+        ds.ReferringPhysicianName = 'py^trip'  # Referring Physician's Name tag 0x0008,0x0090 (type PN - Person Name)
         ds.PositionReferenceIndicator = ''  # Position Reference Indicator tag 0x0020,0x1040
         ds.SeriesNumber = '1'  # SeriesNumber tag 0x0020,0x0011 (type IS - Integer String)
 

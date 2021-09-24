@@ -23,13 +23,14 @@ The Voi class represents a volume of interest 'VOI', also called region of inter
 Each Voi holds several Slice, which are normally synced with an associated CT-cube.
 Each Slice holds one or more Contours.
 """
-import os
+import colorsys
 import copy
-from math import pi, sqrt
 import logging
+import os
 import sys
 import warnings
 from functools import cmp_to_key
+from math import pi, sqrt
 
 import numpy as np
 
@@ -38,6 +39,7 @@ try:
     from pydicom import uid
     from pydicom.dataset import Dataset, FileDataset
     from pydicom.sequence import Sequence
+
     _dicom_loaded = True
 except ImportError:
     try:
@@ -45,6 +47,7 @@ except ImportError:
         from dicom import UID as uid  # old pydicom had UID instead of uid
         from dicom.dataset import Dataset, FileDataset
         from dicom.sequence import Sequence
+
         _dicom_loaded = True
     except ImportError:
         _dicom_loaded = False
@@ -52,7 +55,6 @@ except ImportError:
 import pytrip
 from pytrip.error import InputError, ModuleNotLoadedError
 from pytrip.dos import DosCube
-from pytrip import pytriplib
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +100,8 @@ class VdxCube:
         :param cube: CtxCube type object
         """
         self.vois = []
+        # colors that will be assigned for VOIs added in runtime
+        self._spare_voi_colors = []
         self.cube = cube
         self.path = ""  # full path to .vdx file, set if a regular .vdx file was loaded loaded
 
@@ -166,7 +170,7 @@ class VdxCube:
             sys.exit()
 
         for i, _roi_contour in enumerate(_contours):
-            if structure_ids is None or _roi_contour.RefdROINumber in structure_ids:
+            if structure_ids is None or _roi_contour.ReferencedROINumber in structure_ids:
                 if hasattr(dcm, "RTROIObservationsSequence"):
                     _roi_observation = dcm.RTROIObservationsSequence[i]
                     # _roi_name = dcm.RTROIObservationsSequence[i].ROIObservationLabel  # OPTIONAL by DICOM
@@ -187,6 +191,9 @@ class VdxCube:
 
                 self.add_voi(v)
 
+        # set colors for all added VOIs
+        self.assign_voi_colors()
+
     def get_voi_names(self):
         """
         :returns: a list of available voi names.
@@ -204,12 +211,52 @@ class VdxCube:
         names = [voi.name for voi in self.vois]
         return names
 
-    def add_voi(self, voi):
-        """ Appends a new voi to this class.
+    def add_voi(self, voi, set_color=False):
+        """
+        Appends a new VOI to this object.
+        When set_color flag is set to True, also sets distinct color for added VOI.
 
         :param Voi voi: the voi to be appended to this class.
+        :param bool set_color: whether added VOI color should be set, default False
         """
-        self.vois.append(voi)
+        if set_color:
+            # check if there are any spare colors
+            if len(self._spare_voi_colors) > 0:
+                # take one of them
+                color = self._spare_voi_colors.pop()
+                # assign color to VOI and then add it to VOI list
+                voi.set_color(color)
+                self.vois.append(voi)
+            else:
+                # if there are no spare colors:
+                #   reassign colors to all VOIs and create new list of spare colors
+                self.assign_voi_colors()
+        else:
+            self.vois.append(voi)
+
+    def assign_voi_colors(self, k=3):
+        """
+        Creates n+k distinct colors, where n is length of VOI list and k is size of a buffer for VOIs added in runtime.
+        Assigns first n colors to VOIs stored in VOI list, exactly one color for each VOI.
+        Should be called after ending series of add_voi calls.
+
+        :param int k: size of color buffer, default is 3
+        """
+        n = len(self.vois)
+        # create list of HSV tuples, where saturation and value in maxed, only hue is changing
+        # so there are n+k colors picked from HSV cone base circumference
+        hsv_tuples = [(x * 1.0 / (n + k), 1, 1) for x in range(n + k)]
+        # map HSV to RGB
+        rgb_tuples = [colorsys.hsv_to_rgb(*color_tuple) for color_tuple in hsv_tuples]
+        # map 0.0-1.0 to 0-255
+        # color MUST BE an array, CANNOT BE a tuple, because of DICOM standards
+        int_rgb_tuples = [[int(x * 255), int(y * 255), int(z * 255)] for (x, y, z) in rgb_tuples]
+        # slice last k elements as spare ones
+        self._spare_voi_colors = int_rgb_tuples[-k:]
+        # slice first n element and set them as VOI colors
+        colors = int_rgb_tuples[:n]
+        for voi, color in zip(self.vois, colors):
+            voi.set_color(color)
 
     def get_voi_by_name(self, name):
         """ Returns a Voi object by its name.
@@ -275,10 +322,9 @@ class VdxCube:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
 
-
-#                TODO number_of_vois not used
-#                elif "number_of_vois" in line:
-#                    number_of_vois = int(line.split()[1])
+            #                TODO number_of_vois not used
+            #                elif "number_of_vois" in line:
+            #                    number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -291,6 +337,9 @@ class VdxCube:
                 self.add_voi(v)
                 header_full = True
             i += 1
+
+        # set colors for all added VOIs
+        self.assign_voi_colors()
 
     def concat_contour(self):
         """ Loop through all available VOIs and check whether any have multiple contours in a slice.
@@ -438,9 +487,9 @@ class VdxCube:
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
-            roi_label.RefdROINumber = str(i + 1)
-            roi_contours = self.vois[i].create_dicom_contour_data(i)
-            roi_contours.RefdROINumber = str(i + 1)
+            # roi_label.RefdROINumber = str(i + 1)
+            roi_contours = self.vois[i].create_dicom_contour_data()
+            # roi_contours.RefdROINumber = str(i + 1)
             roi_contours.ReferencedROINumber = str(i + 1)
 
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
@@ -451,9 +500,9 @@ class VdxCube:
             roi_structure_roi_list.append(roi_structure_roi)
             roi_label_list.append(roi_label)
             roi_data_list.append(roi_contours)
-        ds.RTROIObservations = Sequence(roi_label_list)
-        ds.ROIContours = Sequence(roi_data_list)
-        ds.StructureSetROIs = Sequence(roi_structure_roi_list)
+        ds.RTROIObservationsSequence = Sequence(roi_label_list)
+        ds.ROIContourSequence = Sequence(roi_data_list)
+        ds.StructureSetROISequence = Sequence(roi_structure_roi_list)
         return ds
 
     def write_dicom(self, directory):
@@ -628,8 +677,7 @@ class Voi:
         self.is_concated = False
         self.type = 90
         self.slices = []
-        self.color = [0, 230, 0]  # default colour
-        self.define_colors()
+        self.color = [0, 255, 0]  # default colour - green
 
     def __str__(self):
         """ str output handler
@@ -643,7 +691,7 @@ class Voi:
         out += "   Voi\n"
         out += "----------------------------------------------------------------------------\n"
         out += "|   Name                                : '{:s}'\n".format(self.name)
-        out += "|   Is concated                         : {:s}\n".format(str(self.is_concated))
+        out += "|   Is concatenated                     : {:s}\n".format(str(self.is_concated))
         out += "|   Type                                : {:d}\n".format(self.type)
         out += "|   Number of slices in VOI             : {:d}\n".format(len(self.slices))
         out += "|   Color 0xRGB                         : #{:s}{:s}{:s}\n".format(hex(self.color[0].strip('0x')),
@@ -719,7 +767,7 @@ class Voi:
 
     def get_3d_polygon(self):
         """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
-        sefl.polygon3d. If this attribute does not exist, create it.
+        self.polygon3d. If this attribute does not exist, create it.
         """
         if not hasattr(self, "polygon3d"):
             self.concat_to_3d_polygon()
@@ -770,6 +818,7 @@ class Voi:
         """
         (TODO: Documentation)
         """
+        from pytrip import pytriplib
         a = np.array(basis[0])
         b = np.array(basis[1])
         self.concat_contour()
@@ -791,47 +840,78 @@ class Voi:
 
     def get_2d_slice(self, plane, depth):
         """
-        Gets a 2d Slice object from the contour in either sagittal or coronal plane.
+        Gets a 2D Slice object from the contour in either sagittal or coronal plane.
         Contours will be concatenated.
 
         :param int plane: either self.sagittal or self.coronal
-        :param float depth: position of plane
+        :param float depth: position of plane in mm
         :returns: a Slice object.
         """
-        self.concat_contour()
-        points1 = []
-        points2 = []
-        for _slice in self.slices:  # TODO: slices must be sorted first, but wouldnt they always be ?
+        from pytrip import pytriplib
+
+        # concat_contour() merges all contours to one contour, as in TRiP98 standard
+        self.concat_contour()  # TODO: this is modifying current Voi, which is not nice, refactor it
+
+        # variables to store points that have same depth, but different X or Y coordinate depending on plane type
+        # lower chain contains points with higher coordinate value (X or Y)
+        lower_chain = []
+        # upper chain contains points with lower coordinate value (X or Y)
+        upper_chain = []
+
+        # in the code below we will deal with convex polygons
+        # ideally we should go around the input contour (i.e. first with ascending Z coordinate then with descending Z)
+        # unfortunately we take another approach: we loop over all slices with ascending Z only
+        # we use two temporary lists, one for "upper part" (where points are added in correct order with ascending Z)
+        # and another list for "lower part" which will be later reversed, for part of the contour for descending Z
+
+        # loop over all slices in Voi, each slice contains at least one contour
+        # which forms chain of points in transversal (XY) plane
+        for _slice in self.slices:  # TODO: slices must be sorted first, but wouldn't they always be ?
+
+            # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
+            contour = np.array(_slice.contours[0].contour)
+
+            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
+            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+
+            # get intersection points depending on plane type
             if plane is self.sagittal:
-                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                               key=lambda x: x[1])
+                point = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
             elif plane is self.coronal:
-                point = sorted(pytriplib.slice_on_plane(np.array(_slice.contours[0].contour), plane, depth),
-                               key=lambda x: x[0])
+                point = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
+
+            # for chains forming convex polygon we are limited to 0, 1 or 2 intersection points
+            # TODO this code has no support for concave polygons
+            #  as only first and last intersection points are considered in the code below
+            #  this is a severe limitation, as the concave parts are approximated with straight lines
+            #  for sagittal and coronal projects of concave contours a convex hull is calculated
+            #   tl;dr:
+            #   when we look for intersection using a plane, we can have more than 2 points of intersection
+            #   f.e: we can chop liver contour in four points and those two middle points are not used at all
+            # in case we have a least one intersection point, take the point with highest X or Y
             if len(point) > 0:
-                points2.append(point[-1])
-                if len(point) > 1:
-                    points1.append(point[0])
+                upper_chain.append(point[-1])
+            # in case we have a least two intersection points, take the point with lowest X or Y
+            if len(point) > 1:
+                lower_chain.append(point[0])
+
+        # object to return if there is no intersection
         s = None
-        if len(points1) > 0:
-            points1.extend(reversed(points2))
-            points1.append(points1[0])
+
+        # check if list of "extreme" intersection points is not-empty
+        if len(lower_chain) > 0:
+
+            # concatenate lower and upper part of the chain of the points
+            contour = lower_chain + list(reversed(upper_chain))
+
+            # close the contour
+            contour.append(contour[0])
+
+            # create a slice object and add a contour data
             s = Slice(cube=self.cube)
-            s.add_contour(Contour(points1, cube=self.cube))
+            s.add_contour(Contour(contour, cube=self.cube))
 
         return s
-
-    def define_colors(self):
-        """
-        Creates a list of default colours [R,G,B] in self.colours.
-        """
-        self.colors = []
-        self.colors.append([0, 0, 255])
-        self.colors.append([0, 128, 0])
-        self.colors.append([0, 255, 0])
-        self.colors.append([255, 0, 0])
-        self.colors.append([0, 128, 128])
-        self.colors.append([255, 255, 0])
 
     def calculate_center(self):
         """
@@ -855,18 +935,15 @@ class Voi:
             self.center_pos = center_pos
             return center_pos
 
-    def get_color(self, i=None):
+    def get_color(self):
         """
-        :param int i: selects a colour, default if None.
         :returns: a [R,G,B] list.
         """
-        if i is None:
-            return self.color
-        return self.colors[i % len(self.colors)]
+        return self.color
 
     def set_color(self, color):
         """
-        :param [3*int]: set a color [R,G,B].
+        :param [3*int] color: set a color [R,G,B], MUST BE an array, CANNOT BE a tuple, because of DICOM standards
         """
         self.color = color
 
@@ -889,7 +966,7 @@ class Voi:
         roi.ROIName = self.name
         return roi
 
-    def create_dicom_contour_data(self, i):
+    def create_dicom_contour_data(self):
         """
         Based on self.slices, DICOM contours are generated for the DICOM ROI.
 
@@ -906,8 +983,8 @@ class Voi:
             logger.info("Get contours from slice at {:10.3f} mm".format(_slice.get_position()))
             contours.extend(_slice.create_dicom_contours(dcmcube))
 
-        roi_contours.Contours = Sequence(contours)
-        roi_contours.ROIDisplayColor = self.get_color(i)
+        roi_contours.ContourSequence = Sequence(contours)
+        roi_contours.ROIDisplayColor = self.get_color()
 
         return roi_contours
 
@@ -1411,7 +1488,7 @@ class Slice:
                 contour.extend([p[0], p[1], p[2]])
             con.ContourData = contour
             con.ContourGeometricType = 'CLOSED_PLANAR'
-            con.NumberofContourPoints = item.number_of_points()
+            con.NumberOfContourPoints = item.number_of_points()
             cont_image_item = Dataset()
             cont_image_item.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage SOP Class
             cont_image_item.ReferencedSOPInstanceUID = ref_sop_instance_uid  # CT slice Instance UID
