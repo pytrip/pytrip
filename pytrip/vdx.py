@@ -1288,6 +1288,12 @@ class Voi:
         return temp_min, temp_max
 
     def is_fully_contained(self):
+		"""
+        Checks whether this VOI is fully contained in its Cube.
+
+        :returns: true if this VOI's maximal/minimal coordinates in all axes are lesser/greater
+				  than its Cube's maximal/minimal coordinates.
+        """
         try:
             [min_pos_x, min_pos_y, min_pos_z], [max_pos_x, max_pos_y, max_pos_z] = self.get_min_max()
         except TypeError:
@@ -1305,7 +1311,7 @@ class Voi:
         return self.cube.yoffset <= min_pos and max_pos <= self.cube.dimy * self.cube.pixel_size + self.cube.yoffset
 
     def _is_z_contained(self, min_pos, max_pos):
-        return self.cube.zoffset <= min_pos and max_pos <= self.cube.dimz * self.cube.pixel_size + self.cube.zoffset
+        return self.cube.zoffset <= min_pos and max_pos <= self.cube.dimz * self.cube.slice_distance + self.cube.zoffset
 
 
 class Slice:
