@@ -14,7 +14,3 @@ dependency_file_paths = ["tests/requirements-test.txt"]
   skip_doc_coverage = ["module", "magic", "init"]
   additional_builtins = ["_", "pretty_output"]
 
-[[transformers]]
-name = "yapf"
-enabled = true
-
