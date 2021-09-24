@@ -1288,7 +1288,7 @@ class Voi:
         return temp_min, temp_max
 
     def is_fully_contained(self):
-		"""
+        """
         Checks whether this VOI is fully contained in its Cube.
 
         :returns: true if this VOI's maximal/minimal coordinates in all axes are lesser/greater
