@@ -113,6 +113,7 @@ install_requires = ["matplotlib", "pydicom"]
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
+# |      1.21     | 14 (0xe)  |    3.7 - 3.10   | linux, mac, win |
 # |      1.20     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.19     | 13 (0xd)  |    3.6 - 3.8    | linux, mac, win |
 # |      1.18     | 13 (0xd)  |    3.5 - 3.8    | linux, mac, win |
@@ -127,7 +128,10 @@ install_requires = ["matplotlib", "pydicom"]
 # |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
 # ----------------------------------------------------------------|
 setup_requires = []
-if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
+if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.10
+    setup_requires += ["numpy==1.21.0"]  # numpy 1.20, API v14 (0xe)
+    install_requires += ["numpy>=1.21.0"]  # numpy 1.20 or newer, API v14 (0xe)
+elif sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
     setup_requires += ["numpy==1.20.0"]  # numpy 1.20, API v14 (0xe)
     install_requires += ["numpy>=1.20.0"]  # numpy 1.20 or newer, API v14 (0xe)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 8:  # python 3.8
@@ -193,6 +197,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
