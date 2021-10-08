@@ -100,7 +100,6 @@ extensions = [
     setuptools.Extension('_cntr', sources=[os.path.join('pytrip', 'lib', 'cntr.c')], extra_compile_args=['-fpic'])
 ]
 
-install_requires = ["matplotlib", "pydicom"]
 
 # packages specified in setup_requires are needed only when running setup.py, in our case it is only numpy
 # which needs to provide header files (via numpy.get_include()) required to build C extension
@@ -113,6 +112,7 @@ install_requires = ["matplotlib", "pydicom"]
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
+# |      1.21     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.20     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.19     | 13 (0xd)  |    3.6 - 3.8    | linux, mac, win |
 # |      1.18     | 13 (0xd)  |    3.5 - 3.8    | linux, mac, win |
@@ -126,34 +126,35 @@ install_requires = ["matplotlib", "pydicom"]
 # |      1.10     | 10 (0xa)  | 2.7,  3.3 - 3.5 |      linux      |
 # |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
 # ----------------------------------------------------------------|
-setup_requires = []
-if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
-    setup_requires += ["numpy==1.20.0"]  # numpy 1.20, API v14 (0xe)
-    install_requires += ["numpy>=1.20.0"]  # numpy 1.20 or newer, API v14 (0xe)
-elif sys.version_info[0] == 3 and sys.version_info[1] == 8:  # python 3.8
-    setup_requires += ["numpy==1.18.0"]  # numpy 1.18, API v13 (0xd)
-    install_requires += ["numpy>=1.18.0"]  # numpy 1.18 or newer, API v13 (0xd)
-elif sys.version_info[0] == 3 and sys.version_info[1] == 7:  # python 3.7
-    setup_requires += ["numpy==1.15.0"]  # numpy 1.15, API v12 (0xc)
-    install_requires += ["numpy>=1.15.0"]  # numpy 1.15 or newer, API v12 (0xc)
-elif sys.version_info[0] == 3 and sys.version_info[1] == 6:  # python 3.6
-    setup_requires += ["numpy==1.12.0"]  # numpy 1.12, API v10 (0xa)
-    install_requires += ["numpy>=1.12.0,<1.20"]  # numpy 1.12 - 1.19, API v10 (0xa)
-elif sys.version_info[0] == 3 and sys.version_info[1] == 5:  # python 3.5
-    setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
-    install_requires += ["numpy>=1.11.0,<1.19"]  # numpy 1.11 - 1.18, API v10 (0xa)
-elif (sys.version_info[0] == 3 and sys.version_info[1] < 5) or (sys.version_info[0] == 2):  # python 3.4 + 2.7
-    setup_requires += ["numpy==1.11.0"]  # numpy 1.11, API v10 (0xa)
-    install_requires += ["numpy>=1.11.0,<1.15"]  # numpy 1.11 - 1.15, API v10 (0xa)
-else:  # others
-    setup_requires += ["numpy"]  # try newest version, this will probably fail
-    install_requires += ["numpy"]  # try newest version, this will probably fail
+
+install_requires = [
+    "matplotlib",
+    "pydicom",
+    "numpy>=1.20.0 ; python_version >= '3.9'",
+    "numpy>=1.18.0 ; python_version == '3.8'",
+    "numpy>=1.15.0 ; python_version == '3.7'",
+    "numpy>=1.12.0,<1.20 ; python_version == '3.6'",
+    "numpy>=1.11.0,<1.19 ; python_version == '3.5'",
+    "numpy>=1.11.0,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
+]
+
+setup_requires = [
+    "numpy==1.20.0 ; python_version >= '3.9'",
+    "numpy==1.18.0 ; python_version == '3.8'",
+    "numpy==1.15.0 ; python_version == '3.7'",
+    "numpy==1.12.0 ; python_version == '3.6'",
+    "numpy==1.11.0 ; python_version <= '3.5'"  # python 3.5, 3.4 and 2.7
+]
+
+extras_require={
+    'remote': ['paramiko']
+}
 
 setuptools.setup(
     name='pytrip98',
     cmdclass={'build_ext': build_ext},
     version=git_version(),
-    packages=setuptools.find_packages(exclude=["tests"]),
+    packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
     author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
@@ -198,6 +199,7 @@ setuptools.setup(
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
     setup_requires=setup_requires,
     install_requires=install_requires,
+    extras_require=extras_require,
     ext_package='pytrip',
     ext_modules=extensions,
     entry_points={
