@@ -146,7 +146,7 @@ setup_requires = [
     "numpy==1.11.0 ; python_version <= '3.5'"  # python 3.5, 3.4 and 2.7
 ]
 
-extras_require={
+extras_require = {
     'remote': ['paramiko']
 }
 
