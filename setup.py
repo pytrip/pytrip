@@ -128,7 +128,7 @@ install_requires = ["matplotlib", "pydicom"]
 # |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
 # ----------------------------------------------------------------|
 setup_requires = []
-if sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.10
+if sys.version_info[0] == 3 and sys.version_info[1] == 10:  # python 3.10
     setup_requires += ["numpy==1.21.0"]  # numpy 1.20, API v14 (0xe)
     install_requires += ["numpy>=1.21.0"]  # numpy 1.20 or newer, API v14 (0xe)
 elif sys.version_info[0] == 3 and sys.version_info[1] == 9:  # python 3.9
