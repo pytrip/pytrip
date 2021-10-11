@@ -112,7 +112,7 @@ extensions = [
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
-# |      1.21     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
+# |      1.21     | 14 (0xe)  |    3.7 - 3.10   | linux, mac, win |
 # |      1.20     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.19     | 13 (0xd)  |    3.6 - 3.8    | linux, mac, win |
 # |      1.18     | 13 (0xd)  |    3.5 - 3.8    | linux, mac, win |
@@ -127,19 +127,24 @@ extensions = [
 # |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
 # ----------------------------------------------------------------|
 
+
 install_requires = [
     "matplotlib",
     "pydicom",
-    "numpy>=1.20.0 ; python_version >= '3.9'",
-    "numpy>=1.18.0 ; python_version == '3.8'",
-    "numpy>=1.15.0 ; python_version == '3.7'",
-    "numpy>=1.12.0,<1.20 ; python_version == '3.6'",
-    "numpy>=1.11.0,<1.19 ; python_version == '3.5'",
-    "numpy>=1.11.0,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
+    # full range of NumPy version with support for given python version
+    "numpy>=1.21 ; python_version >= '3.10'",
+    "numpy>=1.20 ; python_version == '3.9'",
+    "numpy>=1.18 ; python_version == '3.8'",
+    "numpy>=1.15 ; python_version == '3.7'",
+    "numpy>=1.12,<1.20 ; python_version == '3.6'",
+    "numpy>=1.11,<1.19 ; python_version == '3.5'",
+    "numpy>=1.11,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
 ]
 
+# oldest NumPy version with support for given python version
 setup_requires = [
-    "numpy==1.20.0 ; python_version >= '3.9'",
+    "numpy==1.21.0 ; python_version >= '3.10'",
+    "numpy==1.20.0 ; python_version == '3.9'",
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
     "numpy==1.12.0 ; python_version == '3.6'",
