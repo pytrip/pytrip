@@ -132,7 +132,7 @@ install_requires = [
     "matplotlib",
     "pydicom",
     # full range of NumPy version with support for given python version
-    "numpy>=1.21 ; python_version >= '3.10'",
+    "numpy>=1.21 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
     "numpy>=1.18 ; python_version == '3.8'",
     "numpy>=1.15 ; python_version == '3.7'",
