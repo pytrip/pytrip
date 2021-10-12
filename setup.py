@@ -143,7 +143,7 @@ install_requires = [
 
 # oldest NumPy version with support for given python version
 setup_requires = [
-    "numpy==1.21.0 ; python_version >= '3.10'",
+    "numpy==1.21.0 ; python_version == '3.10'",
     "numpy==1.20.0 ; python_version == '3.9'",
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
