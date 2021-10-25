@@ -145,6 +145,9 @@ class Cube(object):
 
             self.z_table = False  # positions are stored in self.slice_pos (list of slice#,pos(mm),thickness(mm),tilt)
 
+    def __str__(self):
+        return "Cube: "+self.basename
+
     def __add__(self, other):
         """ Overload + operator
         """

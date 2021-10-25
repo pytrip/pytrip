@@ -53,6 +53,11 @@ class LETCube(Cube):
         self.type = "LET"
         self.let_type = None
 
+    def __str__(self):
+        if self.type == "LET":
+            return "LET: " + self.basename
+        return "LET (type " + self.type + "): " + self.basename
+
     def get_max(self):
         """ Returns the largest value in the LETCube.
 
