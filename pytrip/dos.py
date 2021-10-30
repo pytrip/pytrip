@@ -71,6 +71,11 @@ class DosCube(Cube):
         self._plan_dicom_series_instance_uid = uid.generate_uid(prefix=None)
         self._dose_dicom_series_instance_uid = uid.generate_uid(prefix=None)
 
+    def __str__(self):
+        if self.type == "DOS":
+            return "Dose: " + self.basename
+        return "Dose (type " + self.type + "): " + self.basename
+
     def read_dicom(self, dcm):
         """ Imports the dose distribution from DICOM object.
 
