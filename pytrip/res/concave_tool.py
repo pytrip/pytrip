@@ -1,14 +1,15 @@
 import math
 
+
 # This file contains methods that create from a list of intersections (list of points).
 # Algorithm steps:
 #     1. Divide passed list of intersections into separate groups, that each represents a valid contour.
 #     2. For each group create a contour.
-#         2.1. Divide group of points into parts of contour, each part imitates discrete function (like in maths)
+#         2.1. Divide group of points into parts of contour, polygon representing each part imitates plot of a function
 #         2.2. Connect parts of contour (taking into account direction of connection)
 #     3. Return created contours.
 # Basic heuristics are used:
-#     1. searching for minimal distance between a part and a point and ensuring that relation is symmetrical
+#     1. searching for minimal distance between a part of contour and a point and ensuring that relation is symmetrical
 #         (if point A is the closest one to part B, check if part B is the closest one to point A)
 #     2. limiting distance between parts and points based on previous distances
 #         (next point cannot be too far away from parts)
@@ -16,6 +17,7 @@ import math
 
 class ListEntry:
     """Special type to hold data and other useful information"""
+
     def __init__(self):
         self.data = []
         self.last_distance = float('inf')
@@ -23,41 +25,44 @@ class ListEntry:
 
 class SpecialPoint:
     """Special type to hold data and other useful information"""
+
     def __init__(self, point):
         self.point = point
         self.is_appended = False
 
 
 # -------------------- start block of utility methods --------------------
+magic_max_distance_multiplier = 2
+
+
 def map_points_to_special_points(points):
-    mapped = []
-    for p in points:
-        mapped.append(SpecialPoint(p))
-    return mapped
+    return [SpecialPoint(p) for p in points]
 
 
-def calculate_distance(points_a, point_b):
-    return math.sqrt((points_a[0] - point_b[0])**2 + (points_a[1] - point_b[1])**2 + (points_a[2] - point_b[2])**2)
+def calculate_distance(p, q):
+    """Return value of distance between two points in euclidean 3D space"""
+    return math.sqrt(
+        (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2)
 
 
-def search_for_closest_part(closest_point, parts_of_contour):
-    part_b = None
+def search_for_closest_part(s_point, parts_of_contour):
+    closest_part = None
     closest_distance = float('inf')
     for part in parts_of_contour:
-        distance = calculate_distance(closest_point.point, part.data[-1])
-        if distance < closest_distance and distance < 2 * part.last_distance:
+        distance = calculate_distance(s_point.point, part.data[-1])
+        if distance < closest_distance and distance < magic_max_distance_multiplier * part.last_distance:
             closest_distance = distance
-            part_b = part
-    return part_b
+            closest_part = part
+    return closest_part
 
 
-def search_for_closest_point(current_part, current_points):
+def search_for_closest_point(part_of_contour, s_points):
     closest_point = None
     closest_distance = float('inf')
-    for sp in current_points:
-        distance = calculate_distance(sp.point, current_part.data[-1])
+    for sp in s_points:
+        distance = calculate_distance(sp.point, part_of_contour.data[-1])
         # distance should be the shortest one and should not be longer than *magic number* times last know distance
-        if distance < closest_distance and distance < 2 * current_part.last_distance:
+        if distance < closest_distance and distance < magic_max_distance_multiplier * part_of_contour.last_distance:
             closest_distance = distance
             closest_point = sp
     return closest_point
@@ -66,10 +71,7 @@ def search_for_closest_point(current_part, current_points):
 def calculate_average_distance(parts_of_contour):
     average_distance = 3 * 2.0  # three times slice distance, but i dont know why - magic number
     if parts_of_contour:
-        average_distance = 0.0
-        for part in parts_of_contour:
-            average_distance += part.last_distance
-        average_distance = average_distance / len(parts_of_contour)
+        average_distance = math.fsum(part.last_distance for part in parts_of_contour) / len(parts_of_contour)
     return average_distance
 
 
@@ -115,7 +117,7 @@ def create_parts_for_loose_points(current_points, parts_of_contour):
     #       that should not be connected!
     average_distance = calculate_average_distance(parts_of_contour)
     for point in current_points:
-        if point.is_appended is False:
+        if not point.is_appended:
             # create single-point-part in parts
             new_list_entry = ListEntry()
             new_list_entry.data.append(point.point)
@@ -272,8 +274,14 @@ def create_contour_parts(points_lists):
 
 
 def connect_all_parts(parts):
+    guardian_counter = 0
     while len(parts) > 1:
+        if guardian_counter > 10 ** 6:
+            raise RuntimeWarning("Connecting part in method connect_all_parts in concave_tool exceeded iteration limit")
+        guardian_counter += 1
+
         connect_closest_parts(parts)
+
     # there is only one part left, that is whole contour
     contour = parts[0]
     # close contour by adding first element at the end of if
@@ -297,6 +305,5 @@ def create_contour(points_lists):
         contours.append(contour)
 
     return contours
-
 
 # -------------------- end block of wrapper methods --------------------
