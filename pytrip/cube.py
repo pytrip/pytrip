@@ -306,7 +306,7 @@ class Cube(object):
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
-    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, slice_offset=0.0):
+    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, xoffset=0.0, yoffset=0.0, slice_offset=0.0):
         """ Creates an empty Cube object.
 
         Values are stored as 2-byte integers.
@@ -317,7 +317,9 @@ class Cube(object):
         :param int dimz: number of voxels along z
         :param float pixel_size: size of each pixel (x == y) in [mm]
         :param float slice_distance: the distance between two slices (z) in [mm]
-        :param float slice_offset: start position of the first slice in [mm] (default 0.0 mm)
+        :param float xoffset: offset in X in [mm] (default 0.0 mm)
+        :param float yoffset: offset in Y in [mm] (default 0.0 mm)
+        :param float slice_offset: start position of the first slice (offset in Z) in [mm] (default 0.0 mm)
         """
         self.dimx = dimx
         self.dimy = dimy
@@ -326,6 +328,9 @@ class Cube(object):
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
         self.slice_thickness = slice_distance  # use distance for thickness as default
+        self.xoffset = xoffset
+        self.yoffset = yoffset
+        self.zoffset = slice_offset
         self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * value
         self.slice_dimension = dimx
         self.num_bytes = 2
