@@ -1,6 +1,5 @@
 import math
 
-
 # This file contains methods that create from a list of intersections (list of points).
 # Algorithm steps:
 #     1. Divide passed list of intersections into separate groups, that each represents a valid contour.
@@ -17,7 +16,6 @@ import math
 
 class ListEntry:
     """Special type to hold data and other useful information"""
-
     def __init__(self):
         self.data = []
         self.last_distance = float('inf')
@@ -25,7 +23,6 @@ class ListEntry:
 
 class SpecialPoint:
     """Special type to hold data and other useful information"""
-
     def __init__(self, point):
         self.point = point
         self.is_appended = False
@@ -41,8 +38,7 @@ def map_points_to_special_points(points):
 
 def calculate_distance(p, q):
     """Return value of distance between two points in euclidean 3D space"""
-    return math.sqrt(
-        (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2)
+    return math.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2 + (p[2] - q[2])**2)
 
 
 def search_for_closest_part(s_point, parts_of_contour):
@@ -276,7 +272,7 @@ def create_contour_parts(points_lists):
 def connect_all_parts(parts):
     guardian_counter = 0
     while len(parts) > 1:
-        if guardian_counter > 10 ** 6:
+        if guardian_counter > 10**6:
             raise RuntimeWarning("Connecting part in method connect_all_parts in concave_tool exceeded iteration limit")
         guardian_counter += 1
 
@@ -305,5 +301,6 @@ def create_contour(points_lists):
         contours.append(contour)
 
     return contours
+
 
 # -------------------- end block of wrapper methods --------------------
