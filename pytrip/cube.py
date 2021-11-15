@@ -59,6 +59,7 @@ class Cube(object):
     allowed_suffix = ()
 
     def __init__(self, cube=None):
+        self.pydata_type = np.int16
         if cube is not None:  # copying constructor
             self.header_set = cube.header_set
             self.version = cube.version
@@ -332,7 +333,6 @@ class Cube(object):
         self.slice_dimension = dimx
         self.num_bytes = 2
         self.data_type = "integer"
-        self.pydata_type = np.int16
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
         self.patient_id = ''
