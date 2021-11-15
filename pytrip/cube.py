@@ -220,18 +220,13 @@ class Cube(object):
         """
         eps = 1e-5
 
-        if a.dimx != b.dimx:
+        if a.dimx != b.dimx or \
+                a.dimy != b.dimy or \
+                a.dimz != b.dimz or \
+                (a.pixel_size - b.pixel_size) > eps or \
+                a.slice_distance != b.slice_distance:
             return False
-        elif a.dimy != b.dimy:
-            return False
-        elif a.dimz != b.dimz:
-            return False
-        elif (a.pixel_size - b.pixel_size) > eps:
-            return False
-        elif a.slice_distance != b.slice_distance:
-            return False
-        else:
-            return True
+        return True
 
     def indices_to_pos(self, indices):
         """ Translate index number of a voxel to real position in [mm], including any offsets.
@@ -256,19 +251,20 @@ class Cube(object):
         # note that self.slice_pos contains an array of positions including any zoffset.
         return self.slice_pos[slice_number - 1]
 
-    def create_cube_from_equation(self, equation, center, limits, radial=True):
-        """ Create Cube from a given equation.
-
-        This function is currently out of order.
-
-        """
-        # TODO why eq not being used ?
-        # eq = util.evaluator(equation)
-        # TODO why data not being used ?
-        # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
-        x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
-        y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
-        xv, yv = np.meshgrid(x, y)
+    # TODO unfinished function
+    # def create_cube_from_equation(self, equation, center, limits, radial=True):
+    #     """ Create Cube from a given equation.
+    #
+    #     This function is currently out of order.
+    #
+    #     """
+    #     # TODO why eq not being used ?
+    #     # eq = util.evaluator(equation)
+    #     # TODO why data not being used ?
+    #     # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
+    #     x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
+    #     y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
+    #     xv, yv = np.meshgrid(x, y)
 
     def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
         """ Attaches/overwrites Cube.data based on a given Voi.
@@ -306,7 +302,8 @@ class Cube(object):
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
-    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, xoffset=0.0, yoffset=0.0, slice_offset=0.0):
+    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, xoffset=0.0, yoffset=0.0,
+                          slice_offset=0.0):
         """ Creates an empty Cube object.
 
         Values are stored as 2-byte integers.
@@ -503,11 +500,11 @@ class Cube(object):
         # load plain of gzipped file
         if header_path.endswith(".gz"):
             import gzip
-            fp = gzip.open(header_path, "rt")
+            with gzip.open(header_path, "rt") as fp:
+                content = fp.read()
         else:
-            fp = open(header_path, "rt")
-        content = fp.read()
-        fp.close()
+            with open(header_path, "rt") as fp:
+                content = fp.read()
 
         # fill self with data
         self._parse_trip_header(content)
@@ -790,7 +787,7 @@ class Cube(object):
         # if yes, then all references to whether this is sorted or not can be removed hereafter
         # (see also pytripgui) /NBassler
         self.slice_pos = []
-        for i, dcm_image in enumerate(dcm["images"]):
+        for _, dcm_image in enumerate(dcm["images"]):
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
     def _set_header_from_dicom(self, dcm):
@@ -867,24 +864,24 @@ class Cube(object):
         else:
             raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
-    def set_data_type(self, type):
+    def set_data_type(self, data_type):
         """ Sets the data type for the TRiP98 header files.
 
-        :param numpy.type type: numpy type, e.g. np.uint16
+        :param numpy.type data_type: numpy type, e.g. np.uint16
         """
-        if type is np.int8 or type is np.uint8:
+        if data_type is np.int8 or data_type is np.uint8:
             self.data_type = "integer"
             self.num_bytes = 1
-        elif type is np.int16 or type is np.uint16:
+        elif data_type is np.int16 or data_type is np.uint16:
             self.data_type = "integer"
             self.num_bytes = 2
-        elif type is np.int32 or type is np.uint32:
+        elif data_type is np.int32 or data_type is np.uint32:
             self.data_type = "integer"
             self.num_bytes = 4
-        elif type is np.float:
+        elif data_type is np.float:
             self.data_type = "float"
             self.num_bytes = 4
-        elif type is np.double:
+        elif data_type is np.double:
             self.data_type = "double"
             self.num_bytes = 8
 

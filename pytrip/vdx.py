@@ -556,6 +556,7 @@ def create_cube(cube, name, center, width, height, depth):
             v.add_slice(s)
     return v
 
+
 # most likely doesn't work correctly
 def create_voi_from_cube(cube, name, value=100):
     """
@@ -648,7 +649,8 @@ def create_sphere(cube, name, center, radius):
             _contour_closed = True
             if r2 > 0.0:
                 # including offsets
-                points = [[center[0] + x[0] * sqrt(r2) + cube.xoffset, center[1] + x[1] * sqrt(r2) + cube.yoffset, z + cube.zoffset] for x in p]
+                points = [[center[0] + x[0] * sqrt(r2) + cube.xoffset, center[1] + x[1] * sqrt(r2) + cube.yoffset,
+                           z + cube.zoffset] for x in p]
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
