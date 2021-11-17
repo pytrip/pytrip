@@ -486,7 +486,15 @@ class TRiP98FileLocator(object):
         logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
+
 def human_readable_size(num, suffix="B"):
+    """
+    Convert number of bytes to human readable form
+    for example 35489 -> 34.66KiB
+    :param num: number of bytes to convert
+    :param suffix: suffix to use (default B (byte))
+    :return: string with number in human readable form
+    """
     # https://stackoverflow.com/questions/1094841/get-human-readable-version-of-file-size
     for unit in ["", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "Zi"]:
         if abs(num) < 1024.0:
@@ -496,10 +504,16 @@ def human_readable_size(num, suffix="B"):
     number = "{:.2f}".format(num).rstrip('0').rstrip('.')
     return "{:s}Yi{:s}".format(number, suffix)
 
+
 def get_size(start_path="."):
+    """
+    Calculates size of directory (with subdirectories)
+    :param start_path: path to directory
+    :return: size of directory in bytes
+    """
     # https://stackoverflow.com/questions/1392413/calculating-a-directorys-size-using-python
     total_size = 0
-    for dirpath, dirnames, filenames in os.walk(start_path):
+    for dirpath, _, filenames in os.walk(start_path):
         for f in filenames:
             fp = os.path.join(dirpath, f)
             # skip if it is symbolic link
@@ -507,6 +521,7 @@ def get_size(start_path="."):
                 total_size += os.path.getsize(fp)
 
     return total_size
+
 
 def evaluator(funct, name='funct'):
     """ Wrapper for evaluating a function.

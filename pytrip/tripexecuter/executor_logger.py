@@ -27,16 +27,16 @@ logger = logging.getLogger(__name__)
 
 class ExecutorLogger:
     def info(self, text):
-        pass
+        pass  # interface method
 
     def log(self, text):
-        pass
+        pass  # interface method
 
     def error(self, text):
-        pass
+        pass  # interface method
 
     def end(self):
-        pass
+        pass  # interface method
 
 
 class ConsoleExecutorLogger(ExecutorLogger):

@@ -29,6 +29,11 @@ import time
 
 from subprocess import Popen, PIPE
 
+try:
+    from shlex import quote  # Python >= 3.3
+except ImportError:
+    from pipes import quote
+
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
 from pytrip.ctx import CtxCube
@@ -73,7 +78,7 @@ class Execute(object):
         self.vdx = vdx
         self._vdx_path = vdx_path
 
-        self.executor_loggers = [] # elements of type ExecutorLogger
+        self.executor_loggers = []  # elements of type ExecutorLogger
 
         # TODO: this should be only the TRiP98 command, and not the full path
         # however some issue when running remote, so lets leave this for now
@@ -95,6 +100,10 @@ class Execute(object):
         self.pkey_path = ""
 
         self._working_dir = ""
+        self._use_default_loggers = None
+        self.console_logger = None
+        self.file_logger = None
+        self._start_time = None
 
     def __str__(self):
         """ str output handler
@@ -163,7 +172,7 @@ class Execute(object):
         self._working_dir = os.path.expandvars(plan.working_dir)
 
         # create default loggers that print output to console and files
-        if self._use_default_loggers == True:
+        if self._use_default_loggers is True:
             self.console_logger = ConsoleExecutorLogger()
 
             # stdout and stderr are always written locally
@@ -305,7 +314,7 @@ class Execute(object):
         _, tgz_filename = os.path.split(tar_path)
         local_tgz_path = os.path.join(self._working_dir, tgz_filename)
         remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
-        remote_rel_run_dir = os.path.splitext(os.path.splitext(tgz_filename)[0])[0] # remove .tar.gz
+        remote_rel_run_dir = os.path.splitext(os.path.splitext(tgz_filename)[0])[0]  # remove .tar.gz
         remote_run_dir = os.path.join(self.remote_base_dir, remote_rel_run_dir)
         remote_exec_fn = plan.basename + ".exec"
 
@@ -319,23 +328,29 @@ class Execute(object):
 
         # The TRiP98 command must be encapsulated in a bash -l -c "TRiP98 < fff.exec"
         # then .bashrc_profile is checked. (However, not .bashrc)
-        tripcmd = "bash -l -c \"" + self.trip_bin_path + " < " + remote_exec_fn + "\""
+        tripcmd = "bash -l -c \"" + quote(self.trip_bin_path) + " < " + quote(remote_exec_fn) + "\""
 
         # log status every 10 MB (record-size * checkpoint)
         tar_log_parameters = "--record-size=10K --checkpoint=1024 --totals"
 
         commands = [
-            "cd " + self.remote_base_dir + ";" +
-            "echo Size to extract: $(file " + remote_tgz_path + " | rev | cut -d' ' -f1 | rev | numfmt --to=iec-i --suffix=B);"
-            "tar -zx " + tar_log_parameters + " --checkpoint-action=echo=\"Extracted bytes %{}T\" -f " + remote_tgz_path,  # unpack tarball
+            # extract tarball
+            "cd " + quote(self.remote_base_dir) + ";" +
+            "echo Size to extract: " +
+            "$(file " + quote(remote_tgz_path) + " | rev | cut -d' ' -f1 | rev | numfmt --to=iec-i --suffix=B);"
+            "tar -zx " + tar_log_parameters + " --checkpoint-action=echo=\"Extracted bytes %{}T\" " +
+            "-f " + quote(remote_tgz_path),
 
-            "cd " + remote_run_dir + ";" +
+            # run TRiP98
+            "cd " + quote(remote_run_dir) + ";" +
             norun + tripcmd,
 
-            "cd " + self.remote_base_dir + ";" +
-            "echo Size to compress: $(du -sh " + remote_rel_run_dir + " | cut -f1)iB;" +
-            "tar -zc " + tar_log_parameters + " --checkpoint-action=echo=\"Compressed bytes %{}T\" -f " + remote_tgz_path + " " + remote_rel_run_dir + ";" +
-            "rm -r " + remote_run_dir
+            # compress to tarball
+            "cd " + quote(self.remote_base_dir) + ";" +
+            "echo Size to compress: $(du -sh " + quote(remote_rel_run_dir) + " | cut -f1)iB;" +
+            "tar -zc " + tar_log_parameters + " --checkpoint-action=echo=\"Compressed bytes %{}T\" " +
+            "-f " + quote(remote_tgz_path) + " " + quote(remote_rel_run_dir) + ";" +
+            "rm -r " + quote(remote_run_dir)
         ]
 
         # test if TRiP is installed
@@ -355,7 +370,7 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.info("Executing commands")
             self.log(_cmd.replace(";", "\n"))
-            stdin, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)
+            _, stdout, stderr = ssh.exec_command(quote(_cmd), get_pty=True)
 
             self.info("Result")
             for line in stdout:
@@ -468,12 +483,15 @@ class Execute(object):
 
         total_size = get_size(_dir)
         sum_size = 0
+
         def track_progress(tarinfo):
             nonlocal total_size, sum_size
             if tarinfo.isfile():
                 sum_size += tarinfo.size
                 percentage = int(sum_size / total_size * 100)
-                self.log("Compressing file {} with size {} ({}%)".format(tarinfo.name, human_readable_size(tarinfo.size), percentage))
+                self.log("Compressing file {} with size {} ({}%)".format(tarinfo.name,
+                                                                         human_readable_size(tarinfo.size),
+                                                                         percentage))
             return tarinfo
 
         with tarfile.open(_target_filename, "w:gz") as tar:
@@ -484,8 +502,6 @@ class Execute(object):
         os.chdir(_cwd)
 
         return os.path.join(_pardir, _target_filename)
-
-
 
     def _extract_tarball(self, tgz_path, basedir):
         """ Extracts a tarball at path into self.working_dir
@@ -511,14 +527,17 @@ class Execute(object):
         os.chdir(basedir)
 
         sum_size = 0
-        def track_progress(members, total_size):
+
+        def track_progress(members, files_total_size):
             nonlocal sum_size
             for file in members:
                 yield file
                 if file.isfile():
                     sum_size += file.size
-                    percentage = int(sum_size / total_size * 100)
-                    self.log("Extracting file {} with size {} ({}%)".format(file.name, human_readable_size(file.size), percentage))
+                    percentage = int(sum_size / files_total_size * 100)
+                    self.log("Extracting file {} with size {} ({}%)".format(file.name,
+                                                                            human_readable_size(file.size),
+                                                                            percentage))
 
         with tarfile.open(tgz_path, "r:gz") as tar:
             total_size = sum(file.size for file in tar)
@@ -623,7 +642,7 @@ class Execute(object):
         """
 
         # execute the list of commands on the remote server
-        _tripcmd_test = "bash -l -c \"" + "cat exit | " + self.trip_bin_path + "\""
+        _tripcmd_test = "bash -l -c \"" + "cat exit | " + quote(self.trip_bin_path) + "\""
 
         # test if TRiP98 can be reached
 
@@ -656,17 +675,17 @@ class Execute(object):
     def end(self):
         """ Ends all executor loggers
         """
-        if self._use_default_loggers == True:
+        if self._use_default_loggers is True:
             self.file_logger.end()
-        for logger in self.executor_loggers:
-            logger.end()
+        for executor_logger in self.executor_loggers:
+            executor_logger.end()
 
     def _loggers(self, func_name, text):
         """ Sends text to all executor loggers
         """
-        if self._use_default_loggers == True:
+        if self._use_default_loggers is True:
             getattr(self.console_logger, func_name)(text)
             getattr(self.file_logger, func_name)(text)
 
-        for logger in self.executor_loggers:
-            getattr(logger, func_name)(text)
+        for executor_logger in self.executor_loggers:
+            getattr(executor_logger, func_name)(text)
