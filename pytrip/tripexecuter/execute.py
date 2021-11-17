@@ -370,7 +370,7 @@ class Execute(object):
             logger.debug("Execute on remote server: {:s}".format(_cmd))
             self.info("Executing commands")
             self.log(_cmd.replace(";", "\n"))
-            _, stdout, stderr = ssh.exec_command(quote(_cmd), get_pty=True)
+            _, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)  # skipcq: BAN-B601
 
             self.info("Result")
             for line in stdout:
