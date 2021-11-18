@@ -27,7 +27,7 @@ import tarfile
 import logging
 import time
 
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, STDOUT
 
 try:
     from shlex import quote  # Python >= 3.3
@@ -265,10 +265,11 @@ class Execute(object):
             logger.info("Found {:s} version {:s}".format(trip, ver))
 
         # start local process running TRiP98
+        self.info("\nRunning TRiP98")
         if self._norun:  # for testing, just echo the command which would be executed
-            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stdin=PIPE, cwd=_run_dir)
+            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=_run_dir)
         else:
-            p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE, cwd=_run_dir)
+            p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=_run_dir)
 
         # fill standard input with configuration file content
         p.stdin.write(plan._trip_exec.encode("ascii"))
@@ -277,20 +278,15 @@ class Execute(object):
         with p.stdout:
             for line in p.stdout:
                 text = line.decode("ascii")
-                logger.debug("Local answer stdout:" + text)
-                self.log(text)
+                self.log(text.rstrip())
 
-        p.wait()
-        rc = p.returncode
+        rc = p.wait()
         if rc != 0:
+            self.error("Return code: {:d}".format(rc))
             logger.error("TRiP98 error: return code {:d}".format(rc))
         else:
             logger.debug("TRiP98 exited with status: {:d}".format(rc))
-
-        if p.stderr is not None:
-            text = p.stderr.decode("ascii")
-            logger.debug("Local answer stderr:" + text)
-            self.error(text)
+        self.log("")
 
         return rc
 
@@ -609,7 +605,7 @@ class Execute(object):
         :returns: None, None if not installed
         """
 
-        p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+        p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE)
         stdout, stderr = p.communicate("exit".encode('ascii'))
 
         _out = stdout.decode('utf-8')
