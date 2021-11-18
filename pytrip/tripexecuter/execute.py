@@ -264,16 +264,11 @@ class Execute(object):
         else:
             logger.info("Found {:s} version {:s}".format(trip, ver))
 
-        _pwd = os.getcwd()
-        os.chdir(_run_dir)
-
         # start local process running TRiP98
         if self._norun:  # for testing, just echo the command which would be executed
-            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stdin=PIPE)
+            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stdin=PIPE, cwd=_run_dir)
         else:
-            p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE)
-
-        os.chdir(_pwd)
+            p = Popen([self.trip_bin_path], stdout=PIPE, stdin=PIPE, cwd=_run_dir)
 
         # fill standard input with configuration file content
         p.stdin.write(plan._trip_exec.encode("ascii"))
@@ -453,12 +448,12 @@ class Execute(object):
             logger.debug("Delete {:s}".format(plan._temp_dir))
             shutil.rmtree(plan._temp_dir)
 
-    def _compress_files(self, _source_dir):
+    def _compress_files(self, source_dir):
         """
-        Builds the tar.gz from what is found in _source_dir.
+        Builds the tar.gz from what is found in source_dir.
         Resulting file will be stored in "source_dir/.." if not specified otherwise
 
-        :params str _source_dir: path to dir with the files to be compressed.
+        :params str source_dir: path to dir with the files to be compressed.
         :returns: full path to tar.gz file.
 
         :example:
@@ -471,17 +466,14 @@ class Execute(object):
         # but dirname() will return foo in the first case and bar in the second,
         # fix this by adding an extra seperator, in that case all will be stripped.
         # add an extra trailing slash, if there are multiple
-        _dir = os.path.dirname(_source_dir + os.sep)
-        _pardir, _basedir = os.path.split(_dir)
-        _target_filename = _basedir + ".tar.gz"
+        dirpath = os.path.dirname(source_dir + os.sep)
+        _, dirname = os.path.split(dirpath)
+        target_path = source_dir + ".tar.gz"
 
-        _cwd = os.getcwd()
-        os.chdir(_pardir)
+        logger.debug("Compressing files in {:s} to {:s}".format(source_dir, target_path))
+        self.info("Compressing files in {:s} to {:s}".format(source_dir, target_path))
 
-        logger.debug("Compressing files in {:s} to {:s}".format(_source_dir, _target_filename))
-        self.info("Compressing files in {:s} to {:s}".format(_source_dir, _target_filename))
-
-        total_size = get_size(_dir)
+        total_size = get_size(source_dir)
         sum_size = 0
 
         def track_progress(tarinfo):
@@ -494,37 +486,32 @@ class Execute(object):
                                                                          percentage))
             return tarinfo
 
-        with tarfile.open(_target_filename, "w:gz") as tar:
+        with tarfile.open(target_path, "w:gz") as tar:
             self.log("Size to compress: {:s}".format(human_readable_size(total_size)))
-            tar.add(_basedir, arcname=_basedir, filter=track_progress)
+            tar.add(source_dir, arcname=dirname, filter=track_progress)
         self.log("Compressing done\n")
 
-        os.chdir(_cwd)
+        return target_path
 
-        return os.path.join(_pardir, _target_filename)
-
-    def _extract_tarball(self, tgz_path, basedir):
+    def _extract_tarball(self, tgz_path, target_dirpath):
         """ Extracts a tarball at path into self.working_dir
         :params tgz_path: full path to tar.gz file
-        :params basedir: where extracted files (including the tgz root dir) will be stored
+        :params target_dirpath: where extracted files (including the tgz root dir) will be stored
         :returns: a string where the files were extracted including the tgz root dir
 
         i.e. _extract_tarball("foobar.tar.gz", "/home/bassler/test")
         will return "/home/bassler/test/foobar"
         """
 
-        logger.debug("Locally extract {:s} in {:s}".format(tgz_path, basedir))
-        self.info("Extracting {:s} in {:s}".format(tgz_path, basedir))
+        logger.debug("Locally extract {:s} in {:s}".format(tgz_path, target_dirpath))
+        self.info("Extracting {:s} in {:s}".format(tgz_path, target_dirpath))
 
-        _basedir, _tarfile = os.path.split(tgz_path)
-        _outdirname = os.path.splitext(os.path.splitext(_tarfile)[0])[0]  # remove .tar.gz
-        _outdir = os.path.join(_basedir, _outdirname)
+        _, tgz_file = os.path.split(tgz_path)
+        out_dirname = os.path.splitext(os.path.splitext(tgz_file)[0])[0]  # remove .tar.gz
+        out_dirpath = os.path.join(target_dirpath, out_dirname)
 
-        if os.path.exists(_outdir):
-            shutil.rmtree(_outdir)
-
-        _cwd = os.getcwd()
-        os.chdir(basedir)
+        if os.path.exists(out_dirpath):
+            shutil.rmtree(out_dirpath)
 
         sum_size = 0
 
@@ -542,12 +529,11 @@ class Execute(object):
         with tarfile.open(tgz_path, "r:gz") as tar:
             total_size = sum(file.size for file in tar)
             self.log("Size to extract: {:s}".format(human_readable_size(total_size)))
-            tar.extractall("./", members=track_progress(tar, total_size))
+            tar.extractall(target_dirpath, members=track_progress(tar, total_size))
 
         self.log("Extracting done\n")
 
-        os.chdir(_cwd)
-        return _outdir
+        return out_dirpath
 
     def _copy_file_to_server(self, _from, _to):
         """
