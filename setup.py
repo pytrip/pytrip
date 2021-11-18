@@ -131,6 +131,7 @@ extensions = [
 install_requires = [
     "matplotlib",
     "pydicom",
+    "enum34 ; python_version < '3.5'"  # python 3.4 and 2.7
     # full range of NumPy version with support for given python version
     "numpy>=1.21 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
