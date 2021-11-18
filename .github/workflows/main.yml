@@ -57,6 +57,7 @@ jobs:
         run: |
           pip install -r requirements.txt
           pip install -r tests/requirements-test.txt
+          pip intall -e .
 
       - name: Lint with flake8
         run: |
@@ -65,7 +66,7 @@ jobs:
 
       - name: Smoke test with tox
         run: |
-          tox -e py -- -k "smoke"
+          pytest -k "smoke"
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
