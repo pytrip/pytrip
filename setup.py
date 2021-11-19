@@ -154,7 +154,8 @@ setup_requires = [
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
     "numpy==1.12.0 ; python_version == '3.6'",
-    "numpy==1.11.0 ; python_version < '3.6'",  # python 3.5, 3.4 and 2.7
+    "numpy==1.11.0 ; python_version == '3.5'",
+#    "numpy==1.11.0 ; python_version < '3.6'",  # python 3.5, 3.4 and 2.7
 ]
 
 extras_require = {
