@@ -31,65 +31,55 @@ import pytrip.utils.rst_plot
 logger = logging.getLogger(__name__)
 
 
-def test_check(self):
-    self.assertRaises(SystemExit, pytrip.utils.rst_plot.main, [])
-
-
-def test_generate(self):
+def test_generate(rst_filename):
     fd, outfile = tempfile.mkstemp(suffix='.png')
 
     # convert CT cube to DICOM
-    pytrip.utils.rst_plot.main([self.rst_file, outfile])
+    pytrip.utils.rst_plot.main([rst_filename, outfile])
 
     # check if destination file is not empty
-    self.assertTrue(os.path.exists(outfile))
-    self.assertGreater(os.path.getsize(outfile), 0)
-    self.assertEqual(imghdr.what(outfile), 'png')
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
+    assert imghdr.what(outfile) == 'png'
 
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
 
-    # self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
-    # logger.info("Loading dos file " + self.dos)
-    #
-    # self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
-    # logger.info("Loading let file " + self.let)
 
-
-def test_relative_dos_plot(self):
+def test_relative_dos_plot(dos_filename, vdx_filename):
     working_dir = tempfile.mkdtemp()  # make temp working dir for output file
     output_file = os.path.join(working_dir, "foo.png")
 
-    pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-o', output_file])
+    pytrip.utils.dvhplot.main(args=[dos_filename, vdx_filename, 'target', '-l', '-v', '-o', output_file])
 
     logger.info("Checking if " + output_file + " is PNG")
-    self.assertEqual(imghdr.what(output_file), 'png')
+    assert imghdr.what(output_file) == 'png'
 
     logger.info("Removing " + working_dir)
     shutil.rmtree(working_dir)
 
 
-def test_absolute_dos_plot(self):
+def test_absolute_dos_plot(dos_filename, vdx_filename):
     working_dir = tempfile.mkdtemp()  # make temp working dir for output file
     output_file = os.path.join(working_dir, "foo.png")
 
-    pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-d 2.0', '-o', output_file])
+    pytrip.utils.dvhplot.main(args=[dos_filename, vdx_filename, 'target', '-l', '-v', '-d 2.0', '-o', output_file])
 
     logger.info("Checking if " + output_file + " is PNG")
-    self.assertEqual(imghdr.what(output_file), 'png')
+    assert imghdr.what(output_file) == 'png'
 
     logger.info("Removing " + working_dir)
     shutil.rmtree(working_dir)
 
 
-def test_let_plot(self):
+def test_let_plot(let_filename, vdx_filename):
     working_dir = tempfile.mkdtemp()  # make temp working dir for output file
     output_file = os.path.join(working_dir, "foo.png")
 
-    pytrip.utils.dvhplot.main(args=[self.let, self.vdx, 'target', '-l', '-v', '-o', output_file])
+    pytrip.utils.dvhplot.main(args=[let_filename, vdx_filename, 'target', '-l', '-v', '-o', output_file])
 
     logger.info("Checking if " + output_file + " is PNG")
-    self.assertEqual(imghdr.what(output_file), 'png')
+    assert imghdr.what(output_file) == 'png'
 
     logger.info("Removing " + working_dir)
     shutil.rmtree(working_dir)

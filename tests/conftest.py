@@ -13,6 +13,16 @@ def ctx_allnames(ctx_corename):
 
 
 @pytest.fixture(scope='module')
+def dos_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.dos.gz')
+
+
+@pytest.fixture(scope='module')
+def let_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.dosemlet.dos.gz')
+
+
+@pytest.fixture(scope='module')
 def vdx_filename():
     return os.path.join('tests', 'res', 'TST003', 'tst003000.vdx')
 
