@@ -221,7 +221,3 @@
 #             assert_allclose(interp_2d(2, 0), 2.5, atol=0.1)
 #             assert_allclose(interp_2d(2, 2), 2.5, atol=0.1)
 #             assert_allclose(interp_2d(2, 10), 2.5, atol=0.1)
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()

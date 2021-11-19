@@ -105,7 +105,3 @@
 #         executer_str = str(t)
 #         self.assertGreater(len(executer_str), 1)
 #         # No results will be generated since, TRiP98 is not installed in test environment.
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()

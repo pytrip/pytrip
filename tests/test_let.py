@@ -82,7 +82,3 @@
 #         # logger.info("Checking if output file " + lvh_file + " is not empty")
 #         # self.assertGreater(os.path.getsize(lvh_file), 1)
 #         # os.remove(lvh_file)
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()

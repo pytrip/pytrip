@@ -158,7 +158,3 @@
 #         self.assertGreater(os.path.getsize(dos_file), 1)
 #         os.remove(hed_file)
 #         os.remove(dos_file)
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()
