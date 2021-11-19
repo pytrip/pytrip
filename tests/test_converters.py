@@ -1,83 +1,66 @@
-# #
-# #    Copyright (C) 2010-2017 PyTRiP98 Developers.
-# #
-# #    This file is part of PyTRiP98.
-# #
-# #    PyTRiP98 is free software: you can redistribute it and/or modify
-# #    it under the terms of the GNU General Public License as published by
-# #    the Free Software Foundation, either version 3 of the License, or
-# #    (at your option) any later version.
-# #
-# #    PyTRiP98 is distributed in the hope that it will be useful,
-# #    but WITHOUT ANY WARRANTY; without even the implied warranty of
-# #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# #    GNU General Public License for more details.
-# #
-# #    You should have received a copy of the GNU General Public License
-# #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
-# #
-# """
-# TODO: documentation here.
-# """
-# import imghdr
-# import unittest
-# import os
-# import sys
-# import tempfile
-# import glob
-# import logging
-# import shutil
 #
-# import pytest
+#    Copyright (C) 2010-2017 PyTRiP98 Developers.
 #
-# import pytrip.utils.trip2dicom
-# import pytrip.utils.dicom2trip
-# import pytrip.utils.cubeslice
-# import pytrip.utils.rst2sobp
-# import pytrip.utils.gd2dat
-# import pytrip.utils.gd2agr
-# import pytrip.utils.bevlet2oer
+#    This file is part of PyTRiP98.
 #
-# from tests.base import get_files
+#    PyTRiP98 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
 #
-# logger = logging.getLogger(__name__)
+#    PyTRiP98 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
 #
+#    You should have received a copy of the GNU General Public License
+#    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
-# class TestTrip2Dicom(unittest.TestCase):
-#     def setUp(self):
-#         testdir = get_files()
-#         self.cube000 = os.path.join(testdir, "tst003000")
-#
-#     def test_generate(self):
-#         # create temp dir
-#         tmpdir = tempfile.mkdtemp()
-#
-#         # convert CT cube to DICOM
-#         pytrip.utils.trip2dicom.main([self.cube000, tmpdir])
-#
-#         # check if destination directory is not empty
-#         self.assertTrue(os.listdir(tmpdir))
-#
-#
-# class TestRst2SOBP(unittest.TestCase):
-#     def setUp(self):
-#         testdir = get_files()
-#         self.rst_file = os.path.join(testdir, "tst003001.rst")
-#
-#     def test_generate(self):
-#         fd, outfile = tempfile.mkstemp()
-#
-#         # convert CT cube to DICOM
-#         pytrip.utils.rst2sobp.main([self.rst_file, outfile])
-#
-#         # check if destination file is not empty
-#         self.assertTrue(os.path.exists(outfile))
-#         self.assertGreater(os.path.getsize(outfile), 0)
-#
-#         os.close(fd)  # Windows needs it
-#         os.remove(outfile)  # we need only temp filename, not the file
-#
-#
+"""
+TODO: documentation here.
+"""
+import logging
+import os
+import shutil
+import tempfile
+
+import pytrip.utils.bevlet2oer
+import pytrip.utils.cubeslice
+import pytrip.utils.dicom2trip
+import pytrip.utils.gd2agr
+import pytrip.utils.gd2dat
+import pytrip.utils.rst2sobp
+import pytrip.utils.trip2dicom
+
+logger = logging.getLogger(__name__)
+
+
+def test_trip2dicom(ctx_corename):
+    # create temp dir
+    tmpdir = tempfile.mkdtemp()
+
+    # convert CT cube to DICOM
+    pytrip.utils.trip2dicom.main([ctx_corename, tmpdir])
+
+    # check if destination directory is not empty
+    assert len(os.listdir(tmpdir)) == 301
+
+    shutil.rmtree(tmpdir)
+
+
+def test_rst2sobp(rst_filename):
+    fd, outfile = tempfile.mkstemp()
+
+    # convert CT cube to DICOM
+    pytrip.utils.rst2sobp.main([rst_filename, outfile])
+
+    # check if destination file is not empty
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
+
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
+
 # class TestGd2Dat(unittest.TestCase):
 #     def setUp(self):
 #         testdir = get_files()
