@@ -28,7 +28,12 @@ import logging
 
 import pytest
 
-import tests.base
+
+import sys
+
+print(sys.path)
+
+import pytrip
 from pytrip.ctx import CtxCube
 from pytrip.error import FileNotFound
 from pytrip.util import TRiP98FileLocator
@@ -37,92 +42,86 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-class TestCtx(unittest.TestCase):
-    def setUp(self):
-        testdir = tests.base.get_files()
-        self.cube000 = os.path.join(testdir, "tst003000")
+@pytest.fixture(scope='module')
+def test_ctx_corename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003000')
 
-    def test_read(self):
-        c = CtxCube()
-        c.read(self.cube000)
+def test_read(test_ctx_corename):
+    c = CtxCube()
+    c.read(self.cube000)
 
-    def read_and_write_cube(self, path):
+def read_and_write_cube(test_ctx_corename):
+    logger.info("Testing cube from path " + path)
 
-        logger.info("Testing cube from path " + path)
+    # read original cube and calculate hashsum
+    c = CtxCube()
+    c.read(path)
 
-        # read original cube and calculate hashsum
-        c = CtxCube()
-        c.read(path)
+    # get path to the cube data file, extracting it from a partial path
+    data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
 
-        # get path to the cube data file, extracting it from a partial path
-        data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
+    # get the hashsum
+    if data_file_path.endswith(".gz"):
+        f = gzip.open(data_file_path)
+    else:
+        f = open(data_file_path, 'rb')
+    original_md5 = hashlib.md5(f.read()).hexdigest()
+    f.close()
 
-        # get the hashsum
-        if data_file_path.endswith(".gz"):
-            f = gzip.open(data_file_path)
-        else:
-            f = open(data_file_path, 'rb')
-        original_md5 = hashlib.md5(f.read()).hexdigest()
-        f.close()
+    # calculate temporary filename
+    fd, outfile = tempfile.mkstemp()
+    os.close(fd)
+    os.remove(outfile)  # we need only random name, not a descriptor
+    logger.debug("Generated random file name " + outfile)
 
-        # calculate temporary filename
-        fd, outfile = tempfile.mkstemp()
-        os.close(fd)
-        os.remove(outfile)  # we need only random name, not a descriptor
-        logger.debug("Generated random file name " + outfile)
+    # save cube and calculate hashsum
+    saved_header_path, saved_cubedata_path = c.write(outfile)  # this will write outfile+".ctx"  and outfile+".hed"
 
-        # save cube and calculate hashsum
-        saved_header_path, saved_cubedata_path = c.write(outfile)  # this will write outfile+".ctx"  and outfile+".hed"
+    # check if generated files exists
+    self.assertTrue(os.path.exists(saved_header_path))
+    self.assertTrue(os.path.exists(saved_cubedata_path))
 
-        # check if generated files exists
-        self.assertTrue(os.path.exists(saved_header_path))
-        self.assertTrue(os.path.exists(saved_cubedata_path))
+    # get checksum
+    f = open(saved_cubedata_path, 'rb')
+    generated_md5 = hashlib.md5(f.read()).hexdigest()
+    f.close()
+    logger.debug("Removing " + saved_cubedata_path)
+    os.remove(saved_cubedata_path)
+    logger.debug("Removing " + saved_header_path)
+    os.remove(saved_header_path)
+    # compare checksums
+    self.assertEqual(original_md5, generated_md5)
 
-        # get checksum
-        f = open(saved_cubedata_path, 'rb')
-        generated_md5 = hashlib.md5(f.read()).hexdigest()
-        f.close()
-        logger.debug("Removing " + saved_cubedata_path)
-        os.remove(saved_cubedata_path)
-        logger.debug("Removing " + saved_header_path)
-        os.remove(saved_header_path)
-        # compare checksums
-        self.assertEqual(original_md5, generated_md5)
+    # @pytest.mark.slow
+    # def test_write(self):
+    #     possible_names = [
+    #         self.cube000, self.cube000 + ".ctx", self.cube000 + ".hed", self.cube000 + ".CTX", self.cube000 + ".HED",
+    #         self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"
+    #     ]
 
-    @pytest.mark.slow
-    def test_write(self):
-        possible_names = [
-            self.cube000, self.cube000 + ".ctx", self.cube000 + ".hed", self.cube000 + ".CTX", self.cube000 + ".HED",
-            self.cube000 + ".hed.gz", self.cube000 + ".ctx.gz"
-        ]
+    #     for name in possible_names:
+    #         self.read_and_write_cube(name)
 
-        for name in possible_names:
-            self.read_and_write_cube(name)
+    # def test_problems_when_reading(self):
+    #     # check malformed filename
+    #     with self.assertRaises(FileNotFound) as e:
+    #         logger.info("Catching {:s}".format(str(e)))
+    #         self.read_and_write_cube(self.cube000[2:-1])
 
-    def test_problems_when_reading(self):
-        # check malformed filename
-        with self.assertRaises(FileNotFound) as e:
-            logger.info("Catching {:s}".format(str(e)))
-            self.read_and_write_cube(self.cube000[2:-1])
+    #     # check exception if filename is without dot
+    #     with self.assertRaises(FileNotFound) as e:
+    #         logger.info("Catching {:s}".format(str(e)))
+    #         self.read_and_write_cube(self.cube000 + "hed")
 
-        # check exception if filename is without dot
-        with self.assertRaises(FileNotFound) as e:
-            logger.info("Catching {:s}".format(str(e)))
-            self.read_and_write_cube(self.cube000 + "hed")
+    #     # check opening wrong filetype (file self.cube000 + ".vdx" exists !)
+    #     with self.assertRaises(FileNotFound) as e:
+    #         logger.info("Catching {:s}".format(str(e)))
+    #         self.read_and_write_cube(self.cube000 + ".vdx")
 
-        # check opening wrong filetype (file self.cube000 + ".vdx" exists !)
-        with self.assertRaises(FileNotFound) as e:
-            logger.info("Catching {:s}".format(str(e)))
-            self.read_and_write_cube(self.cube000 + ".vdx")
-
-    @pytest.mark.smoke
-    def test_addition(self):
-        # read cube
-        c = CtxCube()
-        c.read(self.cube000)
-        d = c + 5
-        self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
-
-
-if __name__ == '__main__':
-    unittest.main()
+    # @pytest.mark.smoke
+    # def test_addition(self):
+    #     # read cube
+    #     c = CtxCube()
+    #     c.read(self.cube000)
+    #     d = c + 5
+    #     self.assertEqual(c.cube[10][20][30] + 5, d.cube[10][20][30])
