@@ -35,21 +35,21 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-def test_read(test_ctx_corename):
+def test_read(ctx_corename):
     c = CtxCube()
-    c.read(test_ctx_corename)
+    c.read(ctx_corename)
 
 
 @pytest.mark.slow
-def test_read_and_write_cube(test_ctx_allnames):
-    logger.info("Testing cube from path " + test_ctx_allnames)
+def test_read_and_write_cube(ctx_allnames):
+    logger.info("Testing cube from path " + ctx_allnames)
 
     # read original cube and calculate hashsum
     c = CtxCube()
-    c.read(test_ctx_allnames)
+    c.read(ctx_allnames)
 
     # get path to the cube data file, extracting it from a partial path
-    data_file_path = TRiP98FileLocator(test_ctx_allnames, CtxCube).datafile
+    data_file_path = TRiP98FileLocator(ctx_allnames, CtxCube).datafile
 
     # get the hashsum
     if data_file_path.endswith(".gz"):
@@ -84,27 +84,27 @@ def test_read_and_write_cube(test_ctx_allnames):
     assert original_md5 == generated_md5
 
 
-def test_problems_when_reading(test_ctx_corename):
+def test_problems_when_reading(ctx_corename):
     # check malformed filename
     with pytest.raises(FileNotFound) as e:
         logger.info("Catching {:s}".format(str(e)))
-        test_read_and_write_cube(test_ctx_corename[2:-2])
+        test_read_and_write_cube(ctx_corename[2:-2])
 
     # check exception if filename is without dot
     with pytest.raises(FileNotFound) as e:
         logger.info("Catching {:s}".format(str(e)))
-        test_read_and_write_cube(test_ctx_corename + "hed")
+        test_read_and_write_cube(ctx_corename + "hed")
 
     # check opening wrong filetype (file self.cube000 + ".vdx" exists !)
     with pytest.raises(FileNotFound) as e:
         logger.info("Catching {:s}".format(str(e)))
-        test_read_and_write_cube(test_ctx_corename + ".vdx")
+        test_read_and_write_cube(ctx_corename + ".vdx")
 
 
 @pytest.mark.smoke
-def test_addition(test_ctx_corename):
+def test_addition(ctx_corename):
     # read cube
     c = CtxCube()
-    c.read(test_ctx_corename)
+    c.read(ctx_corename)
     d = c + 5
-    c.cube[10][20][30] + 5 == d.cube[10][20][30]
+    assert c.cube[10][20][30] + 5 == d.cube[10][20][30]
