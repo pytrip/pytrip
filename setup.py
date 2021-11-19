@@ -135,8 +135,7 @@ install_requires = [
     "scipy ; python_version > '3.5'",
     "scipy<1.3 ; python_version == '3.5'",
     "kiwisolver==1.1 ; python_version == '3.5'",
-    "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7
-    
+    "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7    
     # full range of NumPy version with support for given python version
     "numpy>=1.21 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
