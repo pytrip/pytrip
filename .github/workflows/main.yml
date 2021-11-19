@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.5', '3.9', '3.10'] # todo
+         python-version: ['3.5', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
@@ -69,7 +69,7 @@ jobs:
 
       - name: Smoke tests
         run: |
-          pytest -k "smoke"
+          pytest -k "smoke" tests/test_ctx.py # todo migrate all tests
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
@@ -99,7 +99,7 @@ jobs:
 
      - name: Regular tests
        run: |
-          pytest -k "not slow"
+          pytest -k "not slow" tests/test_ctx.py # todo migrate all tests
 
    make_and_upload_package_linux:
     name: Wheels on Linux
