@@ -58,6 +58,7 @@ jobs:
           python --version
           pip --version
           pip freeze
+          pip install wheel
           pip install numpy==1.11.0
           pip install -r requirements.txt
           pip install -r tests/requirements-test.txt
