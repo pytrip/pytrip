@@ -154,9 +154,9 @@ def test_create_voi_sphere(ctx_corename):
 
     logger.info("Checking Contour calculate_center method")
     center, area = contour.calculate_center()
-    assert center[0] == 10.0
-    assert center[1] == 10.0
-    assert center[2] == 12.0  # TODO why 12 ?
+    assert np.isclose(center[0], 10.0)
+    assert np.isclose(center[1], 10.0)
+    assert np.isclose(center[2], 12.0)  # TODO why 12 ?
     assert area > 100.0
 
     logger.info("Checking Contour vdx_string method")
