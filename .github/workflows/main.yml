@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.6', '3.9', '3.10']
+         python-version: ['3.6', '3.9', '3.10'] # todo
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
