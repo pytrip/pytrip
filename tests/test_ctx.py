@@ -48,7 +48,7 @@ def test_ctx_corename():
 
 def test_read(test_ctx_corename):
     c = CtxCube()
-    c.read(self.cube000)
+    c.read(test_ctx_corename)
 
 def read_and_write_cube(test_ctx_corename):
     logger.info("Testing cube from path " + path)
@@ -58,7 +58,7 @@ def read_and_write_cube(test_ctx_corename):
     c.read(path)
 
     # get path to the cube data file, extracting it from a partial path
-    data_file_path = TRiP98FileLocator(self.cube000, CtxCube).datafile
+    data_file_path = TRiP98FileLocator(test_ctx_corename, CtxCube).datafile
 
     # get the hashsum
     if data_file_path.endswith(".gz"):
