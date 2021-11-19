@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.6', '3.9', '3.10'] # todo
+         python-version: ['3.5', '3.9', '3.10'] # todo
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
@@ -58,6 +58,7 @@ jobs:
           python --version
           pip --version
           pip install wheel
+          pip install "numpy>=1.11,<1.19 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
           pip install -r requirements.txt
           pip install -r tests/requirements-test.txt
 
@@ -92,6 +93,7 @@ jobs:
          python --version
          pip --version
          pip install wheel
+         pip install "numpy>=1.11,<1.19 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
          pip install -r requirements.txt
          pip install -r tests/requirements-test.txt
 
