@@ -1,5 +1,3 @@
-scipy
 pytest
 pytest-xdist
-tox
 flake8
