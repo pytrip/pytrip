@@ -35,16 +35,6 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-@pytest.fixture(scope='module')
-def test_ctx_corename():
-    return os.path.join('tests', 'res', 'TST003', 'tst003000')
-
-
-@pytest.fixture(scope='module', params=["", ".ctx", ".hed", ".CTX", ".HED", ".hed.gz", ".ctx.gz"])
-def test_ctx_allnames(test_ctx_corename, scope='module', params=["a", ""]):
-    return test_ctx_corename
-
-
 def test_read(test_ctx_corename):
     c = CtxCube()
     c.read(test_ctx_corename)
