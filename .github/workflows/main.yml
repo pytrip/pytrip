@@ -69,7 +69,7 @@ jobs:
 
       - name: Smoke tests
         run: |
-          pytest -k "smoke" tests/test_ctx.py tests/test_vdx.py tests/test_rst.py # todo migrate all tests
+          pytest -k "smoke" tests/
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
@@ -99,7 +99,7 @@ jobs:
 
      - name: Regular tests
        run: |
-          pytest -k "not slow" tests/test_ctx.py tests/test_vdx.py tests/test_rst.py # todo migrate all tests
+          pytest -k "not slow" tests/
 
    make_and_upload_package_linux:
     name: Wheels on Linux
@@ -166,7 +166,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-* cp310-*"
+          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
 
       - uses: actions/upload-artifact@v2
         with:

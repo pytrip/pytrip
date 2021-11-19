@@ -20,116 +20,76 @@
 TODO: documentation here.
 """
 import imghdr
-import unittest
-import os
-import tempfile
 import logging
+import os
 import shutil
+import tempfile
 
-import pytrip.utils.rst_plot
 import pytrip.utils.dvhplot
-
-from tests.base import get_files
+import pytrip.utils.rst_plot
 
 logger = logging.getLogger(__name__)
 
 
-class TestRstPlot(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.rst_file = os.path.join(testdir, "tst003001.rst")
-
-    def test_check(self):
-        self.assertRaises(SystemExit, pytrip.utils.rst_plot.main, [])
-
-    def test_version(self):
-        try:
-            pytrip.utils.rst_plot.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp(suffix='.png')
-
-        # convert CT cube to DICOM
-        pytrip.utils.rst_plot.main([self.rst_file, outfile])
-
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-        self.assertEqual(imghdr.what(outfile), 'png')
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
+def test_check(self):
+    self.assertRaises(SystemExit, pytrip.utils.rst_plot.main, [])
 
 
-class TestDvhPlot(unittest.TestCase):
-    def setUp(self):
-        self.dir_path = os.path.join("tests", "res", "TST003")
+def test_generate(self):
+    fd, outfile = tempfile.mkstemp(suffix='.png')
 
-        self.vdx = os.path.join(self.dir_path, "tst003000.vdx")
-        logger.info("Loading vdx file " + self.vdx)
+    # convert CT cube to DICOM
+    pytrip.utils.rst_plot.main([self.rst_file, outfile])
 
-        self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
-        logger.info("Loading dos file " + self.dos)
+    # check if destination file is not empty
+    self.assertTrue(os.path.exists(outfile))
+    self.assertGreater(os.path.getsize(outfile), 0)
+    self.assertEqual(imghdr.what(outfile), 'png')
 
-        self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
-        logger.info("Loading let file " + self.let)
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
 
-    def test_help(self):
-        try:
-            pytrip.utils.dvhplot.main(["--help"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_version(self):
-        try:
-            pytrip.utils.dvhplot.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_noarg(self):
-        try:
-            pytrip.utils.dvhplot.main([])
-        except SystemExit as e:
-            self.assertEqual(e.code, 2)
-
-    def test_relative_dos_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
-        output_file = os.path.join(working_dir, "foo.png")
-
-        pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-o', output_file])
-
-        logger.info("Checking if " + output_file + " is PNG")
-        self.assertEqual(imghdr.what(output_file), 'png')
-
-        logger.info("Removing " + working_dir)
-        shutil.rmtree(working_dir)
-
-    def test_absolute_dos_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
-        output_file = os.path.join(working_dir, "foo.png")
-
-        pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-d 2.0', '-o', output_file])
-
-        logger.info("Checking if " + output_file + " is PNG")
-        self.assertEqual(imghdr.what(output_file), 'png')
-
-        logger.info("Removing " + working_dir)
-        shutil.rmtree(working_dir)
-
-    def test_let_plot(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for output file
-        output_file = os.path.join(working_dir, "foo.png")
-
-        pytrip.utils.dvhplot.main(args=[self.let, self.vdx, 'target', '-l', '-v', '-o', output_file])
-
-        logger.info("Checking if " + output_file + " is PNG")
-        self.assertEqual(imghdr.what(output_file), 'png')
-
-        logger.info("Removing " + working_dir)
-        shutil.rmtree(working_dir)
+    # self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
+    # logger.info("Loading dos file " + self.dos)
+    #
+    # self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
+    # logger.info("Loading let file " + self.let)
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_relative_dos_plot(self):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+    output_file = os.path.join(working_dir, "foo.png")
+
+    pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-o', output_file])
+
+    logger.info("Checking if " + output_file + " is PNG")
+    self.assertEqual(imghdr.what(output_file), 'png')
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
+
+
+def test_absolute_dos_plot(self):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+    output_file = os.path.join(working_dir, "foo.png")
+
+    pytrip.utils.dvhplot.main(args=[self.dos, self.vdx, 'target', '-l', '-v', '-d 2.0', '-o', output_file])
+
+    logger.info("Checking if " + output_file + " is PNG")
+    self.assertEqual(imghdr.what(output_file), 'png')
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
+
+
+def test_let_plot(self):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for output file
+    output_file = os.path.join(working_dir, "foo.png")
+
+    pytrip.utils.dvhplot.main(args=[self.let, self.vdx, 'target', '-l', '-v', '-o', output_file])
+
+    logger.info("Checking if " + output_file + " is PNG")
+    self.assertEqual(imghdr.what(output_file), 'png')
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
