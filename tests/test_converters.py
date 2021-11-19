@@ -202,7 +202,3 @@
 #
 #         logger.info("Removing " + working_dir)
 #         shutil.rmtree(working_dir)
-#
-#
-# if __name__ == '__main__':
-#     unittest.main()
