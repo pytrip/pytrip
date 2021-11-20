@@ -59,6 +59,9 @@ class FileExecutorLogger(ExecutorLogger):
         self.stdout = ""
         self.stderr = ""
 
+    def info(self, text):
+        self.stdout += text + "\n"
+
     def log(self, text):
         self.stdout += text + "\n"
 

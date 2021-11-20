@@ -100,9 +100,8 @@ class Execute(object):
         self.pkey_path = ""
 
         self._working_dir = ""
-        self._use_default_loggers = None
-        self.console_logger = None
-        self.file_logger = None
+        self._use_default_logger = None
+        self._file_logger = None
         self._start_time = None
 
     def __str__(self):
@@ -134,7 +133,7 @@ class Execute(object):
 
         return out
 
-    def execute(self, plan, run=True, _callback=None, use_default_loggers=True):
+    def execute(self, plan, run=True, callback=None, use_default_logger=True):
         """
         Executes the Plan() object using TRiP98.
 
@@ -148,9 +147,10 @@ class Execute(object):
             logger.debug("Execute TRiP98 (dry-run)...")
             self._norun = True
 
-        self._use_default_loggers = use_default_loggers
+        self._use_default_logger = use_default_logger
+        self._file_logger = None
 
-        self._callback = _callback  # TODO: check if GUI really needs this.
+        self._callback = callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
         plan.save_exec(plan._exec_path)  # add the .exec as well
         rc = self._run_trip(plan)  # run TRiP
@@ -171,14 +171,12 @@ class Execute(object):
             plan.working_dir = "./"
         self._working_dir = os.path.expandvars(plan.working_dir)
 
-        # create default loggers that print output to console and files
-        if self._use_default_loggers is True:
-            self.console_logger = ConsoleExecutorLogger()
-
+        # create default logger that print output to files
+        if self._use_default_logger:
             # stdout and stderr are always written locally
             stdout_path = os.path.join(self._working_dir, self.logfile_prefix_stdout + plan.basename)
             stderr_path = os.path.join(self._working_dir, self.logfile_prefix_stderr + plan.basename)
-            self.file_logger = FileExecutorLogger(stdout_path, stderr_path)
+            self._file_logger = FileExecutorLogger(stdout_path, stderr_path)
 
         # We will not run TRiP98 in working dir, but in an isolated subdirectory which will be
         # uniquely created for this purpose, located after the working dir.
@@ -199,30 +197,30 @@ class Execute(object):
 
         logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
 
-        _flist = []  # list of files which must be copied to the package.
+        flist = []  # list of files which must be copied to the package.
 
         if plan.incube_basename:
-            _flist.append(os.path.join(self._working_dir, plan.incube_basename + ".dos"))
-            _flist.append(os.path.join(self._working_dir, plan.incube_basename + ".hed"))
+            flist.append(os.path.join(self._working_dir, plan.incube_basename + ".dos"))
+            flist.append(os.path.join(self._working_dir, plan.incube_basename + ".hed"))
 
-        for _field in plan.fields:
-            if _field.use_raster_file:
-                _flist.append(os.path.join(self._working_dir, _field.basename + ".rst"))
+        for field in plan.fields:
+            if field.use_raster_file:
+                flist.append(os.path.join(self._working_dir, field.basename + ".rst"))
 
-        # once the file list _flist is complete, copy it to the package location
-        for _fn in _flist:
-            logger.debug("Copy {:s} to {:s}".format(_fn, plan._temp_dir))
-            shutil.copy(_fn, plan._temp_dir)
+        # once the file list flist is complete, copy it to the package location
+        for fn in flist:
+            logger.debug("Copy {:s} to {:s}".format(fn, plan._temp_dir))
+            shutil.copy(fn, plan._temp_dir)
 
         # Ctx and Vdx files are not copied, but written from the objects passed to Execute() during __init__.
         # This gives the user better control over what Ctx and Vdx should be based for the planning.
         # Copying can though be forced by specifying .ctx and .vdx path during self.__init__
         # This is necessary as long as PyTRiP has trouble to produce TRiP98 readable files reliably.
         if self._ctx_path:
-            _ctx_base, _ = os.path.splitext(self._ctx_path)
+            ctx_base, _ = os.path.splitext(self._ctx_path)
             logger.info("Copying {:s} to tmp dir, instead of writing from Ctx object.".format(self._ctx_path))
             shutil.copy(self._ctx_path, plan._temp_dir)  # copy .ctx
-            shutil.copy(_ctx_base + ".hed", plan._temp_dir)  # copy.hed
+            shutil.copy(ctx_base + ".hed", plan._temp_dir)  # copy.hed
         else:
             self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
 
@@ -232,26 +230,26 @@ class Execute(object):
         else:
             self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
 
-    def _run_trip(self, plan, _dir=""):
+    def _run_trip(self, plan, run_dir=""):
         """ Method for executing the attached exec.
-        :params str dir: overrides dir where the TRiP package is assumed to be, otherwise
+        :params str run_dir: overrides dir where the TRiP package is assumed to be, otherwise
         the package location is taken from plan._temp_dir
 
         :returns int: return code from trip execution.
         """
-        if not _dir:
-            _dir = plan._temp_dir
+        if not run_dir:
+            run_dir = plan._temp_dir
         if self.remote:
-            rc = self._run_trip_remote(plan, _dir)
+            rc = self._run_trip_remote(plan, run_dir)
         else:
-            rc = self._run_trip_local(plan, _dir)
+            rc = self._run_trip_local(plan, run_dir)
         return rc
 
-    def _run_trip_local(self, plan, _run_dir):
+    def _run_trip_local(self, plan, run_dir):
         """
         Runs TRiP98 on local computer.
         :params Plan plan : plan object to be executed
-        :params str _run_dir: directory where a clean trip package is located, i.e. where TRiP98 will be run.
+        :params str run_dir: directory where a clean trip package is located, i.e. where TRiP98 will be run.
 
         :returns int: return code of TRiP98 execution. (0, even if optimiztion fails)
         """
@@ -265,11 +263,11 @@ class Execute(object):
             logger.info("Found {:s} version {:s}".format(trip, ver))
 
         # start local process running TRiP98
-        self.info("\nRunning TRiP98")
+        self._info("\nRunning TRiP98")
         if self._norun:  # for testing, just echo the command which would be executed
-            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=_run_dir)
+            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
         else:
-            p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=_run_dir)
+            p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
 
         # fill standard input with configuration file content
         p.stdin.write(plan._trip_exec.encode("ascii"))
@@ -278,22 +276,22 @@ class Execute(object):
         with p.stdout:
             for line in p.stdout:
                 text = line.decode("ascii")
-                self.log(text.rstrip())
+                self._log(text.rstrip())
 
         rc = p.wait()
         if rc != 0:
-            self.error("Return code: {:d}".format(rc))
+            self._error("Return code: {:d}".format(rc))
             logger.error("TRiP98 error: return code {:d}".format(rc))
         else:
             logger.debug("TRiP98 exited with status: {:d}".format(rc))
-        self.log("")
+        self._log("")
 
         return rc
 
-    def _run_trip_remote(self, plan, _run_dir=None):
+    def _run_trip_remote(self, plan, run_dir=None):
         """ Method for executing the attached plan remotely.
         :params Plan plan: plan object
-        :params str _run_dir: TODO: not used
+        :params str run_dir: TODO: not used
 
         :returns: integer exist status of TRiP98 execution. (0, even if optimiztion fails)
         """
@@ -305,7 +303,10 @@ class Execute(object):
         _, tgz_filename = os.path.split(tar_path)
         local_tgz_path = os.path.join(self._working_dir, tgz_filename)
         remote_tgz_path = os.path.join(self.remote_base_dir, tgz_filename)
-        remote_rel_run_dir = os.path.splitext(os.path.splitext(tgz_filename)[0])[0]  # remove .tar.gz
+
+        # extract filename by removing two extensions .tar.gz
+        remote_rel_run_dir = os.path.splitext(os.path.splitext(tgz_filename)[0])[0]
+
         remote_run_dir = os.path.join(self.remote_base_dir, remote_rel_run_dir)
         remote_exec_fn = plan.basename + ".exec"
 
@@ -350,33 +351,33 @@ class Execute(object):
         if trip is None:
             logger.error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername,
                                                                                     self.trip_bin_path))
-            self.error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername, self.trip_bin_path))
+            self._error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername, self.trip_bin_path))
             raise EnvironmentError
         else:
             logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
 
         # open ssh channel and run commands
         ssh = self._get_ssh_client()
-        for _cmd in commands:
-            logger.debug("Execute on remote server: {:s}".format(_cmd))
-            self.info("Executing commands")
-            self.log(_cmd.replace(";", "\n"))
-            _, stdout, stderr = ssh.exec_command(_cmd, get_pty=True)  # skipcq: BAN-B601
+        for cmd in commands:
+            logger.debug("Execute on remote server: {:s}".format(cmd))
+            self._info("Executing commands")
+            self._log(cmd.replace(";", "\n"))
+            _, stdout, stderr = ssh.exec_command(cmd, get_pty=True)  # skipcq: BAN-B601
 
-            self.info("Result")
+            self._info("Result")
             for line in stdout:
-                self.log(line.rstrip())
+                self._log(line.rstrip())
             for line in stderr:
-                self.error(line.rstrip())
+                self._error(line.rstrip())
 
             rc = int(stdout.channel.recv_exit_status())  # recv_exit_status() returns an string type
             if rc != 0:
-                self.error("Return code: {:d}".format(rc))
+                self._error("Return code: {:d}".format(rc))
                 logger.error("TRiP98 error: return code {:d}".format(rc))
             else:
                 logger.debug("TRiP98 exited with status: {:d}".format(rc))
 
-            self.log("")
+            self._log("")
 
         ssh.close()
 
@@ -391,54 +392,54 @@ class Execute(object):
         """ return requested results, copy them back in to self._working_dir
         """
 
-        self.info("Reading results")
-        for _file_name in plan._out_files:
-            _path = os.path.join(plan._temp_dir, _file_name)
+        self._info("Reading results")
+        for file_name in plan._out_files:
+            path = os.path.join(plan._temp_dir, file_name)
 
             # only copy files back, if we actually have been running TRiP
             if self._norun:
-                logger.info("dummy run: would now copy {:s} to {:s}".format(_path, self._working_dir))
+                logger.info("dummy run: would now copy {:s} to {:s}".format(path, self._working_dir))
             else:
-                logger.info("copy {:s} to {:s}".format(_path, self._working_dir))
+                logger.info("copy {:s} to {:s}".format(path, self._working_dir))
                 try:
-                    shutil.copy(_path, self._working_dir)
+                    shutil.copy(path, self._working_dir)
                 except IOError as e:
-                    logger.debug("No file {:s}".format(_file_name))
-                    self.error(str(e))
-                    self.error("Simulation failed")
-                    self.end()
+                    logger.debug("No file {:s}".format(file_name))
+                    self._error(str(e))
+                    self._error("Simulation failed")
+                    self._end()
                     raise IOError
 
-        for _file_name in plan._out_files:
-            _path = os.path.join(plan._temp_dir, _file_name)
-            self.log("Reading {:s} file".format(_file_name))
-            if ".phys.dos" in _file_name:
-                _ctx_cube = DosCube()
+        for file_name in plan._out_files:
+            path = os.path.join(plan._temp_dir, file_name)
+            self._log("Reading {:s} file".format(file_name))
+            if ".phys.dos" in file_name:
+                ctx_cube = DosCube()
                 if not self._norun:
-                    _ctx_cube.read(_path)
-                    plan.dosecubes.append(_ctx_cube)
+                    ctx_cube.read(path)
+                    plan.dosecubes.append(ctx_cube)
 
-            if ".bio.dos" in _file_name:
-                _ctx_cube = CtxCube()
+            if ".bio.dos" in file_name:
+                ctx_cube = CtxCube()
                 if not self._norun:
-                    _ctx_cube.read(_path)
-                    plan.dosecubes.append(_ctx_cube)
+                    ctx_cube.read(path)
+                    plan.dosecubes.append(ctx_cube)
 
-            if ".dosemlet.dos" in _file_name:
-                _let_cube = LETCube()
+            if ".dosemlet.dos" in file_name:
+                let_cube = LETCube()
                 if not self._norun:
-                    _let_cube.read(_path)
-                    plan.letcubes.append(_let_cube)
+                    let_cube.read(path)
+                    plan.letcubes.append(let_cube)
 
-            if ".rst" in _file_name:
-                logger.warning("attaching fields to class not implemented yet {:s}".format(_path))
+            if ".rst" in file_name:
+                logger.warning("attaching fields to class not implemented yet {:s}".format(path))
                 # TODO
                 # need to access the RstClass here for each rst file. This will then need to be attached
                 # to the proper field in the list of fields.
 
-        self.info("Done")
+        self._info("Done")
 
-        self.end()
+        self._end()
 
         if self._cleanup:
             logger.debug("Delete {:s}".format(plan._temp_dir))
@@ -458,16 +459,16 @@ class Execute(object):
         and returns "/home/bassler/test/foobar.tar.gz"
         """
 
-        # _source_dir may be of either "/foo/bar" or "/foo/bar/". We only need "bar",
+        # source_dir may be of either "/foo/bar" or "/foo/bar/". We only need "bar",
         # but dirname() will return foo in the first case and bar in the second,
-        # fix this by adding an extra seperator, in that case all will be stripped.
+        # fix this by adding an extra separator, in that case all will be stripped.
         # add an extra trailing slash, if there are multiple
         dirpath = os.path.dirname(source_dir + os.sep)
         _, dirname = os.path.split(dirpath)
         target_path = source_dir + ".tar.gz"
 
         logger.debug("Compressing files in {:s} to {:s}".format(source_dir, target_path))
-        self.info("Compressing files in {:s} to {:s}".format(source_dir, target_path))
+        self._info("Compressing files in {:s} to {:s}".format(source_dir, target_path))
 
         total_size = get_size(source_dir)
         sum_size = 0
@@ -477,15 +478,15 @@ class Execute(object):
             if tarinfo.isfile():
                 sum_size += tarinfo.size
                 percentage = int(sum_size / total_size * 100)
-                self.log("Compressing file {} with size {} ({}%)".format(tarinfo.name,
+                self._log("Compressing file {} with size {} ({}%)".format(tarinfo.name,
                                                                          human_readable_size(tarinfo.size),
                                                                          percentage))
             return tarinfo
 
         with tarfile.open(target_path, "w:gz") as tar:
-            self.log("Size to compress: {:s}".format(human_readable_size(total_size)))
+            self._log("Size to compress: {:s}".format(human_readable_size(total_size)))
             tar.add(source_dir, arcname=dirname, filter=track_progress)
-        self.log("Compressing done\n")
+        self._log("Compressing done\n")
 
         return target_path
 
@@ -500,10 +501,13 @@ class Execute(object):
         """
 
         logger.debug("Locally extract {:s} in {:s}".format(tgz_path, target_dirpath))
-        self.info("Extracting {:s} in {:s}".format(tgz_path, target_dirpath))
+        self._info("Extracting {:s} in {:s}".format(tgz_path, target_dirpath))
 
         _, tgz_file = os.path.split(tgz_path)
-        out_dirname = os.path.splitext(os.path.splitext(tgz_file)[0])[0]  # remove .tar.gz
+
+        # extract filename by removing two extensions .tar.gz
+        out_dirname = os.path.splitext(os.path.splitext(tgz_file)[0])[0]
+
         out_dirpath = os.path.join(target_dirpath, out_dirname)
 
         if os.path.exists(out_dirpath):
@@ -518,49 +522,49 @@ class Execute(object):
                 if file.isfile():
                     sum_size += file.size
                     percentage = int(sum_size / files_total_size * 100)
-                    self.log("Extracting file {} with size {} ({}%)".format(file.name,
+                    self._log("Extracting file {} with size {} ({}%)".format(file.name,
                                                                             human_readable_size(file.size),
                                                                             percentage))
 
         with tarfile.open(tgz_path, "r:gz") as tar:
             total_size = sum(file.size for file in tar)
-            self.log("Size to extract: {:s}".format(human_readable_size(total_size)))
+            self._log("Size to extract: {:s}".format(human_readable_size(total_size)))
             tar.extractall(target_dirpath, members=track_progress(tar, total_size))
 
-        self.log("Extracting done\n")
+        self._log("Extracting done\n")
 
         return out_dirpath
 
-    def _copy_file_to_server(self, _from, _to):
+    def _copy_file_to_server(self, source, destination):
         """
         Copies the generated tar.gz file to the remote server.
-        :params _from: full path to file
-        :params _to: full path to location on server
+        :params source: full path to file
+        :params destination: full path to location on server
         """
-        _to_uri = self.servername + ":" + _to
-        logger.debug("Copy {:s} to {:s}".format(_from, _to_uri))
+        destination_uri = self.servername + ":" + destination
+        logger.debug("Copy {:s} to {:s}".format(source, destination_uri))
 
-        self.info("Transferring files to remote")
+        self._info("Transferring files to remote")
         sftp = self._get_sftp_client()
         self._start_time = time.time() - 3
-        sftp.put(localpath=_from, remotepath=_to, callback=self._log_sftp_progress)
-        self.log("Transferring done\n")
+        sftp.put(localpath=source, remotepath=destination, callback=self._log_sftp_progress)
+        self._log("Transferring done\n")
         sftp.close()
 
-    def _move_file_from_server(self, _from, _to):
+    def _move_file_from_server(self, source, destination):
         """ Copies and removes a single file from a server
-        :param _from: full path on remote server
-        :param _to: full path on local computer
+        :param source: full path on remote server
+        :param destination: full path on local computer
         """
-        _from_uri = self.servername + ":" + _from
-        logger.debug("Move {:s} to {:s}".format(_from_uri, _to))
+        source_uri = self.servername + ":" + source
+        logger.debug("Move {:s} to {:s}".format(source_uri, destination))
 
-        self.info("Transferring files from remote")
+        self._info("Transferring files from remote")
         sftp = self._get_sftp_client()
         self._start_time = time.time() - 3
-        sftp.get(remotepath=_from, localpath=_to, callback=self._log_sftp_progress)
-        self.log("Transferring done\n")
-        sftp.remove(_from)
+        sftp.get(remotepath=source, localpath=destination, callback=self._log_sftp_progress)
+        self._log("Transferring done\n")
+        sftp.remove(source)
         sftp.close()
 
     def _log_sftp_progress(self, transferred, to_be_transferred):
@@ -569,14 +573,13 @@ class Execute(object):
         if end_time - self._start_time >= 3 or transferred == to_be_transferred:
             self._start_time = end_time
             percentage = int(transferred / to_be_transferred * 100)
-            self.log("Transferred: {0}/{1} ({2}%)".format(human_readable_size(transferred),
+            self._log("Transferred: {0}/{1} ({2}%)".format(human_readable_size(transferred),
                                                           human_readable_size(to_be_transferred),
                                                           percentage))
 
     def _get_ssh_client(self):
         """ returns an open ssh client
         """
-
         ssh = paramiko.SSHClient()
         ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
@@ -586,8 +589,8 @@ class Execute(object):
             ssh.connect(self.servername, username=self.username, password=self.password, key_filename=self.pkey_path)
         except Exception as e:
             logger.error("Cannot connect to " + self.servername)
-            self.error(str(e))
-            self.end()
+            self._error(str(e))
+            self._end()
             raise
 
         return ssh
@@ -608,11 +611,11 @@ class Execute(object):
         p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE)
         stdout, stderr = p.communicate("exit".encode('ascii'))
 
-        _out = stdout.decode('utf-8')
+        out = stdout.decode('utf-8')
 
-        if "This is TRiP98" in _out:
-            tripname = _out.split(" ")[3][:-1]
-            tripver = _out.split(" ")[5].split("(")[0]
+        if "This is TRiP98" in out:
+            tripname = out.split(" ")[3][:-1]
+            tripver = out.split(" ")[5].split("(")[0]
             return tripname, tripver
         else:
             return None, None
@@ -624,50 +627,47 @@ class Execute(object):
         """
 
         # execute the list of commands on the remote server
-        _tripcmd_test = "bash -l -c \"" + "cat exit | " + quote(self.trip_bin_path) + "\""
+        tripcmd_test = "bash -l -c \"" + "cat exit | " + quote(self.trip_bin_path) + "\""
 
         # test if TRiP98 can be reached
-
         ssh = self._get_ssh_client()
-        stdin, stdout, stderr = ssh.exec_command(_tripcmd_test)
-        _out = stdout.read().decode('utf-8')
+        stdin, stdout, stderr = ssh.exec_command(tripcmd_test)
+        out = stdout.read().decode('utf-8')
         ssh.close()
 
-        if "This is TRiP98" in _out:
-            tripname = _out.split(" ")[3][:-1]
-            tripver = _out.split(" ")[5].split("(")[0]
+        if "This is TRiP98" in out:
+            tripname = out.split(" ")[3][:-1]
+            tripver = out.split(" ")[5].split("(")[0]
             return tripname, tripver
         else:
             return None, None
 
     def add_executor_logger(self, executor_logger):
-        """ A executor_logger is of type ExecutorLogger.
+        """ An executor_logger is of type ExecutorLogger.
         """
         self.executor_loggers.append(executor_logger)
 
-    def info(self, text):
+    def _info(self, text):
         self._loggers("info", text)
 
-    def error(self, text):
+    def _error(self, text):
         self._loggers("error", text)
 
-    def log(self, text):
+    def _log(self, text):
         self._loggers("log", text)
 
-    def end(self):
+    def _end(self):
         """ Ends all executor loggers
         """
-        if self._use_default_loggers is True:
-            self.file_logger.end()
+        if self._use_default_logger:
+            self._file_logger.end()
         for executor_logger in self.executor_loggers:
             executor_logger.end()
 
     def _loggers(self, func_name, text):
         """ Sends text to all executor loggers
         """
-        if self._use_default_loggers is True:
-            getattr(self.console_logger, func_name)(text)
-            getattr(self.file_logger, func_name)(text)
-
+        if self._use_default_logger:
+            getattr(self._file_logger, func_name)(text)
         for executor_logger in self.executor_loggers:
             getattr(executor_logger, func_name)(text)
