@@ -30,3 +30,8 @@ def vdx_filename():
 @pytest.fixture(scope='module')
 def rst_filename():
     return os.path.join('tests', 'res', 'TST003', 'tst003001.rst')
+
+
+def exists_and_nonempty(filename):
+    """check if file exists and its size is greater than 1 byte"""
+    return os.path.exists(filename) and os.path.getsize(filename) > 1

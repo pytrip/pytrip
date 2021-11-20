@@ -59,7 +59,7 @@ def test_dvh(dos_filename):
     logger.info("Calculating DVH")
     result = c.calculate_dvh(v)
     assert result is not None
-    dvh, min_dose, max_dose, mean, area = result
+    dvh, min_dose, max_dose, _, area = result
     assert area > 2.0
     assert len(dvh.shape) == 2
     assert dvh.shape[1] == 2

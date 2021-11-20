@@ -25,6 +25,7 @@ import tempfile
 
 from pytrip.let import LETCube
 from pytrip.vdx import create_sphere
+from tests.conftest import exists_and_nonempty
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ def test_read(let_filename):
     logger.info("Calculating DVH")
     result = let.calculate_lvh(v)
     assert result is not None
-    lvh, min_l, max_l, mean, area = result
+    lvh, min_l, max_l, _, area = result
     assert area > 2.
     assert len(lvh.shape) == 1
     assert lvh.shape[0] == 3000
@@ -54,11 +55,7 @@ def test_read(let_filename):
     let.write(outfile)
     hed_file = outfile + LETCube.header_file_extension
     dos_file = outfile + LETCube.data_file_extension
-    assert os.path.exists(hed_file) is True
-    assert os.path.exists(dos_file) is True
-    logger.info("Checking if output file " + hed_file + " is not empty")
-    assert os.path.getsize(hed_file) > 1
-    logger.info("Checking if output file " + dos_file + " is not empty")
-    assert os.path.getsize(dos_file) > 1
+    assert exists_and_nonempty(hed_file) is True
+    assert exists_and_nonempty(dos_file) is True
     os.remove(hed_file)
     os.remove(dos_file)

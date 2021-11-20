@@ -35,6 +35,7 @@ import pytrip.utils.gd2agr
 import pytrip.utils.gd2dat
 import pytrip.utils.rst2sobp
 import pytrip.utils.trip2dicom
+from tests.conftest import exists_and_nonempty
 
 logger = logging.getLogger(__name__)
 
@@ -68,9 +69,7 @@ def test_rst2sobp(rst_filename):
     # convert CT cube to DICOM
     pytrip.utils.rst2sobp.main([rst_filename, outfile])
 
-    # check if destination file is not empty
-    assert os.path.exists(outfile) is True
-    assert os.path.getsize(outfile) > 1
+    assert exists_and_nonempty(outfile)
 
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
@@ -82,9 +81,7 @@ def test_gd2dat(bev_gd_filename):
     # convert gd file to dat
     pytrip.utils.gd2dat.main([bev_gd_filename, outfile])
 
-    # check if destination file is not empty
-    assert os.path.exists(outfile) is True
-    assert os.path.getsize(outfile) > 1
+    assert exists_and_nonempty(outfile)
 
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
@@ -96,9 +93,7 @@ def test_gd2agr(bev_gd_filename):
     # convert gd file to agr
     pytrip.utils.gd2agr.main([bev_gd_filename, outfile])
 
-    # check if destination file is not empty
-    assert os.path.exists(outfile) is True
-    assert os.path.getsize(outfile) > 1
+    assert exists_and_nonempty(outfile)
 
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
@@ -110,9 +105,7 @@ def test_gd2oar(bevlet_gd_filename):
     # convert bev let file to oar
     pytrip.utils.bevlet2oer.main([bevlet_gd_filename, outfile])
 
-    # check if destination file is not empty
-    assert os.path.exists(outfile) is True
-    assert os.path.getsize(outfile) > 1
+    assert exists_and_nonempty(outfile)
 
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
