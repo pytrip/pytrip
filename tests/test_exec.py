@@ -79,9 +79,9 @@ def test_exec(ctx_corename, vdx_filename, patient_name="tst003000"):
 
     t = pte.Execute(c, v)
     assert t is not None
-    t.trip_bin_path = '/bin/sh'
+    t.trip_bin_path = 'tests/res/dummy_TRiP98/TRiP98'
     if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
-        t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
+        t.execute(plan=plan, run=False)  # setup and make a dry-run, since TRiP98 is not installed.
 
     executer_str = str(t)
     assert len(executer_str) > 1
