@@ -24,6 +24,8 @@ import os
 import shutil
 import tempfile
 
+import pytest
+
 import pytrip.utils.bevlet2oer
 import pytrip.utils.cubeslice
 import pytrip.utils.dicom2trip
@@ -33,6 +35,16 @@ import pytrip.utils.rst2sobp
 import pytrip.utils.trip2dicom
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope='module')
+def bev_gd_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.bev.gd')
+
+
+@pytest.fixture(scope='module')
+def bevlet_gd_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.bevlet.gd')
 
 
 def test_trip2dicom(ctx_corename):
@@ -61,63 +73,48 @@ def test_rst2sobp(rst_filename):
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
 
-# class TestGd2Dat(unittest.TestCase):
-#     def setUp(self):
-#         testdir = get_files()
-#         self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
-#
-#     def test_generate(self):
-#         fd, outfile = tempfile.mkstemp()
-#
-#         # convert CT cube to DICOM
-#         pytrip.utils.gd2dat.main([self.gd_file, outfile])
-#
-#         # check if destination file is not empty
-#         self.assertTrue(os.path.exists(outfile))
-#         self.assertGreater(os.path.getsize(outfile), 0)
-#
-#         os.close(fd)  # Windows needs it
-#         os.remove(outfile)  # we need only temp filename, not the file
-#
-#
-# class TestGd2Agr(unittest.TestCase):
-#     def setUp(self):
-#         testdir = get_files()
-#         self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
-#
-#     def test_generate(self):
-#         fd, outfile = tempfile.mkstemp()
-#
-#         # convert CT cube to DICOM
-#         pytrip.utils.gd2agr.main([self.gd_file, outfile])
-#
-#         # check if destination file is not empty
-#         self.assertTrue(os.path.exists(outfile))
-#         self.assertGreater(os.path.getsize(outfile), 0)
-#
-#         os.close(fd)  # Windows needs it
-#         os.remove(outfile)  # we need only temp filename, not the file
-#
-#
-# class TestBevLet2Oer(unittest.TestCase):
-#     def setUp(self):
-#         testdir = get_files()
-#         self.gd_file = os.path.join(testdir, "tst003001.bevlet.gd")
-#
-#     def test_generate(self):
-#         fd, outfile = tempfile.mkstemp()
-#
-#         # convert CT cube to DICOM
-#         pytrip.utils.bevlet2oer.main([self.gd_file, outfile])
-#
-#         # check if destination file is not empty
-#         self.assertTrue(os.path.exists(outfile))
-#         self.assertGreater(os.path.getsize(outfile), 0)
-#
-#         os.close(fd)  # Windows needs it
-#         os.remove(outfile)  # we need only temp filename, not the file
-#
-#
+
+def test_gd2dat(bev_gd_filename):
+    fd, outfile = tempfile.mkstemp()
+
+    # convert gd file to dat
+    pytrip.utils.gd2dat.main([bev_gd_filename, outfile])
+
+    # check if destination file is not empty
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
+
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
+
+
+def test_gd2agr(bev_gd_filename):
+    fd, outfile = tempfile.mkstemp()
+
+    # convert gd file to agr
+    pytrip.utils.gd2agr.main([bev_gd_filename, outfile])
+
+    # check if destination file is not empty
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
+
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
+
+
+def test_gd2oar(bevlet_gd_filename):
+    fd, outfile = tempfile.mkstemp()
+
+    # convert bev let file to oar
+    pytrip.utils.bevlet2oer.main([bevlet_gd_filename, outfile])
+
+    # check if destination file is not empty
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
+
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
+
 # class TestCubeSlicer(unittest.TestCase):
 #     def setUp(self):
 #         self.dir_path = os.path.join("tests", "res", "TST003")
