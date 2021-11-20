@@ -99,7 +99,7 @@ class Execute(object):
         self.remote_base_dir = "./"
         self.pkey_path = ""
 
-        self._working_dir = ""
+        self._working_dir = ""  # dir with results will be stored in this dir
         self._use_default_logger = None
         self._file_logger = None
         self._start_time = None
@@ -133,36 +133,33 @@ class Execute(object):
 
         return out
 
-    def execute(self, plan, run=True, callback=None, use_default_logger=True):
+    def execute(self, plan, run=True, use_default_logger=True):
         """
         Executes the Plan() object using TRiP98.
 
         :returns int: return code from trip execution.
         """
 
+        self._norun = not run
         if run:
             logger.debug("Execute TRiP98...")
-            self._norun = False
         else:
             logger.debug("Execute TRiP98 (dry-run)...")
-            self._norun = True
 
         self._use_default_logger = use_default_logger
         self._file_logger = None
 
-        self._callback = callback  # TODO: check if GUI really needs this.
         self._pre_execute(plan)  # prepare directory where all will be run, put files in it.
-        plan.save_exec(plan._exec_path)  # add the .exec as well
         rc = self._run_trip(plan)  # run TRiP
         self._finish(plan)
+
         return rc
 
     def _pre_execute(self, plan):
         """
         Prepare a temporary working directory where TRiP will be executed.
         Sets:
-        _temp_dir where all will be executed
-        _exec_path generates full path to the file name.exec file will be stored
+        temp_dir where all will be executed
         """
 
         # attach working dir to plan, but expanded for environment variables
@@ -181,21 +178,21 @@ class Execute(object):
         # We will not run TRiP98 in working dir, but in an isolated subdirectory which will be
         # uniquely created for this purpose, located after the working dir.
         # This contents of this subdir will be termed "the package", as it is a clean environment.
-        # The name of the subdir will be stored in plan._temp_dir
+        # The name of the subdir will be stored in plan.temp_dir
         # It may be safely deleted afterwards, once the resulting files are copied back to the plan.working_dir
 
-        if not hasattr(plan, "_temp_dir"):
+        if not plan.temp_dir:
             import tempfile
             from datetime import datetime
             now = datetime.now()
             prefix = 'trip98_{:%Y%m%d_%H%M%S}_'.format(now)
-            plan._temp_dir = tempfile.mkdtemp(prefix=prefix, dir=self._working_dir)
+            plan.temp_dir = tempfile.mkdtemp(prefix=prefix, dir=self._working_dir)
 
-        plan._temp_dir = os.path.join(self._working_dir, plan._temp_dir)
+        plan.temp_dir = os.path.join(self._working_dir, plan.temp_dir)
+        exec_path = os.path.join(plan.temp_dir, plan.basename + ".exec")
+        plan.save_exec(exec_path)  # add the .exec as well
 
-        plan._exec_path = os.path.join(plan._temp_dir, plan.basename + ".exec")
-
-        logger.debug("Created temporary working directory {:s}".format(plan._temp_dir))
+        logger.debug("Created temporary working directory {:s}".format(plan.temp_dir))
 
         flist = []  # list of files which must be copied to the package.
 
@@ -209,8 +206,8 @@ class Execute(object):
 
         # once the file list flist is complete, copy it to the package location
         for fn in flist:
-            logger.debug("Copy {:s} to {:s}".format(fn, plan._temp_dir))
-            shutil.copy(fn, plan._temp_dir)
+            logger.debug("Copy {:s} to {:s}".format(fn, plan.temp_dir))
+            shutil.copy(fn, plan.temp_dir)
 
         # Ctx and Vdx files are not copied, but written from the objects passed to Execute() during __init__.
         # This gives the user better control over what Ctx and Vdx should be based for the planning.
@@ -219,26 +216,26 @@ class Execute(object):
         if self._ctx_path:
             ctx_base, _ = os.path.splitext(self._ctx_path)
             logger.info("Copying {:s} to tmp dir, instead of writing from Ctx object.".format(self._ctx_path))
-            shutil.copy(self._ctx_path, plan._temp_dir)  # copy .ctx
-            shutil.copy(ctx_base + ".hed", plan._temp_dir)  # copy.hed
+            shutil.copy(self._ctx_path, plan.temp_dir)  # copy .ctx
+            shutil.copy(ctx_base + ".hed", plan.temp_dir)  # copy.hed
         else:
-            self.ctx.write(os.path.join(plan._temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
+            self.ctx.write(os.path.join(plan.temp_dir, self.ctx.basename + ".ctx"))  # will also make the hed
 
         if self._vdx_path:
             logger.info("Copying {:s} to tmp dir, instead of writing from Vdx object.".format(self._vdx_path))
-            shutil.copy(self._vdx_path, plan._temp_dir)
+            shutil.copy(self._vdx_path, plan.temp_dir)
         else:
-            self.vdx.write(os.path.join(plan._temp_dir, self.vdx.basename + ".vdx"))
+            self.vdx.write(os.path.join(plan.temp_dir, self.vdx.basename + ".vdx"))
 
     def _run_trip(self, plan, run_dir=""):
         """ Method for executing the attached exec.
         :params str run_dir: overrides dir where the TRiP package is assumed to be, otherwise
-        the package location is taken from plan._temp_dir
+        the package location is taken from plan.temp_dir
 
         :returns int: return code from trip execution.
         """
         if not run_dir:
-            run_dir = plan._temp_dir
+            run_dir = plan.temp_dir
         if self.remote:
             rc = self._run_trip_remote(plan, run_dir)
         else:
@@ -270,7 +267,7 @@ class Execute(object):
             p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
 
         # fill standard input with configuration file content
-        p.stdin.write(plan._trip_exec.encode("ascii"))
+        p.stdin.write(plan.get_exec().encode("ascii"))
         p.stdin.flush()
 
         with p.stdout:
@@ -288,16 +285,16 @@ class Execute(object):
 
         return rc
 
-    def _run_trip_remote(self, plan, run_dir=None):
+    def _run_trip_remote(self, plan, _run_dir=None):
         """ Method for executing the attached plan remotely.
         :params Plan plan: plan object
         :params str run_dir: TODO: not used
 
-        :returns: integer exist status of TRiP98 execution. (0, even if optimiztion fails)
+        :returns: integer exist status of TRiP98 execution. (0, even if optimization fails)
         """
         logger.info("Run TRiP98 in REMOTE mode.")
 
-        tar_path = self._compress_files(plan._temp_dir)  # make a tarball out of the TRiP98 package
+        tar_path = self._compress_files(plan.temp_dir)  # make a tarball out of the TRiP98 package
 
         # prepare relevant dirs and paths
         _, tgz_filename = os.path.split(tar_path)
@@ -393,8 +390,8 @@ class Execute(object):
         """
 
         self._info("Reading results")
-        for file_name in plan._out_files:
-            path = os.path.join(plan._temp_dir, file_name)
+        for file_name in plan.out_files:
+            path = os.path.join(plan.temp_dir, file_name)
 
             # only copy files back, if we actually have been running TRiP
             if self._norun:
@@ -410,8 +407,8 @@ class Execute(object):
                     self._end()
                     raise IOError
 
-        for file_name in plan._out_files:
-            path = os.path.join(plan._temp_dir, file_name)
+        for file_name in plan.out_files:
+            path = os.path.join(plan.temp_dir, file_name)
             self._log("Reading {:s} file".format(file_name))
             if ".phys.dos" in file_name:
                 ctx_cube = DosCube()
@@ -442,8 +439,8 @@ class Execute(object):
         self._end()
 
         if self._cleanup:
-            logger.debug("Delete {:s}".format(plan._temp_dir))
-            shutil.rmtree(plan._temp_dir)
+            logger.debug("Delete {:s}".format(plan.temp_dir))
+            shutil.rmtree(plan.temp_dir)
 
     def _compress_files(self, source_dir):
         """
@@ -479,8 +476,8 @@ class Execute(object):
                 sum_size += tarinfo.size
                 percentage = int(sum_size / total_size * 100)
                 self._log("Compressing file {} with size {} ({}%)".format(tarinfo.name,
-                                                                         human_readable_size(tarinfo.size),
-                                                                         percentage))
+                                                                          human_readable_size(tarinfo.size),
+                                                                          percentage))
             return tarinfo
 
         with tarfile.open(target_path, "w:gz") as tar:
@@ -523,8 +520,8 @@ class Execute(object):
                     sum_size += file.size
                     percentage = int(sum_size / files_total_size * 100)
                     self._log("Extracting file {} with size {} ({}%)".format(file.name,
-                                                                            human_readable_size(file.size),
-                                                                            percentage))
+                                                                             human_readable_size(file.size),
+                                                                             percentage))
 
         with tarfile.open(tgz_path, "r:gz") as tar:
             total_size = sum(file.size for file in tar)
@@ -574,8 +571,8 @@ class Execute(object):
             self._start_time = end_time
             percentage = int(transferred / to_be_transferred * 100)
             self._log("Transferred: {0}/{1} ({2}%)".format(human_readable_size(transferred),
-                                                          human_readable_size(to_be_transferred),
-                                                          percentage))
+                                                           human_readable_size(to_be_transferred),
+                                                           percentage))
 
     def _get_ssh_client(self):
         """ returns an open ssh client
