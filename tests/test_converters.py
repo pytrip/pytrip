@@ -19,6 +19,8 @@
 """
 TODO: documentation here.
 """
+import glob
+import imghdr
 import logging
 import os
 import shutil
@@ -115,70 +117,58 @@ def test_gd2oar(bevlet_gd_filename):
     os.close(fd)  # Windows needs it
     os.remove(outfile)  # we need only temp filename, not the file
 
-# class TestCubeSlicer(unittest.TestCase):
-#     def setUp(self):
-#         self.dir_path = os.path.join("tests", "res", "TST003")
-#
-#         self.ctx = os.path.join(self.dir_path, "tst003000.ctx.gz")
-#         logger.info("Loading ctx file " + self.ctx)
-#
-#         self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
-#         logger.info("Loading dos file " + self.dos)
-#
-#         self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
-#         logger.info("Loading dos file " + self.dos)
-#
-#     def test_help(self):
-#         try:
-#             pytrip.utils.cubeslice.main(["--help"])
-#         except SystemExit as e:
-#             self.assertEqual(e.code, 0)
-#
-#     def test_version(self):
-#         try:
-#             pytrip.utils.cubeslice.main(["--version"])
-#         except SystemExit as e:
-#             self.assertEqual(e.code, 0)
-#
-#     def test_noarg(self):
-#         try:
-#             pytrip.utils.cubeslice.main([])
-#         except SystemExit as e:
-#             self.assertEqual(e.code, 2)
-#
-#     @pytest.mark.slow
-#     def test_convert_all(self):
-#         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
-#
-#         pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-o', working_dir])
-#         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
-#
-#         logger.info("Checking if number of output files is sufficient")
-#         self.assertEqual(len(output_file_list), 300)
-#
-#         for output_file in output_file_list:
-#             logger.info("Checking if " + output_file + " is PNG")
-#             self.assertEqual(imghdr.what(output_file), 'png')
-#
-#         logger.info("Removing " + working_dir)
-#         shutil.rmtree(working_dir)
-#
-#     @pytest.mark.smoke
-#     def test_convert_one(self):
-#         working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
-#
-#         input_args = ['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '5', '-o', working_dir]
-#         ret_code = pytrip.utils.cubeslice.main(args=input_args)
-#         self.assertEqual(ret_code, 0)
-#
-#         output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
-#
-#         logger.info("Checking if number of output files is sufficient")
-#         self.assertEqual(len(output_file_list), 1)
-#
-#         for output_file in output_file_list:
-#             logger.info("Checking if " + output_file + " is PNG")
-#             self.assertEqual(imghdr.what(output_file), 'png')
-#
-#         logger.info("Removing " + working_dir)
-#         shutil.rmtree(working_dir)
+
+@pytest.mark.parametrize("option_name", ["version", "help"])
+def test_call_cmd_option(option_name):
+    with pytest.raises(SystemExit) as e:
+        logger.info("Catching {:s}".format(str(e)))
+        pytrip.utils.cubeslice.main(['--' + option_name])
+        assert e.code == 0
+
+
+@pytest.mark.skip("need to properly handle exception when obligatory arguments are missing")
+def test_call_no_options():
+    with pytest.raises(SystemExit) as e:
+        logger.info("Catching {:s}".format(str(e)))
+        pytrip.utils.cubeslice.main([])
+        assert e.code == 2
+
+
+@pytest.mark.smoke
+def test_convert_one(ctx_corename, dos_filename):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+    input_args = ['--data', dos_filename, '--ct', ctx_corename, '-f', '5', '-t', '5', '-o', working_dir]
+    ret_code = pytrip.utils.cubeslice.main(args=input_args)
+    assert ret_code == 0
+
+    output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
+
+    logger.info("Checking if number of output files is sufficient")
+    assert len(output_file_list) == 1
+    output_filename = output_file_list[0]
+    assert os.path.basename(output_filename) == "tst003001_005.png"
+
+    logger.info("Checking if " + output_filename + " is PNG")
+    assert imghdr.what(output_filename) == 'png'
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
+
+
+@pytest.mark.slow
+def test_convert_all(ctx_corename, dos_filename):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+    pytrip.utils.cubeslice.main(args=['--data', dos_filename, '--ct', ctx_corename, '-o', working_dir])
+    output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
+
+    logger.info("Checking if number of output files is sufficient")
+    assert len(output_file_list) == 300
+
+    for output_file in output_file_list:
+        logger.info("Checking if " + output_file + " is PNG")
+        assert imghdr.what(output_file) == 'png'
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
