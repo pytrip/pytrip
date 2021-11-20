@@ -26,8 +26,10 @@ from pytrip.tripexecuter.plan import Plan
 from pytrip.tripexecuter.projectile import Projectile
 from pytrip.tripexecuter.kernel import KernelModel
 from pytrip.tripexecuter.execparser import ExecParser
+from pytrip.tripexecuter.executor_logger import ExecutorLogger, ConsoleExecutorLogger, FileExecutorLogger
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
 # it is taken to be the list of module names that should be imported when from package import * is encountered.
-__all__ = ['Field', 'Execute', 'Plan', 'Projectile', 'KernelModel', 'ExecParser']
+__all__ = ['Field', 'Execute', 'Plan', 'Projectile', 'KernelModel', 'ExecParser',
+           'ExecutorLogger', 'ConsoleExecutorLogger', 'FileExecutorLogger']

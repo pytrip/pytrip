@@ -93,9 +93,11 @@ class Plan(object):
         # results
         self.dosecubes = []  # list of DosCube() objects (i.e. results)
         self.letcubes = []  # list of LETCubes()
+        self.out_files = []  # list of files generated which will be returned
 
         # directories and file paths.
         self.working_dir = ""  # directory where all input files are stored, and where all output files will be put.
+        self.temp_dir = ""  # directory where all input files will be temporary stored before execution
 
         self.hlut_path = "$TRIP98/DATA/19990211.hlut"
         self.dedx_path = "$TRIP98/DATA/DEDX/20040607.dedx"
@@ -264,10 +266,16 @@ class Plan(object):
         self.make_exec()
 
         if exec_path is None:
-            exec_path = os.path.join(self._temp_dir, self.basename, "*.exec")
+            exec_path = os.path.join(self.temp_dir, self.basename, "*.exec")
 
         with open(exec_path, "w") as f:
             f.write(self._trip_exec)
+
+    def get_exec(self):
+        if not self._trip_exec:
+            self.make_exec()
+
+        return self._trip_exec
 
     def read_exec(self, exec_path):
         """ Reads an .exec file onto self.
@@ -541,12 +549,10 @@ class Plan(object):
                 window[4],
                 window[5])  # Zmin/max
 
-        self._out_files = []  # list of files generated which will be returned
-
         if self.want_phys_dose:
             line = 'dose "{:s}."'.format(basename)
-            self._out_files.append(basename + ".phys.dos")
-            self._out_files.append(basename + ".phys.hed")
+            self.out_files.append(basename + ".phys.dos")
+            self.out_files.append(basename + ".phys.hed")
             line += ' /calculate  alg({:s})'.format(self.dose_alg)
             line += window_str
             line += ' field(*) write'
@@ -554,8 +560,8 @@ class Plan(object):
 
         if self.want_bio_dose:
             line = 'dose "{:s}."'.format(basename)
-            self._out_files.append(basename + ".bio.dos")
-            self._out_files.append(basename + ".bio.hed")
+            self.out_files.append(basename + ".bio.dos")
+            self.out_files.append(basename + ".bio.hed")
             line += ' /calculate  bioalgorithm({:s})'.format(self.bio_alg)
             line += window_str
             line += ' biological norbe field(*) write'
@@ -563,8 +569,8 @@ class Plan(object):
 
         if self.want_dlet:
             line = 'dose "{:s}."'.format(basename)
-            self._out_files.append(basename + ".dosemlet.dos")
-            self._out_files.append(basename + ".dosemlet.hed")
+            self.out_files.append(basename + ".dosemlet.dos")
+            self.out_files.append(basename + ".dosemlet.hed")
             line += ' /calculate  alg({:s})'.format(self.dose_alg)
             line += window_str
             line += ' field(*) dosemeanlet write'
@@ -573,7 +579,7 @@ class Plan(object):
         if self.want_rst and self.optimize:
             for i, field in enumerate(fields):
                 output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
-                self._out_files.append(field.basename + ".rst")
+                self.out_files.append(field.basename + ".rst")
 
         for _field in fields:
             if _field.save_bev_file:
@@ -583,7 +589,7 @@ class Plan(object):
                 line = "field {:d} /bev(*) file({:s})".format(i + 1, bev_filename)
                 output.append(line)
 
-                self._out_files.append(bev_filename)
+                self.out_files.append(bev_filename)
 
         # TODO: add various .gd files
         return output
