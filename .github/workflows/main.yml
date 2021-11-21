@@ -35,74 +35,74 @@ jobs:
       commit_message:
         echo "${{ steps.get_commit_message.outputs.commit_message }}"
 
-  # smoke_test:
-  #   # quick smoke tests
-  #   if: "!contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
-  #   name: "Fast smoke tests"
-  #   runs-on:  ${{ matrix.platform }}
-  #   needs: [initialise]
-  #   strategy:
-  #      matrix:
-  #        python-version: ['3.5', '3.9', '3.10']
-  #        platform: [ubuntu-latest, windows-latest]
-  #   steps:
-  #     - uses: actions/checkout@v2
+  smoke_test:
+    # quick smoke tests
+    if: "!contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
+    name: "Fast smoke tests"
+    runs-on:  ${{ matrix.platform }}
+    needs: [initialise]
+    strategy:
+       matrix:
+         python-version: ['3.5', '3.9', '3.10']
+         platform: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v2
 
-  #     - name: Set up Python
-  #       uses: actions/setup-python@v2.3.0
-  #       with:
-  #         python-version: ${{ matrix.python-version }}
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.0
+        with:
+          python-version: ${{ matrix.python-version }}
 
-  #     - name: Install dependencies
-  #       run: |
-  #         python --version
-  #         pip --version
-  #         pip install wheel
-  #         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
-  #         pip install -r requirements.txt
-  #         pip install -r tests/requirements-test.txt
+      - name: Install dependencies
+        run: |
+          python --version
+          pip --version
+          pip install wheel
+          pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
+          pip install -r requirements.txt
+          pip install -r tests/requirements-test.txt
 
-  #     - name: Lint with flake8
-  #       run: |
-  #         # stop the build if there are Python syntax errors or undefined names
-  #         flake8 --count --select=E9,F63,F7,F82 --show-source --statistics pytrip tests examples
+      - name: Lint with flake8
+        run: |
+          # stop the build if there are Python syntax errors or undefined names
+          flake8 --count --select=E9,F63,F7,F82 --show-source --statistics pytrip tests examples
 
-  #     - name: Smoke tests
-  #       run: |
-  #         pytest -k "smoke" tests/
+      - name: Smoke tests
+        run: |
+          pytest -k "smoke" tests/
 
-  # full_tests:
-  #    # these full tests, being slow are triggered only in following cases:
-  #    #  - if commit message contains specific keyword: [build]
-  #    #  - on master branch
-  #    #  - on release tags (named v*)
-  #    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
-  #    name: "Full slow tests"
-  #    runs-on:  ${{ matrix.platform }}
-  #    needs: [initialise, smoke_test]
-  #    strategy:
-  #      matrix:
-  #        python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
-  #        platform: [ubuntu-latest, windows-latest]
-  #    steps:
-  #    - uses: actions/checkout@v2
-  #    - name: Set up Python
-  #      uses: actions/setup-python@v2.3.0
-  #      with:
-  #        python-version: ${{ matrix.python-version }}
+  full_tests:
+     # these full tests, being slow are triggered only in following cases:
+     #  - if commit message contains specific keyword: [build]
+     #  - on master branch
+     #  - on release tags (named v*)
+     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+     name: "Full slow tests"
+     runs-on:  ${{ matrix.platform }}
+     needs: [initialise, smoke_test]
+     strategy:
+       matrix:
+         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+         platform: [ubuntu-latest, windows-latest]
+     steps:
+     - uses: actions/checkout@v2
+     - name: Set up Python
+       uses: actions/setup-python@v2.3.0
+       with:
+         python-version: ${{ matrix.python-version }}
 
-  #    - name: Install dependencies
-  #      run: |
-  #        python --version
-  #        pip --version
-  #        pip install wheel
-  #        pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
-  #        pip install -r requirements.txt
-  #        pip install -r tests/requirements-test.txt
+     - name: Install dependencies
+       run: |
+         python --version
+         pip --version
+         pip install wheel
+         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
+         pip install -r requirements.txt
+         pip install -r tests/requirements-test.txt
 
-  #    - name: Regular tests
-  #      run: |
-  #         pytest -k "not slow" tests/
+     - name: Regular tests
+       run: |
+          pytest -k "not slow" tests/
 
   build_wheels_manylinux1:
     # these full tests, being slow are triggered only in following cases:
@@ -112,8 +112,7 @@ jobs:
     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
     name: Wheels on Linux
     runs-on: ubuntu-latest
-#    needs: [initialise, full_tests]
-    needs: [initialise]
+    needs: [initialise, full_tests]
     strategy:
        matrix:
          python-versions: ["cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
@@ -146,8 +145,7 @@ jobs:
     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
     name: Wheels on Linux
     runs-on: ubuntu-latest
-#    needs: [initialise, full_tests]
-    needs: [initialise]
+    needs: [initialise, full_tests]
     strategy:
        matrix:
          python-versions: ['cp310-cp310']
@@ -173,70 +171,70 @@ jobs:
           if-no-files-found: error
 
 
-  # build_wheels_macOS:
-  #   # these full tests, being slow are triggered only in following cases:
-  #   #  - if commit message contains specific keyword: [build]
-  #   #  - on master branch
-  #   #  - on release tags (named v*)
-  #   if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
-  #   name: Wheels on macOS
-  #   needs: [initialise, full_tests]
-  #   runs-on: macos-10.15
+  build_wheels_macOS:
+    # these full tests, being slow are triggered only in following cases:
+    #  - if commit message contains specific keyword: [build]
+    #  - on master branch
+    #  - on release tags (named v*)
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+    name: Wheels on macOS
+    needs: [initialise, full_tests]
+    runs-on: macos-10.15
 
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
-  #     - uses: actions/setup-python@v2.3.0
-  #       with:
-  #         python-version: "3.9"
+      - uses: actions/setup-python@v2.3.0
+        with:
+          python-version: "3.9"
 
-  #     - name: install dependencies
-  #       run: |
-  #         pip install --upgrade setuptools pip wheel
-  #         pip install cibuildwheel
+      - name: install dependencies
+        run: |
+          pip install --upgrade setuptools pip wheel
+          pip install cibuildwheel
 
-  #     - name: show environment
-  #       run: |
-  #         pip freeze
+      - name: show environment
+        run: |
+          pip freeze
 
-  #     - name: list target wheels
-  #       run: |
-  #         python -m cibuildwheel . --print-build-identifiers
+      - name: list target wheels
+        run: |
+          python -m cibuildwheel . --print-build-identifiers
 
-  #     - name: build wheels
-  #       run: python -m cibuildwheel --output-dir wheelhouse
-  #       env:
-  #         CIBW_BUILD_VERBOSITY: "1"
-  #         CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
+      - name: build wheels
+        run: python -m cibuildwheel --output-dir wheelhouse
+        env:
+          CIBW_BUILD_VERBOSITY: "1"
+          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
 
-  #     - uses: actions/upload-artifact@v2
-  #       with:
-  #         path: ./wheelhouse/*.whl
-  #         if-no-files-found: error
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./wheelhouse/*.whl
+          if-no-files-found: error
    
-  # upload_wheels:
-  #   # upload wheels only when git tag and release is created
-  #   name: Upload wheels
-  #   needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/download-artifact@v2
-  #       with:
-  #             name: artifact
-  #             path: dist
+  upload_wheels:
+    # upload wheels only when git tag and release is created
+    name: Upload wheels
+    needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v2
+        with:
+              name: artifact
+              path: dist
 
-  #     - name: inspect packages to upload
-  #       run: |
-  #         ls -alh dist/
+      - name: inspect packages to upload
+        run: |
+          ls -alh dist/
           
-  #     - name: Publish packages to pypi
-  #       uses: pypa/gh-action-pypi-publish@v1.4.2
-  #       if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-  #       with:
-  #             password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
-  #             repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
-  #             packages_dir: dist/ # The target directory for distribution
-  #             verbose: true # Show verbose output
+      - name: Publish packages to pypi
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+        with:
+              password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
+              repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
+              packages_dir: dist/ # The target directory for distribution
+              verbose: true # Show verbose output
 
