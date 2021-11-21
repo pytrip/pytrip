@@ -16,122 +16,69 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-Tests for models/*.py
-"""
-import os
-import unittest
+"""Tests for models/*.py"""
 import logging
+
 import numpy as np
 import pytest
 
 import pytrip as pt
-from pytrip.models.proton import rbe_carabe
-from pytrip.models.proton import rbe_wedenberg
-from pytrip.models.proton import rbe_mcnamara
+from pytrip.models.proton import rbe_carabe, rbe_mcnamara, rbe_wedenberg
 from pytrip.models.rcr import sf_rcr
-
-import tests.base
 
 logger = logging.getLogger(__name__)
 
 
-class TestProton(unittest.TestCase):
-    """ Test the proton.py models
-    """
-    def setUp(self):
-        """ Prepare files for tests
-        """
-        testdir = tests.base.get_files()
-        self.cube001 = os.path.join(testdir, "tst003001")
-        self.vdx = os.path.join(testdir, "tst003000.vdx")
-        logger.info("Cube path " + self.cube001)
-        logger.info("VDX path " + self.vdx)
-
-    def test_carabe(self):
-        """ Check if we are able to calculate a few RBE values
-        """
-        # increasing LET should increase RBE
-        rbe1 = rbe_carabe(10.0, 10.0, 5.0)
-        rbe2 = rbe_carabe(10.0, 17.0, 5.0)
-        self.assertGreater(rbe2, rbe1)
-        self.assertGreater(rbe2, 1.0)  # Carabe can actually return values below 1.0 for RBE
-        self.assertGreater(10.0, rbe2)  # Sanity check
-
-    @pytest.mark.smoke
-    def test_wedenberg(self):
-        """ Check if we are able to calculate a few RBE values
-        """
-        # increasing LET should increase RBE
-        rbe1 = rbe_wedenberg(10.0, 10.0, 5.0)
-        rbe2 = rbe_wedenberg(10.0, 17.0, 5.0)
-        self.assertGreater(rbe2, rbe1)
-        self.assertGreater(rbe2, 1.0)
-        self.assertGreater(10.0, rbe2)  # Sanity check
-
-    def test_mcnamara(self):
-        """ Check if we are able to calculate a few RBE values
-        """
-        # increasing LET should increase RBE
-        rbe1 = rbe_mcnamara(10.0, 10.0, 5.0)
-        rbe2 = rbe_mcnamara(10.0, 17.0, 5.0)
-        self.assertGreater(rbe2, rbe1)
-        self.assertGreater(rbe2, 1.0)
-        self.assertGreater(10.0, rbe2)  # Sanity check
-
-    def test_mcnamara_cube(self):
-        """ McNamara test on real cubes.
-        """
-        dose = pt.DosCube()
-        dose.read(self.cube001)
-        let = pt.LETCube()
-        let.read(self.cube001)
-        v = pt.VdxCube(dose)
-        logger.info("Adding VDX from path " + self.vdx)
-        v.read(self.vdx)
-
-        # increasing LET should increase RBE
-        abx = 10.0  # alpha/beta ratio for x-rays [Gy]
-        rbe1 = rbe_mcnamara(dose.cube, let.cube, abx)
-        rbe2 = rbe_mcnamara(dose.cube, let.cube, 2.0)
-
-        self.assertTrue(np.all(rbe2 >= rbe1))  # RBE goes up as abx goes down.
+@pytest.mark.smoke
+@pytest.mark.parametrize('model_func', [rbe_carabe, rbe_mcnamara, rbe_wedenberg])
+def test_few_values(model_func):
+    rbe1 = model_func(10., 10., 5.)
+    rbe2 = model_func(10., 17., 5.)
+    assert rbe2 > rbe1
+    assert rbe2 > 1.  # Carabe can actually return values below 1.0 for RBE
+    assert 10. > rbe2  # Sanity check
 
 
-class TestRCR(unittest.TestCase):
-    """ Test the rcr.py model
-    """
-    def setUp(self):
-        """ Prepare files for tests
-        """
+def test_mcnamara_cube(dos_filename, let_filename, vdx_filename):
+    """McNamara test on real cubes."""
+    dose = pt.DosCube()
+    dose.read(dos_filename)
+    let = pt.LETCube()
+    let.read(let_filename)
+    v = pt.VdxCube(dose)
+    logger.info("Adding VDX from path " + vdx_filename)
+    v.read(vdx_filename)
 
-    def test_rcr(self):
-        """ Test RCR model
-        """
-        dose = 2.0  # Gy
-        let = 50.0  # keV/um
+    # increasing LET should increase RBE
+    abx = 10.0  # alpha/beta ratio for x-rays [Gy]
+    rbe1 = rbe_mcnamara(dose.cube, let.cube, abx)
+    rbe2 = rbe_mcnamara(dose.cube, let.cube, 2.0)
 
-        sf1 = sf_rcr(dose, let)
-        # Survival should always be 0.0 <= sf <= 1.0
-        self.assertGreater(1.0, sf1)
-        self.assertGreater(sf1, 0.0)
-
-        # add hypoxia, should increase survival
-        sf2 = sf_rcr(dose, let, 10.0)  # some oxygenation -> less survival
-        self.assertGreater(1.0, sf2)
-        self.assertGreater(sf2, 0.0)
-
-        sf1 = sf_rcr(dose, let, 0.0)  # no oxygenation -> much survival
-        self.assertGreater(1.0, sf2)
-        self.assertGreater(sf2, 0.0)
-        self.assertGreater(sf1, sf2)
-
-        # increase LET, should reduce survival
-        sf2 = sf_rcr(dose, let + 10.0)
-        self.assertGreater(1.0, sf2)
-        self.assertGreater(sf2, 0.0)
-        self.assertGreater(sf1, sf2)
+    assert np.all(rbe2 >= rbe1)  # RBE goes up as abx goes down.
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_rcr():
+    """Test RCR model"""
+    dose = 2.0  # Gy
+    let = 50.0  # keV/um
+
+    sf1 = sf_rcr(dose, let)
+    # Survival should always be 0.0 <= sf <= 1.0
+    assert 1.0 >= sf1
+    assert sf1 >= 0.0
+
+    # add hypoxia, should increase survival
+    sf2 = sf_rcr(dose, let, 10.0)  # some oxygenation -> less survival
+    assert 1.0 >= sf2
+    assert sf2 >= 0.0
+
+    sf1 = sf_rcr(dose, let, 0.0)  # no oxygenation -> much survival
+    assert 1.0 >= sf2
+    assert sf2 >= 0.0
+    assert sf1 >= sf2
+
+    # increase LET, should reduce survival
+    sf2 = sf_rcr(dose, let + 10.0)
+    assert 1.0 >= sf2
+    assert sf2 >= 0.0
+    assert sf1 >= sf2

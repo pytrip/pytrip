@@ -19,93 +19,70 @@
 """
 TODO: documentation here.
 """
-import os
-import unittest
 import logging
+import os
 
 import pytrip as pt
 import pytrip.tripexecuter as pte
 
-import tests.base
-
 logger = logging.getLogger(__name__)
 
 
-class TestLocalExec(unittest.TestCase):
-    """ Tests for pytrip.tripexecuter
-    """
-    def setUp(self):
-        """ Prepare test environment.
-        """
-        testdir = tests.base.get_files()
+def test_exec(ctx_corename, vdx_filename, patient_name="tst003000"):
+    """Prepare and execute a dry-run test using the Executer."""
+    logger.info("Test norun TRiP98 execution")
 
-        self.patient_name = "tst003000"
+    logger.debug("Load CtxCube {:s}".format(ctx_corename))
+    c = pt.CtxCube()
+    c.read(ctx_corename)
 
-        self.ctx_path = os.path.join(testdir, self.patient_name + '.ctx')
-        self.vdx_path = os.path.join(testdir, self.patient_name + '.vdx')
-        self.trip_path = os.path.join(testdir, "TRiP98")
+    logger.debug("Load VdxCube {:s}".format(vdx_filename))
+    v = pt.VdxCube(c)
+    v.read(vdx_filename)
 
-    def test_exec(self):
-        """ Prepare and execute a dry-run test using the Executer.
-        """
-        logger.info("Test norun TRiP98 execution")
+    print(v.voi_names())
 
-        logger.debug("Load CtxCube {:s}".format(self.ctx_path))
-        c = pt.CtxCube()
-        c.read(self.ctx_path)
+    projectile = pte.Projectile('H')
+    kernel = pte.KernelModel(projectile)
+    kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
+    kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
+    kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
+    kernel.rifi_thickness = 3.0
+    plan = pte.Plan(default_kernel=kernel, basename=patient_name)
+    assert plan is not None
 
-        logger.debug("Load VdxCube {:s}".format(self.vdx_path))
-        v = pt.VdxCube(c)
-        v.read(self.vdx_path)
+    plan.hlut_path = "/opt/TRiP98/base/DATA/HLUT/19990218.hlut"
+    plan.dedx_path = "/opt/TRiP98/base/DATA/DEDX/20040607.dedx"
+    plan.working_dir = "."  # working dir must exist.
 
-        print(v.voi_names())
+    # add the target voi to the plan
+    plan.voi_target = v.get_voi_by_name('target')
 
-        projectile = pte.Projectile('H')
-        kernel = pte.KernelModel(projectile)
-        kernel.ddd_path = "/opt/TRiP98/base/DATA/DDD/12C/RF3MM/*"
-        kernel.spc_path = "/opt/TRiP98/base/DATA/SPC/12C/RF3MM/*"
-        kernel.sis_path = "/opt/TRiP98/base/DATA/SIS/12C.sis"
-        kernel.rifi_thickness = 3.0
-        plan = pte.Plan(default_kernel=kernel, basename=self.patient_name)
-        self.assertIsNotNone(plan)
+    plan.bolus = 0.0
+    plan.offh2o = 1.873
 
-        plan.hlut_path = "/opt/TRiP98/base/DATA/HLUT/19990218.hlut"
-        plan.dedx_path = "/opt/TRiP98/base/DATA/DEDX/20040607.dedx"
-        plan.working_dir = "."  # working dir must exist.
+    # create a field and add it to the plan
+    field = pte.Field(kernel)
+    assert field is not None
+    field.basename = patient_name
+    field.gantry = 10.0
+    field.couch = 90.0  # degrees
+    field.fwhm = 4.0  # spot size in [mm]
 
-        # add the target voi to the plan
-        plan.voi_target = v.get_voi_by_name('target')
+    plan.fields.append(field)
 
-        plan.bolus = 0.0
-        plan.offh2o = 1.873
+    # flags for what output should be generated
+    plan.want_phys_dose = True
+    plan.want_bio_dose = False
+    plan.want_dlet = True
+    plan.want_rst = False
 
-        # create a field and add it to the plan
-        field = pte.Field(kernel)
-        self.assertIsNotNone(field)
-        field.basename = self.patient_name
-        field.gantry = 10.0
-        field.couch = 90.0  # degrees
-        field.fwhm = 4.0  # spot size in [mm]
+    t = pte.Execute(c, v)
+    assert t is not None
+    t.trip_bin_path = 'tests/res/dummy_TRiP98/TRiP98'
+    if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
+        t.execute(plan=plan, run=False)  # setup and make a dry-run, since TRiP98 is not installed.
 
-        plan.fields.append(field)
-
-        # flags for what output should be generated
-        plan.want_phys_dose = True
-        plan.want_bio_dose = False
-        plan.want_dlet = True
-        plan.want_rst = False
-
-        t = pte.Execute(c, v)
-        self.assertIsNotNone(t)
-        t.trip_bin_path = self.trip_path
-        print(self.trip_path)
-        if os.name != 'nt':  # skip running fake TRiP98 on Windows as it is not supported there
-            t.execute(plan, False)  # setup and make a dry-run, since TRiP98 is not installed.
-
-        executer_str = str(t)
-        self.assertGreater(len(executer_str), 1)
-        # No results will be generated since, TRiP98 is not installed in test environment.
-
-
-if __name__ == '__main__':
-    unittest.main()
+    executer_str = str(t)
+    assert len(executer_str) > 1
+    # No results will be generated since, TRiP98 is not installed in test environment.

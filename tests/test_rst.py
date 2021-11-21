@@ -16,70 +16,39 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-Test for raster.py
-"""
-import os
-import unittest
 import logging
+import os
 import tempfile
 
 import pytest
 
-import tests.base
-from pytrip.raster import Rst
 import pytrip.utils.rst2sobp
+from pytrip.raster import Rst
 
 logger = logging.getLogger(__name__)
 
 
-class TestRst(unittest.TestCase):
-    """ Test the raster.py files
-    """
-    def setUp(self):
-        """ Prepare files for tests
-        """
-        testdir = tests.base.get_files()
-        self.rst000 = os.path.join(testdir, "tst003001.rst")
-        logger.info("Testing .rst from path " + self.rst000)
-
-    @pytest.mark.smoke
-    def test_read(self):
-        """ Check if we are able to read a simple .rst file
-        """
-        r = Rst()
-        r.read(self.rst000)
-        self.assertEqual(r.submachines, '17')
-        self.assertEqual(r.machines[0].points, 323)
-        self.assertEqual(r.machines[0].energy, 120.2)
-        self.assertEqual(r.machines[0].raster_points[0], [27.0, -24.0, 2844850.0])
+@pytest.mark.smoke
+def test_read(rst_filename):
+    """Check if we are able to read a simple .rst file"""
+    r = Rst()
+    r.read(rst_filename)
+    assert r.submachines == '17'
+    assert r.machines[0].points == 323
+    assert r.machines[0].energy == 120.2
+    assert r.machines[0].raster_points[0] == [27.0, -24.0, 2844850.0]
 
 
-class TestRst2Sobp(unittest.TestCase):
-    """ Test the rst2sobp.py script
-    """
-    def setUp(self):
-        """ Prepare files for tests
-        """
-        testdir = tests.base.get_files()
-        self.rst000 = os.path.join(testdir, "tst003001.rst")
-        logger.info("Testing rst2sobp.py using .rst from path " + self.rst000)
+@pytest.mark.smoke
+def test_generate(rst_filename):
+    """Execute rst2sobp.py and make sure a non-empty file exists."""
+    fd, outfile = tempfile.mkstemp()
 
-    @pytest.mark.smoke
-    def test_generate(self):
-        """ Execute rst2sobp.py and make sure a non-empty file exists.
-        """
-        fd, outfile = tempfile.mkstemp()
+    pytrip.utils.rst2sobp.main(args=[rst_filename, outfile])
 
-        pytrip.utils.rst2sobp.main(args=[self.rst000, outfile])
+    # check if destination file is not empty
+    assert os.path.exists(outfile) is True
+    assert os.path.getsize(outfile) > 1
 
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
-
-
-if __name__ == '__main__':
-    unittest.main()
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file

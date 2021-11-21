@@ -19,256 +19,149 @@
 """
 TODO: documentation here.
 """
-import imghdr
-import unittest
-import os
-import sys
-import tempfile
 import glob
+import imghdr
 import logging
+import os
 import shutil
+import tempfile
 
 import pytest
 
-import pytrip.utils.trip2dicom
-import pytrip.utils.dicom2trip
-import pytrip.utils.cubeslice
-import pytrip.utils.rst2sobp
-import pytrip.utils.gd2dat
-import pytrip.utils.gd2agr
 import pytrip.utils.bevlet2oer
-
-from tests.base import get_files
+import pytrip.utils.cubeslice
+import pytrip.utils.dicom2trip
+import pytrip.utils.gd2agr
+import pytrip.utils.gd2dat
+import pytrip.utils.rst2sobp
+import pytrip.utils.trip2dicom
+from tests.conftest import exists_and_nonempty
 
 logger = logging.getLogger(__name__)
 
 
-class TestTrip2Dicom(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.cube000 = os.path.join(testdir, "tst003000")
-
-    def test_generate(self):
-        # create temp dir
-        tmpdir = tempfile.mkdtemp()
-
-        # convert CT cube to DICOM
-        pytrip.utils.trip2dicom.main([self.cube000, tmpdir])
-
-        # check if destination directory is not empty
-        self.assertTrue(os.listdir(tmpdir))
-
-    def test_version(self):
-        try:
-            pytrip.utils.trip2dicom.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+@pytest.fixture(scope='module')
+def bev_gd_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.bev.gd')
 
 
-class TestRst2SOBP(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.rst_file = os.path.join(testdir, "tst003001.rst")
-
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp()
-
-        # convert CT cube to DICOM
-        pytrip.utils.rst2sobp.main([self.rst_file, outfile])
-
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
-
-    def test_version(self):
-        try:
-            pytrip.utils.rst2sobp.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+@pytest.fixture(scope='module')
+def bevlet_gd_filename():
+    return os.path.join('tests', 'res', 'TST003', 'tst003001.bevlet.gd')
 
 
-class TestGd2Dat(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
+def test_trip2dicom(ctx_corename):
+    # create temp dir
+    tmpdir = tempfile.mkdtemp()
 
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp()
+    # convert CT cube to DICOM
+    pytrip.utils.trip2dicom.main([ctx_corename, tmpdir])
 
-        # convert CT cube to DICOM
-        pytrip.utils.gd2dat.main([self.gd_file, outfile])
+    # check if destination directory is not empty
+    assert len(os.listdir(tmpdir)) == 301
 
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
-
-    def test_version(self):
-        try:
-            pytrip.utils.gd2dat.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+    shutil.rmtree(tmpdir)
 
 
-class TestGd2Agr(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.gd_file = os.path.join(testdir, "tst003001.bev.gd")
+def test_rst2sobp(rst_filename):
+    fd, outfile = tempfile.mkstemp()
 
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp()
+    # convert CT cube to DICOM
+    pytrip.utils.rst2sobp.main([rst_filename, outfile])
 
-        # convert CT cube to DICOM
-        pytrip.utils.gd2agr.main([self.gd_file, outfile])
+    assert exists_and_nonempty(outfile)
 
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
-
-    def test_version(self):
-        try:
-            pytrip.utils.gd2agr.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
 
 
-class TestBevLet2Oer(unittest.TestCase):
-    def setUp(self):
-        testdir = get_files()
-        self.gd_file = os.path.join(testdir, "tst003001.bevlet.gd")
+def test_gd2dat(bev_gd_filename):
+    fd, outfile = tempfile.mkstemp()
 
-    def test_check(self):
-        self.assertRaises(SystemExit, pytrip.utils.bevlet2oer.main, [])
+    # convert gd file to dat
+    pytrip.utils.gd2dat.main([bev_gd_filename, outfile])
 
-    def test_version(self):
-        try:
-            pytrip.utils.bevlet2oer.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+    assert exists_and_nonempty(outfile)
 
-    def test_generate(self):
-        fd, outfile = tempfile.mkstemp()
-
-        # convert CT cube to DICOM
-        pytrip.utils.bevlet2oer.main([self.gd_file, outfile])
-
-        # check if destination file is not empty
-        self.assertTrue(os.path.exists(outfile))
-        self.assertGreater(os.path.getsize(outfile), 0)
-
-        os.close(fd)  # Windows needs it
-        os.remove(outfile)  # we need only temp filename, not the file
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
 
 
-class TestDicom2Trip(unittest.TestCase):
-    def test_check(self):
-        self.assertRaises(SystemExit, pytrip.utils.dicom2trip.main, [])
+def test_gd2agr(bev_gd_filename):
+    fd, outfile = tempfile.mkstemp()
 
-    def test_version(self):
-        try:
-            pytrip.utils.dicom2trip.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
+    # convert gd file to agr
+    pytrip.utils.gd2agr.main([bev_gd_filename, outfile])
 
+    assert exists_and_nonempty(outfile)
 
-class TestSpc2Pdf(unittest.TestCase):
-    def test_check(self):
-        if sys.version_info[0] == 3 and sys.version_info[1] == 2:
-            retcode = pytrip.utils.spc2pdf.main()
-            self.assertEqual(retcode, 1)
-        else:
-            # Some import hacking needed by Appveyor
-            from pytrip.utils import spc2pdf  # noqa F401
-            self.assertRaises(SystemExit, pytrip.utils.spc2pdf.main, [])
-
-    def test_version(self):
-        try:
-            # Some import hacking needed by Appveyor
-            from pytrip.utils import spc2pdf  # noqa F401
-            pytrip.utils.spc2pdf.main(["--version"])
-        except SystemExit as e:
-            if sys.version_info[0] == 3 and sys.version_info[1] == 2:
-                self.assertEqual(e.code, 1)
-            else:
-                self.assertEqual(e.code, 0)
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
 
 
-class TestCubeSlicer(unittest.TestCase):
-    def setUp(self):
-        self.dir_path = os.path.join("tests", "res", "TST003")
+def test_gd2oar(bevlet_gd_filename):
+    fd, outfile = tempfile.mkstemp()
 
-        self.ctx = os.path.join(self.dir_path, "tst003000.ctx.gz")
-        logger.info("Loading ctx file " + self.ctx)
+    # convert bev let file to oar
+    pytrip.utils.bevlet2oer.main([bevlet_gd_filename, outfile])
 
-        self.dos = os.path.join(self.dir_path, "tst003001.dos.gz")
-        logger.info("Loading dos file " + self.dos)
+    assert exists_and_nonempty(outfile)
 
-        self.let = os.path.join(self.dir_path, "tst003001.dosemlet.dos.gz")
-        logger.info("Loading dos file " + self.dos)
-
-    def test_help(self):
-        try:
-            pytrip.utils.cubeslice.main(["--help"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_version(self):
-        try:
-            pytrip.utils.cubeslice.main(["--version"])
-        except SystemExit as e:
-            self.assertEqual(e.code, 0)
-
-    def test_noarg(self):
-        try:
-            pytrip.utils.cubeslice.main([])
-        except SystemExit as e:
-            self.assertEqual(e.code, 2)
-
-    @pytest.mark.slow
-    def test_convert_all(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
-
-        pytrip.utils.cubeslice.main(args=['--data', self.dos, '--ct', self.ctx, '-o', working_dir])
-        output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
-
-        logger.info("Checking if number of output files is sufficient")
-        self.assertEqual(len(output_file_list), 300)
-
-        for output_file in output_file_list:
-            logger.info("Checking if " + output_file + " is PNG")
-            self.assertEqual(imghdr.what(output_file), 'png')
-
-        logger.info("Removing " + working_dir)
-        shutil.rmtree(working_dir)
-
-    @pytest.mark.smoke
-    def test_convert_one(self):
-        working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
-
-        input_args = ['--data', self.dos, '--ct', self.ctx, '-f', '5', '-t', '5', '-o', working_dir]
-        ret_code = pytrip.utils.cubeslice.main(args=input_args)
-        self.assertEqual(ret_code, 0)
-
-        output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
-
-        logger.info("Checking if number of output files is sufficient")
-        self.assertEqual(len(output_file_list), 1)
-
-        for output_file in output_file_list:
-            logger.info("Checking if " + output_file + " is PNG")
-            self.assertEqual(imghdr.what(output_file), 'png')
-
-        logger.info("Removing " + working_dir)
-        shutil.rmtree(working_dir)
+    os.close(fd)  # Windows needs it
+    os.remove(outfile)  # we need only temp filename, not the file
 
 
-if __name__ == '__main__':
-    unittest.main()
+@pytest.mark.parametrize("option_name", ["version", "help"])
+def test_call_cmd_option(option_name):
+    with pytest.raises(SystemExit) as e:
+        logger.info("Catching {:s}".format(str(e)))
+        pytrip.utils.cubeslice.main(['--' + option_name])
+        assert e.code == 0
+
+
+@pytest.mark.skip("need to properly handle exception when obligatory arguments are missing")
+def test_call_no_options():
+    with pytest.raises(SystemExit) as e:
+        logger.info("Catching {:s}".format(str(e)))
+        pytrip.utils.cubeslice.main([])
+        assert e.code == 2
+
+
+@pytest.mark.smoke
+def test_convert_one(ctx_corename, dos_filename):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+    input_args = ['--data', dos_filename, '--ct', ctx_corename, '-f', '5', '-t', '5', '-o', working_dir]
+    ret_code = pytrip.utils.cubeslice.main(args=input_args)
+    assert ret_code == 0
+
+    output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
+
+    logger.info("Checking if number of output files is sufficient")
+    assert len(output_file_list) == 1
+    output_filename = output_file_list[0]
+    assert os.path.basename(output_filename) == "tst003001_005.png"
+
+    logger.info("Checking if " + output_filename + " is PNG")
+    assert imghdr.what(output_filename) == 'png'
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)
+
+
+@pytest.mark.slow
+def test_convert_all(ctx_corename, dos_filename):
+    working_dir = tempfile.mkdtemp()  # make temp working dir for converter output files
+
+    pytrip.utils.cubeslice.main(args=['--data', dos_filename, '--ct', ctx_corename, '-o', working_dir])
+    output_file_list = glob.glob(os.path.join(working_dir, "*.png"))
+
+    logger.info("Checking if number of output files is sufficient")
+    assert len(output_file_list) == 300
+
+    for output_file in output_file_list:
+        logger.info("Checking if " + output_file + " is PNG")
+        assert imghdr.what(output_file) == 'png'
+
+    logger.info("Removing " + working_dir)
+    shutil.rmtree(working_dir)

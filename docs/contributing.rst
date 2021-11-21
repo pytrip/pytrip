@@ -99,13 +99,13 @@ In this way python interpreter will set properly all directories needed for prop
 
 5. Make local changes to fix the bug or to implement a feature.
 
-6. When you're done making changes, check that your changes comply with PEP8 code quality standards (flake8 tests) and test against other Python versions with tox::
+6. When you're done making changes, check that your changes comply with PEP8 code quality standards (flake8 tests) run pytest tests::
 
     $ pep8 --max-line-length=120 pytrip tests
     $ flake8 --max-line-length=120 pytrip tests
-    $ tox
+    $ pytest
 
-   To get pep8, flake8 and tox, just pip install them.
+   To get pep8, flake8 and pytest, just pip install them.
 
 7. Commit your changes and push your branch to GitHub::
 
@@ -133,7 +133,7 @@ Before you submit a pull request, check that it meets these guidelines:
 2. If the pull request adds functionality, the docs should be updated. Put
    your new functionality into a function with a docstring, and add the
    feature to the list in README.rst.
-3. The pull request should work for Python 2.7, 3.5-3.9. Check
+3. The pull request should work for Python 2.7, 3.5-3.10. Check
    https://github.com/pytrip/pytrip/actions
    and make sure that the tests pass for all supported Python versions.
 
@@ -153,10 +153,10 @@ Get Started for non-GIT developers
 
    (...)
 
-Make your changes and check that they comply with PEP8 code quality standards (flake8 tests) and test against other Python versions with tox::
+Make your changes and check that they comply with PEP8 code quality standards (flake8 tests) and run pytest::
 
     $ flake8 pytrip tests
-    $ tox
+    $ pytest
 
 3. Compress your working directory and send it to us by email (see `authors <AUTHORS.rst>`__), describing your changes.
 
@@ -166,7 +166,7 @@ Tips
 
 To run full tests type::
 
-    $ tox
+    $ pytest
 
 To run only a single test type::
 

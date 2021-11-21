@@ -129,8 +129,14 @@ extensions = [
 
 
 install_requires = [
-    "matplotlib",
+    "matplotlib; python_version > '3.5'",
+    "matplotlib<3.1 ; python_version == '3.5'",
     "pydicom",
+    "scipy ; python_version > '3.5'",
+    "scipy<1.3 ; python_version == '3.5'",
+    "kiwisolver==1.1 ; python_version == '3.5'",
+    "cffi<1.15 ; python_version == '3.5'",
+    "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7
     # full range of NumPy version with support for given python version
     "numpy>=1.21 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
@@ -148,7 +154,7 @@ setup_requires = [
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
     "numpy==1.12.0 ; python_version == '3.6'",
-    "numpy==1.11.0 ; python_version <= '3.5'"  # python 3.5, 3.4 and 2.7
+    "numpy==1.11.0 ; python_version < '3.6'"  # python 3.5, 3.4 and 2.7
 ]
 
 extras_require = {

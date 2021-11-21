@@ -25,6 +25,11 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       platform: x64
       PYTHON: "C:\\Python39-x64"
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      platform: x64
+      PYTHON: "C:\\Python310-x64"
+
 init:
 # check python version for default and target python version
   - "%PYTHON%\\python.exe -V"
@@ -55,7 +60,7 @@ install:
 # check 32 or 64 bit of target python
   - python -c "import struct;print(8 * struct.calcsize('P'))"
 # install usual requirements
-  - python -m pip install --upgrade virtualenv pip setuptools tox wheel
+  - python -m pip install --upgrade virtualenv pip setuptools wheel
   - python -m pip install --upgrade -r requirements.txt
 # check numpy & scipy versions
   - python -c "import numpy as np;print(np.version.version)"

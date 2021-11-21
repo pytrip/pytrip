@@ -6,7 +6,7 @@ name: Python tests and packaging
 on:
   push:
     branches: [ master ]
-    tags: '*'
+    tags: ['*']
   pull_request:
     branches: [ master ]
   release:
@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: [3.5, 3.9]
+         python-version: ['3.5', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
@@ -55,6 +55,10 @@ jobs:
 
       - name: Install dependencies
         run: |
+          python --version
+          pip --version
+          pip install wheel
+          pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
           pip install -r requirements.txt
           pip install -r tests/requirements-test.txt
 
@@ -63,9 +67,9 @@ jobs:
           # stop the build if there are Python syntax errors or undefined names
           flake8 --count --select=E9,F63,F7,F82 --show-source --statistics pytrip tests examples
 
-      - name: Smoke test with tox
+      - name: Smoke tests
         run: |
-          tox -e py -- -k "smoke"
+          pytest -k "smoke" tests/
 
    run_tests:
      # these full tests, being slow are triggered only on master branch or on specific commit message [build]
@@ -75,7 +79,7 @@ jobs:
      needs: [initialise, smoke_test]
      strategy:
        matrix:
-         python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
      steps:
      - uses: actions/checkout@v2
@@ -86,12 +90,16 @@ jobs:
 
      - name: Install dependencies
        run: |
+         python --version
+         pip --version
+         pip install wheel
+         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
          pip install -r requirements.txt
          pip install -r tests/requirements-test.txt
 
-     - name: Test with tox
+     - name: Regular tests
        run: |
-          tox -e py -- -k "not slow"
+          pytest -k "not slow" tests/
 
    make_and_upload_package_linux:
     name: Wheels on Linux
@@ -110,12 +118,15 @@ jobs:
        python-version: '3.9'
 
     - name: Python wheels manylinux build
-     # You may pin to the exact commit or the version.
-     # uses: RalfG/python-wheels-manylinux-build@34161e0af9394fc7b5140da1ae8fc861540bba8d
-      uses: RalfG/python-wheels-manylinux-build@v0.3.3-manylinux1_x86_64
+      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux1_x86_64
       with:
        # Python versions to target, space-separated
        python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
+
+    - name: Python wheels manylinux build
+      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
+      with:
+       python-versions: "cp310-cp310"  # Python versions to target, space-separated
 
     - uses: actions/upload-artifact@v2
       with:
@@ -155,7 +166,7 @@ jobs:
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"
+          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
 
       - uses: actions/upload-artifact@v2
         with:

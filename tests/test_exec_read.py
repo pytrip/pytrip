@@ -18,41 +18,26 @@
 #
 """
 """
-import os
-import unittest
 import logging
+import os
+
+import pytest
 
 import pytrip.tripexecuter as pte
 
-import tests.base
-
 logger = logging.getLogger(__name__)
-# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.INFO)
 
 
-class TestParseExec(unittest.TestCase):
-    """ Tests for pytrip.tripexecuter.execparser
-    """
-    def setUp(self):
-        """ Prepare test environment.
-        """
-        self.exec_name = "TST003101.exec"
-
-        testdir = tests.base.get_files()
-        _exec_dir = os.path.join(testdir, "EXEC")
-        self.exec_path = os.path.join(_exec_dir, self.exec_name)
-
-    def test_exec_parse(self):
-        """
-        """
-        logger.info("Test parsing '{:s}'".format(self.exec_path))
-
-        plan = pte.Plan()
-        plan.read_exec(self.exec_path)
-        print(plan)
-        for field in plan.fields:
-            print(field)
+@pytest.fixture(scope='module')
+def exec_filename():
+    return os.path.join('tests', 'res', 'TST003', 'EXEC', 'TST003101.exec')
 
 
-if __name__ == '__main__':
-    unittest.main()
+def test_exec_parse(exec_filename):
+    """TODO"""
+    logger.info("Test parsing '{:s}'".format(exec_filename))
+
+    plan = pte.Plan()
+    plan.read_exec(exec_filename)
+    assert len(plan.fields) == 3
