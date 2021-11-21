@@ -183,70 +183,70 @@ jobs:
           if-no-files-found: error
 
 
-  build_wheels_macOS:
-    # these full tests, being slow are triggered only in following cases:
-    #  - if commit message contains specific keyword: [build]
-    #  - on master branch
-    #  - on release tags (named v*)
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
-    name: Wheels on macOS
-    needs: [initialise, full_tests]
-    runs-on: macos-10.15
+  # build_wheels_macOS:
+  #   # these full tests, being slow are triggered only in following cases:
+  #   #  - if commit message contains specific keyword: [build]
+  #   #  - on master branch
+  #   #  - on release tags (named v*)
+  #   if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+  #   name: Wheels on macOS
+  #   needs: [initialise, full_tests]
+  #   runs-on: macos-10.15
 
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: actions/setup-python@v2.3.0
-        with:
-          python-version: "3.9"
+  #     - uses: actions/setup-python@v2.3.0
+  #       with:
+  #         python-version: "3.9"
 
-      - name: install dependencies
-        run: |
-          pip install --upgrade setuptools pip wheel
-          pip install cibuildwheel
+  #     - name: install dependencies
+  #       run: |
+  #         pip install --upgrade setuptools pip wheel
+  #         pip install cibuildwheel
 
-      - name: show environment
-        run: |
-          pip freeze
+  #     - name: show environment
+  #       run: |
+  #         pip freeze
 
-      - name: list target wheels
-        run: |
-          python -m cibuildwheel . --print-build-identifiers
+  #     - name: list target wheels
+  #       run: |
+  #         python -m cibuildwheel . --print-build-identifiers
 
-      - name: build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
+  #     - name: build wheels
+  #       run: python -m cibuildwheel --output-dir wheelhouse
+  #       env:
+  #         CIBW_BUILD_VERBOSITY: "1"
+  #         CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
 
-      - uses: actions/upload-artifact@v2
-        with:
-          path: ./wheelhouse/*.whl
-          if-no-files-found: error
+  #     - uses: actions/upload-artifact@v2
+  #       with:
+  #         path: ./wheelhouse/*.whl
+  #         if-no-files-found: error
    
-  upload_wheels:
-    # upload wheels only when git tag and release is created
-    name: Upload wheels
-    needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/download-artifact@v2
-        with:
-              name: artifact
-              path: dist
+  # upload_wheels:
+  #   # upload wheels only when git tag and release is created
+  #   name: Upload wheels
+  #   needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: actions/download-artifact@v2
+  #       with:
+  #             name: artifact
+  #             path: dist
 
-      - name: inspect packages to upload
-        run: |
-          ls -alh dist/
+  #     - name: inspect packages to upload
+  #       run: |
+  #         ls -alh dist/
           
-      - name: Publish packages to pypi
-        uses: pypa/gh-action-pypi-publish@v1.4.2
-        if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
-        with:
-              password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
-              repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
-              packages_dir: dist/ # The target directory for distribution
-              verbose: true # Show verbose output
+  #     - name: Publish packages to pypi
+  #       uses: pypa/gh-action-pypi-publish@v1.4.2
+  #       if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
+  #       with:
+  #             password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
+  #             repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
+  #             packages_dir: dist/ # The target directory for distribution
+  #             verbose: true # Show verbose output
 
