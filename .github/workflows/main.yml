@@ -1,6 +1,3 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
-
 name: Python tests and packaging
 
 on:
@@ -14,15 +11,15 @@ on:
 
 jobs:
 
-# code adopted from https://github.community/t/accessing-commit-message-in-pull-request-event/17158
    initialise:
+    # code adopted from https://github.community/t/accessing-commit-message-in-pull-request-event/17158
+    # extracts commit message from last commit, so it is available in further stages of build process
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Project
         uses: actions/checkout@v2
         with:
-          # for pull_request so we can do HEAD^2
-          fetch-depth: 2
+          fetch-depth: 2 # needed for pull_request so we can do HEAD^2
 
       - name: Get commit message
         id: get_commit_message
@@ -38,7 +35,9 @@ jobs:
         echo "${{ steps.get_commit_message.outputs.commit_message }}"
 
    smoke_test:
-    if: "github.repository == 'pytrip/pytrip' && !contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
+    # quick smoke tests
+    if: "!contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
+    name: "Fast smoke tests"
     runs-on:  ${{ matrix.platform }}
     needs: [initialise]
     strategy:
@@ -71,10 +70,13 @@ jobs:
         run: |
           pytest -k "smoke" tests/
 
-   run_tests:
-     # these full tests, being slow are triggered only on master branch or on specific commit message [build]
-     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
-
+   full_tests:
+     # these full tests, being slow are triggered only in following cases:
+     #  - if commit message contains specific keyword: [build]
+     #  - on master branch
+     #  - on release tags
+     if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags'))"
+     name: "Full slow tests"
      runs-on:  ${{ matrix.platform }}
      needs: [initialise, smoke_test]
      strategy:
@@ -101,13 +103,15 @@ jobs:
        run: |
           pytest -k "not slow" tests/
 
-   make_and_upload_package_linux:
+   build_wheels_linux:
+     # these full tests, being slow are triggered only in following cases:
+     #  - if commit message contains specific keyword: [build]
+     #  - on master branch
+     #  - on release tags
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags'))"
     name: Wheels on Linux
-    # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
-
     runs-on: ubuntu-latest
-    needs: [initialise, run_tests]
+    needs: [initialise, full_tests]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -117,13 +121,14 @@ jobs:
       with:
        python-version: '3.9'
 
-    - name: Python wheels manylinux build
+    - name: manylinux1 wheels
+      # manylinux1 build has support for python versions up to 3.9
       uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux1_x86_64
       with:
-       # Python versions to target, space-separated
-       python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"
+       python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"  # Python versions to target, space-separated
 
-    - name: Python wheels manylinux build
+    - name: manylinux2010 wheels
+      # we use manylinux2010 as it is the oldest standard with support for python 3.10
       uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
       with:
        python-versions: "cp310-cp310"  # Python versions to target, space-separated
@@ -134,10 +139,13 @@ jobs:
           if-no-files-found: error
 
    build_wheels_macOS:
-    # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
+     # these full tests, being slow are triggered only in following cases:
+     #  - if commit message contains specific keyword: [build]
+     #  - on master branch
+     #  - on release tags
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.ref, 'refs/tags'))"
     name: Wheels on macOS
-    needs: [initialise, run_tests]
+    needs: [initialise, full_tests]
     runs-on: macos-10.15
 
     steps:
@@ -162,7 +170,7 @@ jobs:
         run: |
           python -m cibuildwheel . --print-build-identifiers
 
-      - name: Build wheels
+      - name: build wheels
         run: python -m cibuildwheel --output-dir wheelhouse
         env:
           CIBW_BUILD_VERBOSITY: "1"
@@ -174,10 +182,10 @@ jobs:
           if-no-files-found: error
    
    upload_wheels:
-    # this test, being slow are triggered only on master branch or on specific commit message [build]
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master'"
+    # upload wheels only when git tag and release is created
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
     name: Upload wheels
-    needs: [initialise, make_and_upload_package_linux, build_wheels_macOS]
+    needs: [initialise, build_wheels_linux, build_wheels_macOS]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
@@ -189,11 +197,8 @@ jobs:
         uses: pypa/gh-action-pypi-publish@v1.4.2
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
         with:
-              # Password for your PyPI user or access token
-              password: ${{ secrets.TWINE_PASSWORD }}
-              # The repository URL to use
-              repository_url: "https://upload.pypi.org/legacy/"
-              # The target directory for distribution
-              packages_dir: dist/
-              # Show verbose output.
-              verbose: true
+              password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
+              repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
+              packages_dir: dist/ # The target directory for distribution
+              verbose: true # Show verbose output
+
