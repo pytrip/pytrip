@@ -116,7 +116,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-versions: ['cp35-cp35m', 'cp36-cp36m', 'cp37-cp37m','cp38-cp38', 'cp39-cp39']
+         python-versions: ["cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
 
     steps:
     - uses: actions/checkout@v2
@@ -132,7 +132,7 @@ jobs:
       # manylinux1 build has support for python versions up to 3.9
       uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux1_x86_64
       with:
-       python-versions: ${{ matrix.python-version }}  # Python versions to target, space-separated
+       python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
 
     - name: inspect packages to upload
       run: |
@@ -171,7 +171,7 @@ jobs:
       # we use manylinux2010 as it is the oldest standard with support for python 3.10
       uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
       with:
-       python-versions: ${{ matrix.python-version }}  # Python versions to target, space-separated
+       python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
 
     - name: inspect packages to upload
       run: |
