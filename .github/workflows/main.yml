@@ -128,12 +128,6 @@ jobs:
       with:
        python-versions: ${{ matrix.python-version }}  # Python versions to target, space-separated
 
-    - name: manylinux2010 wheels
-      # we use manylinux2010 as it is the oldest standard with support for python 3.10
-      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
-      with:
-       python-versions: "cp310-cp310"  # Python versions to target, space-separated
-
     - uses: actions/upload-artifact@v2
       with:
           path: ./dist/pytrip98*manylinux1_x86_64.whl
