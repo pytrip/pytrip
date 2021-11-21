@@ -221,13 +221,13 @@ class Cube(object):
         """
         eps = 1e-5
 
-        if a.dimx != b.dimx or \
-                a.dimy != b.dimy or \
-                a.dimz != b.dimz or \
-                (a.pixel_size - b.pixel_size) > eps or \
-                a.slice_distance != b.slice_distance:
-            return False
-        return True
+        x_dim_compatible = (a.dimx == b.dimx)
+        y_dim_compatible = (a.dimy == b.dimy)
+        z_dim_compatible = (a.dimz == b.dimz)
+        pixel_size_compatible = (a.pixel_size - b.pixel_size <= eps)
+        slice_distance_compatible = (a.slice_distance == b.slice_distance)
+        return x_dim_compatible and y_dim_compatible and z_dim_compatible and pixel_size_compatible and \
+            slice_distance_compatible
 
     def indices_to_pos(self, indices):
         """ Translate index number of a voxel to real position in [mm], including any offsets.
@@ -251,21 +251,6 @@ class Cube(object):
         """
         # note that self.slice_pos contains an array of positions including any zoffset.
         return self.slice_pos[slice_number - 1]
-
-    # TODO unfinished function
-    # def create_cube_from_equation(self, equation, center, limits, radial=True):
-    #     """ Create Cube from a given equation.
-    #
-    #     This function is currently out of order.
-    #
-    #     """
-    #     # TODO why eq not being used ?
-    #     # eq = util.evaluator(equation)
-    #     # TODO why data not being used ?
-    #     # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
-    #     x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
-    #     y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
-    #     xv, yv = np.meshgrid(x, y)
 
     def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
         """ Attaches/overwrites Cube.data based on a given Voi.
@@ -787,7 +772,7 @@ class Cube(object):
         # if yes, then all references to whether this is sorted or not can be removed hereafter
         # (see also pytripgui) /NBassler
         self.slice_pos = []
-        for _, dcm_image in enumerate(dcm["images"]):
+        for dcm_image in dcm["images"]:
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
     def _set_header_from_dicom(self, dcm):

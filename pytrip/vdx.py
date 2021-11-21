@@ -557,7 +557,6 @@ def create_cube(cube, name, center, width, height, depth):
     return v
 
 
-# most likely doesn't work correctly
 def create_voi_from_cube(cube, name, value=100):
     """
     Creates a new VOI which holds the contours following an isodose lines.
