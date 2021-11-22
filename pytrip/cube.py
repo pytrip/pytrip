@@ -490,7 +490,7 @@ class Cube(object):
         else:
             with open(header_path, "rb") as fp:
                 content = fp.read()
-
+        content = content.decode("utf-8")
         # fill self with data
         self._parse_trip_header(content)
         self._set_format_str()
