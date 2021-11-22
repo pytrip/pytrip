@@ -96,7 +96,7 @@ jobs:
          python --version
          pip --version
          pip install wheel
-         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
+         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seems to doesn't understand reqs in setup.py
          pip install -r requirements.txt
          pip install -r tests/requirements-test.txt
 
@@ -104,7 +104,7 @@ jobs:
        run: |
           pytest -k "not slow" tests/
 
-  build_wheels_linux:
+  build_wheels_manylinux1:
     # these full tests, being slow are triggered only in following cases:
     #  - if commit message contains specific keyword: [build]
     #  - on master branch
@@ -113,31 +113,63 @@ jobs:
     name: Wheels on Linux
     runs-on: ubuntu-latest
     needs: [initialise, full_tests]
+    strategy:
+       matrix:
+         python-versions: ["cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
+
     steps:
     - uses: actions/checkout@v2
       with:
        fetch-depth: 0
-    - name: Set up Python
-      uses: actions/setup-python@v2.3.0
-      with:
-       python-version: '3.9'
 
     - name: manylinux1 wheels
       # manylinux1 build has support for python versions up to 3.9
       uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux1_x86_64
       with:
-       python-versions: "cp35-cp35m cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39"  # Python versions to target, space-separated
+       python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
 
-    - name: manylinux2010 wheels
-      # we use manylinux2010 as it is the oldest standard with support for python 3.10
-      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
-      with:
-       python-versions: "cp310-cp310"  # Python versions to target, space-separated
+    - name: inspect packages to upload
+      run: |
+          ls -alh dist/
 
     - uses: actions/upload-artifact@v2
       with:
           path: ./dist/pytrip98*manylinux1_x86_64.whl
           if-no-files-found: error
+
+  build_wheels_manylinux2010:
+    # these full tests, being slow are triggered only in following cases:
+    #  - if commit message contains specific keyword: [build]
+    #  - on master branch
+    #  - on release tags (named v*)
+    if: "contains(needs.initialise.outputs.commit_message, '[build]') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+    name: Wheels on Linux
+    runs-on: ubuntu-latest
+    needs: [initialise, full_tests]
+    strategy:
+       matrix:
+         python-versions: ['cp310-cp310']
+
+    steps:
+    - uses: actions/checkout@v2
+      with:
+       fetch-depth: 0
+
+    - name: manylinux2010 wheels
+      # we use manylinux2010 as it is the oldest standard with support for python 3.10
+      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
+      with:
+       python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
+
+    - name: inspect packages to upload
+      run: |
+          ls -alh dist/
+
+    - uses: actions/upload-artifact@v2
+      with:
+          path: ./dist/pytrip98*manylinux2010_x86_64.whl
+          if-no-files-found: error
+
 
   build_wheels_macOS:
     # these full tests, being slow are triggered only in following cases:
@@ -185,13 +217,17 @@ jobs:
   upload_wheels:
     # upload wheels only when git tag and release is created
     name: Upload wheels
-    needs: [initialise, build_wheels_linux, build_wheels_macOS]
+    needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
         with:
               name: artifact
               path: dist
+
+      - name: inspect packages to upload
+        run: |
+          ls -alh dist/
           
       - name: Publish packages to pypi
         uses: pypa/gh-action-pypi-publish@v1.4.2
