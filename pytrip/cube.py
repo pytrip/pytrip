@@ -59,6 +59,7 @@ class Cube(object):
     allowed_suffix = ()
 
     def __init__(self, cube=None):
+        self.pydata_type = np.int16
         if cube is not None:  # copying constructor
             self.header_set = cube.header_set
             self.version = cube.version
@@ -220,18 +221,13 @@ class Cube(object):
         """
         eps = 1e-5
 
-        if a.dimx != b.dimx:
-            return False
-        elif a.dimy != b.dimy:
-            return False
-        elif a.dimz != b.dimz:
-            return False
-        elif (a.pixel_size - b.pixel_size) > eps:
-            return False
-        elif a.slice_distance != b.slice_distance:
-            return False
-        else:
-            return True
+        x_dim_compatible = (a.dimx == b.dimx)
+        y_dim_compatible = (a.dimy == b.dimy)
+        z_dim_compatible = (a.dimz == b.dimz)
+        pixel_size_compatible = (a.pixel_size - b.pixel_size <= eps)
+        slice_distance_compatible = (a.slice_distance == b.slice_distance)
+        return x_dim_compatible and y_dim_compatible and z_dim_compatible and pixel_size_compatible and \
+            slice_distance_compatible
 
     def indices_to_pos(self, indices):
         """ Translate index number of a voxel to real position in [mm], including any offsets.
@@ -255,20 +251,6 @@ class Cube(object):
         """
         # note that self.slice_pos contains an array of positions including any zoffset.
         return self.slice_pos[slice_number - 1]
-
-    def create_cube_from_equation(self, equation, center, limits, radial=True):
-        """ Create Cube from a given equation.
-
-        This function is currently out of order.
-
-        """
-        # TODO why eq not being used ?
-        # eq = util.evaluator(equation)
-        # TODO why data not being used ?
-        # data = np.array(np.zeros((self.dimz, self.dimy, self.dimx)))
-        x = np.linspace(0.5, self.dimx - 0.5, self.dimx) * self.pixel_size - center[0]
-        y = np.linspace(self.dimx - 0.5, 0.5, self.dimx) * self.pixel_size - center[1]
-        xv, yv = np.meshgrid(x, y)
 
     def mask_by_voi_all(self, voi, preset=0, data_type=np.int16):
         """ Attaches/overwrites Cube.data based on a given Voi.
@@ -306,7 +288,8 @@ class Cube(object):
                                 data[i_z][i_y][i_x] = preset
         self.cube = data
 
-    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, slice_offset=0.0):
+    def create_empty_cube(self, value, dimx, dimy, dimz, pixel_size, slice_distance, xoffset=0.0, yoffset=0.0,
+                          slice_offset=0.0):
         """ Creates an empty Cube object.
 
         Values are stored as 2-byte integers.
@@ -317,7 +300,9 @@ class Cube(object):
         :param int dimz: number of voxels along z
         :param float pixel_size: size of each pixel (x == y) in [mm]
         :param float slice_distance: the distance between two slices (z) in [mm]
-        :param float slice_offset: start position of the first slice in [mm] (default 0.0 mm)
+        :param float xoffset: offset in X in [mm] (default 0.0 mm)
+        :param float yoffset: offset in Y in [mm] (default 0.0 mm)
+        :param float slice_offset: start position of the first slice (offset in Z) in [mm] (default 0.0 mm)
         """
         self.dimx = dimx
         self.dimy = dimy
@@ -326,11 +311,13 @@ class Cube(object):
         self.pixel_size = pixel_size
         self.slice_distance = slice_distance
         self.slice_thickness = slice_distance  # use distance for thickness as default
+        self.xoffset = xoffset
+        self.yoffset = yoffset
+        self.zoffset = slice_offset
         self.cube = np.ones((dimz, dimy, dimx), dtype=np.int16) * value
         self.slice_dimension = dimx
         self.num_bytes = 2
         self.data_type = "integer"
-        self.pydata_type = np.int16
         self.slice_pos = [slice_distance * i + slice_offset for i in range(dimz)]
         self.header_set = True
         self.patient_id = ''
@@ -498,12 +485,12 @@ class Cube(object):
         # load plain of gzipped file
         if header_path.endswith(".gz"):
             import gzip
-            fp = gzip.open(header_path, "rt")
+            with gzip.open(header_path, "rb") as fp:
+                content = fp.read()
         else:
-            fp = open(header_path, "rt")
-        content = fp.read()
-        fp.close()
-
+            with open(header_path, "rb") as fp:
+                content = fp.read()
+        content = content.decode("utf-8")
         # fill self with data
         self._parse_trip_header(content)
         self._set_format_str()
@@ -785,7 +772,7 @@ class Cube(object):
         # if yes, then all references to whether this is sorted or not can be removed hereafter
         # (see also pytripgui) /NBassler
         self.slice_pos = []
-        for i, dcm_image in enumerate(dcm["images"]):
+        for dcm_image in dcm["images"]:
             self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
 
     def _set_header_from_dicom(self, dcm):
@@ -862,24 +849,24 @@ class Cube(object):
         else:
             raise ValueError("set_byteorder error: unknown endian " + str(endian))
 
-    def set_data_type(self, type):
+    def set_data_type(self, data_type):
         """ Sets the data type for the TRiP98 header files.
 
-        :param numpy.type type: numpy type, e.g. np.uint16
+        :param numpy.type data_type: numpy type, e.g. np.uint16
         """
-        if type is np.int8 or type is np.uint8:
+        if data_type is np.int8 or data_type is np.uint8:
             self.data_type = "integer"
             self.num_bytes = 1
-        elif type is np.int16 or type is np.uint16:
+        elif data_type is np.int16 or data_type is np.uint16:
             self.data_type = "integer"
             self.num_bytes = 2
-        elif type is np.int32 or type is np.uint32:
+        elif data_type is np.int32 or data_type is np.uint32:
             self.data_type = "integer"
             self.num_bytes = 4
-        elif type is np.float:
+        elif data_type is np.float:
             self.data_type = "float"
             self.num_bytes = 4
-        elif type is np.double:
+        elif data_type is np.double:
             self.data_type = "double"
             self.num_bytes = 8
 

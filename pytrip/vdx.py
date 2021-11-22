@@ -544,9 +544,11 @@ def create_cube(cube, name, center, width, height, depth):
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [  # 4 corners of cube in this slice
-                [center[0] - width / 2, center[1] - height / 2, z], [center[0] + width / 2, center[1] - height / 2, z],
-                [center[0] + width / 2, center[1] + height / 2, z], [center[0] - width / 2, center[1] + height / 2, z]
+            points = [  # 4 corners of cube in this slice, including offsets
+                [center[0] - width / 2 + cube.xoffset, center[1] - height / 2 + cube.yoffset, z + cube.zoffset],
+                [center[0] + width / 2 + cube.xoffset, center[1] - height / 2 + cube.yoffset, z + cube.zoffset],
+                [center[0] + width / 2 + cube.xoffset, center[1] + height / 2 + cube.yoffset, z + cube.zoffset],
+                [center[0] - width / 2 + cube.xoffset, center[1] + height / 2 + cube.yoffset, z + cube.zoffset]
             ]
             c = Contour(points, cube)
             c.contour_closed = True
@@ -609,7 +611,8 @@ def create_cylinder(cube, name, center, radius, depth):
         if center[2] - depth / 2 <= z <= center[2] + depth / 2:
             s = Slice(cube)
             s.thickness = cube.slice_distance
-            points = [[x[0], x[1], z] for x in p]
+            # including offsets
+            points = [[x[0] + cube.xoffset, x[1] + cube.yoffset, z + cube.zoffset] for x in p]
             if points:
                 c = Contour(points, cube)
                 c.contour_closed = True
@@ -644,7 +647,9 @@ def create_sphere(cube, name, center, radius):
             s.thickness = cube.slice_distance
             _contour_closed = True
             if r2 > 0.0:
-                points = [[center[0] + x[0] * sqrt(r2), center[1] + x[1] * sqrt(r2), z] for x in p]
+                # including offsets
+                points = [[center[0] + x[0] * sqrt(r2) + cube.xoffset, center[1] + x[1] * sqrt(r2) + cube.yoffset,
+                           z + cube.zoffset] for x in p]
             # in case r2 == 0.0, the contour in this slice is a point.
             # TODO: How should the sphere be treated with points in the end slices:
             # seen from the side: " .oOo. "  or should it be "  oOo  "  ?
@@ -652,7 +657,8 @@ def create_sphere(cube, name, center, radius):
             # Here "  oOo  " is implemented.
             # If you do not want the " .oOo. " version uncomment the next three lines.
             else:
-                points = [[center[0], center[1], z]]
+                # including offsets
+                points = [[center[0] + cube.xoffset, center[1] + cube.yoffset, z + cube.zoffset]]
             if len(points) > 0:
                 c = Contour(points, cube)
                 c.contour_closed = _contour_closed
