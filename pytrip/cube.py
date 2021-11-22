@@ -485,10 +485,10 @@ class Cube(object):
         # load plain of gzipped file
         if header_path.endswith(".gz"):
             import gzip
-            with gzip.open(header_path, "rt") as fp:
+            with gzip.open(header_path, "rb") as fp:
                 content = fp.read()
         else:
-            with open(header_path, "rt") as fp:
+            with open(header_path, "rb") as fp:
                 content = fp.read()
 
         # fill self with data
