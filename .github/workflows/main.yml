@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.5', '3.9', '3.10']
+         python-version: ['2,7', '3.5', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
@@ -82,7 +82,7 @@ jobs:
      needs: [initialise, smoke_test]
      strategy:
        matrix:
-         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
      steps:
      - uses: actions/checkout@v2
