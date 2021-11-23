@@ -1,13 +1,22 @@
 version: 2
 updates:
 
-  # Maintain dependencies for GitHub Actions
+  # automatically update dependencies for GitHub Actions
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "daily"
+    # add a dedicated commit message, so github actions could decide to run full tests for such PRs 
+    commit-message:
+      include: "scope"
+      prefix: "dependabot_gha"
 
+  # automatically update dependencies for pip 
   - package-ecosystem: "pip"
     directory: "/"
     schedule:
       interval: "daily"
+    # add a dedicated commit message, so github actions could decide to run full tests for such PRs
+    commit-message:
+      prefix: "dependabot_pip"
+      include: "scope"
