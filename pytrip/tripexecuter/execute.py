@@ -471,7 +471,7 @@ class Execute(object):
         sum_size = 0
 
         def track_progress(tarinfo):
-            nonlocal total_size, sum_size
+            nonlocal total_size, sum_size  # do we have some implementation that works for python 2.7 ? nonlocal is 3.x only
             if tarinfo.isfile():
                 sum_size += tarinfo.size
                 percentage = int(sum_size / total_size * 100)
