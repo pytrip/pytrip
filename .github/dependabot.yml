@@ -6,7 +6,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    # add a dedicated commit message, so github actions could decide to run full tests for such PR  
+    # add a dedicated commit message, so github actions could decide to run full tests for such PRs 
     commit-message:
       include: "scope"
       prefix: "dependabot_gha"
@@ -16,7 +16,7 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
-    # add a dedicated commit message, so github actions could decide to run full tests for such PR
+    # add a dedicated commit message, so github actions could decide to run full tests for such PRs
     commit-message:
       prefix: "dependabot_pip"
       include: "scope"
