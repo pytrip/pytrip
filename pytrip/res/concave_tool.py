@@ -1,21 +1,24 @@
 import math
 
-# This file contains methods that create from a list of intersections (list of points).
-# Algorithm steps:
-#     1. Divide passed list of intersections into separate groups, that each represents a valid contour.
-#     2. For each group create a contour.
-#         2.1. Divide group of points into parts of contour, polygon representing each part imitates plot of a function
-#         2.2. Connect parts of contour (taking into account direction of connection)
-#     3. Return created contours.
-# Basic heuristics are used:
-#     1. searching for minimal distance between a part of contour and a point and ensuring that relation is symmetrical
-#         (if point A is the closest one to part B, check if part B is the closest one to point A)
-#     2. limiting distance between parts and points based on previous distances
-#         (next point cannot be too far away from parts)
+"""
+This file contains methods that create from a list of intersections (list of points).
+Algorithm steps:
+    1. Divide passed list of intersections into separate groups, that each represents a valid contour.
+    2. For each group create a contour.
+        2.1. Divide group of points into parts of contour, polygon representing each part imitates plot of a function
+        2.2. Connect parts of contour (taking into account direction of connection)
+    3. Return created contours.
+Basic heuristics are used:
+    1. searching for minimal distance between a part of contour and a point and ensuring that relation is symmetrical
+        (if point A is the closest one to part B, check if part B is the closest one to point A)
+    2. limiting distance between parts and points based on previous distances
+        (next point cannot be too far away from parts)
+"""
 
 
 class ListEntry:
     """Special type to hold data and other useful information"""
+
     def __init__(self):
         self.data = []
         self.last_distance = float('inf')
@@ -23,6 +26,7 @@ class ListEntry:
 
 class SpecialPoint:
     """Special type to hold data and other useful information"""
+
     def __init__(self, point):
         self.point = point
         self.is_appended = False
@@ -36,32 +40,33 @@ def map_points_to_special_points(points):
     return [SpecialPoint(p) for p in points]
 
 
-def calculate_distance(p, q):
-    """Return value of distance between two points in euclidean 3D space"""
-    return math.sqrt((p[0] - q[0])**2 + (p[1] - q[1])**2 + (p[2] - q[2])**2)
+def distance(p, q):
+    """Return value of euclidean distance between two points in euclidean 3D space"""
+    return math.sqrt(
+        (p[0] - q[0]) ** 2 + (p[1] - q[1]) ** 2 + (p[2] - q[2]) ** 2)
 
 
-def search_for_closest_part(s_point, parts_of_contour):
-    closest_part = None
+def search_for_closest_part(point, parts):
+    cp = None
     closest_distance = float('inf')
-    for part in parts_of_contour:
-        distance = calculate_distance(s_point.point, part.data[-1])
-        if distance < closest_distance and distance < magic_max_distance_multiplier * part.last_distance:
-            closest_distance = distance
-            closest_part = part
-    return closest_part
+    for part in parts:
+        d = distance(point.point, part.data[-1])
+        if d < closest_distance and d < magic_max_distance_multiplier * part.last_distance:
+            closest_distance = d
+            cp = part
+    return cp
 
 
-def search_for_closest_point(part_of_contour, s_points):
-    closest_point = None
+def search_for_closest_point(part, points):
+    cp = None
     closest_distance = float('inf')
-    for sp in s_points:
-        distance = calculate_distance(sp.point, part_of_contour.data[-1])
-        # distance should be the shortest one and should not be longer than *magic number* times last know distance
-        if distance < closest_distance and distance < magic_max_distance_multiplier * part_of_contour.last_distance:
-            closest_distance = distance
-            closest_point = sp
-    return closest_point
+    for point in points:
+        d = distance(point.point, part.data[-1])
+        # distance should be the shortest one and should not be longer than *magic number* times last known distance
+        if d < closest_distance and d < magic_max_distance_multiplier * part.last_distance:
+            closest_distance = d
+            cp = point
+    return cp
 
 
 def calculate_average_distance(parts_of_contour):
@@ -87,11 +92,11 @@ def append_points_to_parts(current_points, parts_of_contour):
         closest_point = search_for_closest_point(current_part, current_points)
         # if that point exists - check if current part is the closest one to that point
         if closest_point:
-            part_b = search_for_closest_part(closest_point, parts_of_contour)
+            closest_part = search_for_closest_part(closest_point, parts_of_contour)
             # if the closest part to chosen point is the same as current part,
             #   then we can append point to part and mark the point as appended
-            if part_b == current_part and not closest_point.is_appended:
-                current_part.last_distance = calculate_distance(closest_point.point, current_part.data[-1])
+            if closest_part == current_part and not closest_point.is_appended:
+                current_part.last_distance = distance(closest_point.point, current_part.data[-1])
                 current_part.data.append(closest_point.point)
                 closest_point.is_appended = True
 
@@ -161,14 +166,14 @@ def search_for_closest_parts(parts):
         # search for closest part to part_a, from both sides - aka part_b
         for last_point_a, reverse_a in [(part_a.data[-1], True), (part_a.data[0], False)]:
             for part_wo_a in parts_without_a:
-                distance = calculate_distance(last_point_a, part_wo_a.data[0])
-                if distance < closest_distance:
-                    closest_distance = distance
+                d = distance(last_point_a, part_wo_a.data[0])
+                if d < closest_distance:
+                    closest_distance = d
                     part_b = part_wo_a
                     reverse_b = False
-                distance = calculate_distance(last_point_a, part_wo_a.data[-1])
-                if distance < closest_distance:
-                    closest_distance = distance
+                d = distance(last_point_a, part_wo_a.data[-1])
+                if d < closest_distance:
+                    closest_distance = d
                     part_b = part_wo_a
                     reverse_b = True
 
@@ -181,14 +186,14 @@ def search_for_closest_parts(parts):
                 closest_distance = float('inf')
                 parts_without_b = [p for p in parts if p != part_b]
                 for part_wo_b in parts_without_b:
-                    distance = calculate_distance(last_point_b, part_wo_b.data[-1])
-                    if distance < closest_distance:
-                        closest_distance = distance
+                    d = distance(last_point_b, part_wo_b.data[-1])
+                    if d < closest_distance:
+                        closest_distance = d
                         closest_to_part_b = part_wo_b
                         reverse_to_part_b = True
-                    distance = calculate_distance(last_point_b, part_wo_b.data[0])
-                    if distance < closest_distance:
-                        closest_distance = distance
+                    d = distance(last_point_b, part_wo_b.data[0])
+                    if d < closest_distance:
+                        closest_distance = d
                         closest_to_part_b = part_wo_b
                         reverse_to_part_b = False
             # if the closest part to part_b is the as part_a considering proper end of array
@@ -272,7 +277,7 @@ def create_contour_parts(points_lists):
 def connect_all_parts(parts):
     guardian_counter = 0
     while len(parts) > 1:
-        if guardian_counter > 10**6:
+        if guardian_counter > 10 ** 6:
             raise RuntimeWarning("Connecting part in method connect_all_parts in concave_tool exceeded iteration limit")
         guardian_counter += 1
 
@@ -301,6 +306,5 @@ def create_contour(points_lists):
         contours.append(contour)
 
     return contours
-
 
 # -------------------- end block of wrapper methods --------------------

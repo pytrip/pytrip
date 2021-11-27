@@ -860,7 +860,7 @@ class Voi:
         # concat_contour() merges all contours to one contour, as in TRiP98 standard
         self.concat_contour()  # TODO: this is modifying current Voi, which is not nice, refactor it
 
-        # variable to collect all intersections found in for loop
+        # a list to collect all intersections found in all loop passes
         all_intersections = []
 
         # loop over all slices in Voi, each slice contains at least one contour
