@@ -69,7 +69,7 @@ jobs:
 
       - name: Smoke tests
         run: |
-          pytest -k "smoke" tests/
+          python -m pytest -k "smoke" tests/
 
   full_tests:
      # these full tests, being slow are triggered only in following cases:
@@ -102,7 +102,7 @@ jobs:
 
      - name: Regular tests
        run: |
-          pytest -k "not slow" tests/
+          python -m pytest -k "not slow" tests/
 
   build_wheels_manylinux1:
     # these full tests, being slow are triggered only in following cases:
