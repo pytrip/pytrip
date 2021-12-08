@@ -680,6 +680,29 @@ def create_sphere(cube, name, center, radius):
     return v
 
 
+def create_custom(cube, name, center, slices):
+    v = Voi(name, cube)
+
+    distance_to_slice = center[2] % cube.slice_distance
+    z = center[2] - (distance_to_slice + cube.slice_distance * (len(slices) // 2))
+    # TODO do something about empty VOIs and slices - are they correct?
+    for slice_contours in slices:
+        s = Slice(cube)
+        s.thickness = cube.slice_distance
+        for contour in slice_contours:
+            # check if the contour is not empty
+            if contour:
+                points = [[point_xy[0], point_xy[1], z] for point_xy in contour]
+                c = Contour(points, cube)
+                # TODO not sure if correct
+                if points[0] == points[-1]:
+                    c.contour_closed = True
+                s.add_contour(c)
+        v.add_slice(s)
+        z += cube.slice_distance
+    return v
+
+
 class Voi:
     """
     This is a class for handling volume of interests (VOIs). This class can e.g. be found inside the VdxCube object.
