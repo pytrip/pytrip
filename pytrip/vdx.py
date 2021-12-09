@@ -370,9 +370,9 @@ class VdxCube:
                 fp.write("all_indices_zero_based\n")
                 fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
             except TypeError:
-                fp.write(unicode("vdx_file_version 2.0\n"))
-                fp.write(unicode("all_indices_zero_based\n"))
-                fp.write(unicode("number_of_vois {:d}\n".format(self.number_of_vois())))
+                fp.write("vdx_file_version 2.0\n".decode())
+                fp.write("all_indices_zero_based\n".decode())
+                fp.write("number_of_vois {:d}\n".format(self.number_of_vois()).decode())
 
             self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
             for voi in self.vois:
@@ -380,7 +380,7 @@ class VdxCube:
                 try:
                     fp.write(voi.vdx_string())
                 except TypeError:
-                    fp.write(unicode(voi.vdx_string()))
+                    fp.write(voi.vdx_string().decode())
 
     def write_trip(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.

@@ -750,7 +750,7 @@ class Cube(object):
             try:
                 f.write(output_str)
             except TypeError:
-                f.write(unicode(output_str))
+                f.write(output_str.decode())
 
     def _write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
