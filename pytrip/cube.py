@@ -746,6 +746,9 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
+        # for compatibility with python 2.7 we need to use `io.open` instead of `open`,
+        # as `open` function in python 2.7 cannot handle `newline` argument.
+        # This needs to be followed by `decode()`d string being written
         with io.open(path, "w+", newline='\n') as f:
             try:
                 f.write(output_str)

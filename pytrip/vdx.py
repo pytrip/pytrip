@@ -364,6 +364,10 @@ class VdxCube:
 
         :param str path: Full path, including file extension (.vdx).
         """
+
+        # for compatibility with python 2.7 we need to use `io.open` instead of `open`,
+        # as `open` function in python 2.7 cannot handle `newline` argument.
+        # This needs to be followed by `decode()`d string being written
         with io.open(path, "w", newline='\n') as fp:
             try:
                 fp.write("vdx_file_version 2.0\n")
