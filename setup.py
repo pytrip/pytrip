@@ -133,9 +133,9 @@ install_requires = [
     "matplotlib<3.1 ; python_version <= '3.5'",
     "pydicom",
     "scipy ; python_version > '3.5'",
-    "scipy<1.3 ; python_version == '3.5'",
-    "kiwisolver==1.1 ; python_version == '3.5'",
-    "cffi<1.15 ; python_version == '3.5'",
+    "scipy<1.3 ; python_version <= '3.5'",
+    "kiwisolver==1.1 ; python_version <= '3.5'",
+    "cffi<1.15 ; python_version <= '3.5'",
     "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7
     # full range of NumPy version with support for given python version
     "numpy>=1.21 ; python_version == '3.10'",
