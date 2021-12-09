@@ -21,6 +21,7 @@ This module provides the Cube class, which is used by the CTX, DOS, LET and VDX 
 A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
 import os
+import io
 import re
 import sys
 import logging
@@ -745,7 +746,7 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
-        with open(path, "w+", newline='\n') as f:
+        with io.open(path, "w+", newline='\n') as f:
             f.write(output_str)
 
     def _write_trip_data(self, path):
