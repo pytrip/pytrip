@@ -54,7 +54,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       - name: Install Visual C++ 9.0 for Python 2.7
-        if: matrix.python-version == '2.7'
+        if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
         run: |
           choco install vcpython27 -f -y
 
