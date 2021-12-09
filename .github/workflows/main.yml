@@ -56,7 +56,8 @@ jobs:
       - name: Install Visual C++ 9.0 for Python 2.7
         if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
         run: |
-          choco install vcredist2008 -f -y
+          echo $env:GITHUB_WORKSPACE
+          pwd
 
       - name: Install dependencies
         run: |
