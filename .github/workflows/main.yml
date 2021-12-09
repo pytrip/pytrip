@@ -56,7 +56,7 @@ jobs:
       - name: Install Visual C++ 9.0 for Python 2.7
         if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
         run: |
-          choco install vcpython27 -f -y
+          choco install vcredist2008 -f -y
 
       - name: Install dependencies
         run: |
