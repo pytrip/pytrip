@@ -97,6 +97,12 @@ jobs:
        with:
          python-version: ${{ matrix.python-version }}
 
+     - name: Install Visual C++ 9.0 for Python 2.7
+       if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
+       run: |
+         C:\msys64\usr\bin\wget.exe -q https://web.archive.org/web/20190720195601/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi
+         msiexec /i VCForPython27.msi /qn
+
      - name: Install dependencies
        run: |
          python --version
