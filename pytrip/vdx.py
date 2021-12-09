@@ -364,15 +364,23 @@ class VdxCube:
 
         :param str path: Full path, including file extension (.vdx).
         """
-        fp = io.open(path, "w", newline='\n')
-        fp.write("vdx_file_version 2.0\n")
-        fp.write("all_indices_zero_based\n")
-        fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
-        self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
-        for voi in self.vois:
-            logger.debug("writing VOI {}".format(voi.name))
-            fp.write(voi.vdx_string())
-        fp.close()
+        with io.open(path, "w", newline='\n') as fp:
+            try:
+                fp.write("vdx_file_version 2.0\n")
+                fp.write("all_indices_zero_based\n")
+                fp.write("number_of_vois {:d}\n".format(self.number_of_vois()))
+            except TypeError:
+                fp.write(unicode("vdx_file_version 2.0\n"))
+                fp.write(unicode("all_indices_zero_based\n"))
+                fp.write(unicode("number_of_vois {:d}\n".format(self.number_of_vois())))
+
+            self.vois = sorted(self.vois, key=lambda voi: voi.type, reverse=True)
+            for voi in self.vois:
+                logger.debug("writing VOI {}".format(voi.name))
+                try:
+                    fp.write(voi.vdx_string())
+                except TypeError:
+                    fp.write(unicode(voi.vdx_string()))
 
     def write_trip(self, path):
         """ Writes all VOIs in voxelplan format, while ensuring no slice holds more than one contour.

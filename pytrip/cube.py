@@ -747,7 +747,10 @@ class Cube(object):
             output_str += "z_table no\n"
 
         with io.open(path, "w+", newline='\n') as f:
-            f.write(output_str)
+            try:
+                f.write(output_str)
+            except TypeError:
+                f.write(unicode(output_str))
 
     def _write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
