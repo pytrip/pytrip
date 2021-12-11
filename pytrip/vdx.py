@@ -348,8 +348,8 @@ class VdxCube:
 
         This is needed since TRiP98 cannot handle multiple contours in the same slice.
         """
-        for i in range(len(self.vois)):
-            self.vois[i].concat_contour()
+        for voi in self.vois:
+            voi.concat_contour()
 
     def number_of_vois(self):
         """
@@ -719,16 +719,16 @@ class Voi:
 
         return out
 
-    def create_copy(self, margin=0):
+    def create_copy(self, _margin=0):
         """
         Returns an independent copy of the Voi object
 
-        :param margin: (unused)
+        :param _margin: (unused)
         :returns: a deep copy of the Voi object
         """
         voi = copy.deepcopy(self)
-        if margin != 0:
-            pass
+        # if margin != 0:
+        #     pass
         return voi
 
     def get_voi_cube(self, level=1000, recalc=False):
@@ -750,8 +750,7 @@ class Voi:
             _max_inv = 1 / _max
             if _max == level:
                 return self.voi_cube
-            else:
-                return self.voi_cube * _max_inv * level
+            return self.voi_cube * _max_inv * level
 
         self.voi_cube = DosCube(self.cube)
         self.voi_cube.mask_by_voi_all(self, level)
@@ -950,9 +949,9 @@ class Voi:
         if tot_volume > 0:
             self.center_pos = center_pos / tot_volume
             return center_pos / tot_volume
-        else:
-            self.center_pos = center_pos
-            return center_pos
+
+        self.center_pos = center_pos
+        return center_pos
 
     def get_color(self):
         """
@@ -1059,9 +1058,8 @@ class Voi:
 
                 self.slices.append(s)
 
-            if line.startswith("#TransversalObjects"):
-                pass
-                # slices = int(line.split()[1]) # TODO holds information about number of skipped slices
+            # if line.startswith("#TransversalObjects"):
+            #     slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
 
         self._sort_slices()
@@ -1115,16 +1113,15 @@ class Voi:
         """
         if type_name == 'EXTERNAL':
             return 10
-        elif type_name == 'AVOIDANCE':
+        if type_name == 'AVOIDANCE':
             return 2
-        elif type_name == 'ORGAN':
+        if type_name == 'ORGAN':
             return 0
-        elif type_name == 'GTV':
+        if type_name == 'GTV':
             return 1
-        elif type_name == 'CTV':
+        if type_name == 'CTV':
             return 1
-        else:
-            return 0
+        return 0
 
     @staticmethod
     def get_roi_type_name(type_id):
@@ -1133,11 +1130,11 @@ class Voi:
         """
         if type_id == 10:
             return "EXTERNAL"
-        elif type_id == 2:
+        if type_id == 2:
             return 'AVOIDANCE'
-        elif type_id == 1:
+        if type_id == 1:
             return 'CTV'
-        elif type_id == 0:
+        if type_id == 0:
             return 'ORGAN'
         return ''
 
@@ -1160,7 +1157,7 @@ class Voi:
         self.color = roi_cont.ROIDisplayColor
 
         contours = roi_cont.ContourSequence
-        for i, contour in enumerate(contours):
+        for contour in contours:
 
             # get current slice position
             _z_pos = contour.ContourData[2]
@@ -1269,9 +1266,9 @@ class Voi:
         if len(_slice) == 0:
             logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
             return None
-        else:
-            logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
-            return _slice[0]
+
+        logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
+        return _slice[0]
 
     def number_of_slices(self):
         """
@@ -1410,8 +1407,7 @@ class Slice:
             center_pos += area * center
         if tot_area > 0:
             return center_pos / tot_area, tot_area
-        else:
-            return center_pos, tot_area
+        return center_pos, tot_area
 
     def read_vdx(self, content, i):
         """
@@ -1599,9 +1595,9 @@ class Contour:
 
         :param Contour contour: a Contour object.
         """
-        for i in range(len(self.children)):
-            if self.children[i].contains_contour(contour):
-                self.children[i].push(contour)
+        for child in self.children:
+            if child.contains_contour(contour):
+                child.push(contour)
                 return
         self.add_child(contour)
 
@@ -1658,7 +1654,7 @@ class Contour:
         # The vdx files require all contours to be mapped to a CT cube starting at (x,y) = (0,0)
         # However, z may be mapped directly as found in the dicom file by using z_tables in .hed
         out = ""
-        for i, cnt in enumerate(self.contour):
+        for cnt in self.contour:
             out += " %.4f %.4f %.4f %.4f %.4f %.4f\n" % (cnt[0] - self.cube.xoffset, cnt[1] - self.cube.yoffset, cnt[2],
                                                          0, 0, 0)
 
@@ -1799,7 +1795,7 @@ class Contour:
 
         :param int level: (TODO: needs documentation)
         """
-        for i, item in enumerate(self.children):
+        for item in self.children:
             print(level * '\t', )
             print(item.contour)
             self.item.print_child(level + 1)
@@ -1816,20 +1812,20 @@ class Contour:
         This is important for TRiP98 compatibility, as TRiP98 cannot handle multiple contours in the same slice of
         of the same VOI.
         """
-        for i in range(len(self.children)):
-            self.children[i].concat()
+        for child in self.children:
+            child.concat()
         while len(self.children) > 1:
-            d = -1
+            dist = -1
             child = 0
             for i in range(1, len(self.children)):
-                i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(
-                    self.children[0].contour, self.children[i].contour)
-                if d == -1 or d_temp < d:
-                    d = d_temp
+                _, _, dist_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
+                                                                              self.children[i].contour)
+                if dist == -1 or dist_temp < dist:
+                    dist = dist_temp
                     child = i
-            i1_temp, i2_temp, d_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour,
-                                                                                   self.contour)
-            if d_temp < d:
+
+            _, _, dist_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour, self.contour)
+            if dist_temp < dist:
                 self._merge(self.children[0])
                 self.children.pop(0)
             else:
@@ -1842,8 +1838,8 @@ class Contour:
     def remove_inner_contours(self):
         """ (TODO: needs documentation)
         """
-        for i in range(len(self.children)):
-            self.children[i].children = []
+        for child in self.children:
+            child.children = []
 
     def _merge(self, contour):
         """
@@ -1852,7 +1848,7 @@ class Contour:
         if len(self.contour) == 0:
             self.contour = contour.contour
             return
-        i1, i2, d = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
+        i1, i2, _ = pytrip.res.point.short_distance_polygon_idx(self.contour, contour.contour)
         con = []
         for i in range(i1 + 1):
             con.append(self.contour[i])
