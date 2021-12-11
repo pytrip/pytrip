@@ -719,16 +719,13 @@ class Voi:
 
         return out
 
-    def create_copy(self, _margin=0):
+    def create_copy(self):
         """
         Returns an independent copy of the Voi object
 
-        :param _margin: (unused)
         :returns: a deep copy of the Voi object
         """
         voi = copy.deepcopy(self)
-        # if margin != 0:
-        #     pass
         return voi
 
     def get_voi_cube(self, level=1000, recalc=False):
@@ -1058,8 +1055,6 @@ class Voi:
 
                 self.slices.append(s)
 
-            # if line.startswith("#TransversalObjects"):
-            #     slices = int(line.split()[1]) # TODO holds information about number of skipped slices
             i += 1
 
         self._sort_slices()
