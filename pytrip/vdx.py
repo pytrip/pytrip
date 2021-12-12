@@ -753,12 +753,12 @@ class Voi:
         self.voi_cube.mask_by_voi_all(self, level)
         return self.voi_cube
 
-    def add_slice(self, slice):
+    def add_slice(self, new_slice):
         """ Add another slice to this VOI, and update self.slice_z table.
 
-        :param Slice slice: the Slice object to be appended.
+        :param Slice new_slice: the Slice object to be appended.
         """
-        self.slices.append(slice)
+        self.slices.append(new_slice)
 
     def get_name(self):
         """
