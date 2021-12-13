@@ -43,7 +43,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['2.7', '3.5', '3.9', '3.10']
+         python-version: ['2.7'] #, '3.5', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
     steps:
       - uses: actions/checkout@v2
@@ -58,8 +58,9 @@ jobs:
         # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
         if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
         run: |
-          C:\msys64\usr\bin\wget.exe -nv https://web.archive.org/web/20190720195601/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi
-          msiexec /i VCForPython27.msi /qn
+          C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
+          msiexec /i VCForPython27.msi /qn /L*v! install.log
+          type install.log
 
       - name: Install dependencies
         run: |
