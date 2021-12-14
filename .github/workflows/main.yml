@@ -58,7 +58,9 @@ jobs:
         # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
         if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
         run: |
-          C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
+          C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228if_/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi' 2>&1 | tee wget.log
+          echo $lastexitcode
+          type wget.log | findstr /c:"Length: unspecified [text/html]" ; if($?) {type VCForPython27.msi} else {$global:LASTEXITCODE=0}
           msiexec /i VCForPython27.msi /qn
 
       - name: Install dependencies
