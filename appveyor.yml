@@ -81,7 +81,7 @@ test_script:
   - rd /s /q pytrip
   - del setup.py
 # install wheel package via pip, as we do not know the wheel filename in advance, we loop over all *.whl files in dist directory
-  - ps: cd C:\ ; Get-ChildItem -Path C:\projects\pytrip\dist\ -Recurse -Include *.whl | foreach-object { echo $_ | Out-Host ; pip install $_}
+  - ps: cd C:\ ; Get-ChildItem -Path C:\projects\pytrip\dist\ -Recurse -Include *.whl | foreach-object { echo $_ | Out-Host ; python -m pip install $_}
   - cd C:\\projects\\pytrip\
 # deploy package
   - bash appveyor\deploy_package.sh
