@@ -124,9 +124,9 @@ class DDD:
                 data = f.read()
             lines = data.split('\n')
             for n, line in enumerate(data.split("\n")):
-                if line.find("energy") is not -1:
+                if line.find("energy") != -1:
                     energy = float(line.split()[1])
-                if line.find('!') is -1 and line.find('#') is -1:
+                if line.find('!') == -1 and line.find('#') == -1:
                     break
             for i in range(n, len(lines)):
                 if len(lines[i]) < 3:

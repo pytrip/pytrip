@@ -43,8 +43,12 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.5', '3.9', '3.10']
+         python-version: ['2.7', '3.5', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
+         exclude:
+           # skip this config, because it is slow
+           - python-version: '2.7'
+             platform: windows-latest
     steps:
       - uses: actions/checkout@v2
 
@@ -69,7 +73,7 @@ jobs:
 
       - name: Smoke tests
         run: |
-          pytest -k "smoke" tests/
+          python -m pytest -k "smoke" tests/
 
   full_tests:
      # these full tests, being slow are triggered only in following cases:
@@ -83,7 +87,7 @@ jobs:
      needs: [initialise, smoke_test]
      strategy:
        matrix:
-         python-version: ['3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
          platform: [ubuntu-latest, windows-latest]
      steps:
      - uses: actions/checkout@v2
@@ -91,6 +95,14 @@ jobs:
        uses: actions/setup-python@v2.3.1
        with:
          python-version: ${{ matrix.python-version }}
+
+     - name: Install Visual C++ 9.0 for Python 2.7
+       # we download from web.archive.org, because it is not accessible on official microsoft site
+       # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
+       if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
+       run: |
+         C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228if_/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
+         msiexec /i VCForPython27.msi /qn
 
      - name: Install dependencies
        run: |
@@ -103,7 +115,7 @@ jobs:
 
      - name: Regular tests
        run: |
-          pytest -k "not slow" tests/
+          python -m pytest -k "not slow" tests/
 
   build_wheels_manylinux1:
     # these full tests, being slow are triggered only in following cases:
@@ -117,7 +129,7 @@ jobs:
     needs: [initialise, full_tests]
     strategy:
        matrix:
-         python-versions: ["cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
+         python-versions: ["cp27-cp27m", "cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
 
     steps:
     - uses: actions/checkout@v2

@@ -467,21 +467,23 @@ class Execute(object):
         logger.debug("Compressing files in {:s} to {:s}".format(source_dir, target_path))
         self._info("Compressing files in {:s} to {:s}".format(source_dir, target_path))
 
-        total_size = get_size(source_dir)
-        sum_size = 0
+        # trick for no nonlocal in python 2.7
+        track_progress_info = {
+            "total_size": get_size(source_dir),
+            "sum_size": 0
+        }
 
         def track_progress(tarinfo):
-            nonlocal total_size, sum_size
             if tarinfo.isfile():
-                sum_size += tarinfo.size
-                percentage = int(sum_size / total_size * 100)
+                track_progress_info["sum_size"] += tarinfo.size
+                percentage = int(track_progress_info["sum_size"] / track_progress_info["total_size"] * 100)
                 self._log("Compressing file {} with size {} ({}%)".format(tarinfo.name,
                                                                           human_readable_size(tarinfo.size),
                                                                           percentage))
             return tarinfo
 
         with tarfile.open(target_path, "w:gz") as tar:
-            self._log("Size to compress: {:s}".format(human_readable_size(total_size)))
+            self._log("Size to compress: {:s}".format(human_readable_size(track_progress_info["total_size"])))
             tar.add(source_dir, arcname=dirname, filter=track_progress)
         self._log("Compressing done\n")
 
@@ -510,15 +512,17 @@ class Execute(object):
         if os.path.exists(out_dirpath):
             shutil.rmtree(out_dirpath)
 
-        sum_size = 0
+        # trick for no nonlocal in python 2.7
+        track_progress_info = {
+            "sum_size": 0
+        }
 
         def track_progress(members, files_total_size):
-            nonlocal sum_size
             for file in members:
                 yield file
                 if file.isfile():
-                    sum_size += file.size
-                    percentage = int(sum_size / files_total_size * 100)
+                    track_progress_info["sum_size"] += file.size
+                    percentage = int(track_progress_info["sum_size"] / files_total_size * 100)
                     self._log("Extracting file {} with size {} ({}%)".format(file.name,
                                                                              human_readable_size(file.size),
                                                                              percentage))

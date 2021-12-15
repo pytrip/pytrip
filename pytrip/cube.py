@@ -21,6 +21,7 @@ This module provides the Cube class, which is used by the CTX, DOS, LET and VDX 
 A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
 import os
+import io
 import re
 import sys
 import logging
@@ -96,7 +97,7 @@ class Cube(object):
             # unique for each CT slice
             self._ct_sop_instance_uid = cube._ct_sop_instance_uid
 
-            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)  # skipcq PTC-W0052
 
         else:
             import getpass
@@ -745,8 +746,14 @@ class Cube(object):
         else:
             output_str += "z_table no\n"
 
-        with open(path, "w+", newline='\n') as f:
-            f.write(output_str)
+        # for compatibility with python 2.7 we need to use `io.open` instead of `open`,
+        # as `open` function in python 2.7 cannot handle `newline` argument.
+        # This needs to be followed by `decode()`d string being written
+        with io.open(path, "w+", newline='\n') as f:
+            try:
+                f.write(output_str)
+            except TypeError:
+                f.write(output_str.decode())
 
     def _write_trip_data(self, path):
         """ Writes the binary data cube in TRiP98 format to a file.
