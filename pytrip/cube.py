@@ -97,7 +97,7 @@ class Cube(object):
             # unique for each CT slice
             self._ct_sop_instance_uid = cube._ct_sop_instance_uid
 
-            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)
+            self.cube = np.zeros((self.dimz, self.dimy, self.dimx), dtype=cube.pydata_type)  # skipcq PTC-W0052
 
         else:
             import getpass

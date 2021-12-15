@@ -694,9 +694,20 @@ class Voi:
         self.cube = cube
         self.name = name
         self.is_concated = False
+        self.key = None
         self.type = 90
         self.slices = []
         self.color = [0, 255, 0]  # default colour - green
+
+        self.points = None
+
+        # variables with cached calculated values
+        # they are used for speedup
+        self.temp_min = None
+        self.temp_max = None
+        self.center_pos = None
+        self.polygon3d = None
+        self.voi_cube = None
 
     def __str__(self):
         """ str output handler
@@ -739,10 +750,7 @@ class Voi:
         :param recalc: force recalculation (avoid caching)
         :returns: a DosCube object which holds the value <level> in those voxels which are inside the Voi.
         """
-        # caching: checks if class has voi_cube attribute
-        # this is needed for speedup.
-
-        if not recalc and hasattr(self, "voi_cube"):
+        if not recalc and self.voi_cube is not None:
             _max = self.voi_cube.cube.max()
             _max_inv = 1 / _max
             if _max == level:
@@ -781,10 +789,10 @@ class Voi:
         self.polygon3d = np.array(data)
 
     def get_3d_polygon(self):
-        """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in
-        self.polygon3d. If this attribute does not exist, create it.
+        """ Returns a list of points rendering a 3D polygon of this VOI, which is stored in self.polygon3d.
+        If this attribute is None then set it.
         """
-        if not hasattr(self, "polygon3d"):
+        if self.polygon3d is None:
             self.concat_to_3d_polygon()
         return self.polygon3d
 
@@ -934,7 +942,7 @@ class Voi:
 
         :returns: A numpy array[x,y,z] with positions in [mm]
         """
-        if hasattr(self, "center_pos"):
+        if self.center_pos is not None:
             return self.center_pos
         self.concat_contour()
         tot_volume = 0.0
@@ -945,7 +953,7 @@ class Voi:
             center_pos += area * center
         if tot_volume > 0:
             self.center_pos = center_pos / tot_volume
-            return center_pos / tot_volume
+            return self.center_pos
 
         self.center_pos = center_pos
         return center_pos
@@ -1284,9 +1292,10 @@ class Voi:
 
         :returns: minimum and maximum x y coordinates in Voi.
         """
-        temp_min, temp_max = None, None
-        if hasattr(self, "temp_min"):
+        if self.temp_min and self.temp_max:
             return self.temp_min, self.temp_max
+
+        temp_min, temp_max = None, None
         for _slice in self.slices:
             if temp_min is None:
                 temp_min, temp_max = _slice.get_min_max()
@@ -1340,6 +1349,10 @@ class Slice:
         self.thickness = 0.1  # assume some default value
         if cube is not None:
             self.thickness = cube.slice_distance
+
+        self.start_pos = None
+        self.stop_pos = None
+        self.slice_in_frame = None
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -1580,9 +1593,12 @@ class Contour:
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
+        # skipcq PTC-W0052
         self.contour = contour  # TODO: consider renaming this to 'data' or 'contour_data'
         # contour_closed: if set to True, the last point in the contour will be repeated when writing VDX files.
         self.contour_closed = False
+
+        self.internal_false = None
 
     def push(self, contour):
         """
@@ -1821,13 +1837,13 @@ class Contour:
 
             _, _, dist_temp = pytrip.res.point.short_distance_polygon_idx(self.children[0].contour, self.contour)
             if dist_temp < dist:
-                self._merge(self.children[0])
+                self.merge(self.children[0])
                 self.children.pop(0)
             else:
-                self.children[0]._merge(self.children[child])
+                self.children[0].merge(self.children[child])
                 self.children.pop(child)
         if len(self.children) == 1:
-            self._merge(self.children[0])
+            self.merge(self.children[0])
             self.children.pop(0)
 
     def remove_inner_contours(self):
@@ -1836,7 +1852,7 @@ class Contour:
         for child in self.children:
             child.children = []
 
-    def _merge(self, contour):
+    def merge(self, contour):
         """
         Merge two contours into a single one.
         """
