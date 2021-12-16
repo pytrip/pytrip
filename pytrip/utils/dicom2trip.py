@@ -29,9 +29,12 @@ import pytrip as pt
 logger = logging.getLogger(__name__)
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main function for dicom2trip.py
     """
+    if args is None:
+        args = sys.argv[1:]
+
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("dicom_dir", help="location of directory with DICOM files", type=str)

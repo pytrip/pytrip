@@ -81,13 +81,13 @@ class Rst:
         with open(path, mode='r') as f:
             data = f.read()
         data = data.split("\n")
-        out, i = parse_to_var(data, self.var_dict, "submachine#")
+        out, i = parse_to_var(data, self.var_dict, stoptag="submachine#")
 
         for key, item in out.items():
             setattr(self, key, item)
         if hasattr(self, "bolus"):
             self.bolus = float(self.bolus)
-        for machine in range(int(self.submachines)):
+        for _ in range(int(self.submachines)):
             submachine = SubMachine()
             i = submachine._parse_submachine(data, i)
             self.machines.append(submachine)
@@ -292,7 +292,7 @@ class SubMachine:
                 self.max_particles = line.split()[2]
                 self.total_particles = line.split()[3]
         i += 1
-        for i in range(i, i + self.points):
-            items = data[i].split()
+        for j in range(i, i + self.points):
+            items = data[j].split()
             self.raster_points.append([float(items[0]), float(items[1]), float(items[2])])
-        return i + 1
+        return i + self.points

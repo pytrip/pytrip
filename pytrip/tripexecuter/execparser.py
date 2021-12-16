@@ -239,14 +239,13 @@ class ExecParser(object):
         Method for parsing field data
         """
         items = line.split("/")
-        _number = int(items[0].split()[1])
-        if len(items) > 1:
-            if "new" in items[1]:
-                logger.debug("Parse a new field number {:d}".format(_number))
-                field = Field()
-                field.number = _number
-                self.plan.fields.append(field)
-                self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
+        number = int(items[0].split()[1])
+        if len(items) > 1 and "new" in items[1]:
+            logger.debug("Parse a new field number {:d}".format(number))
+            field = Field()
+            field.number = number
+            self.plan.fields.append(field)
+            self._parse_extra_args(line, self._field_args, self.plan.fields[-1])
 
     def _parse_scancap(self, line):
         """

@@ -83,9 +83,9 @@ class LETCube(Cube):
         lv = np.zeros(3000)
         for i in range(self.dimz):
             pos += self.slice_distance
-            slice = voi.get_slice_at_pos(pos)
-            if slice is not None:
-                lv += pytriplib.calculate_lvh_slice(self.cube[i], np.array(slice.contours[0].contour), size)
+            slice_at_pos = voi.get_slice_at_pos(pos)
+            if slice_at_pos is not None:
+                lv += pytriplib.calculate_lvh_slice(self.cube[i], np.array(slice_at_pos.contours[0].contour), size)
 
         cubes = sum(lv)
         lvh = np.cumsum(lv[::-1])[::-1] / cubes
@@ -109,6 +109,5 @@ class LETCube(Cube):
         # see calculate_lvh() method
         for vol, let in zip(lvh[0], lvh[1]):
             output += "%.4e\t%.4e\n" % (vol, let)
-        f = open(path + ".dvh", "w+")
-        f.write(output)
-        f.close()
+        with open(path + ".dvh", "w+") as f:
+            f.write(output)

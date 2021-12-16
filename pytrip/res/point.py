@@ -58,13 +58,12 @@ def point_in_polygon(x, y, polygon):
     for i in range(n + 1):
         x2 = polygon[i % n][0]
         y2 = polygon[i % n][1]
-        if y > min(y1, y2):
-            if y <= max(y1, y2):
-                if x <= max(x1, x2):
-                    if y1 != y2:
-                        xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1
-                    if x1 == x2 or x <= xinters:
-                        intersects += 1
+        if min(y1, y2) < y <= max(y1, y2) and x <= max(x1, x2):
+            xinters = None
+            if y1 != y2:
+                xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1
+            if x1 == x2 or x <= xinters:
+                intersects += 1
         x1 = x2
         y1 = y2
     return intersects % 2 != 0
@@ -126,10 +125,9 @@ def get_x_intersection(y, polygon):
         x2 = polygon[i % n][0]  # modulus operator will make last point to 0, i.e. start index.
         y2 = polygon[i % n][1]
         # test if y is between y1 and y2
-        if y > min(y1, y2):
-            if y <= max(y1, y2):
-                x = (x2 - x1) / (y2 - y1) * (y - y1) + x1
-                intersections.append(x)
+        if min(y1, y2) < y <= max(y1, y2):
+            x = (x2 - x1) / (y2 - y1) * (y - y1) + x1
+            intersections.append(x)
         x1 = x2
         y1 = y2
     return intersections

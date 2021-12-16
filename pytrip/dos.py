@@ -110,10 +110,10 @@ class DosCube(Cube):
         voi_and_cube_intersect = False
         for i in range(self.dimz):
             z_pos += self.slice_distance
-            slice = voi.get_slice_at_pos(z_pos)
-            if slice is not None:  # VOI intersects with this slice
+            slice_at_pos = voi.get_slice_at_pos(z_pos)
+            if slice_at_pos is not None:  # VOI intersects with this slice
                 voi_and_cube_intersect = True
-                contour_array = np.array(slice.contours[0].contour)
+                contour_array = np.array(slice_at_pos.contours[0].contour)
                 dose_bins += pytriplib.calculate_dvh_slice(self.cube[i], contour_array, voxel_size)
 
         if voi_and_cube_intersect:
@@ -158,8 +158,7 @@ class DosCube(Cube):
         if dvh_tuple is None:
             logging.warning("Voi {:s} outside the cube".format(voi.get_name()))
         else:
-            dvh, min_dose, max_dose, mean_dose, mean_volume = dvh_tuple
-            np.savetxt(dvh, filename)
+            np.savetxt(dvh_tuple[0], filename)
 
     def create_dicom_plan(self):
         """ Create a dummy DICOM RT-plan object.

@@ -462,7 +462,7 @@ class Cube(object):
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
 
         else:
-            raise Exception("More than two arguments provided as path variable to Cube.read method")
+            raise ValueError("More than two arguments provided as path variable to Cube.read method")
 
         # finally read files
         self._read_trip_header_file(header_path=header_path)
@@ -693,7 +693,7 @@ class Cube(object):
             if not TRiP98FilePath(datafile_path, self).is_valid_datafile_path():
                 logger.warning("Loading {:s} which doesn't look like valid datafile path".format(datafile_path))
         else:
-            raise Exception("More than two arguments provided as path variable to Cube.read method")
+            raise ValueError("More than two arguments provided as path variable to Cube.write method")
 
         # finally write files
         self._write_trip_header(header_path)

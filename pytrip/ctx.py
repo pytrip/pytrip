@@ -61,8 +61,8 @@ class CtxCube(Cube):
         intersect = float(dcm["images"][0].RescaleIntercept)
         slope = float(dcm["images"][0].RescaleSlope)
 
-        for i in range(len(dcm["images"])):
-            data = np.array(dcm["images"][i].pixel_array) * slope + intersect
+        for i, dcm_image in enumerate(dcm["images"]):
+            data = np.array(dcm_image.pixel_array) * slope + intersect
             self.cube[i][:][:] = data
         if len(self.slice_pos) > 1 and self.slice_pos[1] < self.slice_pos[0]:
             self.slice_pos.reverse()
@@ -111,7 +111,7 @@ class CtxCube(Cube):
         ds.AcquisitionNumber = '1'  # AcquisitionNumber tag 0x0020, 0x0012 (type IS - Integer String)
 
         import uuid
-        for i in range(len(self.cube)):
+        for i, cube in enumerate(self.cube):
             _ds = copy.deepcopy(ds)
             _ds.ImagePositionPatient = ["{:.3f}".format(self.xoffset),
                                         "{:.3f}".format(self.yoffset),
@@ -138,7 +138,7 @@ class CtxCube(Cube):
             _ds.SliceLocation = str(self.slice_pos[i])
             _ds.InstanceNumber = str(i + 1)
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
-            pixel_array[:][:] = self.cube[i][:][:]
+            pixel_array[:][:] = cube[:][:]
             _ds.PixelData = pixel_array.tostring()
             data.append(_ds)
         return data

@@ -30,8 +30,6 @@ logger = logging.getLogger(__name__)
 class DDD:
     """ Class for handling Depth-Dose Data.
     """
-    def __init__(self):
-        pass
 
     def get_ddd_data(self, energy, points):
         """ TODO: documentation
@@ -123,11 +121,13 @@ class DDD:
             with open(item, 'r') as f:
                 data = f.read()
             lines = data.split('\n')
-            for n, line in enumerate(data.split("\n")):
+            n = 0
+            for line in lines:
                 if line.find("energy") != -1:
                     energy = float(line.split()[1])
                 if line.find('!') == -1 and line.find('#') == -1:
                     break
+                n += 1
             for i in range(n, len(lines)):
                 if len(lines[i]) < 3:
                     continue

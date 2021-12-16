@@ -296,11 +296,9 @@ class VdxCube:
         :param content: the vdx file contents as an array of strings.
         :returns: vdx version string, e.g. "1.2" or "2.0"
         """
-        for line in content:
-            if line.strip().startswith("vdx_file_version"):
-                return line.split()[1]
-            else:
-                return "1.2"
+        if content[0].strip().startswith("vdx_file_version"):
+            return content[0].split()[1]
+        return "1.2"
 
     def read_vdx(self, path):
         """ Reads a structure file in Voxelplan format.
@@ -309,9 +307,8 @@ class VdxCube:
         """
         self.basename = os.path.basename(path).split(".")[0]
         self.path = path
-        fp = open(path, "r")
-        content = fp.read().split('\n')
-        fp.close()
+        with open(path, "r") as fp:
+            content = fp.read().split('\n')
 
         self.version = self.vdx_version(content)
 
@@ -324,17 +321,15 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
-
-            #                TODO number_of_vois not used
-            #                elif "number_of_vois" in line:
-            #                    number_of_vois = int(line.split()[1])
+               # TODO number_of_vois not used
+               # elif "number_of_vois" in line:
+               #     number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
-                    _token = line.split()
-                    if len(_token) == 6:
-                        if _token[5] != '0':
-                            i = v.read_vdx_old(content, i)
+                    token = line.split()
+                    if len(token) == 6 and token[5] != '0':
+                        i = v.read_vdx_old(content, i)
                 else:
                     i = v.read_vdx(content, i)
                 self.add_voi(v)
@@ -537,8 +532,7 @@ def _voi_point_cmp(a, b):
         c = a[1] - b[1]
     if c < 0:
         return -1
-    else:
-        return 1
+    return 1
 
 
 def create_cube(cube, name, center, width, height, depth):
