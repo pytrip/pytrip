@@ -680,7 +680,20 @@ def create_sphere(cube, name, center, radius):
     return v
 
 
-def create_custom(cube, name, center, slices):
+# TODO overhaul and clarify for edge cases, provided points probably should include Z for consistency
+def create_custom_voi(cube, name, center, slices):
+    """
+    Creates a new VOI which holds the contours rendering a custom figure along z
+
+    :param Cube cube: A CTX or DOS cube to work on.
+    :param str name: Name of the VOI
+    :param [float*3] center: Center position of the figure [x,y,z] in [mm]
+    :param [] slices: List of slices sorted in ascending order by z. Each slice is a list of contours, each contour is
+                      a list of points and each point
+                      (TODO) consists of its x and y positions ([float*2]: [x,y] in [mm]).
+                      It's assumed that a contour is closed when it's first and last point are the same.
+    :returns: A new Voi object.
+    """
     v = Voi(name, cube)
 
     distance_to_slice = center[2] % cube.slice_distance
@@ -694,11 +707,13 @@ def create_custom(cube, name, center, slices):
             if contour:
                 points = [[point_xy[0], point_xy[1], z] for point_xy in contour]
                 c = Contour(points, cube)
-                # TODO not sure if correct
+                # TODO not sure if correct assumption
                 if points[0] == points[-1]:
                     c.contour_closed = True
                 s.add_contour(c)
-        v.add_slice(s)
+        # if there is at least one non-empty contour
+        if s.contours:
+            v.add_slice(s)
         z += cube.slice_distance
     return v
 
