@@ -228,7 +228,7 @@ class RegularInterpolator(object):
             elif kind == 'linear':
                 result = fun_interp
             else:
-                raise Exception("Unsupported interpolation type {:s}.".format(kind))
+                raise ValueError("Unsupported interpolation type {:s}.".format(kind))
         return result
 
     @staticmethod

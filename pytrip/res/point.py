@@ -59,9 +59,7 @@ def point_in_polygon(x, y, polygon):
         x2 = polygon[i % n][0]
         y2 = polygon[i % n][1]
         if min(y1, y2) < y <= max(y1, y2) and x <= max(x1, x2):
-            xinters = None
-            if y1 != y2:
-                xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1
+            xinters = (y - y1) * (x2 - x1) / (y2 - y1) + x1
             if x1 == x2 or x <= xinters:
                 intersects += 1
         x1 = x2
