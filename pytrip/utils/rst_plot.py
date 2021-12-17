@@ -27,13 +27,16 @@ import logging
 import pytrip as pt
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
     # we do it here and not in the top of the file, as inteleaving imports with code lines is discouraged
     import matplotlib
     matplotlib.use('Agg')
     from pylab import plt, ylabel, grid, xlabel, array
+
+    if args is None:
+        args = sys.argv[1:]
 
     parser = argparse.ArgumentParser()
     parser.add_argument("rst_file", help="location of rst file in TRiP98 format", type=str)

@@ -27,9 +27,12 @@ import argparse
 import pytrip as pt
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main function of the rst2sobp script.
     """
+    if args is None:
+        args = sys.argv[1:]
+
     parser = argparse.ArgumentParser()
     parser.add_argument("rst_file", help="path to .rst input file in TRiP98 format", type=str)
     parser.add_argument("sobp_file", help="path to the SHIELD-HIT12A/FLUKA sobp.dat output file", type=str)

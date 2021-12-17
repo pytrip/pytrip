@@ -144,8 +144,7 @@ class RegularInterpolator(object):
         """
         if y is None:
             return self._interp_function(x)
-        else:
-            return self._interp_function(x, y, grid=False)
+        return self._interp_function(x, y, grid=False)
 
     @classmethod
     def eval(cls, x, y=None, xp=None, yp=None, zp=None, kind='linear'):
@@ -229,7 +228,7 @@ class RegularInterpolator(object):
             elif kind == 'linear':
                 result = fun_interp
             else:
-                raise ("Unsupported interpolation type {:s}.".format(kind))
+                raise ValueError("Unsupported interpolation type {:s}.".format(kind))
         return result
 
     @staticmethod

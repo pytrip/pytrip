@@ -111,7 +111,7 @@ class SubField:
         self.ddd = ddd
 
     def get_lateral(self, resolution=0.5):
-        if hasattr(self, "lateral") and resolution == resolution:
+        if hasattr(self, "lateral"):
             return self.lateral
         max_dist = self.get_max_dist()
         dim = np.ceil(np.absolute(max_dist / resolution))

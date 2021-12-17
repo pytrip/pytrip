@@ -124,5 +124,5 @@ class Field(object):
             try:
                 self.isocenter = [float(_target[0]), float(_target[1]), float(_target[2])]
                 return
-            except Exception:
+            except ValueError:
                 logger.error("Expected a 'X,Y,Z' formatted string for Field().set_isocenter_from_string")

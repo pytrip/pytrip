@@ -256,13 +256,13 @@ class Execute(object):
         if trip is None:
             logger.error("Could not find TRiP98 using path \"{:s}\"".format(self.trip_bin_path))
             raise EnvironmentError
-        else:
-            logger.info("Found {:s} version {:s}".format(trip, ver))
+
+        logger.info("Found {:s} version {:s}".format(trip, ver))
 
         # start local process running TRiP98
         self._info("\nRunning TRiP98")
         if self._norun:  # for testing, just echo the command which would be executed
-            p = Popen(["echo", self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
+            p = Popen(["/bin/echo", self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
         else:
             p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE, cwd=run_dir)
 
@@ -350,8 +350,8 @@ class Execute(object):
                                                                                     self.trip_bin_path))
             self._error("Could not find TRiP98 on {:s} using path \"{:s}\"".format(self.servername, self.trip_bin_path))
             raise EnvironmentError
-        else:
-            logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
+
+        logger.info("Found {:s} version {:s} on {:s}".format(trip, ver, self.servername))
 
         # open ssh channel and run commands
         ssh = self._get_ssh_client()
@@ -610,7 +610,7 @@ class Execute(object):
         """
 
         p = Popen([self.trip_bin_path], stdout=PIPE, stderr=STDOUT, stdin=PIPE)
-        stdout, stderr = p.communicate("exit".encode('ascii'))
+        stdout, _ = p.communicate("exit".encode('ascii'))
 
         out = stdout.decode('utf-8')
 
@@ -618,8 +618,8 @@ class Execute(object):
             tripname = out.split(" ")[3][:-1]
             tripver = out.split(" ")[5].split("(")[0]
             return tripname, tripver
-        else:
-            return None, None
+
+        return None, None
 
     def test_remote_trip(self):
         """ Test if TRiP98 can be reached remotely.
@@ -632,7 +632,7 @@ class Execute(object):
 
         # test if TRiP98 can be reached
         ssh = self._get_ssh_client()
-        stdin, stdout, stderr = ssh.exec_command(tripcmd_test)
+        _, stdout, _ = ssh.exec_command(tripcmd_test)  # skipcq: BAN-B601
         out = stdout.read().decode('utf-8')
         ssh.close()
 
@@ -640,8 +640,8 @@ class Execute(object):
             tripname = out.split(" ")[3][:-1]
             tripver = out.split(" ")[5].split("(")[0]
             return tripname, tripver
-        else:
-            return None, None
+
+        return None, None
 
     def add_executor_logger(self, executor_logger):
         """ An executor_logger is of type ExecutorLogger.

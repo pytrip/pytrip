@@ -1,4 +1,21 @@
-import math
+#
+#    Copyright (C) 2010-2021 PyTRiP98 Developers.
+#
+#    This file is part of PyTRiP98.
+#
+#    PyTRiP98 is free software: you can redistribute it and/or modify
+#    it under the terms of the GNU General Public License as published by
+#    the Free Software Foundation, either version 3 of the License, or
+#    (at your option) any later version.
+#
+#    PyTRiP98 is distributed in the hope that it will be useful,
+#    but WITHOUT ANY WARRANTY; without even the implied warranty of
+#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#    GNU General Public License for more details.
+#
+#    You should have received a copy of the GNU General Public License
+#    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
+#
 """
 This file contains methods that create from a list of intersections (list of points).
 Algorithm steps:
@@ -13,6 +30,8 @@ Basic heuristics are used:
     2. limiting distance between parts and points based on previous distances
         (next point cannot be too far away from parts)
 """
+
+import math
 
 
 class ListEntry:

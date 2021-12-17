@@ -51,9 +51,12 @@ class DensityProjections:
         """
         self.cube = cube
 
-    def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+    def calculate_quality_grid(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=None, gradient=True):
         """ TODO: Documentation
         """
+        if avoid is None:
+            avoid = []
+
         result = self.calculate_quality_list(voi,
                                              gantry,
                                              couch,
@@ -68,9 +71,12 @@ class DensityProjections:
         result = np.reshape(grid_data, (len(gantry), len(couch)))
         return result
 
-    def calculate_quality_list(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=[], gradient=True):
+    def calculate_quality_list(self, voi, gantry, couch, calculate_from=0, stepsize=1.0, avoid=None, gradient=True):
         """ TODO: Documentation
         """
+        if avoid is None:
+            avoid = []
+
         q = Queue(32767)
         process = []
         d = voi.get_voi_cube()
@@ -94,9 +100,16 @@ class DensityProjections:
             result.append(tmp)
         return result
 
-    def calculate_best_angles(self, voi, fields, min_dist=20, gantry_limits=[-90, 90], couch_limits=[0, 359], avoid=[]):
+    def calculate_best_angles(self, voi, fields, min_dist=20, gantry_limits=None, couch_limits=None, avoid=None):
         """ TODO: Documentation
         """
+        if gantry_limits is None:
+            gantry_limits = [-90, 90]
+        if couch_limits is None:
+            couch_limits = [0, 359]
+        if avoid is None:
+            avoid = []
+
         grid = self.calculate_quality_list(voi,
                                            range(gantry_limits[0], gantry_limits[1], 20),
                                            range(couch_limits[0], couch_limits[1], 20),
@@ -115,9 +128,12 @@ class DensityProjections:
             i += 1
         return best_angles
 
-    def optimize_angle(self, voi, couch, gantry, margin, iteration, avoid=[]):
+    def optimize_angle(self, voi, couch, gantry, margin, iteration, avoid=None):
         """ TODO: Documentation
         """
+        if avoid is None:
+            avoid = []
+
         if iteration == 0:
             return [gantry, couch]
         grid = self.calculate_quality_list(voi,
@@ -134,11 +150,14 @@ class DensityProjections:
                                        calculate_from=0,
                                        stepsize=1.0,
                                        q=None,
-                                       avoid=[],
+                                       avoid=None,
                                        voi_cube=None,
                                        gradient=True):
         """ TODO: Documentation
         """
+        if avoid is None:
+            avoid = []
+
         os.nice(1)
         for couch_angle in couch:
             qual = self.calculate_angle_quality(voi, gantry, couch_angle, calculate_from, stepsize, avoid, voi_cube,
@@ -151,22 +170,25 @@ class DensityProjections:
                                 couch,
                                 calculate_from=0,
                                 stepsize=1.0,
-                                avoid=[],
+                                avoid=None,
                                 voi_cube=None,
                                 gradient=True):
         """
         Calculates a quality index for a given gantry/couch combination.
         """
-        voi_min, voi_max = voi.get_min_max()
+        if avoid is None:
+            avoid = []
+
+        voi.get_min_max()
         for v in avoid:
-            v_min, v_max = v.get_min_max()
+            v.get_min_max()
         if voi_cube is None:
             d = voi.get_voi_cube()
             d.cube = np.array(d.cube, dtype=np.float32)
             voi_cube = DensityProjections(d)
 
-        data, start, basis = self.calculate_projection(voi, gantry, couch, calculate_from, stepsize)
-        voi_proj, t1, t2 = voi_cube.calculate_projection(voi, gantry, couch, 1, stepsize)
+        data, _start, _basis = self.calculate_projection(voi, gantry, couch, calculate_from, stepsize)
+        voi_proj, _t1, _t2 = voi_cube.calculate_projection(voi, gantry, couch, 1, stepsize)
 
         if gradient:
             gradient = np.gradient(data)
@@ -286,9 +308,9 @@ class DensityCube(Cube):
         """ Imports the Hounsfield lookup table and stores it into self.hlut_data object
         self.hlut_data is trained linear interpolator, it can be later called to get interpolated values
         """
-        fp = open(self.hlut_file, "r")
-        lines = fp.read()
-        fp.close()
+        with open(self.hlut_file, "r") as fp:
+            lines = fp.read()
+
         lines = lines.split('\n')
         x_data = []
         y_data = []

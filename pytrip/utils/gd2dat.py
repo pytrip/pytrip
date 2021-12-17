@@ -79,9 +79,8 @@ class ReadGd(object):
         if os.path.isfile(self.filename) is False:
             raise IOError("Could not find file " + self.filename)
 
-        gd_file = open(self.filename, 'r')
-        gd_lines = gd_file.readlines()
-        gd_file.close()
+        with open(self.filename, "r") as gd_file:
+            gd_lines = gd_file.readlines()
 
         line = gd_lines[0]
         line_len = len(line)
@@ -95,10 +94,10 @@ class ReadGd(object):
                 else:
                     break
 
-            if line[s] == 'x' or line[s] == 'X':
+            if line[s] in ('x', 'X'):
                 line_len = len(line)
                 self.xlabel = line[s + 2:line_len - 1]
-            elif line[s] == 'y' or line[s] == 'Y':
+            elif line[s] in ('y', 'Y'):
                 line_len = len(line)
                 self.ylabel = line[s + 2:line_len - 1]
             elif line[s] in ('h', 'H', 'a', 'A'):
@@ -107,24 +106,24 @@ class ReadGd(object):
                 while p < line_len:
                     l2 = line[p:p + 2]
                     legend_bool = False
-                    if l2 == 'x ' or l2 == 'X ':
+                    if l2 in ('x ', 'X '):
                         self.head.append('x')
                         self.h += 1
                         self.legend.append("x")
                         legend_bool = False
-                    elif l2 == 'y(' or l2 == 'Y(':
+                    elif l2 in ('y(', 'Y('):
                         self.head.append('y')
                         self.h += 1
                         legend_bool = True
-                    elif l2 == 'm(' or l2 == 'M(':
+                    elif l2 in ('m(', 'M('):
                         self.head.append('m')
                         self.h += 1
                         legend_bool = True
-                    elif l2 == 'n(' or l2 == 'N(':
+                    elif l2 in ('n(', 'N('):
                         self.head.append('n')
                         self.h += 1
                         legend_bool = True
-                    elif l2 == 'l(' or l2 == 'L(':
+                    elif l2 in ('l(', 'L('):
                         self.head.append('l')
                         self.h += 1
                         legend_bool = True
@@ -145,11 +144,10 @@ class ReadGd(object):
 
                                 p = t
                                 break
-                            else:
-                                t += 1
+                            t += 1
                     p += 1
 
-            elif line[s] == 'n' or line[s] == 'N':
+            elif line[s] in ('n', 'N'):
                 break
             elif line[s].isdigit() or line[s] == '-':
                 line_len = len(line)
@@ -184,104 +182,107 @@ class ReadGd(object):
                 out_file_name += "dat"
                 print('# Writing data in a ".dat" file: ' + out_file_name)
 
-        out_file = open(out_file_name, 'w')
+        with open(out_file_name, "w") as out_file:
 
-        if self.let_bool:
-            print('# Exporting also LET data  ')
+            if self.let_bool:
+                print('# Exporting also LET data  ')
 
-        if self.agr:
-            header = "# Grace project file\n# \n@version 50122 \n"
-            # header += "@page size 842, 595 \n@page scroll 5% \n"
-            header += "@page inout 5% \n@link page off \n"
+            if self.agr:
+                header = "# Grace project file\n# \n@version 50122 \n"
+                # header += "@page size 842, 595 \n@page scroll 5% \n"
+                header += "@page inout 5% \n@link page off \n"
 
-            str_out = header + '@    title  "' + self.title + ' "\n'
+                str_out = header + '@    title  "' + self.title + ' "\n'
 
-            str_out += '@    xaxis  label "' + self.xlabel
-            str_out += ' "\n@    xaxis  label char size 1.500000\n'
-            str_out += '@    xaxis  ticklabel char size 1.250000\n'
+                str_out += '@    xaxis  label "' + self.xlabel
+                str_out += ' "\n@    xaxis  label char size 1.500000\n'
+                str_out += '@    xaxis  ticklabel char size 1.250000\n'
 
-            str_out += '@    yaxis  label "' + self.ylabel
-            str_out += ' "\n@    yaxis  label char size 1.500000\n'
-            str_out += '@    yaxis  ticklabel char size 1.250000\n'
+                str_out += '@    yaxis  label "' + self.ylabel
+                str_out += ' "\n@    yaxis  label char size 1.500000\n'
+                str_out += '@    yaxis  ticklabel char size 1.250000\n'
 
-            out_file.write(str_out)
+                out_file.write(str_out)
 
-        num = -1
-        counter = 0
+            num = -1
+            counter = 0
 
-        while num < self.h - 1:
+            while num < self.h - 1:
 
-            num += 1
-            # The following feature is still under development
-            #            title = self.legend[num]
-            #            if (title == "Survival" or title == "SpecDose" \
-            #                    or title == "PhysDose" ):
-            #                print '# Skip data with the title "' + title + '"'
-            #                continue
-            #            print self.head[num]  # debug line
+                num += 1
+                # The following feature is still under development
+                #            title = self.legend[num]
+                #            if (title == "Survival" or title == "SpecDose" \
+                #                    or title == "PhysDose" ):
+                #                print '# Skip data with the title "' + title + '"'
+                #                continue
+                #            print self.head[num]  # debug line
 
-            if self.head[num] == "x":
-                continue
+                if self.head[num] == "x":
+                    continue
 
-            elif self.head[num] == 'y' or self.head[num] == 'm':  # normal data
+                if self.head[num] in ('y', 'm'):  # normal data
 
-                if self.head[num] == 'm':
-                    str_hd = self.legend[num]
-                    j = 0
-                    for sign in str_hd:
-                        if sign == '*':
-                            break
-                        j += 1
-                    _legend = str_hd[j + 1:]
+                    if self.head[num] == 'm':
+                        str_hd = self.legend[num]
+                        j = 0
+                        for sign in str_hd:
+                            if sign == '*':
+                                break
+                            j += 1
+                        _legend = str_hd[j + 1:]
+                    else:
+                        _legend = self.legend[num]
+
+                    str_out = ' \n'
+                    if not self.agr:
+                        str_out += '# '
+                    str_out += '@    s' + str(counter) + ' legend  "'
+                    str_out += _legend + '"\n'
+                    out_file.write(str_out)
+
+                    str_out = '@    s' + str(counter) + ' comment "'
+                    if not self.agr:
+                        str_out = '# ' + str_out
+                    str_out += self.filename + ' "\n'
+                    for i, ele in enumerate(self.data[num]):
+                        str_out += self.xdata[i] + ' ' + str(ele) + '\n'
+                    out_file.write(str_out)
+                    counter += 1
+
                 else:
+                    continue
+
+                # special handling for 'm'
+                #
+                # A column with the header 'm' should be multiplied with the
+                # column to the left of it (cf GD manual).
+                #
+                if self.head[num] == 'm':
+
+                    str_out = ' \n'
+                    if not self.agr:
+                        str_out += '# '
                     _legend = self.legend[num]
+                    str_out += '@    s' + str(counter) + ' legend  "'
+                    str_out += _legend + '"\n'
+                    if not self.agr:
+                        str_out += '# '
+                    str_out += '@    s' + str(counter)
+                    str_out += ' comment "' + self.filename + ' "\n'
+                    for i, ele in enumerate(self.indata):
+                        str_out += self.xdata[i] + ' ' + str((float(ele[num]) * float(ele[num - 1]))) + '\n'
+                    out_file.write(str_out)
 
-                str_out = ' \n'
-                if not self.agr:
-                    str_out += '# '
-                str_out += '@    s' + str(counter) + ' legend  "'
-                str_out += _legend + '"\n'
-                out_file.write(str_out)
-
-                str_out = '@    s' + str(counter) + ' comment "'
-                if not self.agr:
-                    str_out = '# ' + str_out
-                str_out += self.filename + ' "\n'
-                for i, ele in enumerate(self.data[num]):
-                    str_out += self.xdata[i] + ' ' + str(ele) + '\n'
-                out_file.write(str_out)
-                counter += 1
-
-            else:
-                continue
-
-            # special handling for 'm'
-            #
-            # A column with the header 'm' should be multiplied with the
-            # column to the left of it (cf GD manual).
-            #
-            if self.head[num] == 'm':
-
-                str_out = ' \n'
-                if not self.agr:
-                    str_out += '# '
-                _legend = self.legend[num]
-                str_out += '@    s' + str(counter) + ' legend  "'
-                str_out += _legend + '"\n'
-                if not self.agr:
-                    str_out += '# '
-                str_out += '@    s' + str(counter)
-                str_out += ' comment "' + self.filename + ' "\n'
-                for i, ele in enumerate(self.indata):
-                    str_out += self.xdata[i] + ' ' + str((float(ele[num]) * float(ele[num - 1]))) + '\n'
-                out_file.write(str_out)
-
-                counter += 1
+                    counter += 1
 
 # end special handling for 'm'
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
+    if args is None:
+        args = sys.argv[1:]
+
     parser = argparse.ArgumentParser()
     parser.add_argument("gd_file", help="location of gd file", type=str)
     parser.add_argument("dat_file", help="location of .dat to write", type=str, nargs='?')

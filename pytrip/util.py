@@ -193,8 +193,7 @@ class TRiP98FilePath(object):
         """
         if not self._is_gzipped():
             return self.name
-        else:
-            return self.name[:-3]
+        return self.name[:-3]
 
     @property
     def _filename_without_extension(self):
@@ -223,14 +222,13 @@ class TRiP98FilePath(object):
             return self._ungzipped_filename[:-len(self.header_file_extension)]
 
         # check if datafile extension present, if yes, drop it
-        elif self.data_file_extension and _ungzipped_filename.endswith(
+        if self.data_file_extension and _ungzipped_filename.endswith(
             (self.data_file_extension.lower(),
              self.data_file_extension.upper())):
             return _ungzipped_filename[:-len(self.data_file_extension)]
 
         # no extensions found, return only unzipped filename
-        else:
-            return _ungzipped_filename
+        return _ungzipped_filename
 
     @property
     def suffix(self):
@@ -280,8 +278,7 @@ class TRiP98FilePath(object):
         """
         if self._is_stem_pattern():
             return self._filename_without_extension[:-len(self.suffix)]
-        else:
-            return None
+        return None
 
     def _is_stem_pattern(self):
         """
@@ -324,10 +321,9 @@ class TRiP98FilePath(object):
         """
         if self.is_valid_header_path():
             return self._filename_without_extension + self.data_file_extension
-        elif self.is_valid_datafile_path():
+        if self.is_valid_datafile_path():
             return self.name
-        else:
-            return self.name + self.data_file_extension
+        return self.name + self.data_file_extension
 
     @property
     def header(self):
@@ -346,10 +342,9 @@ class TRiP98FilePath(object):
         """
         if self.is_valid_header_path():
             return self.name
-        elif self.is_valid_datafile_path():
+        if self.is_valid_datafile_path():
             return self._filename_without_extension + self.header_file_extension
-        else:
-            return self.name + self.header_file_extension
+        return self.name + self.header_file_extension
 
     @property
     def basename(self):
@@ -458,8 +453,7 @@ class TRiP98FileLocator(object):
                     if os.path.exists(candidate_path):
                         logger.info("Found " + candidate_path)
                         return candidate_path
-                    else:
-                        files_tried.append(candidate_path)
+                    files_tried.append(candidate_path)
         logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
@@ -481,8 +475,7 @@ class TRiP98FileLocator(object):
                     candidate_path = dir_basename + suffix + datafile_extension + gzip_extension
                     if os.path.exists(candidate_path):
                         return candidate_path
-                    else:
-                        files_tried.append(candidate_path)
+                    files_tried.append(candidate_path)
         logger.warning("Checking following files: " + " , ".join(files_tried) + ". None of them exists.")
         return None
 
@@ -521,20 +514,3 @@ def get_size(start_path="."):
                 total_size += os.path.getsize(fp)
 
     return total_size
-
-
-def evaluator(funct, name='funct'):
-    """ Wrapper for evaluating a function.
-
-    :params str funct: string which will be parsed
-    :params str name: name which will be assigned to created function.
-
-    :returns: function f build from 'funct' input.
-    """
-    code = compile(funct, name, 'eval')
-
-    def f(x):
-        return eval(code, locals())
-
-    f.__name__ = name
-    return f

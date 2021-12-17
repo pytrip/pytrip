@@ -32,9 +32,11 @@ import matplotlib
 logger = logging.getLogger(__name__)
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main function for dvhplot.py
     """
+    if args is None:
+        args = sys.argv[1:]
 
     # parse arguments
     parser = argparse.ArgumentParser()
@@ -108,10 +110,9 @@ def main(args=sys.argv[1:]):
 
     if tofile:
         logger.info("Write {}".format(tofile))
-        f = open(tofile, "w+")
-        for _x, _y in zip(vh.x, vh.y):
-            f.write("{:.3f} {:.3f}\n".format(_x, _y))
-        f.close()
+        with open(tofile, "w+") as f:
+            for _x, _y in zip(vh.x, vh.y):
+                f.write("{:.3f} {:.3f}\n".format(_x, _y))
 
     if outfile:
         plt.savefig(outfile)

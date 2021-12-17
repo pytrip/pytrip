@@ -108,9 +108,11 @@ def load_ct_cube(filename):
     return c, c.basename
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ The main function for cubeslice.py
     """
+    if args is None:
+        args = sys.argv[1:]
 
     # there are some cases when this script is run on systems without DISPLAY variable being set
     # in such case matplotlib backend has to be explicitly specified
@@ -149,26 +151,24 @@ def main(args=sys.argv[1:]):
         return 2
 
     # Check if different output path was requested. If yes, then check if it exists.
-    if parsed_args.outputdir:
-        if not os.path.isdir(parsed_args.outputdir):
-            logging.warning("Output directory " + parsed_args.outputdir + " does not exist, creating.")
-            os.makedirs(parsed_args.outputdir)
+    if parsed_args.outputdir and not os.path.isdir(parsed_args.outputdir):
+        logging.warning("Output directory " + parsed_args.outputdir + " does not exist, creating.")
+        os.makedirs(parsed_args.outputdir)
 
     data_cube, data_basename = load_data_cube(parsed_args.data)
 
     ct_cube, ct_basename = load_ct_cube(parsed_args.ct)
 
     # check cube data are compatible (if both cubes present)
-    if data_cube is not None and ct_cube is not None:
-        if not data_cube.is_compatible(ct_cube):
-            logging.error("Cubes don't match")
-            logging.info("Cube 1 " + parsed_args.data + " : ")
-            logging.info("\tshape {:d} x {:d} x {:d}".format(data_cube.dimx, data_cube.dimy, data_cube.dimz))
-            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(data_cube.pixel_size, data_cube.slice_distance))
-            logging.info("Cube 2 " + parsed_args.ct + " : ")
-            logging.info("\tshape {:d} x {:d} x {:d}".format(ct_cube.dimx, ct_cube.dimy, ct_cube.dimz))
-            logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(ct_cube.pixel_size, ct_cube.slice_distance))
-            return 2
+    if data_cube is not None and ct_cube is not None and not data_cube.is_compatible(ct_cube):
+        logging.error("Cubes don't match")
+        logging.info("Cube 1 " + parsed_args.data + " : ")
+        logging.info("\tshape {:d} x {:d} x {:d}".format(data_cube.dimx, data_cube.dimy, data_cube.dimz))
+        logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(data_cube.pixel_size, data_cube.slice_distance))
+        logging.info("Cube 2 " + parsed_args.ct + " : ")
+        logging.info("\tshape {:d} x {:d} x {:d}".format(ct_cube.dimx, ct_cube.dimy, ct_cube.dimz))
+        logging.info("\tpixel {:g} [cm], slice {:g} [cm]".format(ct_cube.pixel_size, ct_cube.slice_distance))
+        return 2
 
     cube = None
     cube_basename = None

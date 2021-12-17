@@ -254,8 +254,8 @@ class Plan(object):
         1) *.exec
         2) *.dos
         """
-        self.save_exec(images, path + ".exec")
-        self.save_data(images, path + ".exec")
+        self.save_exec(path + ".exec")
+        self.save_data(images, path)
 
     def save_exec(self, exec_path=None):
         """ Generates (overwriting) self._trip_exec, and saves it to exec_path.
@@ -283,18 +283,18 @@ class Plan(object):
         _exec = ExecParser(self)
         _exec.parse_exec(exec_path)
 
-    def save_data(self, images, path):
+    def save_data(self, _images, path):
         """ Save this plan, including associated data.
         TODO: may have to be implemented in a better way.
         """
-        t = Execute(images)
-        t.set_plan(self)
-        t.save_data(path)
+        # t = Execute(images)
+        # t.set_plan(self)
+        # t.save_data(path)
         for dos in self.dosecubes:
             dos.write(path + "." + dos.get_type() + DosCube.data_file_extension)
 
         for let in self.letcubes:
-            let.write(path + "." + dos.get_type() + DosCube.data_file_extension)
+            let.write(path + "." + let.get_type() + LETCube.data_file_extension)
 
     def load_let(self, path):
         """ Load and append a new LET cube from path to self.letcubes.
@@ -402,7 +402,7 @@ class Plan(object):
         else:
             if not self._make_sis:
                 logger.error("No SIS table loaded or generated.")
-                raise
+                raise Exception("No SIS table loaded or generated.")
             output.append(self._make_sis)
 
         # Scancap:
@@ -581,11 +581,11 @@ class Plan(object):
                 output.append('field {:d} / write file({:s}.rst) reverseorder '.format(i + 1, field.basename))
                 self.out_files.append(field.basename + ".rst")
 
-        for _field in fields:
-            if _field.save_bev_file:
-                bev_filename = _field.bev_filename
+        for i, field in enumerate(fields):
+            if field.save_bev_file:
+                bev_filename = field.bev_filename
                 if not bev_filename:
-                    bev_filename = _field.basename + ".bev.gd"
+                    bev_filename = field.basename + ".bev.gd"
                 line = "field {:d} /bev(*) file({:s})".format(i + 1, bev_filename)
                 output.append(line)
 

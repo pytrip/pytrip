@@ -26,13 +26,17 @@ import logging
 import argparse
 
 import pytrip as pt
+from pytrip.error import FileNotFound
 
 logger = logging.getLogger(__name__)
 
 
-def main(args=sys.argv[1:]):
+def main(args=None):
     """ Main function for trip2dicom.py
     """
+    if args is None:
+        args = sys.argv[1:]
+
     # parse arguments
     parser = argparse.ArgumentParser()
     parser.add_argument("ctx_data", help="location of CT file (header or data) in TRiP98 format", type=str)
@@ -54,7 +58,10 @@ def main(args=sys.argv[1:]):
     c = pt.CtxCube()
     try:
         c.read(parsed_args.ctx_data)
-    except Exception as e:
+    except FileNotFound as e:
+        logger.error(e)
+        return 1
+    except ValueError as e:
         logger.error(e)
         return 1
 
