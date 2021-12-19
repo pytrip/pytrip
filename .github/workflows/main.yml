@@ -37,8 +37,10 @@ jobs:
 
   smoke_test:
     # quick smoke tests
-    if: "!contains(needs.initialise.outputs.commit_message, '[ci skip]') && !contains(needs.initialise.outputs.commit_message, '[skip ci]')"
-    name: "Fast smoke tests"
+    if: >
+      !contains(needs.initialise.outputs.commit_message, '[ci skip]') &&
+      !contains(needs.initialise.outputs.commit_message, '[skip ci]')
+    name: Fast smoke tests
     runs-on:  ${{ matrix.platform }}
     needs: [initialise]
     strategy:
@@ -76,54 +78,105 @@ jobs:
           python -m pytest -k "smoke" tests/
 
   full_tests:
-     # these full tests, being slow are triggered only in following cases:
-     #  - if commit message contains specific keyword: [build]
-     #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
-     #  - on master branch
-     #  - on release tags (named v*)
-     if: "contains(needs.initialise.outputs.commit_message, '[build]') || startsWith(needs.initialise.outputs.commit_message, 'dependabot_') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
-     name: "Full slow tests"
-     runs-on:  ${{ matrix.platform }}
-     needs: [initialise, smoke_test]
-     strategy:
-       matrix:
-         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
-         platform: [ubuntu-latest, windows-latest]
-     steps:
-     - uses: actions/checkout@v2
-     - name: Set up Python
-       uses: actions/setup-python@v2.3.1
-       with:
-         python-version: ${{ matrix.python-version }}
-
-     - name: Install Visual C++ 9.0 for Python 2.7
-       # we download from web.archive.org, because it is not accessible on official microsoft site
-       # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
-       if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
-       run: |
-         C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228if_/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
-         msiexec /i VCForPython27.msi /qn
-
-     - name: Install dependencies
-       run: |
-         python --version
-         pip --version
-         pip install wheel
-         pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seems to doesn't understand reqs in setup.py
-         pip install -r requirements.txt
-         pip install -r tests/requirements-test.txt
-
-     - name: Regular tests
-       run: |
-          python -m pytest -k "not slow" tests/
-
-  build_wheels_manylinux1:
     # these full tests, being slow are triggered only in following cases:
     #  - if commit message contains specific keyword: [build]
     #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
     #  - on master branch
     #  - on release tags (named v*)
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || startsWith(needs.initialise.outputs.commit_message, 'dependabot_') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
+    name: Full slow tests
+    runs-on:  ${{ matrix.platform }}
+    needs: [initialise, smoke_test]
+    strategy:
+      matrix:
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
+        platform: [ubuntu-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2.3.1
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install Visual C++ 9.0 for Python 2.7
+      # we download from web.archive.org, because it is not accessible on official microsoft site
+      # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
+      if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
+      run: |
+        C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228if_/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
+        msiexec /i VCForPython27.msi /qn
+
+    - name: Install dependencies
+      run: |
+        python --version
+        pip --version
+        pip install wheel
+        pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seems to doesn't understand reqs in setup.py
+        pip install -r requirements.txt
+        pip install -r tests/requirements-test.txt
+
+    - name: Regular tests
+      run: |
+         python -m pytest -k "not slow" tests/
+
+
+  build_sdist:
+    # this job is triggered only in following cases:
+    #  - if commit message contains specific keyword: [build]
+    #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
+    #  - on master branch
+    #  - on release tags (named v*)
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
+    name: Build sdist
+    runs-on: ubuntu-latest
+    needs: [initialise, full_tests]
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v2.3.1
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python --version
+          python -m pip install --upgrade pip
+          pip --version
+          pip install -U setuptools
+          pip install wheel
+
+      - name: Build sdist
+        run: |
+          python setup.py sdist
+
+      - uses: actions/upload-artifact@v2
+        with:
+          path: ./dist/pytrip98*.tar.gz
+          if-no-files-found: error
+
+  build_wheels_manylinux1:
+    # this job is triggered only in following cases:
+    #  - if commit message contains specific keyword: [build]
+    #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
+    #  - on master branch
+    #  - on release tags (named v*)
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
     name: Wheels on Linux
     runs-on: ubuntu-latest
     needs: [initialise, full_tests]
@@ -138,7 +191,7 @@ jobs:
 
     - name: manylinux1 wheels
       # manylinux1 build has support for python versions up to 3.9
-      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux1_x86_64
+      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux1_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
 
@@ -148,16 +201,20 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-          path: ./dist/pytrip98*manylinux1_x86_64.whl
-          if-no-files-found: error
+        path: ./dist/pytrip98*manylinux1_x86_64.whl
+        if-no-files-found: error
 
   build_wheels_manylinux2010:
-    # these full tests, being slow are triggered only in following cases:
+    # this job is triggered only in following cases:
     #  - if commit message contains specific keyword: [build]
     #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
     #  - on master branch
     #  - on release tags (named v*)
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || startsWith(needs.initialise.outputs.commit_message, 'dependabot_') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
     name: Wheels on Linux
     runs-on: ubuntu-latest
     needs: [initialise, full_tests]
@@ -172,7 +229,7 @@ jobs:
 
     - name: manylinux2010 wheels
       # we use manylinux2010 as it is the oldest standard with support for python 3.10
-      uses: RalfG/python-wheels-manylinux-build@v0.4.0-manylinux2010_x86_64
+      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2010_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
 
@@ -182,17 +239,21 @@ jobs:
 
     - uses: actions/upload-artifact@v2
       with:
-          path: ./dist/pytrip98*manylinux2010_x86_64.whl
-          if-no-files-found: error
+        path: ./dist/pytrip98*manylinux2010_x86_64.whl
+        if-no-files-found: error
 
 
   build_wheels_macOS:
-    # these full tests, being slow are triggered only in following cases:
+    # this job is triggered only in following cases:
     #  - if commit message contains specific keyword: [build]
     #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
     #  - on master branch
     #  - on release tags (named v*)
-    if: "contains(needs.initialise.outputs.commit_message, '[build]') || startsWith(needs.initialise.outputs.commit_message, 'dependabot_') || github.ref == 'refs/heads/master' || (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))"
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
     name: Wheels on macOS
     needs: [initialise, full_tests]
     runs-on: macos-10.15
@@ -233,7 +294,7 @@ jobs:
   upload_wheels:
     # upload wheels only when git tag and release is created
     name: Upload wheels
-    needs: [initialise, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
+    needs: [initialise, build_sdist, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v2
