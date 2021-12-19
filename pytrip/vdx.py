@@ -35,7 +35,7 @@ from math import pi, sqrt
 
 import numpy as np
 
-from pytrip.res.concave_tool import create_contour
+from pytrip.res.concave_tool_v2 import create_contour
 
 try:
     # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
@@ -321,9 +321,9 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
-               # TODO number_of_vois not used
-               # elif "number_of_vois" in line:
-               #     number_of_vois = int(line.split()[1])
+            # TODO number_of_vois not used
+            # elif "number_of_vois" in line:
+            #     number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -651,7 +651,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -898,8 +898,24 @@ class Voi:
 
         # check if list contains any intersections
         if len(all_intersections) > 0:
+            # initialize proper argument for create_contour call
+            if plane == self.sagittal:
+                plane = 'Sagittal'
+            if plane == self.coronal:
+                plane = 'Coronal'
+            x_size = self.cube.dimx
+            y_size = self.cube.dimy
+            z_size = self.cube.dimz
+            pixel_size = self.cube.pixel_size
+            x_offset = self.cube.xoffset
+            y_offset = self.cube.yoffset
+            z_offset = self.cube.slice_pos[0]
+            slice_thickness = self.cube.slice_distance
             # call method that return list of contours
-            contours = create_contour(all_intersections)
+            contours = create_contour(all_intersections, plane,
+                                      x_size, y_size, z_size, pixel_size,
+                                      x_offset, y_offset,z_offset,
+                                      slice_thickness)
             # create a slice object and add a contour data
             s = Slice(cube=self.cube)
             for contour in contours:
@@ -1292,8 +1308,8 @@ class Voi:
             return False
 
         return self._is_x_contained(min_pos_x, max_pos_x) and \
-            self._is_y_contained(min_pos_y, max_pos_y) and \
-            self._is_z_contained(min_pos_z, max_pos_z)
+               self._is_y_contained(min_pos_y, max_pos_y) and \
+               self._is_z_contained(min_pos_z, max_pos_z)
 
     def _is_x_contained(self, min_pos, max_pos):
         return self.cube.xoffset <= min_pos and max_pos <= self.cube.dimx * self.cube.pixel_size + self.cube.xoffset
@@ -1310,6 +1326,7 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+
     def __init__(self, cube=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
@@ -1561,6 +1578,7 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1594,13 +1612,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
