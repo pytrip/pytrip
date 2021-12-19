@@ -1,7 +1,14 @@
-  recursive-include pytrip *.py
-  recursive-include examples *.py
-  exclude *.sh *.yml *.ini *.txt .gitkeep *.so .coveragerc *LICENSE
-  exclude pytrip/lib/unused.c
-  prune appveyor
-  prune docs
-  prune tests
+include *.rst
+include *.py
+include GPL_LICENSE LICENSE
+include requirements.txt
+graft pytrip
+graft examples
+graft docs
+exclude *.yml *.toml *.ini
+exclude .coveragerc
+exclude .gitmodules
+exclude pytrip/lib/unused.c
+recursive-exclude pytrip *.py[cod]
+prune appveyor
+prune tests
