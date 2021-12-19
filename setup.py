@@ -22,7 +22,6 @@ TODO: documentation here.
 import os
 import setuptools
 import subprocess
-import sys
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
@@ -61,36 +60,45 @@ def git_version():
     try:
         out = _minimal_ext_cmd(['git', 'describe', '--tags', '--long'])
         GIT_REVISION = out.strip().decode('ascii')
-        print('GIT_REVISION', GIT_REVISION)
         if GIT_REVISION:
             no_of_commits_since_last_tag = int(GIT_REVISION.split('-')[1])
             tag_name = GIT_REVISION.split('-')[0][1:]
             if no_of_commits_since_last_tag == 0:
-                version = tag_name
-            else:
-                version = '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
-        else:
-            version = "Unknown"
+                return tag_name
+            return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
+        return "Unknown"
     except OSError:
-        version = "Unknown"
-
-    return version
+        return "Unknown"
 
 
-def write_version_py(filename='pytrip/__init__.py'):
-    cnt = """
-__version__ = '%(version)s'
-"""
-
-    GIT_REVISION = git_version()
-    a = open(filename, 'a')
+def pytrip_init_version():
+    """
+    :return: __version__ from pytrip file
+             if this variable doesn't exists then return "Unknown"
+    """
     try:
-        a.write(cnt % {'version': GIT_REVISION})
-    finally:
-        a.close()
+        from pytrip import __version__
+        print("PYTRIP AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + __version__)
+        return __version__
+    except ImportError:
+        print("IMPORT ERROR BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
+        return "Unknown"
 
 
-write_version_py()
+def get_version():
+    version = git_version()
+    if version != "Unknown":
+        return version
+    return pytrip_init_version()
+
+
+def write_version_py(version, filename='pytrip/__init__.py'):
+    with open(filename, 'a') as f:
+        f.write("\n__version__ = '{:s}'".format(version))
+
+
+pytrip98_version = get_version()
+write_version_py(pytrip98_version)
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -165,7 +173,7 @@ extras_require = {
 setuptools.setup(
     name='pytrip98',
     cmdclass={'build_ext': build_ext},
-    version=git_version(),
+    version=pytrip98_version,
     packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
