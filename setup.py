@@ -54,7 +54,8 @@ def git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env).communicate()[0]
+        FNULL = open(os.devnull, 'w')
+        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=FNULL, env=env).communicate()[0]
         return out
 
     try:
@@ -73,16 +74,19 @@ def git_version():
 
 def pytrip_init_version():
     """
-    :return: __version__ from pytrip file
-             if this variable doesn't exists then return "Unknown"
+    read pytrip/__init__.py file and get __version__ variable
+    we don't import it, because that module may require packages that are not available yet
+    :return: version from pytrip
     """
-    try:
-        from pytrip import __version__
-        print("PYTRIP AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA " + __version__)
-        return __version__
-    except ImportError:
-        print("IMPORT ERROR BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB")
-        return "Unknown"
+    with open("pytrip/__init__.py", "r") as f:
+        lines = f.readlines()
+    for line in reversed(lines):
+        if line.startswith("__version__"):
+            line = line.split('#')[0]  # remove comment
+            delim = '"' if '"' in line else "'"  # check if string is in " or '
+            version = line.split(delim)[1]
+            return version
+    return "Unknown"
 
 
 def get_version():
