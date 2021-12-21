@@ -881,8 +881,12 @@ class Voi:
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
             contour = np.array(_slice.contours[0].contour)
 
-            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
-            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+            # call python method to not-as-C-efficiently calculate intersection points with a X=depth or Y=depth plane
+            if plane == self.sagittal:
+                plane_string = 'Sagittal'
+            if plane == self.coronal:
+                plane_string = 'Coronal'
+            intersection_points = pytriplib.slice_on_plane(contour, plane_string, depth)
 
             points = []
             # sort intersection points depending on plane type
@@ -914,7 +918,7 @@ class Voi:
             # call method that return list of contours
             contours = create_contour(all_intersections, plane,
                                       x_size, y_size, z_size, pixel_size,
-                                      x_offset, y_offset,z_offset,
+                                      x_offset, y_offset, z_offset,
                                       slice_thickness)
             # create a slice object and add a contour data
             s = Slice(cube=self.cube)

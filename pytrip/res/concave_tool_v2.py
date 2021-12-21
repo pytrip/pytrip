@@ -34,16 +34,6 @@ def create_contour(intersections_list_mm, plane, x_size, y_size, z_size, pixel_s
                 x_0 = point_0[0]
                 x_1 = point_1[0]
             bitmap[y_, x_0:x_1] = 1
-        if len(intersection) > 0 and len(intersection) % 2 != 0:
-            point_0 = to_ind(intersection[len(intersection) - 1], pixel_size, x_offset, y_offset, z_offset,
-                             slice_thickness)
-            y_ = point_0[2]
-            x_0 = None
-            if plane == 'Sagittal':
-                x_0 = point_0[1]
-            elif plane == 'Coronal':
-                x_0 = point_0[0]
-            bitmap[y_, x_0] = 1
 
     fig, ax = plt.subplots(1, 1)
     cp = ax.contour(bitmap, levels=0)
