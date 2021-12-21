@@ -17,11 +17,9 @@
 
 --- LICENSE ---
     PyTRiP is licensed under GPL version 3
-    (c) Copyright 2014 by
-    Jakob Toftegaard, <jakob.toftegaard@gmail.com>
-    Niels Bassler, <bassler@phys.au.dk>
-    for the Aarhus Particle Therapy Group
-    http://www.phys.au.dk/aptg
+    (c) Copyright 2021 by
+    the pytrip team
+    https://github.com/pytrip/pytrip/graphs/contributors
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by

@@ -112,7 +112,8 @@ extensions = [
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
-# |      1.21     | 14 (0xe)  |    3.7 - 3.10   | linux, mac, win |
+# |   1.21.4-     | 14 (0xe)  |    3.7 - 3.10   | linux, mac, win |
+# | 1.21.0-1.21.3 | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.20     | 14 (0xe)  |    3.7 - 3.9    | linux, mac, win |
 # |      1.19     | 13 (0xd)  |    3.6 - 3.8    | linux, mac, win |
 # |      1.18     | 13 (0xd)  |    3.5 - 3.8    | linux, mac, win |
@@ -138,7 +139,7 @@ install_requires = [
     "cffi<1.15 ; python_version <= '3.5'",
     "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7
     # full range of NumPy version with support for given python version
-    "numpy>=1.21 ; python_version == '3.10'",
+    "numpy>=1.21.4 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
     "numpy>=1.18 ; python_version == '3.8'",
     "numpy>=1.15 ; python_version == '3.7'",
@@ -149,7 +150,7 @@ install_requires = [
 
 # oldest NumPy version with support for given python version
 setup_requires = [
-    "numpy==1.21.0 ; python_version == '3.10'",
+    "numpy==1.21.4 ; python_version == '3.10'",
     "numpy==1.20.0 ; python_version == '3.9'",
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
@@ -205,6 +206,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
