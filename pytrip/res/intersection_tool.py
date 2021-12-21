@@ -11,8 +11,8 @@ def intersect(contour, plane, depth, i, j):
         y = (depth - x_0) * a + y_0
         intersection = [depth, y, z_0]
     if plane == 'Coronal' and between(y_0, y_1, depth):
-        a = (y_1 - y_0) / (x_1 - x_0)
-        x = (depth - y_0) / a + x_0
+        a = (x_1 - x_0) / (y_1 - y_0)
+        x = (depth - y_0) * a + x_0
         intersection = [x, depth, z_0]
     return intersection
 
