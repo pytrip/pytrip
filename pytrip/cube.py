@@ -484,20 +484,21 @@ class Cube(object):
             raise IOError("Could not find file " + header_path)
 
         # on python 3 read text, but on python 2 read bytes
-        mode = "rt"
+        file_open_mode = "rt"
         if sys.version_info.major == 2:
-            mode = "rb"
+            file_open_mode = "rb"
 
         # load plain of gzipped file
         content = ""
         if header_path.endswith(".gz"):
             import gzip
-            with gzip.open(header_path, mode) as fp:
+            with gzip.open(header_path, file_open_mode) as fp:
                 content = fp.read()
         else:
-            with open(header_path, mode) as fp:
+            with open(header_path, file_open_mode) as fp:
                 content = fp.read()
         if sys.version_info.major == 2:
+            # if it encounters unknown char then replace it with replacement character
             content = content.decode("utf-8", errors="replace")
 
         # fill self with data
