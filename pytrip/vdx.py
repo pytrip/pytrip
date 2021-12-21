@@ -36,6 +36,7 @@ from math import pi, sqrt
 import numpy as np
 
 from pytrip.res.concave_tool_v2 import create_contour
+from pytrip.res.intersection_tool import create_intersections
 
 try:
     # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
@@ -886,7 +887,7 @@ class Voi:
                 plane_string = 'Sagittal'
             if plane == self.coronal:
                 plane_string = 'Coronal'
-            intersection_points = pytriplib.slice_on_plane(contour, plane_string, depth)
+            intersection_points = create_intersections(contour, plane_string, depth)
 
             points = []
             # sort intersection points depending on plane type
