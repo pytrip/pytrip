@@ -22,7 +22,6 @@ TODO: documentation here.
 import os
 import setuptools
 import subprocess
-import sys
 from setuptools.command.build_ext import build_ext as _build_ext
 
 
@@ -55,42 +54,55 @@ def git_version():
         env['LANGUAGE'] = 'C'
         env['LANG'] = 'C'
         env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, env=env).communicate()[0]
+        FNULL = open(os.devnull, 'w')
+        out = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=FNULL, env=env).communicate()[0]
         return out
 
     try:
         out = _minimal_ext_cmd(['git', 'describe', '--tags', '--long'])
         GIT_REVISION = out.strip().decode('ascii')
-        print('GIT_REVISION', GIT_REVISION)
         if GIT_REVISION:
             no_of_commits_since_last_tag = int(GIT_REVISION.split('-')[1])
             tag_name = GIT_REVISION.split('-')[0][1:]
             if no_of_commits_since_last_tag == 0:
-                version = tag_name
-            else:
-                version = '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
-        else:
-            version = "Unknown"
+                return tag_name
+            return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
+        return "Unknown"
     except OSError:
-        version = "Unknown"
-
-    return version
+        return "Unknown"
 
 
-def write_version_py(filename='pytrip/__init__.py'):
-    cnt = """
-__version__ = '%(version)s'
-"""
+def pytrip_init_version():
+    """
+    read pytrip/__init__.py file and get __version__ variable
+    we don't import it, because that module may require packages that are not available yet
+    :return: version from pytrip
+    """
+    with open("pytrip/__init__.py", "r") as f:
+        lines = f.readlines()
+    for line in reversed(lines):
+        if line.startswith("__version__"):
+            line = line.split('#')[0]  # remove comment
+            delim = '"' if '"' in line else "'"  # check if string is in " or '
+            version = line.split(delim)[1]
+            return version
+    return "Unknown"
 
-    GIT_REVISION = git_version()
-    a = open(filename, 'a')
-    try:
-        a.write(cnt % {'version': GIT_REVISION})
-    finally:
-        a.close()
+
+def get_version():
+    version = git_version()
+    if version != "Unknown":
+        return version
+    return pytrip_init_version()
 
 
-write_version_py()
+def write_version_py(version, filename='pytrip/__init__.py'):
+    with open(filename, 'a') as f:
+        f.write("\n__version__ = '{:s}'".format(version))
+
+
+pytrip98_version = get_version()
+write_version_py(pytrip98_version)
 
 with open('README.rst') as readme_file:
     readme = readme_file.read()
@@ -165,7 +177,7 @@ extras_require = {
 setuptools.setup(
     name='pytrip98',
     cmdclass={'build_ext': build_ext},
-    version=git_version(),
+    version=pytrip98_version,
     packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
     url='https://github.com/pytrip/pytrip',
     license='GPL',
