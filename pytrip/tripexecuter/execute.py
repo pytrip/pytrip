@@ -335,6 +335,8 @@ class Execute(object):
             norun + tripcmd,
 
             # compress to tarball
+            "cd " + quote(remote_run_dir) + ";" +
+            "rm " + plan.basename + ".hed " + plan.basename + ".ctx " + plan.basename + ".vdx;" +
             "cd " + quote(self.remote_base_dir) + ";" +
             "echo Size to compress: $(du -sh " + quote(remote_rel_run_dir) + " | cut -f1)iB;" +
             "tar -zc " + tar_log_parameters + " --checkpoint-action=echo=\"Compressed bytes %{}T\" " +
