@@ -411,16 +411,16 @@ class Execute(object):
             path = os.path.join(plan.temp_dir, file_name)
             self._log("Reading {:s} file".format(file_name))
             if ".phys.dos" in file_name:
-                ctx_cube = DosCube()
+                dos_cube = DosCube()
                 if not self._norun:
-                    ctx_cube.read(path)
-                    plan.dosecubes.append(ctx_cube)
+                    dos_cube.read(path)
+                    plan.dosecubes.append(dos_cube)
 
             if ".bio.dos" in file_name:
-                ctx_cube = CtxCube()
+                dos_cube = DosCube()
                 if not self._norun:
-                    ctx_cube.read(path)
-                    plan.dosecubes.append(ctx_cube)
+                    dos_cube.read(path)
+                    plan.dosecubes.append(dos_cube)
 
             if ".dosemlet.dos" in file_name:
                 let_cube = LETCube()
