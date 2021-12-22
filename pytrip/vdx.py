@@ -917,10 +917,10 @@ class Voi:
             z_offset = self.cube.slice_pos[0]
             slice_thickness = self.cube.slice_distance
             # call method that return list of contours
-            contours = create_contour(all_intersections, plane,
-                                      x_size, y_size, z_size, pixel_size,
-                                      x_offset, y_offset, z_offset,
-                                      slice_thickness)
+            contours = create_contour(all_intersections,
+                                      (x_size, y_size, z_size),
+                                      (x_offset, y_offset, z_offset), 
+                                      pixel_size, plane, slice_thickness)
             # create a slice object and add a contour data
             s = Slice(cube=self.cube)
             for contour in contours:

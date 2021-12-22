@@ -1,57 +1,93 @@
+"""
+This code is strongly inspired by:
+https://github.com/ellieb/EGSnrc/blob/DICOM-viewer/HEN_HOUSE/gui/dose-viewer/volumes/structure-set-volume.js
+written by Elise Badun:
+https://github.com/ellieb
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def to_ind(mm, pix_size, x_off, y_off, z_off, s_thick):
+def to_indices(mm, pixel_size, offsets, slice_thickness):
+    x_off, y_off, z_off = offsets
     return [
-        int((mm[0] - x_off) / pix_size),
-        int((mm[1] - y_off) / pix_size),
-        int((mm[2] - z_off) / s_thick)
+        round((mm[0] - x_off) / pixel_size),
+        round((mm[1] - y_off) / pixel_size),
+        round((mm[2] - z_off) / slice_thickness)
     ]
 
 
-def create_contour(intersections_list_mm, plane, x_size, y_size, z_size, pixel_size, x_offset, y_offset, z_offset,
-                   slice_thickness):
+def initialize_bitmap(plane, cube_size):
+    x_size, y_size, z_size = cube_size
     bitmap = None
     if plane == 'Sagittal':
         bitmap = np.zeros((z_size, y_size))
     elif plane == 'Coronal':
         bitmap = np.zeros((z_size, x_size))
+    return bitmap
 
-    stale_variable = None
-    for intersection in intersections_list_mm:
+
+def fill_bitmap(bitmap, intersections_list_filtered, offsets, pixel_size, plane, slice_thickness):
+    for intersection in intersections_list_filtered:
         for i in range(1, len(intersection), 2):
-            point_0 = to_ind(intersection[i - 1], pixel_size, x_offset, y_offset, z_offset, slice_thickness)
-            point_1 = to_ind(intersection[i], pixel_size, x_offset, y_offset, z_offset, slice_thickness)
-            y_ = point_0[2]
+            point_0 = to_indices(intersection[i - 1], pixel_size, offsets, slice_thickness)
+            point_1 = to_indices(intersection[i], pixel_size, offsets, slice_thickness)
+            y = point_0[2]
             x_0, x_1 = None, None
             if plane == 'Sagittal':
-                stale_variable = intersection[0][0]
                 x_0 = point_0[1]
                 x_1 = point_1[1]
             elif plane == 'Coronal':
-                stale_variable = intersection[0][1]
                 x_0 = point_0[0]
                 x_1 = point_1[0]
-            bitmap[y_, x_0:x_1] = 1
+            bitmap[y, x_0:x_1] = 1
 
-    fig, ax = plt.subplots(1, 1)
-    cp = ax.contour(bitmap, levels=0)
 
+def get_depth(intersections_list_filtered, plane):
+    if plane == 'Sagittal':
+        return intersections_list_filtered[0][0][0]
+    if plane == 'Coronal':
+        return intersections_list_filtered[0][0][1]
+
+
+def translate_contours_to_mm(paths, depth, offsets, pixel_size, plane, slice_thickness):
     contours = []
-    for p in cp.collections[0].get_paths():
+    x_offset, y_offset, z_offset = offsets
+    for p in paths:
         v = np.array(p.vertices)
         y = v[:, 1] * slice_thickness + z_offset
-        x = None
         contour = None
         if plane == 'Sagittal':
             x = v[:, 0] * pixel_size + y_offset
-            zipped_xy = [(x[i], y[i]) for i in range(len(x))]
-            contour = [[stale_variable, real_y, real_z] for real_y, real_z in zipped_xy]
+            zipped_xy = zip(x, y)
+            contour = [[depth, real_y, real_z] for real_y, real_z in zipped_xy]
         elif plane == 'Coronal':
             x = v[:, 0] * pixel_size + x_offset
-            zipped_xy = [(x[i], y[i]) for i in range(len(x))]
-            contour = [[real_x, stale_variable, real_z] for real_x, real_z in zipped_xy]
-        contours.append(contour)
+            zipped_xy = zip(x, y)
+            contour = [[real_x, depth, real_z] for real_x, real_z in zipped_xy]
+        if contour:
+            contours.append(contour)
+    return contours
+
+
+def calculate_contour(bitmap):
+    fig, ax = plt.subplots(1, 1)
+    cp = ax.contour(bitmap, levels=0)
+    return cp
+
+
+def create_contour(intersections_list_mm, cube_size, offsets, pixel_size, plane, slice_thickness):
+    intersections_list_filtered = [i for i in intersections_list_mm if i]
+    if not intersections_list_filtered:
+        return []
+
+    bitmap = initialize_bitmap(plane, cube_size)
+    fill_bitmap(bitmap, intersections_list_filtered, offsets, pixel_size, plane, slice_thickness)
+
+    cp = calculate_contour(bitmap)
+
+    depth = get_depth(intersections_list_filtered, plane)
+    paths = cp.collections[0].get_paths()
+    contours = translate_contours_to_mm(paths, depth, offsets, pixel_size, plane, slice_thickness)
 
     return contours
