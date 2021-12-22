@@ -1,10 +1,10 @@
-def between(a, b, c):
-    return a <= c < b or b <= c < a
+def between(a, b, val):
+    return a <= val < b or b <= val < a
 
 
-def intersect(contour, plane, depth, i, j):
+def intersect(contour, plane, depth, i):
     x_0, y_0, z_0 = contour[i]
-    x_1, y_1, _z_1 = contour[j]
+    x_1, y_1, _z_1 = contour[i+1]
     intersection = None
     if plane == 'Sagittal' and between(x_0, x_1, depth):
         a = (y_1 - y_0) / (x_1 - x_0)
@@ -19,13 +19,9 @@ def intersect(contour, plane, depth, i, j):
 
 def create_intersections(contour, plane, depth):
     intersections = []
-    for i in range(len(contour) - 1):
-        intersection = intersect(contour, plane, depth, i, i + 1)
+    for i in range(-1, len(contour) - 1, 1):
+        intersection = intersect(contour, plane, depth, i)
         if intersection:
             intersections.append(intersection)
-
-    intersection = intersect(contour, plane, depth, -1, 0)
-    if intersection:
-        intersections.append(intersection)
 
     return intersections
