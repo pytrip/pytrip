@@ -236,7 +236,6 @@ class VdxCube:
                 #   reassign colors to all VOIs and create new list of spare colors
                 self.assign_voi_colors()
         else:
-            voi.calculate_slices_with_contours_in_sagittal_and_coronal()
             self.vois.append(voi)
 
     def assign_voi_colors(self, k=3):
@@ -868,8 +867,8 @@ class Voi:
             x_min, y_min, _ = self.cube.indices_to_pos([self.cube.dimx, self.cube.dimy, 0])
             x_max, y_max, _ = self.cube.indices_to_pos([0, 0, 0])
             for s in self.slices:
-                for contour in s.contours:
-                    for p in contour:
+                for c in s.contours:
+                    for p in c.contour:
                         x, y, z = p
                         if x < x_min:
                             x_min = x
@@ -886,7 +885,7 @@ class Voi:
         self._calculate_contour_ranges()
         x_min, x_max = self._slices_sagittal_range
         y_min, y_max = self._slices_coronal_range
-        
+
         for x in range(self.cube.dimx):
             x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
             if x_min <= x_pos <= x_max:
@@ -896,7 +895,7 @@ class Voi:
         for y in range(self.cube.dimy):
             _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
             if y_min <= y_pos <= y_max:
-                s = self.get_2d_slice(self.sagittal, y_pos)
+                s = self.get_2d_slice(self.coronal, y_pos)
                 if s:
                     self._slices_coronal.append(s)
 

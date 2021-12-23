@@ -88,7 +88,8 @@ def calculate_contour_v2(bitmap):
     contours_filtered = []
     for contour in contours:
         contours_filtered.append(np.array([contour[i] for i in range(len(contour)) if
-                                           i == len(contour) - 1 or i < len(contour) - 1 and (contour[i] != contour[i + 1]).all()]))
+                                           i == len(contour) - 1 or i < len(contour) - 1 and (
+                                                       contour[i] != contour[i + 1]).any()]))
     return contours_filtered
 
 
