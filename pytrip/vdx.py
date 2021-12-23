@@ -865,11 +865,13 @@ class Voi:
         for x in range(self.cube.dimx):
             x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
             s = self.get_2d_slice(self.sagittal, x_pos)
-            self._slices_sagittal.append(s)
+            if s:
+                self._slices_sagittal.append(s)
         for y in range(self.cube.dimy):
             _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
             s = self.get_2d_slice(self.sagittal, y_pos)
-            self._slices_coronal.append(s)
+            if s:
+                self._slices_coronal.append(s)
 
     def get_2d_slice(self, plane, depth):
         """
