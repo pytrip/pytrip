@@ -911,9 +911,7 @@ class Voi:
 
             all_intersections.append(points)
 
-        # object to return if there is no intersection
-        s = None
-
+        contours = []
         # check if list contains any intersections
         if len(all_intersections) > 0:
             # initialize proper argument for create_contour call
@@ -934,11 +932,13 @@ class Voi:
                                       (x_size, y_size, z_size),
                                       (x_offset, y_offset, z_offset),
                                       pixel_size, plane_string, slice_thickness)
-            # create a slice object and add a contour data
+
+        s = None
+        if contours:
             s = Slice(cube=self.cube, plane=plane)
             for contour in contours:
                 s.add_contour(Contour(contour, cube=self.cube))
-
+        # object to return if there is no intersection
         return s
 
     def calculate_center(self):

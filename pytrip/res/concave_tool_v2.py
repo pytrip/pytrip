@@ -52,22 +52,22 @@ def get_depth(intersections_list_filtered, plane):
 
 
 def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane, slice_thickness):
-    contours = []
+    contours_mm = []
     x_offset, y_offset, z_offset = offsets
     for v in contours_indices:
         y = v[:, 1] * slice_thickness + z_offset
-        contour = None
+        contour_mm = None
         if plane == 'Sagittal':
             x = v[:, 0] * pixel_size + y_offset
             zipped_xy = zip(x, y)
-            contour = [[depth, real_y, real_z] for real_y, real_z in zipped_xy]
+            contour_mm = [[depth, real_y, real_z] for real_y, real_z in zipped_xy]
         elif plane == 'Coronal':
             x = v[:, 0] * pixel_size + x_offset
             zipped_xy = zip(x, y)
-            contour = [[real_x, depth, real_z] for real_x, real_z in zipped_xy]
-        if contour:
-            contours.append(contour)
-    return contours
+            contour_mm = [[real_x, depth, real_z] for real_x, real_z in zipped_xy]
+        if contour_mm:
+            contours_mm.append(contour_mm)
+    return contours_mm
 
 
 def calculate_contour(bitmap):
@@ -85,8 +85,10 @@ def calculate_contour_v2(bitmap):
     contouring_object = _cntr.Cntr(x, y, bitmap)
     traces = contouring_object.trace(0)
     contours = traces[:len(traces) // 2]
-    contours_filtered = [contours[i] for i in range(len(contours)) if
-                         i == len(contours) - 1 or i < len(contours) - 1 and contours[i] != contours[i + 1]]
+    contours_filtered = []
+    for contour in contours:
+        contours_filtered.append(np.array([contour[i] for i in range(len(contour)) if
+                                           i == len(contour) - 1 or i < len(contour) - 1 and (contour[i] != contour[i + 1]).all()]))
     return contours_filtered
 
 
