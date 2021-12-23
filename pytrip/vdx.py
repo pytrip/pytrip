@@ -236,6 +236,7 @@ class VdxCube:
                 #   reassign colors to all VOIs and create new list of spare colors
                 self.assign_voi_colors()
         else:
+            voi.calculate_slices_with_contours_in_sagittal_and_coronal()
             self.vois.append(voi)
 
     def assign_voi_colors(self, k=3):
@@ -705,6 +706,8 @@ class Voi:
         self.center_pos = None
         self.polygon3d = None
         self.voi_cube = None
+        self._slices_sagittal = []
+        self._slices_coronal = []
 
     def __str__(self):
         """ str output handler
@@ -858,6 +861,16 @@ class Voi:
             product = product[:] - offset_proj
         return product
 
+    def calculate_slices_with_contours_in_sagittal_and_coronal(self):
+        for x in range(self.cube.dimx):
+            x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
+            s = self.get_2d_slice(self.sagittal, x_pos)
+            self._slices_sagittal.append(s)
+        for y in range(self.cube.dimy):
+            _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
+            s = self.get_2d_slice(self.sagittal, y_pos)
+            self._slices_coronal.append(s)
+
     def get_2d_slice(self, plane, depth):
         """
         Gets a 2D Slice object from the contour in either sagittal or coronal plane.
@@ -905,9 +918,9 @@ class Voi:
         if len(all_intersections) > 0:
             # initialize proper argument for create_contour call
             if plane == self.sagittal:
-                plane = 'Sagittal'
+                plane_string = 'Sagittal'
             if plane == self.coronal:
-                plane = 'Coronal'
+                plane_string = 'Coronal'
             x_size = self.cube.dimx
             y_size = self.cube.dimy
             z_size = self.cube.dimz
@@ -919,10 +932,10 @@ class Voi:
             # call method that return list of contours
             contours = create_contour(all_intersections,
                                       (x_size, y_size, z_size),
-                                      (x_offset, y_offset, z_offset), 
-                                      pixel_size, plane, slice_thickness)
+                                      (x_offset, y_offset, z_offset),
+                                      pixel_size, plane_string, slice_thickness)
             # create a slice object and add a contour data
-            s = Slice(cube=self.cube)
+            s = Slice(cube=self.cube, plane=plane)
             for contour in contours:
                 s.add_contour(Contour(contour, cube=self.cube))
 
@@ -1249,20 +1262,40 @@ class Voi:
             return None
         return np.sort(_slice.get_intersections(pos))
 
-    def get_slice_at_pos(self, z):
+    def get_slice_at_pos(self, pos, plane=None):
         """
-        Finds and returns a slice object found at position z [mm] (float).
+        Finds and returns a slice object found at position pos [mm] (float) for given plane.
 
-        :param float z: slice position in absolute coordiantes (i.e. including any offsets)
-        :returns: VOI slice at position z, z position may be approxiamte
+        :param float pos: slice position in absolute coordinates (i.e. including any offsets)
+        :param int plane: plane in which slice is searched
+        :returns: VOI slice at position pos, pos may be approximate
         """
+        if plane == self.sagittal:
+            _slice = [item for item in self._slices_sagittal if
+                      np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
+            if len(_slice) == 0:
+                logger.debug(
+                    "could not find slice in get_slice_at_pos() at position {} for plane {}".format(pos, 'sagittal'))
+                return None
 
-        _slice = [item for item in self.slices if np.isclose(item.get_position(), z, atol=item.thickness * 0.5)]
-        if len(_slice) == 0:
-            logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
-            return None
+            logger.debug("found slice at pos for z: {:.2f} mm".format(pos))
+        elif plane == self.coronal:
+            _slice = [item for item in self._slices_coronal if
+                      np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
+            if len(_slice) == 0:
+                logger.debug(
+                    "could not find slice in get_slice_at_pos() at position {}  for plane {}".format(pos, 'coronal'))
+                return None
 
-        logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
+            logger.debug("found slice at pos for z: {:.2f} mm".format(pos))
+        else:  # default for transversal, when plane is None
+            _slice = [item for item in self.slices if np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
+            if len(_slice) == 0:
+                logger.debug("could not find slice in get_slice_at_pos() at position {}".format(pos))
+                return None
+
+            logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(pos, _slice[0].thickness))
+
         return _slice[0]
 
     def number_of_slices(self):
@@ -1331,8 +1364,10 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
+    sagittal = 2  #: id for sagittal view
+    coronal = 1  #: id for coronal view
 
-    def __init__(self, cube=None):
+    def __init__(self, cube=None, plane=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
 
@@ -1346,6 +1381,8 @@ class Slice:
         self.start_pos = None
         self.stop_pos = None
         self.slice_in_frame = None
+
+        self._plane = plane
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -1373,7 +1410,14 @@ class Slice:
         """
         if len(self.contours) == 0:
             return None
-        return self.contours[0].contour[0][2]
+        if self._plane is None:
+            return self.contours[0].contour[0][2]
+        elif self._plane == self.coronal:
+            return self.contours[0].contour[0][1]
+        elif self._plane == self.sagittal:
+            return self.contours[0].contour[0][0]
+        else:
+            return None
 
     def get_intersections(self, pos):
         """
