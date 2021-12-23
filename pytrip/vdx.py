@@ -707,7 +707,9 @@ class Voi:
         self.polygon3d = None
         self.voi_cube = None
         self._slices_sagittal = []
+        self._slices_sagittal_range = None
         self._slices_coronal = []
+        self._slices_coronal_range = None
 
     def __str__(self):
         """ str output handler
@@ -861,17 +863,42 @@ class Voi:
             product = product[:] - offset_proj
         return product
 
+    def _calculate_contour_ranges(self):
+        if self._slices_sagittal_range is None and self._slices_coronal_range is None:
+            x_min, y_min, _ = self.cube.indices_to_pos([self.cube.dimx, self.cube.dimy, 0])
+            x_max, y_max, _ = self.cube.indices_to_pos([0, 0, 0])
+            for s in self.slices:
+                for contour in s.contours:
+                    for p in contour:
+                        x, y, z = p
+                        if x < x_min:
+                            x_min = x
+                        if x > x_max:
+                            x_max = x
+                        if y < y_min:
+                            y_min = y
+                        if y > y_max:
+                            y_max = y
+            self._slices_sagittal_range = (x_min, x_max)
+            self._slices_coronal_range = (y_min, y_max)
+
     def calculate_slices_with_contours_in_sagittal_and_coronal(self):
+        self._calculate_contour_ranges()
+        x_min, x_max = self._slices_sagittal_range
+        y_min, y_max = self._slices_coronal_range
+        
         for x in range(self.cube.dimx):
             x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
-            s = self.get_2d_slice(self.sagittal, x_pos)
-            if s:
-                self._slices_sagittal.append(s)
+            if x_min <= x_pos <= x_max:
+                s = self.get_2d_slice(self.sagittal, x_pos)
+                if s:
+                    self._slices_sagittal.append(s)
         for y in range(self.cube.dimy):
             _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
-            s = self.get_2d_slice(self.sagittal, y_pos)
-            if s:
-                self._slices_coronal.append(s)
+            if y_min <= y_pos <= y_max:
+                s = self.get_2d_slice(self.sagittal, y_pos)
+                if s:
+                    self._slices_coronal.append(s)
 
     def get_2d_slice(self, plane, depth):
         """
