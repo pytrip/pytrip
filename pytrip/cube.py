@@ -628,6 +628,10 @@ class Cube(object):
         self.yoffset *= self.pixel_size
         self.zoffset *= self.slice_distance
 
+        # if zoffset is 0 and it shouldn't be, then calculate it
+        if self.slice_pos and self.slice_pos[0] and self.zoffset == 0:
+            self.zoffset = self.slice_pos[0]
+
         logger.debug("TRiP loaded offsets: {:f} {:f} {:f}".format(self.xoffset, self.yoffset, self.zoffset))
 
         # generate slice position tables, if absent in header file
