@@ -118,13 +118,13 @@ class RegularInterpolator(object):
             if len(x) == 1:  # data with shape 1 x N
                 executor_1d = self.__get_1d_function(x=y, y=z, kind=kind)
 
-                def applicator(x, y, *args, **kwargs):
+                def applicator(_unused, y, *args, **kwargs):
                     return executor_1d(y)
                 self._interp_function = applicator
             elif len(y) == 1:  # data with shape N x 1
                 executor_1d = self.__get_1d_function(x=x, y=z, kind=kind)
 
-                def applicator(x, y, *args, **kwargs):
+                def applicator(x, _unused, *args, **kwargs):
                     return executor_1d(x)
                 self._interp_function = applicator
             else:
