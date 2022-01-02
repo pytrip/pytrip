@@ -35,8 +35,7 @@ from math import pi, sqrt
 
 import numpy as np
 
-from pytrip.res.concave_tool_v2 import create_contour
-from pytrip.res.intersection_tool import create_intersections
+from pytrip.res.contour import create_contour
 
 try:
     # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
