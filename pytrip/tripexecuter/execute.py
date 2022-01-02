@@ -36,9 +36,8 @@ except ImportError:
 
 from pytrip.dos import DosCube
 from pytrip.let import LETCube
-from pytrip.ctx import CtxCube
-from pytrip.tripexecuter.executor_logger import ConsoleExecutorLogger, FileExecutorLogger
-from pytrip.util import human_readable_size, get_size
+from pytrip.tripexecuter.executor_logger import FileExecutorLogger
+from pytrip.util import human_readable_size, get_size, TRiP98FilePath
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +50,7 @@ except ImportError:
 class Execute(object):
     """ Execute class for running trip using attached Ctx, Vdx and Plan objects.
     """
+
     def __init__(self, ctx, vdx, ctx_path="", vdx_path=""):
         """ Initialize the Execute class.
         :params CtxCube() ctx: the CT images as a regular pytrip.CtxCube() object.
@@ -326,7 +326,7 @@ class Execute(object):
             # extract tarball
             "cd " + quote(self.remote_base_dir) + ";" +
             "echo Size to extract: " +
-            "$(file " + quote(remote_tgz_path) + " | rev | cut -d' ' -f1 | rev | numfmt --to=iec-i --suffix=B);"
+            "$(file " + quote(remote_tgz_path) + " | rev | cut -d' ' -f1 | rev | numfmt --to=iec-i --suffix=B);" +
             "tar -zx " + tar_log_parameters + " --checkpoint-action=echo=\"Extracted bytes %{}T\" " +
             "-f " + quote(remote_tgz_path),
 
@@ -411,30 +411,29 @@ class Execute(object):
 
         for file_name in plan.out_files:
             path = os.path.join(plan.temp_dir, file_name)
-            self._log("Reading {:s} file".format(file_name))
-            if ".phys.dos" in file_name:
-                ctx_cube = DosCube()
-                if not self._norun:
-                    ctx_cube.read(path)
-                    plan.dosecubes.append(ctx_cube)
 
-            if ".bio.dos" in file_name:
-                ctx_cube = CtxCube()
-                if not self._norun:
-                    ctx_cube.read(path)
-                    plan.dosecubes.append(ctx_cube)
+            if not self._norun:
+                # check if file is dose file e.g. "phys.dos", "bio.dos"
+                if TRiP98FilePath(file_name, DosCube).suffix in DosCube.allowed_suffix and \
+                        TRiP98FilePath(file_name, DosCube).is_valid_datafile_path():
+                    self._log("Reading {:s} file".format(file_name))
+                    dose_cube = DosCube()
+                    dose_cube.read(path)
+                    plan.dosecubes.append(dose_cube)
 
-            if ".dosemlet.dos" in file_name:
-                let_cube = LETCube()
-                if not self._norun:
+                # check if file is let file e.g. "dosemlet.dos", "mlet.dos"
+                elif TRiP98FilePath(file_name, LETCube).suffix in LETCube.allowed_suffix and \
+                        TRiP98FilePath(file_name, LETCube).is_valid_datafile_path():
+                    self._log("Reading {:s} file".format(file_name))
+                    let_cube = LETCube()
                     let_cube.read(path)
                     plan.letcubes.append(let_cube)
 
-            if ".rst" in file_name:
-                logger.warning("attaching fields to class not implemented yet {:s}".format(path))
-                # TODO
-                # need to access the RstClass here for each rst file. This will then need to be attached
-                # to the proper field in the list of fields.
+                elif ".rst" in file_name:
+                    logger.warning("attaching fields to class not implemented yet {:s}".format(path))
+                    # TODO
+                    # need to access the RstClass here for each rst file. This will then need to be attached
+                    # to the proper field in the list of fields.
 
         self._info("Done")
 
