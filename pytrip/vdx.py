@@ -922,13 +922,12 @@ class Voi:
 
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
             contour = np.array(_slice.contours[0].contour)
+            # we need to add first point at the end, without it slice_on_plane won't work properly
+            #   because it operates on closed chains of points
+            contour = np.append(contour, [contour[0]], axis=0)
 
-            # call python method to not-as-C-efficiently calculate intersection points with a X=depth or Y=depth plane
-            if plane == self.sagittal:
-                plane_string = 'Sagittal'
-            if plane == self.coronal:
-                plane_string = 'Coronal'
-            intersection_points = create_intersections(contour, plane_string, depth)
+            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
+            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
 
             points = []
             # sort intersection points depending on plane type
@@ -943,10 +942,6 @@ class Voi:
         # check if list contains any intersections
         if len(all_intersections) > 0:
             # initialize proper argument for create_contour call
-            if plane == self.sagittal:
-                plane_string = 'Sagittal'
-            if plane == self.coronal:
-                plane_string = 'Coronal'
             x_size = self.cube.dimx
             y_size = self.cube.dimy
             z_size = self.cube.dimz
@@ -959,7 +954,7 @@ class Voi:
             contours = create_contour(all_intersections,
                                       (x_size, y_size, z_size),
                                       (x_offset, y_offset, z_offset),
-                                      pixel_size, plane_string, slice_thickness)
+                                      pixel_size, plane, slice_thickness)
 
         s = None
         if contours:
@@ -1293,38 +1288,56 @@ class Voi:
     def get_slice_at_pos(self, pos, plane=None):
         """
         Finds and returns a slice object found at position pos [mm] (float) for given plane.
+        If slice was not precalculated, tries to calculate it and returns result (can be None)
 
         :param float pos: slice position in absolute coordinates (i.e. including any offsets)
         :param int plane: plane in which slice is searched
         :returns: VOI slice at position pos, pos may be approximate
         """
+
+        def is_close(item):
+            return np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)
+
+        _slice = None
+        logger_info = ""
         if plane == self.sagittal:
-            _slice = [item for item in self._slices_sagittal if
-                      np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
-            if len(_slice) == 0:
-                logger.debug(
-                    "could not find slice in get_slice_at_pos() at position {} for plane {}".format(pos, 'sagittal'))
-                return None
+            # if slices were precalculated, find first slice that is close to the pos
+            if self._slices_sagittal_range:
+                if self._slices_sagittal_range[0] <= pos <= self._slices_sagittal_range[1]:
+                    sagittal_g = (item for item in self._slices_sagittal if is_close(item))
+                    _slice = next(sagittal_g, None)
+            # if were not precalculated, calculate it now
+            else:
+                _slice = self.get_2d_slice(plane, pos)
 
-            logger.debug("found slice at pos for z: {:.2f} mm".format(pos))
+            # update logger info
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for sagittal".format(pos)
+            else:
+                logger_info = "found slice at pos for x: {:.2f} mm".format(pos)
         elif plane == self.coronal:
-            _slice = [item for item in self._slices_coronal if
-                      np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
-            if len(_slice) == 0:
-                logger.debug(
-                    "could not find slice in get_slice_at_pos() at position {}  for plane {}".format(pos, 'coronal'))
-                return None
+            if self._slices_coronal_range:
+                if self._slices_coronal_range[0] <= pos <= self._slices_coronal_range[1]:
+                    coronal_g = (item for item in self._slices_coronal if is_close(item))
+                    _slice = next(coronal_g, None)
+            else:
+                _slice = self.get_2d_slice(plane, pos)
 
-            logger.debug("found slice at pos for z: {:.2f} mm".format(pos))
-        else:  # default for transversal, when plane is None
-            _slice = [item for item in self.slices if np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)]
-            if len(_slice) == 0:
-                logger.debug("could not find slice in get_slice_at_pos() at position {}".format(pos))
-                return None
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for coronal".format(pos)
+            else:
+                logger_info = "found slice at pos for y: {:.2f} mm".format(pos)
+        else:  # default for transversal
+            transversal_g = (item for item in self.slices if is_close(item))
+            _slice = next(transversal_g, None)
 
-            logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(pos, _slice[0].thickness))
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for transversal".format(pos)
+            else:
+                logger_info = "found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(pos, _slice.thickness)
 
-        return _slice[0]
+        logger.debug(logger_info)
+        return _slice
 
     def number_of_slices(self):
         """
