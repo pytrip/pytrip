@@ -705,6 +705,7 @@ class Voi:
         self.center_pos = None
         self.polygon3d = None
         self.voi_cube = None
+        # ranges are used to speed up slices calculations, other are for caching those slices
         self._slices_sagittal = []
         self._slices_sagittal_range = None
         self._slices_coronal = []
@@ -863,6 +864,7 @@ class Voi:
         return product
 
     def _calculate_contour_ranges(self):
+        # calculate ranges only once to optimize calculations of contours
         if self._slices_sagittal_range is None and self._slices_coronal_range is None:
             x_min, y_min, _ = self.cube.indices_to_pos([self.cube.dimx, self.cube.dimy, 0])
             x_max, y_max, _ = self.cube.indices_to_pos([0, 0, 0])
@@ -872,19 +874,19 @@ class Voi:
                         x, y, z = p
                         if x < x_min:
                             x_min = x
-                        if x > x_max:
+                        elif x > x_max:
                             x_max = x
-                        if y < y_min:
+                        elif y < y_min:
                             y_min = y
                         if y > y_max:
                             y_max = y
             self._slices_sagittal_range = (x_min, x_max)
             self._slices_coronal_range = (y_min, y_max)
 
+        return self._slices_sagittal_range, self._slices_coronal_range
+
     def calculate_slices_with_contours_in_sagittal_and_coronal(self):
-        self._calculate_contour_ranges()
-        x_min, x_max = self._slices_sagittal_range
-        y_min, y_max = self._slices_coronal_range
+        (x_min, x_max), (y_min, y_max) = self._calculate_contour_ranges()
 
         for x in range(self.cube.dimx):
             x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
@@ -892,6 +894,7 @@ class Voi:
                 s = self.get_2d_slice(self.sagittal, x_pos)
                 if s:
                     self._slices_sagittal.append(s)
+
         for y in range(self.cube.dimy):
             _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
             if y_min <= y_pos <= y_max:
@@ -1423,6 +1426,8 @@ class Slice:
         self.stop_pos = None
         self.slice_in_frame = None
 
+        # added to make this class more generic
+        # now it stores slices in sagittal and coronal
         self._plane = plane
 
     def add_contour(self, contour):
@@ -1451,14 +1456,15 @@ class Slice:
         """
         if len(self.contours) == 0:
             return None
+
         if self._plane is None:
             return self.contours[0].contour[0][2]
         elif self._plane == self.coronal:
             return self.contours[0].contour[0][1]
         elif self._plane == self.sagittal:
             return self.contours[0].contour[0][0]
-        else:
-            return None
+
+        return None
 
     def get_intersections(self, pos):
         """
