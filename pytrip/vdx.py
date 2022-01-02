@@ -876,9 +876,9 @@ class Voi:
                             x_min = x
                         elif x > x_max:
                             x_max = x
-                        elif y < y_min:
+                        if y < y_min:
                             y_min = y
-                        if y > y_max:
+                        elif y > y_max:
                             y_max = y
             self._slices_sagittal_range = (x_min, x_max)
             self._slices_coronal_range = (y_min, y_max)
