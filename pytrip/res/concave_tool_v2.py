@@ -25,7 +25,7 @@ def initialize_bitmap(plane, cube_size):
     bitmap = None
     if plane == sagittal:
         bitmap = np.zeros((z_size, y_size))
-    elif plane == sagittal:
+    elif plane == coronal:
         bitmap = np.zeros((z_size, x_size))
     return bitmap
 
@@ -40,7 +40,7 @@ def fill_bitmap(bitmap, intersections_list_filtered, offsets, pixel_size, plane,
             if plane == sagittal:
                 x_0 = point_0[1]
                 x_1 = point_1[1]
-            elif plane == sagittal:
+            elif plane == coronal:
                 x_0 = point_0[0]
                 x_1 = point_1[0]
             bitmap[y, x_0:x_1] = 1
@@ -49,7 +49,7 @@ def fill_bitmap(bitmap, intersections_list_filtered, offsets, pixel_size, plane,
 def get_depth(intersections_list_filtered, plane):
     if plane == sagittal:
         return intersections_list_filtered[0][0][0]
-    if plane == sagittal:
+    if plane == coronal:
         return intersections_list_filtered[0][0][1]
 
 
@@ -63,7 +63,7 @@ def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane,
             x = v[:, 0] * pixel_size + y_offset
             zipped_xy = zip(x, y)
             contour_mm = [[depth, real_y, real_z] for real_y, real_z in zipped_xy]
-        elif plane == sagittal:
+        elif plane == coronal:
             x = v[:, 0] * pixel_size + x_offset
             zipped_xy = zip(x, y)
             contour_mm = [[real_x, depth, real_z] for real_x, real_z in zipped_xy]
