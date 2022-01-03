@@ -870,7 +870,7 @@ class Voi:
             for s in self.slices:
                 for c in s.contours:
                     for p in c.contour:
-                        x, y, z = p
+                        x, y, _z = p
                         if x < x_min:
                             x_min = x
                         elif x > x_max:
@@ -1388,9 +1388,8 @@ class Voi:
             # get_min_max can return NoneTypes if a VOI is located outside of the patient
             return False
 
-        return self._is_x_contained(min_pos_x, max_pos_x) and \
-               self._is_y_contained(min_pos_y, max_pos_y) and \
-               self._is_z_contained(min_pos_z, max_pos_z)
+        return self._is_x_contained(min_pos_x, max_pos_x) and self._is_y_contained(min_pos_y, max_pos_y) \
+            and self._is_z_contained(min_pos_z, max_pos_z)
 
     def _is_x_contained(self, min_pos, max_pos):
         return self.cube.xoffset <= min_pos and max_pos <= self.cube.dimx * self.cube.pixel_size + self.cube.xoffset
@@ -1458,9 +1457,9 @@ class Slice:
 
         if self._plane is None:
             return self.contours[0].contour[0][2]
-        elif self._plane == self.coronal:
+        if self._plane == self.coronal:
             return self.contours[0].contour[0][1]
-        elif self._plane == self.sagittal:
+        if self._plane == self.sagittal:
             return self.contours[0].contour[0][0]
 
         return None

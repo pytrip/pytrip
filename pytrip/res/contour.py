@@ -57,6 +57,7 @@ def get_depth(intersections_list_filtered, plane):
         return intersections_list_filtered[0][0][0]  # value of x coordinate
     if plane == coronal:
         return intersections_list_filtered[0][0][1]  # value of y coordinate
+    return None
 
 
 def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane, slice_thickness):
