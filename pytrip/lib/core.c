@@ -885,6 +885,7 @@ static PyMethodDef pytriplibMethods[] = {
 {"calculate_lvh_slice",(PyCFunction)calculate_lvh_slice,METH_VARARGS},
 {"slice_on_plane",(PyCFunction)slice_on_plane,METH_VARARGS},
 {"calculate_dose_center",(PyCFunction)calculate_dose_center,METH_VARARGS},
+{"function_ranges",(PyCFunction)function_ranges,METH_VARARGS},
 {NULL,NULL}
 };
 
