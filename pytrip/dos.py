@@ -177,9 +177,9 @@ class DosCube(Cube):
             ds.PatientID = datetime.datetime.today().strftime('%Y%m%d-%H%M%S')
         else:
             ds.PatientID = self.patient_id  # Patient ID tag 0x0010,0x0020 (type LO - Long String)
-        ds.PatientsSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
+        ds.PatientSex = ''  # Patient's Sex tag 0x0010,0x0040 (type CS - Code String)
         #                      Enumerated Values: M = male F = female O = other.
-        ds.PatientsBirthDate = '19010101'
+        ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.2'  # CT Image Storage
 
@@ -201,9 +201,9 @@ class DosCube(Cube):
         ds.RTPlanLabel = 'B1'
         ds.RTPlanTime = datetime.datetime.today().strftime('%H%M%S')
         structure_ref = Dataset()
-        structure_ref.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage
-        structure_ref.RefdSOPInstanceUID = '1.2.3'
-        ds.RefdStructureSets = Sequence([structure_ref])
+        structure_ref.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3'  # RT Structure Set Storage
+        structure_ref.ReferencedSOPInstanceUID = '1.2.3'
+        ds.ReferencedStructureSets = Sequence([structure_ref])
 
         dose_ref = Dataset()
         dose_ref.DoseReferenceNumber = 1
@@ -270,8 +270,8 @@ class DosCube(Cube):
 
         # Bind to rtplan
         rt_set = Dataset()
-        rt_set.RefdSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
-        rt_set.RefdSOPInstanceUID = '1.2.3'
+        rt_set.ReferencedSOPClassUID = '1.2.840.10008.5.1.4.1.1.481.5'
+        rt_set.ReferencedSOPInstanceUID = '1.2.3'
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
         pixel_array[:][:][:] = self.cube[:][:][:]
