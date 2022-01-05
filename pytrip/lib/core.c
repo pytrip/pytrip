@@ -802,13 +802,13 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
         y_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
 
         if(plane == 2){
-            x_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 0));
-            x_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 0));
+            x_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
+            x_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
             current_direction = (x_0 < x_1);
 
         }else if(plane == 1){
-            y_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 1));
-            y_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 1));
+            y_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
+            y_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
             current_direction = (y_0 < y_1);
         }
         if(last_direction != current_direction){
@@ -817,6 +817,131 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
         }
     }
     PyList_Append(list_out, PyLong_FromLong(length-1));
+
+    return list_out;
+
+}
+
+static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
+    int i;
+    int plane;
+    int current_direction;
+    double depth;
+    double a;
+    int l, r, m;
+
+    // array objects into which input will be unpacked and output packed into
+    PyArrayObject *vec_slice; // input variable - list of points in 3D space
+    PyArrayObject *ranges; // input variable - list function ranges
+    PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
+    PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
+
+    // helper variables to read and operate on input data
+    double x_0 = 0.0;
+    double x_1 = 0.0;
+    double y_0 = 0.0;
+    double y_1 = 0.0;
+    double z = 0.0;
+
+    // digest arguments, we expect:
+    //    an object - vec_slice: input chain of points
+    //    an object - ranges: input chain, each pair tells function ranges
+    //    plane - integer : intersection plane type (2 - sagittal YZ, 1 - coronal XZ)
+    //    depth - double : intersection plane location in mm
+    if (!PyArg_ParseTuple(args, "OOid",&vec_slice,&ranges,&plane,&depth)) return NULL;
+
+    list_out = PyList_New(0);
+    if(plane == 2){ // sagittal
+        for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++)
+        {
+            l = *((int*)PyArray_GETPTR1(ranges, i));
+            r = *((int*)PyArray_GETPTR1(ranges, i+1));
+            x_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 0));
+            x_1 = *((double*)PyArray_GETPTR2(vec_slice, r, 0));
+            if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
+                current_direction = (x_0 < x_1);
+                while (l <= r){
+                    m = (l+r)/2;
+                    x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
+                    x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
+                    if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
+                        break;
+                    }
+                    if (current_direction){
+                        if (depth > x_0){
+                            l = m+1;
+                        }else{
+                            r = m-1;
+                        }
+                    }else{
+                        if (depth < x_0){
+                            l = m+1;
+                        }else{
+                            r = m-1;
+                        }
+                    }
+                }
+                // now m is computed
+                x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
+                x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
+                y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
+                y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
+                z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
+                a = (y_1 - y_0) / (x_1 - x_0);
+
+                list_item = PyList_New(3);
+                PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+                PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                PyList_Append(list_out, list_item);
+            }
+        }
+    }else if(plane == 1){ // coronal
+        for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++)
+        {
+            l = *((int*)PyArray_GETPTR1(ranges, i));
+            r = *((int*)PyArray_GETPTR1(ranges, i+1));
+            y_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 1));
+            y_1 = *((double*)PyArray_GETPTR2(vec_slice, r, 1));
+            if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
+                current_direction = (y_0 < y_1);
+                while (l <= r){
+                    m = (l+r)/2;
+                    y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
+                    y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
+                    if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
+                        break;
+                    }
+                    if (current_direction){
+                        if (depth > y_0){
+                            l = m+1;
+                        }else{
+                            r = m-1;
+                        }
+                    }else{
+                        if (depth < y_0){
+                            l = m+1;
+                        }else{
+                            r = m-1;
+                        }
+                    }
+                }
+                // now m is computed
+                x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
+                x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
+                y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
+                y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
+                z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
+                a = (x_1 - x_0) / (y_1 - y_0);
+
+                list_item = PyList_New(3);
+                PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
+                PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                PyList_Append(list_out, list_item);
+            }
+        }
+    }
 
     return list_out;
 
@@ -886,6 +1011,7 @@ static PyMethodDef pytriplibMethods[] = {
 {"slice_on_plane",(PyCFunction)slice_on_plane,METH_VARARGS},
 {"calculate_dose_center",(PyCFunction)calculate_dose_center,METH_VARARGS},
 {"function_ranges",(PyCFunction)function_ranges,METH_VARARGS},
+{"binary_search_intersection",(PyCFunction)binary_search_intersection,METH_VARARGS},
 {NULL,NULL}
 };
 
