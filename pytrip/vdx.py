@@ -35,7 +35,7 @@ from math import pi, sqrt
 
 import numpy as np
 
-from pytrip.res.concave_tool import create_contour
+from pytrip.res.contour import create_contour
 
 try:
     # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
@@ -321,9 +321,9 @@ class VdxCube:
             if not header_full:
                 if line.startswith("all_indices_zero_based"):
                     self.zero_based = True
-               # TODO number_of_vois not used
-               # elif "number_of_vois" in line:
-               #     number_of_vois = int(line.split()[1])
+            # TODO number_of_vois not used
+            # elif "number_of_vois" in line:
+            #     number_of_vois = int(line.split()[1])
             if line.startswith("voi"):
                 v = Voi(line.split()[1], self.cube)
                 if self.version == "1.2":
@@ -651,7 +651,7 @@ def create_sphere(cube, name, center, radius):
     for i in range(0, cube.dimz):
         z = i * cube.slice_distance
         if center[2] - radius <= z <= center[2] + radius:
-            r2 = radius**2 - (z - center[2])**2
+            r2 = radius ** 2 - (z - center[2]) ** 2
             s = Slice(cube)
             s.thickness = cube.slice_distance
             _contour_closed = True
@@ -704,6 +704,11 @@ class Voi:
         self.center_pos = None
         self.polygon3d = None
         self.voi_cube = None
+        # ranges are used to speed up slices calculations, other are for caching those slices
+        self._slices_sagittal = []
+        self._slices_sagittal_range = None
+        self._slices_coronal = []
+        self._slices_coronal_range = None
 
     def __str__(self):
         """ str output handler
@@ -857,6 +862,45 @@ class Voi:
             product = product[:] - offset_proj
         return product
 
+    def _calculate_contour_ranges(self):
+        # calculate ranges only once to optimize calculations of contours
+        if self._slices_sagittal_range is None and self._slices_coronal_range is None:
+            x_min, y_min, _ = self.cube.indices_to_pos([self.cube.dimx, self.cube.dimy, 0])
+            x_max, y_max, _ = self.cube.indices_to_pos([0, 0, 0])
+            for s in self.slices:
+                for c in s.contours:
+                    for p in c.contour:
+                        x, y, _z = p
+                        if x < x_min:
+                            x_min = x
+                        elif x > x_max:
+                            x_max = x
+                        if y < y_min:
+                            y_min = y
+                        elif y > y_max:
+                            y_max = y
+            self._slices_sagittal_range = (x_min, x_max)
+            self._slices_coronal_range = (y_min, y_max)
+
+        return self._slices_sagittal_range, self._slices_coronal_range
+
+    def calculate_slices_with_contours_in_sagittal_and_coronal(self):
+        (x_min, x_max), (y_min, y_max) = self._calculate_contour_ranges()
+
+        for x in range(self.cube.dimx):
+            x_pos, _, _ = self.cube.indices_to_pos([x, 0, 0])
+            if x_min <= x_pos <= x_max:
+                s = self.get_2d_slice(self.sagittal, x_pos)
+                if s:
+                    self._slices_sagittal.append(s)
+
+        for y in range(self.cube.dimy):
+            _, y_pos, _ = self.cube.indices_to_pos([0, y, 0])
+            if y_min <= y_pos <= y_max:
+                s = self.get_2d_slice(self.coronal, y_pos)
+                if s:
+                    self._slices_coronal.append(s)
+
     def get_2d_slice(self, plane, depth):
         """
         Gets a 2D Slice object from the contour in either sagittal or coronal plane.
@@ -880,6 +924,9 @@ class Voi:
 
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
             contour = np.array(_slice.contours[0].contour)
+            # we need to add first point at the end, without it slice_on_plane won't work properly
+            #   because it operates on closed chains of points
+            contour = np.append(contour, [contour[0]], axis=0)
 
             # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
             intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
@@ -893,18 +940,30 @@ class Voi:
 
             all_intersections.append(points)
 
-        # object to return if there is no intersection
-        s = None
-
+        contours = []
         # check if list contains any intersections
         if len(all_intersections) > 0:
+            # initialize proper argument for create_contour call
+            x_size = self.cube.dimx
+            y_size = self.cube.dimy
+            z_size = self.cube.dimz
+            pixel_size = self.cube.pixel_size
+            x_offset = self.cube.xoffset
+            y_offset = self.cube.yoffset
+            z_offset = self.cube.slice_pos[0]
+            slice_thickness = self.cube.slice_distance
             # call method that return list of contours
-            contours = create_contour(all_intersections)
-            # create a slice object and add a contour data
-            s = Slice(cube=self.cube)
+            contours = create_contour(all_intersections,
+                                      (x_size, y_size, z_size),
+                                      (x_offset, y_offset, z_offset),
+                                      pixel_size, plane, slice_thickness)
+
+        s = None
+        if contours:
+            s = Slice(cube=self.cube, plane=plane)
             for contour in contours:
                 s.add_contour(Contour(contour, cube=self.cube))
-
+        # object to return if there is no intersection
         return s
 
     def calculate_center(self):
@@ -1228,21 +1287,59 @@ class Voi:
             return None
         return np.sort(_slice.get_intersections(pos))
 
-    def get_slice_at_pos(self, z):
+    def get_slice_at_pos(self, pos, plane=None):
         """
-        Finds and returns a slice object found at position z [mm] (float).
+        Finds and returns a slice object found at position pos [mm] (float) for given plane.
+        If slice was not precalculated, tries to calculate it and returns result (can be None)
 
-        :param float z: slice position in absolute coordiantes (i.e. including any offsets)
-        :returns: VOI slice at position z, z position may be approxiamte
+        :param float pos: slice position in absolute coordinates (i.e. including any offsets)
+        :param int plane: plane in which slice is searched
+        :returns: VOI slice at position pos, pos may be approximate
         """
 
-        _slice = [item for item in self.slices if np.isclose(item.get_position(), z, atol=item.thickness * 0.5)]
-        if len(_slice) == 0:
-            logger.debug("could not find slice in get_slice_at_pos() at position {}".format(z))
-            return None
+        def is_close(item):
+            return np.isclose(item.get_position(), pos, atol=item.thickness * 0.5)
 
-        logger.debug("found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(z, _slice[0].thickness))
-        return _slice[0]
+        _slice = None
+        logger_info = ""
+        if plane == self.sagittal:
+            # if slices were precalculated, find first slice that is close to the pos
+            if self._slices_sagittal_range:
+                if self._slices_sagittal_range[0] <= pos <= self._slices_sagittal_range[1]:
+                    sagittal_g = (item for item in self._slices_sagittal if is_close(item))
+                    _slice = next(sagittal_g, None)
+            # if were not precalculated, calculate it now
+            else:
+                _slice = self.get_2d_slice(plane, pos)
+
+            # update logger info
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for sagittal".format(pos)
+            else:
+                logger_info = "found slice at pos for x: {:.2f} mm".format(pos)
+        elif plane == self.coronal:
+            if self._slices_coronal_range:
+                if self._slices_coronal_range[0] <= pos <= self._slices_coronal_range[1]:
+                    coronal_g = (item for item in self._slices_coronal if is_close(item))
+                    _slice = next(coronal_g, None)
+            else:
+                _slice = self.get_2d_slice(plane, pos)
+
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for coronal".format(pos)
+            else:
+                logger_info = "found slice at pos for y: {:.2f} mm".format(pos)
+        else:  # default for transversal
+            transversal_g = (item for item in self.slices if is_close(item))
+            _slice = next(transversal_g, None)
+
+            if _slice is None:
+                logger_info = "could not find slice in get_slice_at_pos() at position {} for transversal".format(pos)
+            else:
+                logger_info = "found slice at pos for z: {:.2f} mm, thickness {:.2f} mm".format(pos, _slice.thickness)
+
+        logger.debug(logger_info)
+        return _slice
 
     def number_of_slices(self):
         """
@@ -1291,9 +1388,8 @@ class Voi:
             # get_min_max can return NoneTypes if a VOI is located outside of the patient
             return False
 
-        return self._is_x_contained(min_pos_x, max_pos_x) and \
-            self._is_y_contained(min_pos_y, max_pos_y) and \
-            self._is_z_contained(min_pos_z, max_pos_z)
+        return self._is_x_contained(min_pos_x, max_pos_x) and self._is_y_contained(min_pos_y, max_pos_y) \
+            and self._is_z_contained(min_pos_z, max_pos_z)
 
     def _is_x_contained(self, min_pos, max_pos):
         return self.cube.xoffset <= min_pos and max_pos <= self.cube.dimx * self.cube.pixel_size + self.cube.xoffset
@@ -1310,7 +1406,10 @@ class Slice:
     The Slice class is specific for structures, and should not be confused with Slices extracted from CTX or DOS
     objects.
     """
-    def __init__(self, cube=None):
+    sagittal = 2  #: id for sagittal view
+    coronal = 1  #: id for coronal view
+
+    def __init__(self, cube=None, plane=None):
         self.cube = cube
         self.contours = []  # list of contours in this slice
 
@@ -1324,6 +1423,10 @@ class Slice:
         self.start_pos = None
         self.stop_pos = None
         self.slice_in_frame = None
+
+        # added to make this class more generic
+        # now it stores slices in sagittal and coronal
+        self._plane = plane
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
@@ -1351,7 +1454,15 @@ class Slice:
         """
         if len(self.contours) == 0:
             return None
-        return self.contours[0].contour[0][2]
+
+        if self._plane is None:
+            return self.contours[0].contour[0][2]
+        if self._plane == self.coronal:
+            return self.contours[0].contour[0][1]
+        if self._plane == self.sagittal:
+            return self.contours[0].contour[0][0]
+
+        return None
 
     def get_intersections(self, pos):
         """
@@ -1561,6 +1672,7 @@ class Contour:
     A contour can also be a single point (POI).
     A contour may be open or closed.
     """
+
     def __init__(self, contour, cube=None):
         self.cube = cube
         self.children = []
@@ -1594,13 +1706,13 @@ class Contour:
         dx_dy = np.diff(points, axis=0)
         if abs(points[0, 2] - points[1, 2]) < 0.01:
             area = -np.dot(points[:-1, 1], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 1]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 1] ** 2) ** 0.5
         elif abs(points[0, 1] - points[1, 1]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 0])
-            paths = (dx_dy[:, 0]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 0] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         elif abs(points[0, 0] - points[1, 0]) < 0.01:
             area = -np.dot(points[:-1, 2], dx_dy[:, 1])
-            paths = (dx_dy[:, 1]**2 + dx_dy[:, 2]**2)**0.5
+            paths = (dx_dy[:, 1] ** 2 + dx_dy[:, 2] ** 2) ** 0.5
         total_path = np.sum(paths)
 
         if total_path > 0:
