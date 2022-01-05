@@ -14,9 +14,9 @@ coronal = 1  #: id for coronal view
 def mm_to_indices(mm, pixel_size, offsets, slice_thickness):
     x_off, y_off, z_off = offsets
     return [
-        round((mm[0] - x_off) / pixel_size),
-        round((mm[1] - y_off) / pixel_size),
-        round((mm[2] - z_off) / slice_thickness)
+        int(round((mm[0] - x_off) / pixel_size)),
+        int(round((mm[1] - y_off) / pixel_size)),
+        int(round((mm[2] - z_off) / slice_thickness))
     ]
 
 
