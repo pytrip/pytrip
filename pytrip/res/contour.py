@@ -7,8 +7,8 @@ https://github.com/ellieb
 import numpy as np
 from pytrip import _cntr
 
-sagittal = 2  #: id for sagittal view
-coronal = 1  #: id for coronal view
+sagittal = 2  # id for sagittal view
+coronal = 1  # id for coronal view
 
 
 def mm_to_indices(mm, pixel_size, offsets, slice_thickness):
