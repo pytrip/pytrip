@@ -81,8 +81,7 @@ def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane,
 
 def filter_predicate(i, contour):
     is_last = (i == len(contour) - 1)
-    adjacent_points_are_not_same = (contour[i] != contour[i + 1]).any()
-    return is_last or (not is_last and adjacent_points_are_not_same)
+    return is_last or (not is_last and (contour[i] != contour[i + 1]).any())
 
 
 def calculate_contour(bitmap):
