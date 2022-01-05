@@ -756,6 +756,72 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     return list_out;
 }
 
+static PyObject* function_ranges(PyObject *self, PyObject *args){
+    int i;
+    int plane;
+    int last_direction;
+    int current_direction;
+    int length;
+
+    // array objects into which input will be unpacked and output packed into
+    PyArrayObject *vec_slice; // input variable - list of points in 3D space
+    PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
+
+    // helper variables to read and operate on input data
+    double x_0 = 0.0;
+    double x_1 = 0.0;
+    double y_0 = 0.0;
+    double y_1 = 0.0;
+
+    // digest arguments, we expect:
+    //    an object - vec_slice: input chain of points
+    //    plane - integer : intersection plane type (2 - sagittal YZ, 1 - coronal XZ)
+    //    depth - double : intersection plane location in mm
+    if (!PyArg_ParseTuple(args, "Oi",&vec_slice,&plane)) return NULL;
+
+    length = PyArray_DIM(vec_slice, 0);
+    // at least two to make initial direction check
+    if (length < 2) return NULL;
+
+    list_out = PyList_New(0);
+    PyList_Append(list_out, PyLong_FromLong(0));
+
+    // make initial direction check based on plane
+    if(plane == 2){ // sagittal
+        x_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 0));
+        x_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 0));
+        last_direction = (x_0 < x_1);
+    }else if(plane == 1){ // coronal
+        y_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 1));
+        y_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 1));
+        last_direction = (y_0 < y_1);
+    }
+
+    for(i = 0; i < length - 1; i++){
+        y_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
+        y_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+
+        if(plane == 2){
+            x_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 0));
+            x_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 0));
+            current_direction = (x_0 < x_1);
+
+        }else if(plane == 1){
+            y_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 1));
+            y_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 1));
+            current_direction = (y_0 < y_1);
+        }
+        if(last_direction != current_direction){
+            PyList_Append(list_out, PyLong_FromLong(i));
+            last_direction = current_direction;
+        }
+    }
+    PyList_Append(list_out, PyLong_FromLong(length-1));
+
+    return list_out;
+
+}
+
 static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
 
     // input vector
