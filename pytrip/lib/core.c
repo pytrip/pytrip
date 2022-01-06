@@ -862,6 +862,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                 current_direction = (x_0 < x_1);
                 while (l <= r){
                     m = (l+r)/2;
+                    printf("%d ", m);
                     x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
                     x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
                     if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
@@ -881,9 +882,8 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                         }
                     }
                 }
-                // now m is computed
-                x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
-                x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
+                printf("\n");
+
                 y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
                 y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
                 z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
@@ -907,6 +907,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                 current_direction = (y_0 < y_1);
                 while (l <= r){
                     m = (l+r)/2;
+                    printf("%d ", m);
                     y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
                     y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
                     if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
@@ -926,11 +927,11 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                         }
                     }
                 }
-                // now m is computed
+
+                printf("\n");
+
                 x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
                 x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
-                y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
-                y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
                 z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
                 a = (x_1 - x_0) / (y_1 - y_0);
 

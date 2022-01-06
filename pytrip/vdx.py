@@ -928,7 +928,7 @@ class Voi:
             #   because it operates on closed chains of points
             contour = np.append(contour, [contour[0]], axis=0)
 
-            if not _slice.range:
+            if _slice.range is None:
                 _slice.range = np.array(pytriplib.function_ranges(contour, plane))
 
             # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
@@ -1431,7 +1431,7 @@ class Slice:
         # now it stores slices in sagittal and coronal
         self._plane = plane
         # to store speeding up variable
-        self.ranges = []
+        self.range = None
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
