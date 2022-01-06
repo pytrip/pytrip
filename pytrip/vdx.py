@@ -923,16 +923,10 @@ class Voi:
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldn't they always be ?
 
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
-            contour = np.array(_slice.contours[0].contour)
-            # we need to add first point at the end, without it slice_on_plane won't work properly
-            #   because it operates on closed chains of points
-            contour = np.append(contour, [contour[0]], axis=0)
-
-            if _slice.range is None:
-                _slice.range = np.array(pytriplib.function_ranges(contour, plane))
+            contour = _slice.contours[0].contour
 
             # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
-            intersection_points = pytriplib.binary_search_intersection(contour, _slice.range, plane, depth)
+            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
 
             points = []
             # sort intersection points depending on plane type
@@ -1430,8 +1424,6 @@ class Slice:
         # added to make this class more generic
         # now it stores slices in sagittal and coronal
         self._plane = plane
-        # to store speeding up variable
-        self.range = None
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
