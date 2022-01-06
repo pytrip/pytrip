@@ -693,7 +693,6 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     // if input chain has only one element this loop won't be executed
     for(i = 0; i < PyArray_DIM(vec_slice, 0)-1; i++)
     {
-
         // choose intersection plane type
         if(plane == 2) // sagittal, projection onto YZ
         {
@@ -851,9 +850,8 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     if (!PyArg_ParseTuple(args, "OOid",&vec_slice,&ranges,&plane,&depth)) return NULL;
 
     list_out = PyList_New(0);
-    if(plane == 2){ // sagittal
-        for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++)
-        {
+    for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++){
+        if(plane == 2){ // sagittal
             l = *((int*)PyArray_GETPTR1(ranges, i));
             r = *((int*)PyArray_GETPTR1(ranges, i+1));
             x_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 0));
@@ -864,16 +862,19 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     m = (l+r)/2;
                     x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
                     x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
-                    if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
-                        break;
-                    }
                     if (current_direction){
+                        if(x_1 >= depth && x_0 < depth){
+                            break;
+                        }
                         if (depth > x_0){
                             l = m+1;
                         }else{
                             r = m-1;
                         }
                     }else{
+                        if(x_0 >= depth && x_1 < depth){
+                            break;
+                        }
                         if (depth < x_0){
                             l = m+1;
                         }else{
@@ -894,9 +895,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                 PyList_Append(list_out, list_item);
             }
         }
-    }else if(plane == 1){ // coronal
-        for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++)
-        {
+        else if(plane == 1){ // coronal
             l = *((int*)PyArray_GETPTR1(ranges, i));
             r = *((int*)PyArray_GETPTR1(ranges, i+1));
             y_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 1));
@@ -907,16 +906,19 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     m = (l+r)/2;
                     y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
                     y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
-                    if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
-                        break;
-                    }
                     if (current_direction){
+                        if(y_1 >= depth && y_0 < depth){
+                            break;
+                        }
                         if (depth > y_0){
                             l = m+1;
                         }else{
                             r = m-1;
                         }
                     }else{
+                        if(y_0 >= depth && y_1 < depth){
+                            break;
+                        }
                         if (depth < y_0){
                             l = m+1;
                         }else{
@@ -938,7 +940,6 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
             }
         }
     }
-
     return list_out;
 
 }
