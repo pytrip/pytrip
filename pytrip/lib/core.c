@@ -664,9 +664,10 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     int plane;
     double depth;
     double factor;
+    int length;
 
     // array objects into which input will be unpacked and output packed into
-    PyArrayObject *vec_slice; // input variable - list of points in 3D space
+    PyListObject *vec_slice; // input variable - list of points in 3D space
     PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
     PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
 
@@ -691,25 +692,25 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
 
     // loop over all line segments in the input chain of points
     // if input chain has only one element this loop won't be executed
-    for(i = 0; i < PyArray_DIM(vec_slice, 0)-1; i++)
+    length = PyList_Size(vec_slice)-1;
+    for(i = 0; i < length; i++)
     {
         // choose intersection plane type
         if(plane == 2) // sagittal, projection onto YZ
         {
             // take X-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
-            second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
-
+            first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 0));
+            second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 0));
             // check if current line segment has intersection with given plane
             // for YZ intersection, the plane is defined by equation `x == depth`,
             // hence we check if requested depth is between those two coordinate values
             if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
             {
-                first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
-                second_point_y = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
-                first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
-                second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
+                first_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 1));
+                second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 1));
+                first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 2));
+                second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 2));
 
                 factor = (depth-first_point_x)/(second_point_x-first_point_x);
 
@@ -726,18 +727,18 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         {
             // take Y-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            first_point_y = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
-            second_point_y = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+            first_point_y =  PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 1));
+            second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 1));
 
             // for XZ intersection, the plane is defined by equation `y == depth`,
             if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
             {
 
                 // similar approach as in sagittal intersection, but applied to X and Z coordinates
-                first_point_x = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
-                second_point_x = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
-                first_point_z = *((double*)PyArray_GETPTR2(vec_slice, i, 2));
-                second_point_z = *((double*)PyArray_GETPTR2(vec_slice, i+1, 2));
+                first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 0));
+                second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 0));
+                first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 2));
+                second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 2));
 
                 factor = (depth-first_point_y)/(second_point_y-first_point_y);
 
@@ -747,6 +748,61 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
                 PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
                 PyList_Append(list_out, list_item);
             }
+        }
+    }
+
+    // choose intersection plane type
+    if(plane == 2) // sagittal, projection onto YZ
+    {
+        // take X-coordinate of two subsequent points from input segment
+        // these two points form a line segment
+        first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 0));
+        second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 0));
+        // check if current line segment has intersection with given plane
+        // for YZ intersection, the plane is defined by equation `x == depth`,
+        // hence we check if requested depth is between those two coordinate values
+        if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
+        {
+            first_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 1));
+            second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 1));
+            first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 2));
+            second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 2));
+
+            factor = (depth-first_point_x)/(second_point_x-first_point_x);
+
+            list_item = PyList_New(3);
+            // fix X coordinate on the intersection plane location
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+            // calculate Y and Z coordinates from linear interpolation
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+            PyList_Append(list_out, list_item);
+        }
+    }
+    else if(plane == 1) // coronal, projection onto XZ
+    {
+        // take Y-coordinate of two subsequent points from input segment
+        // these two points form a line segment
+        first_point_y =  PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 1));
+        second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 1));
+
+        // for XZ intersection, the plane is defined by equation `y == depth`,
+        if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
+        {
+
+            // similar approach as in sagittal intersection, but applied to X and Z coordinates
+            first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 0));
+            second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 0));
+            first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 2));
+            second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 2));
+
+            factor = (depth-first_point_y)/(second_point_y-first_point_y);
+
+            list_item = PyList_New(3);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(first_point_x+(second_point_x-first_point_x)*factor));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+            PyList_Append(list_out, list_item);
         }
     }
 
