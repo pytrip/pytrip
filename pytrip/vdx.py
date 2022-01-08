@@ -945,7 +945,7 @@ class Voi:
                     intersection_points = pytriplib.binary_search_intersection(contour, _slice.ranges_cor, plane, depth)
                 else:
                     intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
-                    
+
                 points = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
 
             all_intersections.append(points)
@@ -1437,6 +1437,8 @@ class Slice:
         # added to make this class more generic
         # now it stores slices in sagittal and coronal
         self._plane = plane
+        self.ranges_cor = None
+        self.ranges_sag = None
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
