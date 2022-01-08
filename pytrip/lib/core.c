@@ -740,7 +740,7 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
                 // similar approach as in sagittal intersection, but applied to X and Z coordinates
                 x_0 = get_coordinate(vec_slice, i, 0);
                 x_1 = get_coordinate(vec_slice, i+1, 0);
-                z_0 = get_coordinate(vec_slice, i, 2));
+                z_0 = get_coordinate(vec_slice, i, 2);
                 z_1 = get_coordinate(vec_slice, i+1, 2);
 
                 factor = (depth-y_0)/(y_1-y_0);
@@ -797,7 +797,7 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
             x_0 = get_coordinate(vec_slice, length, 0);
             x_1 = get_coordinate(vec_slice, 0, 0);
             z_0 = get_coordinate(vec_slice, length, 2);
-            z_1 = get_coordinate(vec_slice, 0, 2));
+            z_1 = get_coordinate(vec_slice, 0, 2);
 
             factor = (depth-y_0)/(y_1-y_0);
 
@@ -837,7 +837,7 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
     //    depth - double : intersection plane location in mm
     if (!PyArg_ParseTuple(args, "Oi",&vec_slice,&plane)) return NULL;
 
-    length = PyArray_DIM(vec_slice, 0);
+    length = PyList_Size(vec_slice);
     // at least two to make initial direction check
     if (length < 2) return NULL;
 
@@ -846,27 +846,27 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
 
     // make initial direction check based on plane
     if(plane == 2){ // sagittal
-        x_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 0));
-        x_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 0));
+        x_0 = get_coordinate(vec_slice, 0, 0);
+        x_1 = get_coordinate(vec_slice, 1, 0);
         last_direction = (x_0 < x_1);
     }else if(plane == 1){ // coronal
-        y_0 = *((double*)PyArray_GETPTR2(vec_slice, 0, 1));
-        y_1 = *((double*)PyArray_GETPTR2(vec_slice, 1, 1));
+        y_0 = get_coordinate(vec_slice, 0, 1);
+        y_1 = get_coordinate(vec_slice, 1, 1);
         last_direction = (y_0 < y_1);
     }
 
     for(i = 0; i < length - 1; i++){
-        y_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
-        y_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+        y_0 = get_coordinate(vec_slice, i, 1);
+        y_1 = get_coordinate(vec_slice, i+1, 1);
 
         if(plane == 2){
-            x_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 0));
-            x_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 0));
+            x_0 = get_coordinate(vec_slice, i, 0);
+            x_1 = get_coordinate(vec_slice, i+1, 0);
             current_direction = (x_0 < x_1);
 
         }else if(plane == 1){
-            y_0 = *((double*)PyArray_GETPTR2(vec_slice, i, 1));
-            y_1 = *((double*)PyArray_GETPTR2(vec_slice, i+1, 1));
+            y_0 = get_coordinate(vec_slice, i, 1);
+            y_1 = get_coordinate(vec_slice, i+1, 1);
             current_direction = (y_0 < y_1);
         }
         if(last_direction != current_direction){
@@ -874,6 +874,22 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
             last_direction = current_direction;
         }
     }
+
+//    if(plane == 2){
+//        x_0 = get_coordinate(vec_slice, length-1, 0);
+//        x_1 = get_coordinate(vec_slice, 0, 0);
+//        current_direction = (x_0 < x_1);
+//
+//    }else if(plane == 1){
+//        y_0 = get_coordinate(vec_slice, length-1, 1);
+//        y_1 = get_coordinate(vec_slice, 0, 1);
+//        current_direction = (y_0 < y_1);
+//    }
+//    if(last_direction != current_direction){
+//        PyList_Append(list_out, PyLong_FromLong(length-1));
+//        last_direction = current_direction;
+//    }
+
     PyList_Append(list_out, PyLong_FromLong(length-1));
 
     return list_out;
@@ -887,6 +903,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     double depth;
     double a;
     int l, r, m;
+    int length;
 
     // array objects into which input will be unpacked and output packed into
     PyArrayObject *vec_slice; // input variable - list of points in 3D space
@@ -909,18 +926,22 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     if (!PyArg_ParseTuple(args, "OOid",&vec_slice,&ranges,&plane,&depth)) return NULL;
 
     list_out = PyList_New(0);
-    for(i = 0; i < PyArray_DIM(ranges, 0)-1; i++){
+
+    length = PyList_Size(ranges);
+
+    for(i = 0; i < length-1; i++){
+        l = PyLong_AsLong(PyList_GetItem(ranges, i));
+        r = PyLong_AsLong(PyList_GetItem(ranges, i+1));
+//        printf("i %d,l %d, r %d\n", i, l, r);
         if(plane == 2){ // sagittal
-            l = *((int*)PyArray_GETPTR1(ranges, i));
-            r = *((int*)PyArray_GETPTR1(ranges, i+1));
-            x_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 0));
-            x_1 = *((double*)PyArray_GETPTR2(vec_slice, r, 0));
+            x_0 = get_coordinate(vec_slice, l, 0);
+            x_1 = get_coordinate(vec_slice, r, 0);
             if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
                 current_direction = (x_0 < x_1);
                 while (l <= r){
                     m = (l+r)/2;
-                    x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
-                    x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
+                    x_0 = get_coordinate(vec_slice, m, 0);
+                    x_1 = get_coordinate(vec_slice, m+1, 0);
                     if (current_direction){
                         if(x_1 >= depth && x_0 < depth){
                             break;
@@ -942,9 +963,9 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     }
                 }
 
-                y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
-                y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
-                z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
+                y_0 = get_coordinate(vec_slice, m, 1);
+                y_1 = get_coordinate(vec_slice, m+1, 1);
+                z = get_coordinate(vec_slice, m, 2);
                 a = (y_1 - y_0) / (x_1 - x_0);
 
                 list_item = PyList_New(3);
@@ -955,16 +976,16 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
             }
         }
         else if(plane == 1){ // coronal
-            l = *((int*)PyArray_GETPTR1(ranges, i));
-            r = *((int*)PyArray_GETPTR1(ranges, i+1));
-            y_0 = *((double*)PyArray_GETPTR2(vec_slice, l, 1));
-            y_1 = *((double*)PyArray_GETPTR2(vec_slice, r, 1));
+//            l = *((int*)PyArray_GETPTR1(ranges, i));
+//            r = *((int*)PyArray_GETPTR1(ranges, i+1));
+            y_0 = get_coordinate(vec_slice, l, 1);
+            y_1 = get_coordinate(vec_slice, r, 1);
             if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
                 current_direction = (y_0 < y_1);
                 while (l <= r){
                     m = (l+r)/2;
-                    y_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 1));
-                    y_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 1));
+                    y_0 = get_coordinate(vec_slice, m, 1);
+                    y_1 = get_coordinate(vec_slice, m+1, 1);
                     if (current_direction){
                         if(y_1 >= depth && y_0 < depth){
                             break;
@@ -986,9 +1007,9 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     }
                 }
 
-                x_0 = *((double*)PyArray_GETPTR2(vec_slice, m, 0));
-                x_1 = *((double*)PyArray_GETPTR2(vec_slice, m+1, 0));
-                z = *((double*)PyArray_GETPTR2(vec_slice, m, 2));
+                x_0 = get_coordinate(vec_slice, m, 0);
+                x_1 = get_coordinate(vec_slice, m+1, 0);
+                z = get_coordinate(vec_slice, m, 2);
                 a = (x_1 - x_0) / (y_1 - y_0);
 
                 list_item = PyList_New(3);
