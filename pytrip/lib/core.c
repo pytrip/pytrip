@@ -875,21 +875,6 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
         }
     }
 
-//    if(plane == 2){
-//        x_0 = get_coordinate(vec_slice, length-1, 0);
-//        x_1 = get_coordinate(vec_slice, 0, 0);
-//        current_direction = (x_0 < x_1);
-//
-//    }else if(plane == 1){
-//        y_0 = get_coordinate(vec_slice, length-1, 1);
-//        y_1 = get_coordinate(vec_slice, 0, 1);
-//        current_direction = (y_0 < y_1);
-//    }
-//    if(last_direction != current_direction){
-//        PyList_Append(list_out, PyLong_FromLong(length-1));
-//        last_direction = current_direction;
-//    }
-
     PyList_Append(list_out, PyLong_FromLong(length-1));
 
     return list_out;
@@ -1020,6 +1005,55 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
             }
         }
     }
+
+    // choose intersection plane type
+    length = PyList_Size(vec_slice) -1;
+    if(plane == 2) // sagittal, projection onto YZ
+    {
+        // take X-coordinate of two subsequent points from input segment
+        // these two points form a line segment
+        x_0 = get_coordinate(vec_slice, length, 0);
+        x_1 = get_coordinate(vec_slice, 0, 0);
+        // check if current line segment has intersection with given plane
+        // for YZ intersection, the plane is defined by equation `x == depth`,
+        // hence we check if requested depth is between those two coordinate values
+        if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
+        {
+            y_0 = get_coordinate(vec_slice, length, 1);
+            y_1 = get_coordinate(vec_slice, 0, 1);
+            z = get_coordinate(vec_slice, length, 2);
+            a = (y_1 - y_0) / (x_1 - x_0);
+
+            list_item = PyList_New(3);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+            PyList_Append(list_out, list_item);
+        }
+    }
+    else if(plane == 1) // coronal, projection onto XZ
+    {
+        // take Y-coordinate of two subsequent points from input segment
+        // these two points form a line segment
+        y_0 =  get_coordinate(vec_slice, length, 1);
+        y_1 = get_coordinate(vec_slice, 0, 1);
+
+        // for XZ intersection, the plane is defined by equation `y == depth`,
+        if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
+        {
+            x_0 = get_coordinate(vec_slice, length, 0);
+            x_1 = get_coordinate(vec_slice, 0, 0);
+            z = get_coordinate(vec_slice, length, 2);
+            a = (x_1 - x_0) / (y_1 - y_0);
+
+            list_item = PyList_New(3);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+            PyList_Append(list_out, list_item);
+        }
+    }
+
     return list_out;
 
 }
