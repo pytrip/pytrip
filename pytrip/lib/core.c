@@ -27,7 +27,7 @@
 #include "structmember.h"
 
 // macro to ease python array manipulation
-#define get_coordinate(contour, pos, coord) PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(contour, pos), coord))
+#define GET_COORDINATE(contour, pos, coord) PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(contour, pos), coord))
 
 // Visual Studio 2010 doesn't support C99, so all the code below should follow C89 standard
 // it means first we declare ALL variables, then we assign them values and use them
@@ -703,17 +703,17 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         {
             // take X-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            x_0 = get_coordinate(vec_slice, i, 0);
-            x_1 = get_coordinate(vec_slice, i+1, 0);
+            x_0 = GET_COORDINATE(vec_slice, i, 0);
+            x_1 = GET_COORDINATE(vec_slice, i+1, 0);
             // check if current line segment has intersection with given plane
             // for YZ intersection, the plane is defined by equation `x == depth`,
             // hence we check if requested depth is between those two coordinate values
             if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
             {
-                y_0 = get_coordinate(vec_slice, i, 1);
-                y_1 = get_coordinate(vec_slice, i+1, 1);
-                z_0 = get_coordinate(vec_slice, i, 2);
-                z_1 = get_coordinate(vec_slice, i+1, 2);
+                y_0 = GET_COORDINATE(vec_slice, i, 1);
+                y_1 = GET_COORDINATE(vec_slice, i+1, 1);
+                z_0 = GET_COORDINATE(vec_slice, i, 2);
+                z_1 = GET_COORDINATE(vec_slice, i+1, 2);
 
                 factor = (depth-x_0)/(x_1-x_0);
 
@@ -730,18 +730,18 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         {
             // take Y-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            y_0 =  get_coordinate(vec_slice, i, 1);
-            y_1 = get_coordinate(vec_slice, i+1, 1);
+            y_0 =  GET_COORDINATE(vec_slice, i, 1);
+            y_1 = GET_COORDINATE(vec_slice, i+1, 1);
 
             // for XZ intersection, the plane is defined by equation `y == depth`,
             if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
             {
 
                 // similar approach as in sagittal intersection, but applied to X and Z coordinates
-                x_0 = get_coordinate(vec_slice, i, 0);
-                x_1 = get_coordinate(vec_slice, i+1, 0);
-                z_0 = get_coordinate(vec_slice, i, 2);
-                z_1 = get_coordinate(vec_slice, i+1, 2);
+                x_0 = GET_COORDINATE(vec_slice, i, 0);
+                x_1 = GET_COORDINATE(vec_slice, i+1, 0);
+                z_0 = GET_COORDINATE(vec_slice, i, 2);
+                z_1 = GET_COORDINATE(vec_slice, i+1, 2);
 
                 factor = (depth-y_0)/(y_1-y_0);
 
@@ -759,17 +759,17 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     {
         // take X-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        x_0 = get_coordinate(vec_slice, length, 0);
-        x_1 = get_coordinate(vec_slice, 0, 0);
+        x_0 = GET_COORDINATE(vec_slice, length, 0);
+        x_1 = GET_COORDINATE(vec_slice, 0, 0);
         // check if current line segment has intersection with given plane
         // for YZ intersection, the plane is defined by equation `x == depth`,
         // hence we check if requested depth is between those two coordinate values
         if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
         {
-            y_0 = get_coordinate(vec_slice, length, 1);
-            y_1 = get_coordinate(vec_slice, 0, 1);
-            z_0 = get_coordinate(vec_slice, length, 2);
-            z_1 = get_coordinate(vec_slice, 0, 2);
+            y_0 = GET_COORDINATE(vec_slice, length, 1);
+            y_1 = GET_COORDINATE(vec_slice, 0, 1);
+            z_0 = GET_COORDINATE(vec_slice, length, 2);
+            z_1 = GET_COORDINATE(vec_slice, 0, 2);
 
             factor = (depth-x_0)/(x_1-x_0);
 
@@ -786,18 +786,18 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     {
         // take Y-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        y_0 =  get_coordinate(vec_slice, length, 1);
-        y_1 = get_coordinate(vec_slice, 0, 1);
+        y_0 =  GET_COORDINATE(vec_slice, length, 1);
+        y_1 = GET_COORDINATE(vec_slice, 0, 1);
 
         // for XZ intersection, the plane is defined by equation `y == depth`,
         if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
         {
 
             // similar approach as in sagittal intersection, but applied to X and Z coordinates
-            x_0 = get_coordinate(vec_slice, length, 0);
-            x_1 = get_coordinate(vec_slice, 0, 0);
-            z_0 = get_coordinate(vec_slice, length, 2);
-            z_1 = get_coordinate(vec_slice, 0, 2);
+            x_0 = GET_COORDINATE(vec_slice, length, 0);
+            x_1 = GET_COORDINATE(vec_slice, 0, 0);
+            z_0 = GET_COORDINATE(vec_slice, length, 2);
+            z_1 = GET_COORDINATE(vec_slice, 0, 2);
 
             factor = (depth-y_0)/(y_1-y_0);
 
@@ -846,27 +846,27 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
 
     // make initial direction check based on plane
     if(plane == 2){ // sagittal
-        x_0 = get_coordinate(vec_slice, 0, 0);
-        x_1 = get_coordinate(vec_slice, 1, 0);
+        x_0 = GET_COORDINATE(vec_slice, 0, 0);
+        x_1 = GET_COORDINATE(vec_slice, 1, 0);
         last_direction = (x_0 < x_1);
     }else if(plane == 1){ // coronal
-        y_0 = get_coordinate(vec_slice, 0, 1);
-        y_1 = get_coordinate(vec_slice, 1, 1);
+        y_0 = GET_COORDINATE(vec_slice, 0, 1);
+        y_1 = GET_COORDINATE(vec_slice, 1, 1);
         last_direction = (y_0 < y_1);
     }
 
     for(i = 0; i < length - 1; i++){
-        y_0 = get_coordinate(vec_slice, i, 1);
-        y_1 = get_coordinate(vec_slice, i+1, 1);
+        y_0 = GET_COORDINATE(vec_slice, i, 1);
+        y_1 = GET_COORDINATE(vec_slice, i+1, 1);
 
         if(plane == 2){
-            x_0 = get_coordinate(vec_slice, i, 0);
-            x_1 = get_coordinate(vec_slice, i+1, 0);
+            x_0 = GET_COORDINATE(vec_slice, i, 0);
+            x_1 = GET_COORDINATE(vec_slice, i+1, 0);
             current_direction = (x_0 < x_1);
 
         }else if(plane == 1){
-            y_0 = get_coordinate(vec_slice, i, 1);
-            y_1 = get_coordinate(vec_slice, i+1, 1);
+            y_0 = GET_COORDINATE(vec_slice, i, 1);
+            y_1 = GET_COORDINATE(vec_slice, i+1, 1);
             current_direction = (y_0 < y_1);
         }
         if(last_direction != current_direction){
@@ -919,14 +919,14 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
         r = PyLong_AsLong(PyList_GetItem(ranges, i+1));
 //        printf("i %d,l %d, r %d\n", i, l, r);
         if(plane == 2){ // sagittal
-            x_0 = get_coordinate(vec_slice, l, 0);
-            x_1 = get_coordinate(vec_slice, r, 0);
+            x_0 = GET_COORDINATE(vec_slice, l, 0);
+            x_1 = GET_COORDINATE(vec_slice, r, 0);
             if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
                 current_direction = (x_0 < x_1);
                 while (l <= r){
                     m = (l+r)/2;
-                    x_0 = get_coordinate(vec_slice, m, 0);
-                    x_1 = get_coordinate(vec_slice, m+1, 0);
+                    x_0 = GET_COORDINATE(vec_slice, m, 0);
+                    x_1 = GET_COORDINATE(vec_slice, m+1, 0);
                     if (current_direction){
                         if(x_1 >= depth && x_0 < depth){
                             break;
@@ -948,9 +948,9 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     }
                 }
 
-                y_0 = get_coordinate(vec_slice, m, 1);
-                y_1 = get_coordinate(vec_slice, m+1, 1);
-                z = get_coordinate(vec_slice, m, 2);
+                y_0 = GET_COORDINATE(vec_slice, m, 1);
+                y_1 = GET_COORDINATE(vec_slice, m+1, 1);
+                z = GET_COORDINATE(vec_slice, m, 2);
                 a = (y_1 - y_0) / (x_1 - x_0);
 
                 list_item = PyList_New(3);
@@ -963,14 +963,14 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
         else if(plane == 1){ // coronal
 //            l = *((int*)PyArray_GETPTR1(ranges, i));
 //            r = *((int*)PyArray_GETPTR1(ranges, i+1));
-            y_0 = get_coordinate(vec_slice, l, 1);
-            y_1 = get_coordinate(vec_slice, r, 1);
+            y_0 = GET_COORDINATE(vec_slice, l, 1);
+            y_1 = GET_COORDINATE(vec_slice, r, 1);
             if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
                 current_direction = (y_0 < y_1);
                 while (l <= r){
                     m = (l+r)/2;
-                    y_0 = get_coordinate(vec_slice, m, 1);
-                    y_1 = get_coordinate(vec_slice, m+1, 1);
+                    y_0 = GET_COORDINATE(vec_slice, m, 1);
+                    y_1 = GET_COORDINATE(vec_slice, m+1, 1);
                     if (current_direction){
                         if(y_1 >= depth && y_0 < depth){
                             break;
@@ -992,9 +992,9 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
                     }
                 }
 
-                x_0 = get_coordinate(vec_slice, m, 0);
-                x_1 = get_coordinate(vec_slice, m+1, 0);
-                z = get_coordinate(vec_slice, m, 2);
+                x_0 = GET_COORDINATE(vec_slice, m, 0);
+                x_1 = GET_COORDINATE(vec_slice, m+1, 0);
+                z = GET_COORDINATE(vec_slice, m, 2);
                 a = (x_1 - x_0) / (y_1 - y_0);
 
                 list_item = PyList_New(3);
@@ -1012,16 +1012,16 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     {
         // take X-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        x_0 = get_coordinate(vec_slice, length, 0);
-        x_1 = get_coordinate(vec_slice, 0, 0);
+        x_0 = GET_COORDINATE(vec_slice, length, 0);
+        x_1 = GET_COORDINATE(vec_slice, 0, 0);
         // check if current line segment has intersection with given plane
         // for YZ intersection, the plane is defined by equation `x == depth`,
         // hence we check if requested depth is between those two coordinate values
         if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
         {
-            y_0 = get_coordinate(vec_slice, length, 1);
-            y_1 = get_coordinate(vec_slice, 0, 1);
-            z = get_coordinate(vec_slice, length, 2);
+            y_0 = GET_COORDINATE(vec_slice, length, 1);
+            y_1 = GET_COORDINATE(vec_slice, 0, 1);
+            z = GET_COORDINATE(vec_slice, length, 2);
             a = (y_1 - y_0) / (x_1 - x_0);
 
             list_item = PyList_New(3);
@@ -1035,15 +1035,15 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     {
         // take Y-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        y_0 =  get_coordinate(vec_slice, length, 1);
-        y_1 = get_coordinate(vec_slice, 0, 1);
+        y_0 =  GET_COORDINATE(vec_slice, length, 1);
+        y_1 = GET_COORDINATE(vec_slice, 0, 1);
 
         // for XZ intersection, the plane is defined by equation `y == depth`,
         if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
         {
-            x_0 = get_coordinate(vec_slice, length, 0);
-            x_1 = get_coordinate(vec_slice, 0, 0);
-            z = get_coordinate(vec_slice, length, 2);
+            x_0 = GET_COORDINATE(vec_slice, length, 0);
+            x_1 = GET_COORDINATE(vec_slice, 0, 0);
+            z = GET_COORDINATE(vec_slice, length, 2);
             a = (x_1 - x_0) / (y_1 - y_0);
 
             list_item = PyList_New(3);
