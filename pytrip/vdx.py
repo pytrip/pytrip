@@ -917,22 +917,35 @@ class Voi:
 
         # a list to collect all intersections found in all loop passes
         all_intersections = []
+        magic_length = 50
 
         # loop over all slices in Voi, each slice contains at least one contour
         # which forms chain of points in transversal (XY) plane
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldn't they always be ?
-
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
             contour = _slice.contours[0].contour
 
-            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
-            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
-
             points = []
-            # sort intersection points depending on plane type
             if plane is self.sagittal:
+                if len(contour) > magic_length:
+                    if _slice.ranges_sag is None:
+                        _slice.ranges_sag = pytriplib.function_ranges(contour, plane)
+
+                    intersection_points = pytriplib.binary_search_intersection(contour, _slice.ranges_sag, plane, depth)
+                else:
+                    intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+
                 points = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
+
             elif plane is self.coronal:
+                if len(contour) > magic_length:
+                    if _slice.ranges_cor is None:
+                        _slice.ranges_cor = pytriplib.function_ranges(contour, plane)
+
+                    intersection_points = pytriplib.binary_search_intersection(contour, _slice.ranges_cor, plane, depth)
+                else:
+                    intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+                    
                 points = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
 
             all_intersections.append(points)
