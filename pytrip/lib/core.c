@@ -26,6 +26,9 @@
 #include "numpy/arrayobject.h"
 #include "structmember.h"
 
+// macro to ease python array manipulation
+#define get_coordinate(contour, pos, coord) PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(contour, pos), coord))
+
 // Visual Studio 2010 doesn't support C99, so all the code below should follow C89 standard
 // it means first we declare ALL variables, then we assign them values and use them
 
@@ -672,12 +675,12 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
 
     // helper variables to read and operate on input data
-    double first_point_x = 0.0;
-    double second_point_x = 0.0;
-    double first_point_y = 0.0;
-    double second_point_y = 0.0;
-    double first_point_z = 0.0;
-    double second_point_z = 0.0;
+    double x_0 = 0.0;
+    double x_1 = 0.0;
+    double y_0 = 0.0;
+    double y_1 = 0.0;
+    double z_0 = 0.0;
+    double z_1 = 0.0;
 
     // digest arguments, we expect:
     //    an object - vec_slice: input chain of points
@@ -700,26 +703,26 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         {
             // take X-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 0));
-            second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 0));
+            x_0 = get_coordinate(vec_slice, i, 0);
+            x_1 = get_coordinate(vec_slice, i+1, 0);
             // check if current line segment has intersection with given plane
             // for YZ intersection, the plane is defined by equation `x == depth`,
             // hence we check if requested depth is between those two coordinate values
-            if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
+            if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
             {
-                first_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 1));
-                second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 1));
-                first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 2));
-                second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 2));
+                y_0 = get_coordinate(vec_slice, i, 1);
+                y_1 = get_coordinate(vec_slice, i+1, 1);
+                z_0 = get_coordinate(vec_slice, i, 2);
+                z_1 = get_coordinate(vec_slice, i+1, 2);
 
-                factor = (depth-first_point_x)/(second_point_x-first_point_x);
+                factor = (depth-x_0)/(x_1-x_0);
 
                 list_item = PyList_New(3);
                 // fix X coordinate on the intersection plane location
                 PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
                 // calculate Y and Z coordinates from linear interpolation
-                PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
-                PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+                PyList_SetItem(list_item, 1, PyFloat_FromDouble(y_0+(y_1-y_0)*factor));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z_0+(z_1-z_0)*factor));
                 PyList_Append(list_out, list_item);
             }
         }
@@ -727,25 +730,25 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
         {
             // take Y-coordinate of two subsequent points from input segment
             // these two points form a line segment
-            first_point_y =  PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 1));
-            second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 1));
+            y_0 =  get_coordinate(vec_slice, i, 1);
+            y_1 = get_coordinate(vec_slice, i+1, 1);
 
             // for XZ intersection, the plane is defined by equation `y == depth`,
-            if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
+            if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
             {
 
                 // similar approach as in sagittal intersection, but applied to X and Z coordinates
-                first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 0));
-                second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 0));
-                first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i), 2));
-                second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, i+1), 2));
+                x_0 = get_coordinate(vec_slice, i, 0);
+                x_1 = get_coordinate(vec_slice, i+1, 0);
+                z_0 = get_coordinate(vec_slice, i, 2));
+                z_1 = get_coordinate(vec_slice, i+1, 2);
 
-                factor = (depth-first_point_y)/(second_point_y-first_point_y);
+                factor = (depth-y_0)/(y_1-y_0);
 
                 list_item = PyList_New(3);
-                PyList_SetItem(list_item, 0, PyFloat_FromDouble(first_point_x+(second_point_x-first_point_x)*factor));
+                PyList_SetItem(list_item, 0, PyFloat_FromDouble(x_0+(x_1-x_0)*factor));
                 PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-                PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z_0+(z_1-z_0)*factor));
                 PyList_Append(list_out, list_item);
             }
         }
@@ -756,26 +759,26 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     {
         // take X-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 0));
-        second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 0));
+        x_0 = get_coordinate(vec_slice, length, 0);
+        x_1 = get_coordinate(vec_slice, 0, 0);
         // check if current line segment has intersection with given plane
         // for YZ intersection, the plane is defined by equation `x == depth`,
         // hence we check if requested depth is between those two coordinate values
-        if((first_point_x >= depth && second_point_x < depth) || (second_point_x >= depth && first_point_x < depth))
+        if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
         {
-            first_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 1));
-            second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 1));
-            first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 2));
-            second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 2));
+            y_0 = get_coordinate(vec_slice, length, 1);
+            y_1 = get_coordinate(vec_slice, 0, 1);
+            z_0 = get_coordinate(vec_slice, length, 2);
+            z_1 = get_coordinate(vec_slice, 0, 2);
 
-            factor = (depth-first_point_x)/(second_point_x-first_point_x);
+            factor = (depth-x_0)/(x_1-x_0);
 
             list_item = PyList_New(3);
             // fix X coordinate on the intersection plane location
             PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
             // calculate Y and Z coordinates from linear interpolation
-            PyList_SetItem(list_item, 1, PyFloat_FromDouble(first_point_y+(second_point_y-first_point_y)*factor));
-            PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(y_0+(y_1-y_0)*factor));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z_0+(z_1-z_0)*factor));
             PyList_Append(list_out, list_item);
         }
     }
@@ -783,25 +786,25 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     {
         // take Y-coordinate of two subsequent points from input segment
         // these two points form a line segment
-        first_point_y =  PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 1));
-        second_point_y = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 1));
+        y_0 =  get_coordinate(vec_slice, length, 1);
+        y_1 = get_coordinate(vec_slice, 0, 1);
 
         // for XZ intersection, the plane is defined by equation `y == depth`,
-        if((first_point_y >= depth && second_point_y < depth) || (second_point_y >= depth && first_point_y < depth))
+        if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
         {
 
             // similar approach as in sagittal intersection, but applied to X and Z coordinates
-            first_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 0));
-            second_point_x = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 0));
-            first_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, length), 2));
-            second_point_z = PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(vec_slice, 0), 2));
+            x_0 = get_coordinate(vec_slice, length, 0);
+            x_1 = get_coordinate(vec_slice, 0, 0);
+            z_0 = get_coordinate(vec_slice, length, 2);
+            z_1 = get_coordinate(vec_slice, 0, 2));
 
-            factor = (depth-first_point_y)/(second_point_y-first_point_y);
+            factor = (depth-y_0)/(y_1-y_0);
 
             list_item = PyList_New(3);
-            PyList_SetItem(list_item, 0, PyFloat_FromDouble(first_point_x+(second_point_x-first_point_x)*factor));
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(x_0+(x_1-x_0)*factor));
             PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-            PyList_SetItem(list_item, 2, PyFloat_FromDouble(first_point_z+(second_point_z-first_point_z)*factor));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z_0+(z_1-z_0)*factor));
             PyList_Append(list_out, list_item);
         }
     }
