@@ -889,6 +889,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     double a;
     int l, r, m;
     int length;
+    int magic_number = 50;
 
     // array objects into which input will be unpacked and output packed into
     PyArrayObject *vec_slice; // input variable - list of points in 3D space
@@ -918,90 +919,146 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
         l = PyLong_AsLong(PyList_GetItem(ranges, i));
         r = PyLong_AsLong(PyList_GetItem(ranges, i+1));
 //        printf("i %d,l %d, r %d\n", i, l, r);
-        if(plane == 2){ // sagittal
-            x_0 = GET_COORDINATE(vec_slice, l, 0);
-            x_1 = GET_COORDINATE(vec_slice, r, 0);
-            if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
-                current_direction = (x_0 < x_1);
-                while (l <= r){
-                    m = (l+r)/2;
-                    x_0 = GET_COORDINATE(vec_slice, m, 0);
-                    x_1 = GET_COORDINATE(vec_slice, m+1, 0);
-                    if (current_direction){
-                        if(x_1 >= depth && x_0 < depth){
-                            break;
-                        }
-                        if (depth > x_0){
-                            l = m+1;
-                        }else{
-                            r = m-1;
-                        }
-                    }else{
-                        if(x_0 >= depth && x_1 < depth){
-                            break;
-                        }
-                        if (depth < x_0){
-                            l = m+1;
-                        }else{
-                            r = m-1;
-                        }
+        if(r-l < magic_number){
+            for(; l < r; l++)
+            {
+                // choose intersection plane type
+                if(plane == 2) // sagittal, projection onto YZ
+                {
+                    // take X-coordinate of two subsequent points from input segment
+                    // these two points form a line segment
+                    x_0 = GET_COORDINATE(vec_slice, l, 0);
+                    x_1 = GET_COORDINATE(vec_slice, l+1, 0);
+                    // check if current line segment has intersection with given plane
+                    // for YZ intersection, the plane is defined by equation `x == depth`,
+                    // hence we check if requested depth is between those two coordinate values
+                    if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
+                    {
+                        y_0 = GET_COORDINATE(vec_slice, l, 1);
+                        y_1 = GET_COORDINATE(vec_slice, l+1, 1);
+                        z = GET_COORDINATE(vec_slice, l, 2);
+                        a = (y_1 - y_0) / (x_1 - x_0);
+
+                        list_item = PyList_New(3);
+                        PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+                        PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
+                        PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                        PyList_Append(list_out, list_item);
                     }
                 }
+                else if(plane == 1) // coronal, projection onto XZ
+                {
+                    // take Y-coordinate of two subsequent points from input segment
+                    // these two points form a line segment
+                    y_0 =  GET_COORDINATE(vec_slice, l, 1);
+                    y_1 = GET_COORDINATE(vec_slice, l+1, 1);
 
-                y_0 = GET_COORDINATE(vec_slice, m, 1);
-                y_1 = GET_COORDINATE(vec_slice, m+1, 1);
-                z = GET_COORDINATE(vec_slice, m, 2);
-                a = (y_1 - y_0) / (x_1 - x_0);
+                    // for XZ intersection, the plane is defined by equation `y == depth`,
+                    if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
+                    {
 
-                list_item = PyList_New(3);
-                PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
-                PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
-                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                PyList_Append(list_out, list_item);
+                        // similar approach as in sagittal intersection, but applied to X and Z coordinates
+                        x_0 = GET_COORDINATE(vec_slice, l, 0);
+                        x_1 = GET_COORDINATE(vec_slice, l+1, 0);
+                        z = GET_COORDINATE(vec_slice, l, 2);
+                        a = (x_1 - x_0) / (y_1 - y_0);
+
+                        list_item = PyList_New(3);
+                        PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
+                        PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+                        PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                        PyList_Append(list_out, list_item);
+                    }
+                }
             }
+
         }
-        else if(plane == 1){ // coronal
-//            l = *((int*)PyArray_GETPTR1(ranges, i));
-//            r = *((int*)PyArray_GETPTR1(ranges, i+1));
-            y_0 = GET_COORDINATE(vec_slice, l, 1);
-            y_1 = GET_COORDINATE(vec_slice, r, 1);
-            if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
-                current_direction = (y_0 < y_1);
-                while (l <= r){
-                    m = (l+r)/2;
+        else{
+            if(plane == 2){ // sagittal
+                x_0 = GET_COORDINATE(vec_slice, l, 0);
+                x_1 = GET_COORDINATE(vec_slice, r, 0);
+                if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
+                    current_direction = (x_0 < x_1);
+                    while (l <= r){
+                        m = (l+r)/2;
+                        x_0 = GET_COORDINATE(vec_slice, m, 0);
+                        x_1 = GET_COORDINATE(vec_slice, m+1, 0);
+                        if (current_direction){
+                            if(x_1 >= depth && x_0 < depth){
+                                break;
+                            }
+                            if (depth > x_0){
+                                l = m+1;
+                            }else{
+                                r = m-1;
+                            }
+                        }else{
+                            if(x_0 >= depth && x_1 < depth){
+                                break;
+                            }
+                            if (depth < x_0){
+                                l = m+1;
+                            }else{
+                                r = m-1;
+                            }
+                        }
+                    }
+
                     y_0 = GET_COORDINATE(vec_slice, m, 1);
                     y_1 = GET_COORDINATE(vec_slice, m+1, 1);
-                    if (current_direction){
-                        if(y_1 >= depth && y_0 < depth){
-                            break;
-                        }
-                        if (depth > y_0){
-                            l = m+1;
+                    z = GET_COORDINATE(vec_slice, m, 2);
+                    a = (y_1 - y_0) / (x_1 - x_0);
+
+                    list_item = PyList_New(3);
+                    PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+                    PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
+                    PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                    PyList_Append(list_out, list_item);
+                }
+            }
+            else if(plane == 1){ // coronal
+    //            l = *((int*)PyArray_GETPTR1(ranges, i));
+    //            r = *((int*)PyArray_GETPTR1(ranges, i+1));
+                y_0 = GET_COORDINATE(vec_slice, l, 1);
+                y_1 = GET_COORDINATE(vec_slice, r, 1);
+                if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
+                    current_direction = (y_0 < y_1);
+                    while (l <= r){
+                        m = (l+r)/2;
+                        y_0 = GET_COORDINATE(vec_slice, m, 1);
+                        y_1 = GET_COORDINATE(vec_slice, m+1, 1);
+                        if (current_direction){
+                            if(y_1 >= depth && y_0 < depth){
+                                break;
+                            }
+                            if (depth > y_0){
+                                l = m+1;
+                            }else{
+                                r = m-1;
+                            }
                         }else{
-                            r = m-1;
-                        }
-                    }else{
-                        if(y_0 >= depth && y_1 < depth){
-                            break;
-                        }
-                        if (depth < y_0){
-                            l = m+1;
-                        }else{
-                            r = m-1;
+                            if(y_0 >= depth && y_1 < depth){
+                                break;
+                            }
+                            if (depth < y_0){
+                                l = m+1;
+                            }else{
+                                r = m-1;
+                            }
                         }
                     }
+
+                    x_0 = GET_COORDINATE(vec_slice, m, 0);
+                    x_1 = GET_COORDINATE(vec_slice, m+1, 0);
+                    z = GET_COORDINATE(vec_slice, m, 2);
+                    a = (x_1 - x_0) / (y_1 - y_0);
+
+                    list_item = PyList_New(3);
+                    PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
+                    PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+                    PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+                    PyList_Append(list_out, list_item);
                 }
-
-                x_0 = GET_COORDINATE(vec_slice, m, 0);
-                x_1 = GET_COORDINATE(vec_slice, m+1, 0);
-                z = GET_COORDINATE(vec_slice, m, 2);
-                a = (x_1 - x_0) / (y_1 - y_0);
-
-                list_item = PyList_New(3);
-                PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
-                PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-                PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                PyList_Append(list_out, list_item);
             }
         }
     }
