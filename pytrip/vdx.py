@@ -315,7 +315,6 @@ class VdxCube:
         i = 0
         n = len(content)
         header_full = False
-        #        number_of_vois = 0
         while i < n:
             line = content[i].strip()
             if not header_full:
@@ -497,9 +496,7 @@ class VdxCube:
             roi_label = self.vois[i].create_dicom_label()
             roi_label.ObservationNumber = str(i + 1)
             roi_label.ReferencedROINumber = str(i + 1)
-            # roi_label.RefdROINumber = str(i + 1)
             roi_contours = self.vois[i].create_dicom_contour_data()
-            # roi_contours.RefdROINumber = str(i + 1)
             roi_contours.ReferencedROINumber = str(i + 1)
 
             roi_structure_roi = self.vois[i].create_dicom_structure_roi()
