@@ -941,7 +941,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
 
     // array objects into which input will be unpacked and output packed into
     PyObject *vec_slice; // input variable - list of points in 3D space
-    PyObject *ranges; // input variable - list function ranges
+    PyObject *ranges; // input variable - list of function ranges
     PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
 
     // digest arguments, we expect:
