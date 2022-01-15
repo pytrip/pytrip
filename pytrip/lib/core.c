@@ -27,6 +27,9 @@
 #include "structmember.h"
 
 // macro to ease python array manipulation
+// PyObject* contour: list of points, where point is a list of doubles
+// int pos: index in contour
+// int coord: index in point
 #define GET_COORDINATE(contour, pos, coord) PyFloat_AsDouble(PyList_GetItem(PyList_GetItem(contour, pos), coord))
 
 // Visual Studio 2010 doesn't support C99, so all the code below should follow C89 standard
@@ -644,7 +647,7 @@ static PyObject * calculate_lvh_slice(PyObject *self, PyObject *args)
     return PyArray_Return(vec_out);
 }
 
-static void append_intersection(PyObject *list_out, double x, double y, double z){
+static void append_point_to_list(PyObject *list_out, double x, double y, double z){
     PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
 
     list_item = PyList_New(3);
@@ -656,9 +659,23 @@ static void append_intersection(PyObject *list_out, double x, double y, double z
     PyList_Append(list_out, list_item);
 }
 
+
+/*******************************************************************************
+ * calc_intersect_sagittal checks if segment is intersected 
+ *  and if it is, calculates point of intersection and appends it to passed list.
+ * Input:
+ *  PyObject *vec_slice - chain of points,
+ *  PyObject *list_out - output list,
+ *  double depth - X coordinate for which intersection is calculated,
+ *  int i_0 - index in chain of points of first point of segment,
+ *  int i_1 - index in chain of points of second point of segment.
+ * 
+ * Does not return anything, modifies passed list.
+ ******************************************************************************/
 static void calc_intersect_sagittal(PyObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
+    // sagittal, projection onto YZ
     double x_0, x_1, y_0, y_1, z;
-    double a;
+    double slope;
     
     // take X-coordinate of two subsequent points from input segment
     // these two points form a line segment
@@ -672,15 +689,28 @@ static void calc_intersect_sagittal(PyObject *vec_slice, PyObject *list_out, dou
         y_0 = GET_COORDINATE(vec_slice, i_0, 1);
         y_1 = GET_COORDINATE(vec_slice, i_1, 1);
         z = GET_COORDINATE(vec_slice, i_0, 2);
-        a = (y_1 - y_0) / (x_1 - x_0);
+        slope = (y_1 - y_0) / (x_1 - x_0);
 
-        append_intersection(list_out, depth, ((depth-x_0)*a+y_0), z);
+        append_point_to_list(list_out, depth, ((depth-x_0)*slope+y_0), z);
     }   
 }
 
+/*******************************************************************************
+ * calc_intersect_sagittal checks if segment is intersected 
+ *  and if it is, calculates point of intersection and appends it to passed list.
+ * Input:
+ *  PyObject *vec_slice - chain of points,
+ *  PyObject *list_out - output list,
+ *  double depth - Y coordinate for which intersection is calculated,
+ *  int i_0 - index in chain of points of first point of segment,
+ *  int i_1 - index in chain of points of second point of segment.
+ * 
+ * Does not return anything, modifies passed list.
+ ******************************************************************************/
 static void calc_intersect_coronal(PyObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
+    // coronal, projection onto XZ
     double x_0, x_1, y_0, y_1, z;
-    double a;
+    double slope;
     
     y_0 = GET_COORDINATE(vec_slice, i_0, 1);
     y_1 = GET_COORDINATE(vec_slice, i_1, 1);
@@ -689,9 +719,9 @@ static void calc_intersect_coronal(PyObject *vec_slice, PyObject *list_out, doub
         x_0 = GET_COORDINATE(vec_slice, i_0, 0);
         x_1 = GET_COORDINATE(vec_slice, i_1, 0);
         z = GET_COORDINATE(vec_slice, i_0, 2);
-        a = (x_1 - x_0) / (y_1 - y_0);
+        slope = (x_1 - x_0) / (y_1 - y_0);
 
-        append_intersection(list_out, ((depth-y_0)*a+x_0), depth, z);
+        append_point_to_list(list_out, ((depth-y_0)*slope+x_0), depth, z);
     }   
 }
 /*******************************************************************************
@@ -860,27 +890,27 @@ static void linear_search(PyObject *vec_slice, PyObject *list_out, int start, in
 }
 
 static int binary_search_inner(PyObject *vec_slice, int l, int r, int current_direction, double depth, int coord){
-    double x_0, x_1;
+    double a, b;
     int m;
 
     while (l <= r){
         m = (l+r)/2;
-        x_0 = GET_COORDINATE(vec_slice, m, coord);
-        x_1 = GET_COORDINATE(vec_slice, m+1, coord);
+        a = GET_COORDINATE(vec_slice, m, coord);
+        b = GET_COORDINATE(vec_slice, m+1, coord);
         if (current_direction){
-            if(x_1 >= depth && x_0 < depth){
+            if(b >= depth && a < depth){
                 break;
             }
-            if (depth > x_0){
+            if (depth > a){
                 l = m+1;
             }else{
                 r = m-1;
             }
         }else{
-            if(x_0 >= depth && x_1 < depth){
+            if(a >= depth && b < depth){
                 break;
             }
-            if (depth < x_0){
+            if (depth < a){
                 l = m+1;
             }else{
                 r = m-1;
@@ -889,13 +919,12 @@ static int binary_search_inner(PyObject *vec_slice, int l, int r, int current_di
     }
 
     return m;
-
 }
 
 static void binary_search(PyObject *vec_slice, PyObject *list_out, int l, int r, int plane, double depth){
     double x_0, x_1, y_0, y_1, z;
     int m;
-    double a;
+    double slope;
 
     if(plane == 2){ // sagittal
         x_0 = GET_COORDINATE(vec_slice, l, 0);
@@ -908,9 +937,9 @@ static void binary_search(PyObject *vec_slice, PyObject *list_out, int l, int r,
             y_0 = GET_COORDINATE(vec_slice, m, 1);
             y_1 = GET_COORDINATE(vec_slice, m+1, 1);
             z = GET_COORDINATE(vec_slice, m, 2);
-            a = (y_1 - y_0) / (x_1 - x_0);
+            slope = (y_1 - y_0) / (x_1 - x_0);
 
-            append_intersection(list_out, depth, ((depth-x_0)*a+y_0), z);
+            append_point_to_list(list_out, depth, ((depth-x_0)*slope+y_0), z);
         }
     }
     else if(plane == 1){ // coronal
@@ -924,9 +953,9 @@ static void binary_search(PyObject *vec_slice, PyObject *list_out, int l, int r,
             y_0 = GET_COORDINATE(vec_slice, m, 1);
             y_1 = GET_COORDINATE(vec_slice, m+1, 1);
             z = GET_COORDINATE(vec_slice, m, 2);
-            a = (x_1 - x_0) / (y_1 - y_0);
+            slope = (x_1 - x_0) / (y_1 - y_0);
 
-            append_intersection(list_out, ((depth-y_0)*a+x_0), depth, z);
+            append_point_to_list(list_out, ((depth-y_0)*slope+x_0), depth, z);
         }
     }
 }

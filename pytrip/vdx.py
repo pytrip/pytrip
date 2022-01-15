@@ -1449,6 +1449,7 @@ class Slice:
         # added to make this class more generic
         # now it stores slices in sagittal and coronal
         self._plane = plane
+        # added to store ranges for speeding up contour intersections calculation
         self.ranges_cor = None
         self.ranges_sag = None
 
