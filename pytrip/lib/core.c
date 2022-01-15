@@ -673,7 +673,7 @@ static void calc_intersect(PyListObject *vec_slice, PyObject *list_out, double d
     }   
 }
 
-static void calc_intersect_sag(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
+static void calc_intersect_saggittal(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
     double a_0, a_1, b_0, b_1;
     double z;
     double m;
@@ -702,7 +702,7 @@ static void calc_intersect_sag(PyListObject *vec_slice, PyObject *list_out, doub
     }   
 }
 
-static void calc_intersect_cor(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
+static void calc_intersect_coronal(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
     double a_0, a_1, b_0, b_1;
     double z;
     double m;
@@ -776,10 +776,10 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     if(plane == 2){
         for(i = 0; i < length; i++){
             if(i != length-1){
-                calc_intersect_sag(vec_slice, list_out, depth, i, i+1);
+                calc_intersect_saggittal(vec_slice, list_out, depth, i, i+1);
             }
             else{
-                calc_intersect_sag(vec_slice, list_out, depth, length-1, 0);
+                calc_intersect_saggittal(vec_slice, list_out, depth, length-1, 0);
             }
         }
     }
@@ -787,10 +787,10 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     else if(plane == 1){
         for(i = 0; i < length; i++){
             if(i != length-1){
-                calc_intersect_cor(vec_slice, list_out, depth, i, i+1);
+                calc_intersect_coronal(vec_slice, list_out, depth, i, i+1);
             }
             else{
-                calc_intersect_cor(vec_slice, list_out, depth, length-1, 0);
+                calc_intersect_coronal(vec_slice, list_out, depth, length-1, 0);
             }
         }
     }
@@ -808,7 +808,7 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
     int length;
 
     // array objects into which input will be unpacked and output packed into
-    PyArrayObject *vec_slice; // input variable - list of points in 3D space
+    PyListObject *vec_slice; // input variable - list of points in 3D space
     PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
 
     // helper variables to read and operate on input data
@@ -830,7 +830,7 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
     list_out = PyList_New(0);
     // add first index
     PyList_Append(list_out, PyLong_FromLong(0));
-    // this can be merged, just check what plane sis given and then set proper int variable to get proper coordinate
+    // this can be merged, just check what plane is given and then set proper int variable to get proper coordinate
     // i.e. if plane is 2 set coord to 0, if plane is 1 set coord to 1
     if(plane == 2){ // sagittal
         // make initial direction check based on plane  
@@ -870,28 +870,134 @@ static PyObject* function_ranges(PyObject *self, PyObject *args){
 
 }
 
-static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
+static void linear_search(PyListObject *vec_slice, PyObject *list_out, int start, int end, int plane, double depth){
     int i;
-    int plane;
-    int current_direction;
-    double depth;
-    double a;
-    int l, r, m;
-    int length;
-    int magic_number = 50;
+    // sagittal, projection onto YZ
+    if(plane == 2){
+        for(i = start; i < end; i++){
+            calc_intersect_saggittal(vec_slice, list_out, depth, i, i+1);
+        }
+    }
+    // coronal, projection onto XZ
+    else if(plane == 1){
+        for(i = start; i < end; i++){
+            calc_intersect_coronal(vec_slice, list_out, depth, i, i+1);
+        }
+    }
+}
 
-    // array objects into which input will be unpacked and output packed into
-    PyArrayObject *vec_slice; // input variable - list of points in 3D space
-    PyArrayObject *ranges; // input variable - list function ranges
-    PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
-    PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
-
+static void binary_search(PyListObject *vec_slice, PyObject *list_out, int l, int r, int plane, double depth){
     // helper variables to read and operate on input data
     double x_0 = 0.0;
     double x_1 = 0.0;
     double y_0 = 0.0;
     double y_1 = 0.0;
     double z = 0.0;
+    
+    int current_direction, m;
+    double a;
+
+
+    PyObject *list_item; // temporary variable to store point in 3D space (represented as list of 3 floats)
+
+    if(plane == 2){ // sagittal
+        x_0 = GET_COORDINATE(vec_slice, l, 0);
+        x_1 = GET_COORDINATE(vec_slice, r, 0);
+        if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
+            current_direction = (x_0 < x_1);
+            while (l <= r){
+                m = (l+r)/2;
+                x_0 = GET_COORDINATE(vec_slice, m, 0);
+                x_1 = GET_COORDINATE(vec_slice, m+1, 0);
+                if (current_direction){
+                    if(x_1 >= depth && x_0 < depth){
+                        break;
+                    }
+                    if (depth > x_0){
+                        l = m+1;
+                    }else{
+                        r = m-1;
+                    }
+                }else{
+                    if(x_0 >= depth && x_1 < depth){
+                        break;
+                    }
+                    if (depth < x_0){
+                        l = m+1;
+                    }else{
+                        r = m-1;
+                    }
+                }
+            }
+
+            y_0 = GET_COORDINATE(vec_slice, m, 1);
+            y_1 = GET_COORDINATE(vec_slice, m+1, 1);
+            z = GET_COORDINATE(vec_slice, m, 2);
+            a = (y_1 - y_0) / (x_1 - x_0);
+
+            list_item = PyList_New(3);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+            PyList_Append(list_out, list_item);
+        }
+    }
+    else if(plane == 1){ // coronal
+        y_0 = GET_COORDINATE(vec_slice, l, 1);
+        y_1 = GET_COORDINATE(vec_slice, r, 1);
+        if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
+            current_direction = (y_0 < y_1);
+            while (l <= r){
+                m = (l+r)/2;
+                y_0 = GET_COORDINATE(vec_slice, m, 1);
+                y_1 = GET_COORDINATE(vec_slice, m+1, 1);
+                if (current_direction){
+                    if(y_1 >= depth && y_0 < depth){
+                        break;
+                    }
+                    if (depth > y_0){
+                        l = m+1;
+                    }else{
+                        r = m-1;
+                    }
+                }else{
+                    if(y_0 >= depth && y_1 < depth){
+                        break;
+                    }
+                    if (depth < y_0){
+                        l = m+1;
+                    }else{
+                        r = m-1;
+                    }
+                }
+            }
+
+            x_0 = GET_COORDINATE(vec_slice, m, 0);
+            x_1 = GET_COORDINATE(vec_slice, m+1, 0);
+            z = GET_COORDINATE(vec_slice, m, 2);
+            a = (x_1 - x_0) / (y_1 - y_0);
+
+            list_item = PyList_New(3);
+            PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
+            PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
+            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
+            PyList_Append(list_out, list_item);
+        }
+    }
+}
+
+static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
+    int i;
+    int plane;
+    double depth;
+    int l, r;
+    int length;
+    int magic_number = 50;
+
+    // array objects into which input will be unpacked and output packed into
+    PyListObject *vec_slice; // input variable - list of points in 3D space
+    PyListObject *ranges; // input variable - list function ranges
+    PyObject *list_out;  // return variable - list of points in 3D space, added as list_item objects
 
     // digest arguments, we expect:
     //    an object - vec_slice: input chain of points
@@ -903,201 +1009,27 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     list_out = PyList_New(0);
 
     length = PyList_Size(ranges);
-
     for(i = 0; i < length-1; i++){
         l = PyLong_AsLong(PyList_GetItem(ranges, i));
         r = PyLong_AsLong(PyList_GetItem(ranges, i+1));
 //        printf("i %d,l %d, r %d\n", i, l, r);
         if(r-l < magic_number){
-            for(; l < r; l++)
-            {
-                // choose intersection plane type
-                if(plane == 2) // sagittal, projection onto YZ
-                {
-                    // take X-coordinate of two subsequent points from input segment
-                    // these two points form a line segment
-                    x_0 = GET_COORDINATE(vec_slice, l, 0);
-                    x_1 = GET_COORDINATE(vec_slice, l+1, 0);
-                    // check if current line segment has intersection with given plane
-                    // for YZ intersection, the plane is defined by equation `x == depth`,
-                    // hence we check if requested depth is between those two coordinate values
-                    if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
-                    {
-                        y_0 = GET_COORDINATE(vec_slice, l, 1);
-                        y_1 = GET_COORDINATE(vec_slice, l+1, 1);
-                        z = GET_COORDINATE(vec_slice, l, 2);
-                        a = (y_1 - y_0) / (x_1 - x_0);
-
-                        list_item = PyList_New(3);
-                        PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
-                        PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
-                        PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                        PyList_Append(list_out, list_item);
-                    }
-                }
-                else if(plane == 1) // coronal, projection onto XZ
-                {
-                    // take Y-coordinate of two subsequent points from input segment
-                    // these two points form a line segment
-                    y_0 =  GET_COORDINATE(vec_slice, l, 1);
-                    y_1 = GET_COORDINATE(vec_slice, l+1, 1);
-
-                    // for XZ intersection, the plane is defined by equation `y == depth`,
-                    if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
-                    {
-
-                        // similar approach as in sagittal intersection, but applied to X and Z coordinates
-                        x_0 = GET_COORDINATE(vec_slice, l, 0);
-                        x_1 = GET_COORDINATE(vec_slice, l+1, 0);
-                        z = GET_COORDINATE(vec_slice, l, 2);
-                        a = (x_1 - x_0) / (y_1 - y_0);
-
-                        list_item = PyList_New(3);
-                        PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
-                        PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-                        PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                        PyList_Append(list_out, list_item);
-                    }
-                }
-            }
-
+            linear_search(vec_slice, list_out, l, r, plane, depth);
         }
         else{
-            if(plane == 2){ // sagittal
-                x_0 = GET_COORDINATE(vec_slice, l, 0);
-                x_1 = GET_COORDINATE(vec_slice, r, 0);
-                if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth)){
-                    current_direction = (x_0 < x_1);
-                    while (l <= r){
-                        m = (l+r)/2;
-                        x_0 = GET_COORDINATE(vec_slice, m, 0);
-                        x_1 = GET_COORDINATE(vec_slice, m+1, 0);
-                        if (current_direction){
-                            if(x_1 >= depth && x_0 < depth){
-                                break;
-                            }
-                            if (depth > x_0){
-                                l = m+1;
-                            }else{
-                                r = m-1;
-                            }
-                        }else{
-                            if(x_0 >= depth && x_1 < depth){
-                                break;
-                            }
-                            if (depth < x_0){
-                                l = m+1;
-                            }else{
-                                r = m-1;
-                            }
-                        }
-                    }
-
-                    y_0 = GET_COORDINATE(vec_slice, m, 1);
-                    y_1 = GET_COORDINATE(vec_slice, m+1, 1);
-                    z = GET_COORDINATE(vec_slice, m, 2);
-                    a = (y_1 - y_0) / (x_1 - x_0);
-
-                    list_item = PyList_New(3);
-                    PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
-                    PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
-                    PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                    PyList_Append(list_out, list_item);
-                }
-            }
-            else if(plane == 1){ // coronal
-    //            l = *((int*)PyArray_GETPTR1(ranges, i));
-    //            r = *((int*)PyArray_GETPTR1(ranges, i+1));
-                y_0 = GET_COORDINATE(vec_slice, l, 1);
-                y_1 = GET_COORDINATE(vec_slice, r, 1);
-                if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth)){
-                    current_direction = (y_0 < y_1);
-                    while (l <= r){
-                        m = (l+r)/2;
-                        y_0 = GET_COORDINATE(vec_slice, m, 1);
-                        y_1 = GET_COORDINATE(vec_slice, m+1, 1);
-                        if (current_direction){
-                            if(y_1 >= depth && y_0 < depth){
-                                break;
-                            }
-                            if (depth > y_0){
-                                l = m+1;
-                            }else{
-                                r = m-1;
-                            }
-                        }else{
-                            if(y_0 >= depth && y_1 < depth){
-                                break;
-                            }
-                            if (depth < y_0){
-                                l = m+1;
-                            }else{
-                                r = m-1;
-                            }
-                        }
-                    }
-
-                    x_0 = GET_COORDINATE(vec_slice, m, 0);
-                    x_1 = GET_COORDINATE(vec_slice, m+1, 0);
-                    z = GET_COORDINATE(vec_slice, m, 2);
-                    a = (x_1 - x_0) / (y_1 - y_0);
-
-                    list_item = PyList_New(3);
-                    PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
-                    PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-                    PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-                    PyList_Append(list_out, list_item);
-                }
-            }
+            binary_search(vec_slice, list_out, l, r, plane, depth);
         }
     }
 
-    // choose intersection plane type
-    length = PyList_Size(vec_slice) -1;
+    // check connection between last and first point
+    length = PyList_Size(vec_slice);
     if(plane == 2) // sagittal, projection onto YZ
     {
-        // take X-coordinate of two subsequent points from input segment
-        // these two points form a line segment
-        x_0 = GET_COORDINATE(vec_slice, length, 0);
-        x_1 = GET_COORDINATE(vec_slice, 0, 0);
-        // check if current line segment has intersection with given plane
-        // for YZ intersection, the plane is defined by equation `x == depth`,
-        // hence we check if requested depth is between those two coordinate values
-        if((x_0 >= depth && x_1 < depth) || (x_1 >= depth && x_0 < depth))
-        {
-            y_0 = GET_COORDINATE(vec_slice, length, 1);
-            y_1 = GET_COORDINATE(vec_slice, 0, 1);
-            z = GET_COORDINATE(vec_slice, length, 2);
-            a = (y_1 - y_0) / (x_1 - x_0);
-
-            list_item = PyList_New(3);
-            PyList_SetItem(list_item, 0, PyFloat_FromDouble(depth));
-            PyList_SetItem(list_item, 1, PyFloat_FromDouble((depth-x_0)*a+y_0));
-            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-            PyList_Append(list_out, list_item);
-        }
+        calc_intersect_saggittal(vec_slice, list_out, depth, length-1, 0);
     }
     else if(plane == 1) // coronal, projection onto XZ
     {
-        // take Y-coordinate of two subsequent points from input segment
-        // these two points form a line segment
-        y_0 =  GET_COORDINATE(vec_slice, length, 1);
-        y_1 = GET_COORDINATE(vec_slice, 0, 1);
-
-        // for XZ intersection, the plane is defined by equation `y == depth`,
-        if((y_0 >= depth && y_1 < depth) || (y_1 >= depth && y_0 < depth))
-        {
-            x_0 = GET_COORDINATE(vec_slice, length, 0);
-            x_1 = GET_COORDINATE(vec_slice, 0, 0);
-            z = GET_COORDINATE(vec_slice, length, 2);
-            a = (x_1 - x_0) / (y_1 - y_0);
-
-            list_item = PyList_New(3);
-            PyList_SetItem(list_item, 0, PyFloat_FromDouble((depth-y_0)*a+x_0));
-            PyList_SetItem(list_item, 1, PyFloat_FromDouble(depth));
-            PyList_SetItem(list_item, 2, PyFloat_FromDouble(z));
-            PyList_Append(list_out, list_item);
-        }
+        calc_intersect_coronal(vec_slice, list_out, depth, length-1, 0);
     }
 
     return list_out;
