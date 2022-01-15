@@ -315,7 +315,6 @@ class VdxCube:
         i = 0
         n = len(content)
         header_full = False
-        #        number_of_vois = 0
         while i < n:
             line = content[i].strip()
             if not header_full:
@@ -915,25 +914,50 @@ class Voi:
 
         # a list to collect all intersections found in all loop passes
         all_intersections = []
+        # below that number linear can be faster
+        binary_search_threshold = 50
 
         # loop over all slices in Voi, each slice contains at least one contour
         # which forms chain of points in transversal (XY) plane
         for _slice in self.slices:  # TODO: slices must be sorted first, but wouldn't they always be ?
-
             # thanks to previous call to `concat_contour` so there is exactly one contour in each slice
-            contour = np.array(_slice.contours[0].contour)
-            # we need to add first point at the end, without it slice_on_plane won't work properly
-            #   because it operates on closed chains of points
-            contour = np.append(contour, [contour[0]], axis=0)
+            contour = _slice.contours[0].contour
+            # contour is an open chain stored as list of points
+            # closing it is managed virtually by C extensions
+            #   by comparing last and first point as if they were next to each other in list
+            #   so there is no need to create a copy of that contour just to append first point at the end
+            #   and creating that copy WAS very time expensive (i.e. 22.9 ms of 23 ms)
+            #   because of operating directly on original structure calculation time is greatly reduced
 
-            # call C extension method to efficiently calculate intersection points with a X=depth or Y=depth plane
-            intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
-
+            # variable for intersection points
             points = []
-            # sort intersection points depending on plane type
+            # check plane type
             if plane is self.sagittal:
+                # if number of points is high it is better to use binary search
+                if len(contour) > binary_search_threshold:
+                    # calculate ranges only once per contour
+                    # it is important, because cost of it is quite similar to linear search
+                    # but every next search on that contour will be much faster than linear one
+                    if _slice.ranges_sag is None:
+                        _slice.ranges_sag = pytriplib.function_ranges(contour, plane)
+                    # call effective C extension method to binary search for intersection
+                    intersection_points = pytriplib.binary_search_intersection(contour, _slice.ranges_sag, plane, depth)
+                # if number of points is low, searching for intersections by normal linear search
+                else:
+                    # call effective C extension method to search for intersection
+                    intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+
                 points = sorted(intersection_points, key=lambda x: x[1])  # sort by Y ascending
+
             elif plane is self.coronal:
+                if len(contour) > binary_search_threshold:
+                    if _slice.ranges_cor is None:
+                        _slice.ranges_cor = pytriplib.function_ranges(contour, plane)
+
+                    intersection_points = pytriplib.binary_search_intersection(contour, _slice.ranges_cor, plane, depth)
+                else:
+                    intersection_points = pytriplib.slice_on_plane(contour, plane, depth)
+
                 points = sorted(intersection_points, key=lambda x: x[0])  # sort by X ascending
 
             all_intersections.append(points)
@@ -1425,6 +1449,9 @@ class Slice:
         # added to make this class more generic
         # now it stores slices in sagittal and coronal
         self._plane = plane
+        # added to store ranges for speeding up contour intersections calculation
+        self.ranges_cor = None
+        self.ranges_sag = None
 
     def add_contour(self, contour):
         """ Adds a new 'contour' to the existing contours.
