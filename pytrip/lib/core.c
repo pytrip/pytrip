@@ -673,7 +673,7 @@ static void calc_intersect(PyListObject *vec_slice, PyObject *list_out, double d
     }   
 }
 
-static void calc_intersect_saggittal(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
+static void calc_intersect_sagittal(PyListObject *vec_slice, PyObject *list_out, double depth, int i_0, int i_1){
     double a_0, a_1, b_0, b_1;
     double z;
     double m;
@@ -776,10 +776,10 @@ static PyObject * slice_on_plane(PyObject *self, PyObject *args)
     if(plane == 2){
         for(i = 0; i < length; i++){
             if(i != length-1){
-                calc_intersect_saggittal(vec_slice, list_out, depth, i, i+1);
+                calc_intersect_sagittal(vec_slice, list_out, depth, i, i+1);
             }
             else{
-                calc_intersect_saggittal(vec_slice, list_out, depth, length-1, 0);
+                calc_intersect_sagittal(vec_slice, list_out, depth, length-1, 0);
             }
         }
     }
@@ -875,7 +875,7 @@ static void linear_search(PyListObject *vec_slice, PyObject *list_out, int start
     // sagittal, projection onto YZ
     if(plane == 2){
         for(i = start; i < end; i++){
-            calc_intersect_saggittal(vec_slice, list_out, depth, i, i+1);
+            calc_intersect_sagittal(vec_slice, list_out, depth, i, i+1);
         }
     }
     // coronal, projection onto XZ
@@ -1025,7 +1025,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     length = PyList_Size(vec_slice);
     if(plane == 2) // sagittal, projection onto YZ
     {
-        calc_intersect_saggittal(vec_slice, list_out, depth, length-1, 0);
+        calc_intersect_sagittal(vec_slice, list_out, depth, length-1, 0);
     }
     else if(plane == 1) // coronal, projection onto XZ
     {
