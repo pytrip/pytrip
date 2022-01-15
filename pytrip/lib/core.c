@@ -957,7 +957,7 @@ static PyObject* binary_search_intersection(PyObject *self, PyObject *args){
     for(i = 0; i < length-1; i++){
         l = PyLong_AsLong(PyList_GetItem(ranges, i));
         r = PyLong_AsLong(PyList_GetItem(ranges, i+1));
-        if(r-l < binary_search_treshold){
+        if(r-l < binary_search_threshold){
             linear_search(vec_slice, list_out, l, r, plane, depth);
         }
         else{
