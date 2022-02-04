@@ -317,9 +317,8 @@ class VdxCube:
         header_full = False
         while i < n:
             line = content[i].strip()
-            if not header_full:
-                if line.startswith("all_indices_zero_based"):
-                    self.zero_based = True
+            if not header_full and line.startswith("all_indices_zero_based"):
+                self.zero_based = True
             # TODO number_of_vois not used
             # elif "number_of_vois" in line:
             #     number_of_vois = int(line.split()[1])
