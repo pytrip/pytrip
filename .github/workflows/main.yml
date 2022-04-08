@@ -160,7 +160,7 @@ jobs:
         run: |
           python setup.py sdist
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./dist/pytrip98*.tar.gz
           if-no-files-found: error
@@ -198,7 +198,7 @@ jobs:
       run: |
           ls -alh dist/
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: ./dist/pytrip98*manylinux1_x86_64.whl
         if-no-files-found: error
@@ -236,7 +236,7 @@ jobs:
       run: |
           ls -alh dist/
 
-    - uses: actions/upload-artifact@v2
+    - uses: actions/upload-artifact@v3
       with:
         path: ./dist/pytrip98*manylinux2010_x86_64.whl
         if-no-files-found: error
@@ -285,7 +285,7 @@ jobs:
           CIBW_BUILD_VERBOSITY: "1"
           CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
           if-no-files-found: error
