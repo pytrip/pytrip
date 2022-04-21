@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Project
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 2 # needed for pull_request so we can do HEAD^2
 
@@ -52,7 +52,7 @@ jobs:
            - python-version: '2.7'
              platform: windows-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.0.2
 
       - name: Set up Python
         uses: actions/setup-python@v2.3.2
@@ -96,7 +96,7 @@ jobs:
         python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10']
         platform: [ubuntu-latest, windows-latest]
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.0.2
     - name: Set up Python
       uses: actions/setup-python@v2.3.2
       with:
@@ -140,7 +140,7 @@ jobs:
     needs: [initialise, full_tests]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
@@ -184,7 +184,7 @@ jobs:
          python-versions: ["cp27-cp27m", "cp35-cp35m", "cp36-cp36m", "cp37-cp37m","cp38-cp38", "cp39-cp39"]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.0.2
       with:
        fetch-depth: 0
 
@@ -222,7 +222,7 @@ jobs:
          python-versions: ['cp310-cp310']
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.0.2
       with:
        fetch-depth: 0
 
@@ -258,7 +258,7 @@ jobs:
     runs-on: macos-10.15
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.0.2
         with:
           fetch-depth: 0
 
