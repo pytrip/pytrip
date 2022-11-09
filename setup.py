@@ -34,7 +34,7 @@ class build_ext(_build_ext):
         # Prevent numpy from thinking it is still in its setup process:
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
-        print("Building package with numpy version {}".format(numpy.__version__))
+        print(f"Building package with numpy version {numpy.__version__}")
         self.include_dirs.append(numpy.get_include())
 
 
@@ -66,7 +66,7 @@ def git_version():
             tag_name = GIT_REVISION.split('-')[0][1:]
             if no_of_commits_since_last_tag == 0:
                 return tag_name
-            return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
+            return f'{tag_name}+rev{no_of_commits_since_last_tag}'
         return "Unknown"
     except OSError:
         return "Unknown"
@@ -97,8 +97,10 @@ def get_version():
 
 
 def write_version_py(version, filename='pytrip/__init__.py'):
+    if not filename.endswith('.py'):
+        print("Wrong filename")
     with open(filename, 'a') as f:
-        f.write("\n__version__ = '{:s}'".format(version))
+        f.write(f"\n__version__ = '{version}'")
 
 
 pytrip98_version = get_version()
