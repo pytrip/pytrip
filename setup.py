@@ -156,7 +156,6 @@ install_requires = [
     "numpy>=1.18 ; python_version == '3.8'",
     "numpy>=1.15 ; python_version == '3.7'",
     "numpy>=1.12,<1.20 ; python_version == '3.6'",
-    "numpy>=1.11,<1.19 ; python_version == '3.5'",
     "numpy>=1.11,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
 ]
 
@@ -213,7 +212,6 @@ setuptools.setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: C',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
