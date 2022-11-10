@@ -24,14 +24,12 @@ TODO: documentation here.
 # flake8: noqa
 
 import logging
-from pytrip.cube import Cube
 from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube, Voi
 from pytrip.paths import DensityCube
 from pytrip.raster import Rst
 from pytrip.let import LETCube
-from pytrip.dicomhelper import read_dicom_dir
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
@@ -43,6 +41,3 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 # to prevent it, we add null logging handler, as suggested by Python documentation:
 # as described here: https://docs.python.org/3/howto/logging.html#library-config
 logging.getLogger(__name__).addHandler(logging.NullHandler())
-
-__version__ = '3.7.1+rev1'
-__version__ = '3.7.1+rev1'
