@@ -192,7 +192,7 @@ jobs:
       uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux1_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
-       build-requirements: "pip<22.0"
+       build-requirements: "pip<21.0"
 
 
     - name: inspect packages to upload
