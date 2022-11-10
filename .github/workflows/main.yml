@@ -189,9 +189,11 @@ jobs:
 
     - name: manylinux1 wheels
       # manylinux1 build has support for python versions up to 3.9
-      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux1_x86_64
+      uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux1_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
+       build-requirements: "pip<22.0"
+
 
     - name: inspect packages to upload
       run: |
