@@ -146,7 +146,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4.3.0
         with:
-          python-version: '3.x'
+          python-version: '3.8'
 
       - name: Install dependencies
         run: |
@@ -189,9 +189,13 @@ jobs:
 
     - name: manylinux1 wheels
       # manylinux1 build has support for python versions up to 3.9
-      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux1_x86_64
+      # RalfG/python-wheels-manylinux-build always tries to install latests version of pip
+      # we fix it to <21.0 as this is the latests version which can accept "Unknown" package version
+      uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux1_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
+       build-requirements: "pip<21.0"
+
 
     - name: inspect packages to upload
       run: |
@@ -227,9 +231,12 @@ jobs:
 
     - name: manylinux2010 wheels
       # we use manylinux2010 as it is the oldest standard with support for python 3.10
-      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2010_x86_64
+      # RalfG/python-wheels-manylinux-build always tries to install latests version of pip
+      # we fix it to <21.0 as this is the latests version which can accept "Unknown" package version
+      uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2010_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
+       build-requirements: "pip<21.0"
 
     - name: inspect packages to upload
       run: |
