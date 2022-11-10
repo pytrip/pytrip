@@ -34,7 +34,7 @@ class build_ext(_build_ext):
         # Prevent numpy from thinking it is still in its setup process:
         __builtins__.__NUMPY_SETUP__ = False
         import numpy
-        print("Building package with numpy version {}".format(numpy.__version__))
+        print("Building package with numpy version {}".format(numpy.__version__))  # skipcq: PYL-C0209
         self.include_dirs.append(numpy.get_include())
 
 
@@ -66,7 +66,7 @@ def git_version():
             tag_name = GIT_REVISION.split('-')[0][1:]
             if no_of_commits_since_last_tag == 0:
                 return tag_name
-            return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)
+            return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)  # skipcq: PYL-C0209
         return "Unknown"
     except OSError:
         return "Unknown"
@@ -97,8 +97,10 @@ def get_version():
 
 
 def write_version_py(version, filename='pytrip/__init__.py'):
+    if not filename.endswith('.py'):
+        print("Wrong filename")
     with open(filename, 'a') as f:
-        f.write("\n__version__ = '{:s}'".format(version))
+        f.write("\n__version__ = '{:s}'".format(version))  # skipcq: PYL-C0209
 
 
 pytrip98_version = get_version()
@@ -156,7 +158,6 @@ install_requires = [
     "numpy>=1.18 ; python_version == '3.8'",
     "numpy>=1.15 ; python_version == '3.7'",
     "numpy>=1.12,<1.20 ; python_version == '3.6'",
-    "numpy>=1.11,<1.19 ; python_version == '3.5'",
     "numpy>=1.11,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
 ]
 
@@ -213,7 +214,6 @@ setuptools.setup(
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: C',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',

@@ -24,14 +24,12 @@ TODO: documentation here.
 # flake8: noqa
 
 import logging
-from pytrip.cube import Cube
 from pytrip.ctx import CtxCube
 from pytrip.dos import DosCube
 from pytrip.vdx import VdxCube, Voi
 from pytrip.paths import DensityCube
 from pytrip.raster import Rst
 from pytrip.let import LETCube
-from pytrip.dicomhelper import read_dicom_dir
 
 # from https://docs.python.org/3/tutorial/modules.html
 # if a package's __init__.py code defines a list named __all__,
