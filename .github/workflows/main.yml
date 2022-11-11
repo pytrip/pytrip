@@ -45,7 +45,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['2.7', '3.6', '3.9', '3.10']
+         python-version: ['2.7', '3.6', '3.10', '3.11']
          platform: [ubuntu-latest, windows-latest]
          exclude:
            # skip this config, because it is slow
@@ -64,7 +64,6 @@ jobs:
           python --version
           pip --version
           pip install wheel
-          pip install "numpy==1.11 ; python_version == '3.5'"  # dirty fix for python3.5 which seem to doesn't understand reqs in setup.py
           pip install -r requirements.txt
           pip install -r tests/requirements-test.txt
 
@@ -93,7 +92,7 @@ jobs:
     needs: [initialise, smoke_test]
     strategy:
       matrix:
-        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10']
+        python-version: ['2.7', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11']
         platform: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v3
@@ -146,7 +145,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4.3.0
         with:
-          python-version: '3.8'
+          python-version: '3.9'
 
       - name: Install dependencies
         run: |
@@ -248,6 +247,47 @@ jobs:
         if-no-files-found: error
 
 
+  build_wheels_manylinux2014:
+    # this job is triggered only in following cases:
+    #  - if commit message contains specific keyword: [build]
+    #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
+    #  - on master branch
+    #  - on release tags (named v*)
+    if: >
+      contains(needs.initialise.outputs.commit_message, '[build]') ||
+      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
+      github.ref == 'refs/heads/master' ||
+      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
+    name: Wheels on Linux
+    runs-on: ubuntu-latest
+    needs: [initialise, full_tests]
+    strategy:
+       matrix:
+         python-versions: ['cp311-cp311']
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+       fetch-depth: 0
+
+    - name: manylinux2014 wheels
+      # we use manylinux2014 to test support for python 3.11
+      # RalfG/python-wheels-manylinux-build always tries to install latests version of pip
+      # we fix it to <21.0 as this is the latests version which can accept "Unknown" package version
+      uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2014_x86_64
+      with:
+       python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
+       build-requirements: "pip<21.0"
+
+    - name: inspect packages to upload
+      run: |
+          ls -alh dist/
+
+    - uses: actions/upload-artifact@v3
+      with:
+        path: ./dist/pytrip98*manylinux2014_x86_64.whl
+        if-no-files-found: error
+
   build_wheels_macOS:
     # this job is triggered only in following cases:
     #  - if commit message contains specific keyword: [build]
@@ -299,7 +339,7 @@ jobs:
   upload_wheels:
     # upload wheels only when git tag and release is created
     name: Upload wheels
-    needs: [initialise, build_sdist, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_macOS]
+    needs: [initialise, build_sdist, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_manylinux2014, build_wheels_macOS]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
@@ -319,4 +359,3 @@ jobs:
               repository_url: "https://upload.pypi.org/legacy/" # The repository URL to use
               packages_dir: dist/ # The target directory for distribution
               verbose: true # Show verbose output
-

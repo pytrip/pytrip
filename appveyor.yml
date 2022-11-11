@@ -13,9 +13,6 @@ environment:
       PYTHON: "C:\\Python27-x64"
 
     - platform: x64
-      PYTHON: "C:\\Python35-x64"
-
-    - platform: x64
       PYTHON: "C:\\Python36-x64"
 
     - platform: x64
@@ -32,6 +29,10 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       platform: x64
       PYTHON: "C:\\Python310-x64"
+
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+      platform: x64
+      PYTHON: "C:\\Python311-x64"
 
 init:
 # check python version for default and target python version
