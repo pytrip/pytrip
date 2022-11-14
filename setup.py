@@ -150,7 +150,7 @@ extensions = [
 install_requires = [
     "matplotlib; python_version > '3.5'",
     "matplotlib<3.1 ; python_version <= '3.5'",
-    "pydicom @ git+https://github.com/pydicom/pydicom.git@a8be738418dee0a2b93c241fbd ; python_version == '3.11'",
+    "pydicom>=2.3.1 ; python_version == '3.11'",
     "pydicom ; python_version <= '3.11'",
     "scipy ; python_version > '3.5'",
     "scipy<1.3 ; python_version <= '3.5'",
