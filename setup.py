@@ -151,7 +151,7 @@ install_requires = [
     "matplotlib; python_version > '3.5'",
     "matplotlib<3.1 ; python_version <= '3.5'",
     "pydicom>=2.3.1 ; python_version == '3.11'",
-    "pydicom ; python_version <= '3.11'",
+    "pydicom ; python_version < '3.11'",
     "scipy ; python_version > '3.5'",
     "scipy<1.3 ; python_version <= '3.5'",
     "kiwisolver==1.1 ; python_version <= '3.5'",
