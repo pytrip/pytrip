@@ -45,12 +45,14 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['2.7', '3.10', '3.11']
+         python-version: ['3.10', '3.11']
          platform: [ubuntu-latest, windows-latest]
-         exclude:
-           # skip this config, because it is slow
+         include:
            - python-version: '2.7'
-             platform: windows-latest
+             platform: ubuntu-latest
+           - python-version: '3.6'
+             platform: ubuntu-20.04
+
     steps:
       - uses: actions/checkout@v3
 
@@ -94,6 +96,9 @@ jobs:
       matrix:
         python-version: ['2.7', '3.7', '3.8', '3.9', '3.10', '3.11']
         platform: [ubuntu-latest, windows-latest]
+        include:
+           - python-version: '3.6'
+             platform: ubuntu-20.04
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python
@@ -145,7 +150,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4.3.0
         with:
-          python-version: '3.9'
+          python-version: '3.10'
 
       - name: Install dependencies
         run: |
