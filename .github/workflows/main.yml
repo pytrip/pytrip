@@ -51,7 +51,7 @@ jobs:
            - python-version: '2.7'
              platform: ubuntu-latest
            - python-version: '3.6'
-             platform: ubuntu-20.04
+             platform: ubuntu-20.04 # 3.6 is not available on Ubuntu 22.04 (currently latest)
 
     steps:
       - uses: actions/checkout@v3
