@@ -50,8 +50,7 @@ command, or read the detailed documentation.
 Quick Installation Guide
 ========================
 
-PyTRiP is available for python 2.7, 3.5 or later, and can be installed via pip. If you intend to use **pytripgui** you
-need the python 2.7 version.
+PyTRiP is available for python 3.5 or later, and can be installed via pip. 
 
 We recommend that you run a modern Linux distribution, like: **Ubuntu 16.04** or newer, **Debian 9 Stretch**
 (currently known as testing) or any updated rolling release (archLinux, openSUSE tumbleweed). In that case,

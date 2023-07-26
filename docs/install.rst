@@ -19,7 +19,7 @@ Try if one of following commands (printing Python version) works::
 At the time of writing Python language interpreter has two popular versions: 2.x (Python 2) and 3.x (Python 3) families.
 Command ``python`` invokes either Python 2 or 3, while ``python3`` can invoke only Python 3.
 
-**pytrip** supports most of the modern Python versions, mainly: 2.7, 3.5 - 3.10.
+**pytrip** supports most of the modern Python versions, mainly: 3.5 - 3.11.
 Check if your interpreter version is supported.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
@@ -44,7 +44,7 @@ Installing using pip (all platforms)
 The easiest way to install PyTRiP98 is using `pip <https://pypi.python.org/pypi/pip>`_::
 
 .. note::
-    Pip comes pre-installed with Python newer than 3.4 and 2.7 (for 2.x family)
+    Pip comes pre-installed with Python newer than 3.4
 
 
 Administrator installation (root access)
