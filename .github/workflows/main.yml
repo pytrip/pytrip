@@ -48,8 +48,6 @@ jobs:
          python-version: ['3.10', '3.11']
          platform: [ubuntu-latest, windows-latest]
          include:
-           - python-version: '2.7'
-             platform: ubuntu-latest
            - python-version: '3.6'
              platform: ubuntu-20.04 # 3.6 is not available on Ubuntu 22.04 (currently latest)
 
@@ -94,7 +92,7 @@ jobs:
     needs: [initialise, smoke_test]
     strategy:
       matrix:
-        python-version: ['2.7', '3.7', '3.8', '3.9', '3.10', '3.11']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11']
         platform: [ubuntu-latest, windows-latest]
         include:
            - python-version: '3.6'
@@ -105,14 +103,6 @@ jobs:
       uses: actions/setup-python@v4.6.1
       with:
         python-version: ${{ matrix.python-version }}
-
-    - name: Install Visual C++ 9.0 for Python 2.7
-      # we download from web.archive.org, because it is not accessible on official microsoft site
-      # https://stackoverflow.com/questions/43645519/microsoft-visual-c-9-0-is-required
-      if: matrix.platform == 'windows-latest' && matrix.python-version == '2.7'
-      run: |
-        C:\msys64\usr\bin\wget.exe --progress=dot:mega --tries=50 'https://web.archive.org/web/20200709160228if_/https://download.microsoft.com/download/7/9/6/796EF2E4-801B-4FC4-AB28-B59FBF6D907B/VCForPython27.msi'
-        msiexec /i VCForPython27.msi /qn
 
     - name: Install dependencies
       run: |

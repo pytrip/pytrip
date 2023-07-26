@@ -10,9 +10,6 @@ environment:
   PYPIUSER: __token__
   matrix:
     - platform: x64
-      PYTHON: "C:\\Python27-x64"
-
-    - platform: x64
       PYTHON: "C:\\Python36-x64"
 
     - platform: x64
