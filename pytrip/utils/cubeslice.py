@@ -24,7 +24,7 @@ import logging
 import os
 import sys
 
-from numpy import arange, ma, NINF
+import numpy as np
 
 import pytrip as pt
 from pytrip.util import TRiP98FilePath
@@ -222,7 +222,10 @@ def main(args=None):
     data_colorscale_max = parsed_args.csmax
     if data_colorscale_max is None and data_cube is not None:
         data_colorscale_max = cube.cube.max()
-    data_cube.cube.clip(NINF, data_colorscale_max, data_cube.cube)
+    smallest_number = np.NINF
+    if np.issubdtype(data_cube.cube.dtype, np.integer):
+        smallest_number = np.iinfo(data_cube.cube.dtype).min
+    data_cube.cube.clip(smallest_number, data_colorscale_max, data_cube.cube)
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
@@ -285,7 +288,7 @@ def main(args=None):
 
             # optionally add HU bar
             if parsed_args.HUbar and ct_cb is None:
-                ct_cb = fig.colorbar(ct_im, ax=ax, ticks=arange(-1000, 3000, 200), orientation='horizontal')
+                ct_cb = fig.colorbar(ct_im, ax=ax, ticks=np.arange(-1000, 3000, 200), orientation='horizontal')
                 ct_cb.set_label('HU')
 
         if data_cube is not None:
@@ -303,7 +306,7 @@ def main(args=None):
             dmax = data_cube.cube.max() * 1.1
             if data_colorscale_max is not None and data_cube is not None:
                 dmax = data_colorscale_max * 1.1
-            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
+            tmpdat = np.ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
             data_im = ax.imshow(
