@@ -251,7 +251,7 @@ def main(args=None):
     # loop over each slice
     for slice_id in range(slice_start, slice_stop + 1):
 
-        output_filename = "{:s}_{:03d}.png".format(cube_basename, slice_id)
+        output_filename = f"{cube_basename}_{slice_id:03d}.png"
 
         slice_str = str(slice_id) + "/" + str(cube.dimz)
         if parsed_args.outputdir is not None:
@@ -262,9 +262,7 @@ def main(args=None):
         elif parsed_args.verbosity > 0:
             logging.info("Write slice number: " + slice_str + " to " + output_filename)
 
-        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
-                                                                              cube.dimz,
-                                                                              cube.slice_to_z(slice_id))
+        slice_str = f"Slice #: {slice_id:3d}/{cube.dimz:3d}\nSlice position: {cube.slice_to_z(slice_id):6.2f} mm"
         text_slice.set_text(slice_str)
 
         if ct_cube is not None:
