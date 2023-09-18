@@ -5,7 +5,7 @@ written by Elise Badun:
 https://github.com/ellieb
 """
 import numpy as np
-from pytrip import _cntr
+# from pytrip import _cntr
 
 sagittal = 2  #: id for sagittal view
 coronal = 1  #: id for coronal view
@@ -85,6 +85,7 @@ def filter_predicate(i, contour):
 
 
 def calculate_contour(bitmap):
+    from pytrip import _cntr
     # prepare mesh grid for contouring object
     a, b = bitmap.shape
     x, y = np.meshgrid(np.arange(b), np.arange(a))
