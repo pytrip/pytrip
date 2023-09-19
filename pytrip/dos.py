@@ -87,7 +87,8 @@ class DosCube(Cube):
             self._set_header_from_dicom(dcm)
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx))
         for i, item in enumerate(dcm["rtdose"].pixel_array):
-            self.cube[i][:][:] = item.T
+            # self.cube.append(np.array(item))
+            self.cube[i][:][:] = item
         self.cube *= dcm["rtdose"].DoseGridScaling
 
 

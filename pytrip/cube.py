@@ -239,7 +239,7 @@ class Cube(object):
         :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset, (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               self.slice_pos[indices[2]]]
+               self.slice_pos[indices[2]] + self.zoffset]
         logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(
             indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
@@ -838,9 +838,9 @@ class Cube(object):
         # slice_distance != SliceThickness. One may have overlapping slices. See #342
         self.slice_number = _dimz
         self.xoffset = float(ds.ImagePositionPatient[0])
-        self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
+        self.dimy = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
-        self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
+        self.dimx = int(ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
         self.dimz = _dimz
         self._set_z_table_from_dicom(dcm)
