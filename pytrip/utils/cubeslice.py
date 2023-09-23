@@ -96,7 +96,7 @@ def load_ct_cube(filename):
         logging.warning("Empty CT cube filename")
         return None, None
 
-    logging.info("Reading " + filename)
+    logging.info("Reading", filename)
     c = pt.CtxCube()
     c.read(filename)
     logging.info("CT cube shape" + str(c.cube.shape))
