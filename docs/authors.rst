@@ -6,7 +6,7 @@ Development
 -----------
 
 * Niels Bassler - Stockholm University, Sweden
-* Leszek Grzanka - IFJ-PAN, Poland <leszek.grzanka@gmail.com>
+* Leszek Grzanka - IFJ-PAN, Poland <leszek.grzanka@ifj.edu.pl>
 * Jakob Toftegaard - Aarhus University Hospital, Denmark
 
 Contributors
