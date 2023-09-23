@@ -239,7 +239,7 @@ class Cube(object):
         :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset, (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               self.slice_pos[indices[2]]]
+               self.slice_pos[indices[2]] + self.zoffset]
         logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(
             indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
@@ -792,8 +792,13 @@ class Cube(object):
         # if yes, then all references to whether this is sorted or not can be removed hereafter
         # (see also pytripgui) /NBassler
         self.slice_pos = []
-        for dcm_image in dcm["images"]:
-            self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
+        if 'images' in dcm:
+            for dcm_image in dcm["images"]:
+                self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
+        elif 'rtdose' in dcm:
+            for i,pos in enumerate(dcm["rtdose"].GridFrameOffsetVector):  # (3004,000c)
+                self.slice_pos.append(float(pos))
+
 
     def _set_header_from_dicom(self, dcm):
         """ Creates the header metadata for this Cube class, based on a given Dicom object.
@@ -802,7 +807,18 @@ class Cube(object):
         """
         if not _dicom_loaded:
             raise ModuleNotLoadedError("Dicom")
-        ds = dcm["images"][0]
+
+        if 'images' in dcm:
+            ds = dcm["images"][0]
+            _dimz = len(dcm["images"])
+        elif 'rtdose' in dcm:
+            ds = dcm['rtdose']
+            _dimz = int(ds.NumberOfFrames)  # (0028,0009)
+            _slice_thickness = ds.GridFrameOffsetVector[1] - ds.GridFrameOffsetVector[0]
+        else:
+            return
+
+
         self.version = "1.4"
         self.created_by = "pytrip"
         self.creation_info = "Created by PyTRiP98;"
@@ -813,15 +829,20 @@ class Cube(object):
         self.basename = ds.PatientID.replace(" ", "_")
         self.slice_dimension = int(ds.Rows)  # should be changed ?
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
-        self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
+
+        if ds.SliceThickness is None:
+            self.slice_thickness = _slice_thickness
+        else:
+            self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
+
         # slice_distance != SliceThickness. One may have overlapping slices. See #342
-        self.slice_number = len(dcm["images"])
+        self.slice_number = _dimz
         self.xoffset = float(ds.ImagePositionPatient[0])
-        self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
+        self.dimy = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
-        self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
+        self.dimx = int(ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
-        self.dimz = len(dcm["images"])
+        self.dimz = _dimz
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
 
@@ -883,7 +904,7 @@ class Cube(object):
         elif data_type is np.int32 or data_type is np.uint32:
             self.data_type = "integer"
             self.num_bytes = 4
-        elif data_type is np.float:
+        elif data_type is float:
             self.data_type = "float"
             self.num_bytes = 4
         elif data_type is np.double:
