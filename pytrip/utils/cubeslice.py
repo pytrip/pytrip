@@ -108,7 +108,7 @@ def load_ct_cube(filename):
     return c, c.basename
 
 
-def main(args=None):
+def main(args=None):  # skipcq: PY-R1000
     """ The main function for cubeslice.py
     """
     if args is None:
