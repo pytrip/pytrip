@@ -300,7 +300,7 @@ jobs:
           ls -alh dist/
           
       - name: Publish packages to pypi
-        uses: pypa/gh-action-pypi-publish@v1.8.6
+        uses: pypa/gh-action-pypi-publish@v1.8.10
         if: github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v')
         with:
               password: ${{ secrets.TWINE_PASSWORD }} # Password for your PyPI user or access token
