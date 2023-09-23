@@ -115,7 +115,7 @@ class Cube(object):
                 # on systems which support the pwd module
                 # in such case we set created_by field to a fixed value
                 self.created_by = 'pytrip'
-            self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
+            self.creation_info = f"Created with PyTRiP98 {_ptversion}"
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
             self.num_bytes = ""
@@ -426,7 +426,7 @@ class Cube(object):
             datafile_path = path_locator.datafile
 
             if not datafile_path or not header_path:
-                raise FileNotFound("Loading {:s} failed, file not found".format(path))
+                raise FileNotFound(f"Loading {path} failed, file not found")
 
         # tuple with path to header and datafile
         elif len(path) == 2:
@@ -443,7 +443,7 @@ class Cube(object):
                 if header_path_locator.header is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
                         header_path_locator.header, header_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(header_path))
+                raise FileNotFound(f"Loading {header_path} failed, file not found")
 
             # security checks for datafile path
             # first check - validity of the path
@@ -719,7 +719,7 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
-        from distutils.version import LooseVersion
+        from distutils.version import LooseVersion  # skipcq: PYL-W0402
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         # include created_by and creation_info only for files newer than 1.4
