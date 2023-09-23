@@ -247,4 +247,4 @@ setuptools.setup(
             'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
-    python_requires='>=3.6)
+    python_requires='>=3.6')
