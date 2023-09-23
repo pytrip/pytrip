@@ -283,58 +283,11 @@ jobs:
         path: ./dist/pytrip98*manylinux2014_x86_64.whl
         if-no-files-found: error
 
-  build_wheels_macOS:
-    # this job is triggered only in following cases:
-    #  - if commit message contains specific keyword: [build]
-    #  - if commit message starts with specific keyword: dependabot_ (for PRs created with dependabot)
-    #  - on master branch
-    #  - on release tags (named v*)
-    if: >
-      contains(needs.initialise.outputs.commit_message, '[build]') ||
-      startsWith(needs.initialise.outputs.commit_message, 'dependabot_') ||
-      github.ref == 'refs/heads/master' ||
-      (github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags/v'))
-    name: Wheels on macOS
-    needs: [initialise, full_tests]
-    runs-on: macos-10.15
-
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-
-      - uses: actions/setup-python@v4.6.1
-        with:
-          python-version: "3.9"
-
-      - name: install dependencies
-        run: |
-          pip install --upgrade setuptools pip wheel
-          pip install cibuildwheel
-
-      - name: show environment
-        run: |
-          pip freeze
-
-      - name: list target wheels
-        run: |
-          python -m cibuildwheel . --print-build-identifiers
-
-      - name: build wheels
-        run: python -m cibuildwheel --output-dir wheelhouse
-        env:
-          CIBW_BUILD_VERBOSITY: "1"
-          CIBW_BUILD: "cp36-* cp37-* cp38-* cp39-*"  # add MacOS 3.10 support
-
-      - uses: actions/upload-artifact@v3
-        with:
-          path: ./wheelhouse/*.whl
-          if-no-files-found: error
    
   upload_wheels:
     # upload wheels only when git tag and release is created
     name: Upload wheels
-    needs: [initialise, build_sdist, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_manylinux2014, build_wheels_macOS]
+    needs: [initialise, build_sdist, build_wheels_manylinux1, build_wheels_manylinux2010, build_wheels_manylinux2014]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/download-artifact@v3
