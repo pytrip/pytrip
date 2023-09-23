@@ -88,6 +88,7 @@ class DosCube(Cube):
         self.cube = np.zeros((self.dimz, self.dimy, self.dimx))
         for i, item in enumerate(dcm["rtdose"].pixel_array):
             self.cube[i][:][:] = item
+        self.cube *= dcm["rtdose"].DoseGridScaling
 
     def calculate_dvh(self, voi):
         """
