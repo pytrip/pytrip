@@ -456,7 +456,7 @@ class Cube(object):
                 if datafile_path_locator.datafile is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
                         datafile_path_locator.datafile, datafile_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(datafile_path))
+                raise FileNotFound(f"Loading {datafile_path} failed, file not found")
 
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
@@ -564,7 +564,7 @@ class Cube(object):
             cube *= 2
         self.cube = cube
 
-    def _parse_trip_header(self, content):
+    def _parse_trip_header(self, content):  # skipcq: PY-R1000
         """ Parses content which was read from a trip header.
         """
         i = 0
@@ -674,7 +674,7 @@ class Cube(object):
         else:
             print("Format:", self.byte_order, self.data_type, self.num_bytes)
             raise IOError("Unsupported format.")
-        logger.debug("self.format_str: '{}'".format(self.format_str))
+        logger.debug("self.format_str: '{%s}'", self.format_str)
 
     # ######################  WRITING TRIP98 FILES #######################################
 
@@ -724,8 +724,8 @@ class Cube(object):
         output_str += "modality " + self.modality + "\n"
         # include created_by and creation_info only for files newer than 1.4
         if LooseVersion(self.version) >= LooseVersion("1.4"):
-            output_str += "created_by {:s}\n".format(self.created_by)
-            output_str += "creation_info {:s}\n".format(self.creation_info)
+            output_str += f"created_by {self.created_by}\n"
+            output_str += f"creation_info {self.creation_info}\n"
         output_str += "primary_view " + self.primary_view + "\n"
         output_str += "data_type " + self.data_type + "\n"
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
@@ -735,15 +735,15 @@ class Cube(object):
         # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX
         _fname = os.path.basename(path)
         _pname = os.path.splitext(_fname)[0]
-        output_str += "patient_name {:s}\n".format(_pname)
-        output_str += "slice_dimension {:d}\n".format(self.slice_dimension)
-        output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
-        output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
-        output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
-        output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
-        output_str += "dimy {:d}\n".format(self.dimy)
+        output_str += f"patient_name {_pname}\n"
+        output_str += f"slice_dimension {self.slice_dimension:d}\n"
+        output_str += f"pixel_size {self.pixel_size:.7f}\n"
+        output_str += f"slice_distance {self.slice_distance:.7f}\n"
+        output_str += f"slice_number {self.slice_number:s}\n"
+        output_str += f"xoffset {int(round(self.xoffset / self.pixel_size)):d}\n"
+        output_str += f"dimx {self.dimx:d}\n"
+        output_str += f"yoffset {int(round(self.yoffset / self.pixel_size)):d}\n"
+        output_str += f"dimy {self.dimy:d}\n"
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
         # to apply zoffset, z_table should be used instead.
