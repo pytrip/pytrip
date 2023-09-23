@@ -251,9 +251,9 @@ class DosCube(Cube):
         ds.PositionReferenceIndicator = "RF"
         ds.TissueHeterogeneityCorrection = ['IMAGE', 'ROI_OVERRIDE']
         ds.ImagePositionPatient = [
-            "%.3f" % (self.xoffset * self.pixel_size),
-            "%.3f" % (self.yoffset * self.pixel_size),
-            "%.3f" % (self.slice_pos[0])
+            f"{self.xoffset * self.pixel_size:.3f}",
+            f"{self.yoffset * self.pixel_size:.3f}",
+            f"{self.slice_pos[0]:.3f}"
         ]
         ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.2'
         ds.SOPInstanceUID = '1.2.246.352.71.7.320687012.47206.20090603085223'

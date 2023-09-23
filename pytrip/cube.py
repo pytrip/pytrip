@@ -739,7 +739,7 @@ class Cube(object):
         output_str += f"slice_dimension {self.slice_dimension:d}\n"
         output_str += f"pixel_size {self.pixel_size:.7f}\n"
         output_str += f"slice_distance {self.slice_distance:.7f}\n"
-        output_str += f"slice_number {self.slice_number:s}\n"
+        output_str += f"slice_number {self.slice_number}\n"
         output_str += f"xoffset {int(round(self.xoffset / self.pixel_size)):d}\n"
         output_str += f"dimx {self.dimx:d}\n"
         output_str += f"yoffset {int(round(self.yoffset / self.pixel_size)):d}\n"
@@ -754,8 +754,7 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item, self.slice_thickness,
-                                                                          0)  # 0 gantry tilt
+                output_str += f"  {i + 1:<3d}{item:14.4f}{self.slice_thickness:13.4f}{0:14.4f}\n" # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
