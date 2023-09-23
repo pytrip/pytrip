@@ -754,7 +754,7 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += f"  {i + 1:<3d}{item:14.4f}{self.slice_thickness:13.4f}{0:14.4f}\n" # 0 gantry tilt
+                output_str += f"  {i + 1:<3d}{item:14.4f}{self.slice_thickness:13.4f}{0:14.4f}\n"  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
