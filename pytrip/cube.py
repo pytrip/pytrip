@@ -115,7 +115,7 @@ class Cube(object):
                 # on systems which support the pwd module
                 # in such case we set created_by field to a fixed value
                 self.created_by = 'pytrip'
-            self.creation_info = "Created with PyTRiP98 {:s}".format(_ptversion)
+            self.creation_info = f"Created with PyTRiP98 {_ptversion}"
             self.primary_view = "transversal"  # e.g. transversal
             self.data_type = ""
             self.num_bytes = ""
@@ -239,7 +239,7 @@ class Cube(object):
         :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
         pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset, (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               self.slice_pos[indices[2]]]
+               self.slice_pos[indices[2]] + self.zoffset]
         logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(
             indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
@@ -426,7 +426,7 @@ class Cube(object):
             datafile_path = path_locator.datafile
 
             if not datafile_path or not header_path:
-                raise FileNotFound("Loading {:s} failed, file not found".format(path))
+                raise FileNotFound(f"Loading {path} failed, file not found")
 
         # tuple with path to header and datafile
         elif len(path) == 2:
@@ -443,7 +443,7 @@ class Cube(object):
                 if header_path_locator.header is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
                         header_path_locator.header, header_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(header_path))
+                raise FileNotFound(f"Loading {header_path} failed, file not found")
 
             # security checks for datafile path
             # first check - validity of the path
@@ -456,7 +456,7 @@ class Cube(object):
                 if datafile_path_locator.datafile is not None:
                     logger.warning("Did you meant to load {:s}, instead of {:s} ?".format(
                         datafile_path_locator.datafile, datafile_path))
-                raise FileNotFound("Loading {:s} failed, file not found".format(datafile_path))
+                raise FileNotFound(f"Loading {datafile_path} failed, file not found")
 
             self.basename = ""  # TODO user may provide two completely different filenames for header and datafile
             # i.e. read( ("1.hed", "2.dos"), what about basename then ?
@@ -564,7 +564,7 @@ class Cube(object):
             cube *= 2
         self.cube = cube
 
-    def _parse_trip_header(self, content):
+    def _parse_trip_header(self, content):  # skipcq: PY-R1000
         """ Parses content which was read from a trip header.
         """
         i = 0
@@ -674,7 +674,7 @@ class Cube(object):
         else:
             print("Format:", self.byte_order, self.data_type, self.num_bytes)
             raise IOError("Unsupported format.")
-        logger.debug("self.format_str: '{}'".format(self.format_str))
+        logger.debug("self.format_str: '{%s}'", self.format_str)
 
     # ######################  WRITING TRIP98 FILES #######################################
 
@@ -719,13 +719,13 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
-        from distutils.version import LooseVersion
+        from distutils.version import LooseVersion  # skipcq: PYL-W0402
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         # include created_by and creation_info only for files newer than 1.4
         if LooseVersion(self.version) >= LooseVersion("1.4"):
-            output_str += "created_by {:s}\n".format(self.created_by)
-            output_str += "creation_info {:s}\n".format(self.creation_info)
+            output_str += f"created_by {self.created_by}\n"
+            output_str += f"creation_info {self.creation_info}\n"
         output_str += "primary_view " + self.primary_view + "\n"
         output_str += "data_type " + self.data_type + "\n"
         output_str += "num_bytes " + str(self.num_bytes) + "\n"
@@ -735,15 +735,15 @@ class Cube(object):
         # patient_name in .hed must be equal to the base filename without extension, else TRiP98 wont import VDX
         _fname = os.path.basename(path)
         _pname = os.path.splitext(_fname)[0]
-        output_str += "patient_name {:s}\n".format(_pname)
-        output_str += "slice_dimension {:d}\n".format(self.slice_dimension)
-        output_str += "pixel_size {:.7f}\n".format(self.pixel_size)
-        output_str += "slice_distance {:.7f}\n".format(self.slice_distance)
-        output_str += "slice_number " + str(self.slice_number) + "\n"
-        output_str += "xoffset {:d}\n".format(int(round(self.xoffset / self.pixel_size)))
-        output_str += "dimx {:d}\n".format(self.dimx)
-        output_str += "yoffset {:d}\n".format(int(round(self.yoffset / self.pixel_size)))
-        output_str += "dimy {:d}\n".format(self.dimy)
+        output_str += f"patient_name {_pname}\n"
+        output_str += f"slice_dimension {self.slice_dimension:d}\n"
+        output_str += f"pixel_size {self.pixel_size:.7f}\n"
+        output_str += f"slice_distance {self.slice_distance:.7f}\n"
+        output_str += f"slice_number {self.slice_number}\n"
+        output_str += f"xoffset {int(round(self.xoffset / self.pixel_size)):d}\n"
+        output_str += f"dimx {self.dimx:d}\n"
+        output_str += f"yoffset {int(round(self.yoffset / self.pixel_size)):d}\n"
+        output_str += f"dimy {self.dimy:d}\n"
 
         # zoffset in Voxelplan .hed seems to be broken, and should not be used if not = 0
         # to apply zoffset, z_table should be used instead.
@@ -754,8 +754,7 @@ class Cube(object):
             output_str += "z_table yes\n"
             output_str += "slice_no  position  thickness  gantry_tilt\n"
             for i, item in enumerate(self.slice_pos):
-                output_str += "  {:<3d}{:14.4f}{:13.4f}{:14.4f}\n".format(i + 1, item, self.slice_thickness,
-                                                                          0)  # 0 gantry tilt
+                output_str += f"  {i + 1:<3d}{item:14.4f}{self.slice_thickness:13.4f}{0:14.4f}\n"  # 0 gantry tilt
         else:
             output_str += "z_table no\n"
 
@@ -792,8 +791,11 @@ class Cube(object):
         # if yes, then all references to whether this is sorted or not can be removed hereafter
         # (see also pytripgui) /NBassler
         self.slice_pos = []
-        for dcm_image in dcm["images"]:
-            self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
+        if 'images' in dcm:
+            for dcm_image in dcm["images"]:
+                self.slice_pos.append(float(dcm_image.ImagePositionPatient[2]))
+        elif 'rtdose' in dcm:
+            self.slice_pos = [float(pos) for pos in dcm["rtdose"].GridFrameOffsetVector]
 
     def _set_header_from_dicom(self, dcm):
         """ Creates the header metadata for this Cube class, based on a given Dicom object.
@@ -802,7 +804,16 @@ class Cube(object):
         """
         if not _dicom_loaded:
             raise ModuleNotLoadedError("Dicom")
-        ds = dcm["images"][0]
+        if 'images' in dcm:
+            ds = dcm["images"][0]
+            _dimz = len(dcm["images"])
+        elif 'rtdose' in dcm:
+            ds = dcm['rtdose']
+            _dimz = int(ds.NumberOfFrames)  # (0028,0009)
+            _slice_thickness = ds.GridFrameOffsetVector[1] - ds.GridFrameOffsetVector[0]
+        else:
+            return
+
         self.version = "1.4"
         self.created_by = "pytrip"
         self.creation_info = "Created by PyTRiP98;"
@@ -815,13 +826,13 @@ class Cube(object):
         self.pixel_size = float(ds.PixelSpacing[0])  # (0028, 0030) Pixel Spacing (DS)
         self.slice_thickness = ds.SliceThickness  # (0018, 0050) Slice Thickness (DS)
         # slice_distance != SliceThickness. One may have overlapping slices. See #342
-        self.slice_number = len(dcm["images"])
+        self.slice_number = _dimz
         self.xoffset = float(ds.ImagePositionPatient[0])
-        self.dimx = int(ds.Rows)  # (0028, 0010) Rows (US)
+        self.dimy = int(ds.Rows)  # (0028, 0010) Rows (US)
         self.yoffset = float(ds.ImagePositionPatient[1])
-        self.dimy = int(ds.Columns)  # (0028, 0011) Columns (US)
+        self.dimx = int(ds.Columns)  # (0028, 0011) Columns (US)
         self.zoffset = float(ds.ImagePositionPatient[2])  # note that zoffset should not be used.
-        self.dimz = len(dcm["images"])
+        self.dimz = _dimz
         self._set_z_table_from_dicom(dcm)
         self.z_table = True
 
@@ -883,7 +894,7 @@ class Cube(object):
         elif data_type is np.int32 or data_type is np.uint32:
             self.data_type = "integer"
             self.num_bytes = 4
-        elif data_type is np.float:
+        elif data_type is float:
             self.data_type = "float"
             self.num_bytes = 4
         elif data_type is np.double:
