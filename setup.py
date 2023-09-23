@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2022 PyTRiP98 Developers.
+#    Copyright (C) 2010-2023 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -140,31 +140,22 @@ extensions = [
 # |      1.14     | 12 (0xc)  | 2.7,  3.4 - 3.6 | linux, mac, win |
 # |      1.13     | 11 (0xb)  | 2.7,  3.4 - 3.6 | linux, mac, win |
 # |      1.12     | 10 (0xa)  | 2.7,  3.4 - 3.6 | linux, mac, win |
-# |      1.11     | 10 (0xa)  | 2.7,  3.4 - 3.5 | linux, mac, win |
-# |      1.10     | 10 (0xa)  | 2.7,  3.3 - 3.5 |      linux      |
-# |       1.9     |  9 (0x9)  | 2.7,  3.3 - 3.5 |      linux      |
 # ----------------------------------------------------------------|
 
 
 # as for now pydicom is broken under python 3.11, once this is fixed we need to replace it with normal version
 install_requires = [
-    "matplotlib; python_version > '3.5'",
-    "matplotlib<3.1 ; python_version <= '3.5'",
+    "matplotlib",
     "pydicom>=2.3.1 ; python_version == '3.11'",
     "pydicom ; python_version < '3.11'",
-    "scipy ; python_version > '3.5'",
-    "scipy<1.3 ; python_version <= '3.5'",
-    "kiwisolver==1.1 ; python_version <= '3.5'",
-    "cffi<1.15 ; python_version <= '3.5'",
-    "enum34 ; python_version < '3.5'",  # python 3.4 and 2.7
+    "scipy",
     # full range of NumPy version with support for given python version
     "numpy>=1.23.3 ; python_version == '3.11'",
     "numpy>=1.21.4 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
     "numpy>=1.18 ; python_version == '3.8'",
     "numpy>=1.15 ; python_version == '3.7'",
-    "numpy>=1.12,<1.20 ; python_version == '3.6'",
-    "numpy>=1.11,<1.15 ; python_version < '3.5'"  # python 3.4 and 2.7
+    "numpy>=1.12,<1.20 ; python_version == '3.6'"
 ]
 
 # oldest NumPy version with support for given python version
@@ -174,8 +165,7 @@ setup_requires = [
     "numpy==1.20.0 ; python_version == '3.9'",
     "numpy==1.18.0 ; python_version == '3.8'",
     "numpy==1.15.0 ; python_version == '3.7'",
-    "numpy==1.12.0 ; python_version == '3.6'",
-    "numpy==1.11.0 ; python_version < '3.6'"  # python 3.5, 3.4 and 2.7
+    "numpy==1.12.0 ; python_version == '3.6'"
 ]
 
 extras_require = {
@@ -220,7 +210,6 @@ setuptools.setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: C',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
@@ -248,4 +237,4 @@ setuptools.setup(
             'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
-    python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.3.*, !=3.5.*')
+    python_requires='>=3.6')

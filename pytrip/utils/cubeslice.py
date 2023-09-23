@@ -24,7 +24,7 @@ import logging
 import os
 import sys
 
-from numpy import arange, ma, NINF
+import numpy as np
 
 import pytrip as pt
 from pytrip.util import TRiP98FilePath
@@ -96,7 +96,7 @@ def load_ct_cube(filename):
         logging.warning("Empty CT cube filename")
         return None, None
 
-    logging.info("Reading " + filename)
+    logging.info("Reading %s", filename)
     c = pt.CtxCube()
     c.read(filename)
     logging.info("CT cube shape" + str(c.cube.shape))
@@ -108,7 +108,7 @@ def load_ct_cube(filename):
     return c, c.basename
 
 
-def main(args=None):
+def main(args=None):  # skipcq: PY-R1000
     """ The main function for cubeslice.py
     """
     if args is None:
@@ -222,7 +222,10 @@ def main(args=None):
     data_colorscale_max = parsed_args.csmax
     if data_colorscale_max is None and data_cube is not None:
         data_colorscale_max = cube.cube.max()
-    data_cube.cube.clip(NINF, data_colorscale_max, data_cube.cube)
+    smallest_number = np.NINF
+    if np.issubdtype(data_cube.cube.dtype, np.integer):
+        smallest_number = np.iinfo(data_cube.cube.dtype).min
+    data_cube.cube.clip(smallest_number, data_colorscale_max, data_cube.cube)
 
     # Prepare figure and subplot (axis), they will stay the same during the loop
     fig = plt.figure()
@@ -248,7 +251,7 @@ def main(args=None):
     # loop over each slice
     for slice_id in range(slice_start, slice_stop + 1):
 
-        output_filename = "{:s}_{:03d}.png".format(cube_basename, slice_id)
+        output_filename = f"{cube_basename}_{slice_id:03d}.png"
 
         slice_str = str(slice_id) + "/" + str(cube.dimz)
         if parsed_args.outputdir is not None:
@@ -259,9 +262,7 @@ def main(args=None):
         elif parsed_args.verbosity > 0:
             logging.info("Write slice number: " + slice_str + " to " + output_filename)
 
-        slice_str = "Slice #: {:3d}/{:3d}\nSlice position: {:6.2f} mm".format(slice_id,
-                                                                              cube.dimz,
-                                                                              cube.slice_to_z(slice_id))
+        slice_str = f"Slice #: {slice_id:3d}/{cube.dimz:3d}\nSlice position: {cube.slice_to_z(slice_id):6.2f} mm"
         text_slice.set_text(slice_str)
 
         if ct_cube is not None:
@@ -285,7 +286,7 @@ def main(args=None):
 
             # optionally add HU bar
             if parsed_args.HUbar and ct_cb is None:
-                ct_cb = fig.colorbar(ct_im, ax=ax, ticks=arange(-1000, 3000, 200), orientation='horizontal')
+                ct_cb = fig.colorbar(ct_im, ax=ax, ticks=np.arange(-1000, 3000, 200), orientation='horizontal')
                 ct_cb.set_label('HU')
 
         if data_cube is not None:
@@ -303,7 +304,7 @@ def main(args=None):
             dmax = data_cube.cube.max() * 1.1
             if data_colorscale_max is not None and data_cube is not None:
                 dmax = data_colorscale_max * 1.1
-            tmpdat = ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
+            tmpdat = np.ma.masked_where(data_slice <= dmin, data_slice)  # Sacrificial goat
 
             # plot new data cube
             data_im = ax.imshow(
