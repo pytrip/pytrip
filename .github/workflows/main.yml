@@ -153,7 +153,7 @@ jobs:
         run: |
           python setup.py sdist
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./dist/pytrip98*.tar.gz
           if-no-files-found: error
@@ -195,7 +195,7 @@ jobs:
       run: |
           ls -alh dist/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ./dist/pytrip98*manylinux1_x86_64.whl
         if-no-files-found: error
@@ -236,7 +236,7 @@ jobs:
       run: |
           ls -alh dist/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ./dist/pytrip98*manylinux2010_x86_64.whl
         if-no-files-found: error
@@ -278,7 +278,7 @@ jobs:
       run: |
           ls -alh dist/
 
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         path: ./dist/pytrip98*manylinux2014_x86_64.whl
         if-no-files-found: error
