@@ -54,7 +54,7 @@ class ReadGd(object):  # TODO: rename me
             with resources.files('pytrip.data').joinpath(model_files[_dataset]).open('r') as file:
                 model_data = file.read()
             lines = model_data.split('\n')
-        except (FileNotFoundError, AttributeError, TypeError):
+        except (FileNotFoundError, AttributeError, TypeError, ImportError):
             from pkg_resources import resource_string
             model_data = resource_string('pytrip', os.path.join('data', model_files[_dataset]))
             lines = model_data.decode('ascii').split('\n')
