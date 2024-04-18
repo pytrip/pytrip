@@ -199,6 +199,7 @@ jobs:
       with:
         path: ./dist/pytrip98*manylinux1_x86_64.whl
         if-no-files-found: error
+        name: wheel-${{ matrix.python-versions }}
 
   build_wheels_manylinux2010:
     # this job is triggered only in following cases:
@@ -225,12 +226,9 @@ jobs:
 
     - name: manylinux2010 wheels
       # we use manylinux2010 as it is the oldest standard with support for python 3.10
-      # RalfG/python-wheels-manylinux-build always tries to install latests version of pip
-      # we fix it to <21.0 as this is the latests version which can accept "Unknown" package version
       uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2010_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
-       build-requirements: "pip<21.0"
 
     - name: inspect packages to upload
       run: |
@@ -240,6 +238,7 @@ jobs:
       with:
         path: ./dist/pytrip98*manylinux2010_x86_64.whl
         if-no-files-found: error
+        name: wheel-${{ matrix.python-versions }}
 
 
   build_wheels_manylinux2014:
@@ -267,12 +266,9 @@ jobs:
 
     - name: manylinux2014 wheels
       # we use manylinux2014 to test support for python 3.11
-      # RalfG/python-wheels-manylinux-build always tries to install latests version of pip
-      # we fix it to <21.0 as this is the latests version which can accept "Unknown" package version
       uses: RalfG/python-wheels-manylinux-build@v0.5.0-manylinux2014_x86_64
       with:
        python-versions: ${{ matrix.python-versions }}  # Python versions to target, space-separated
-       build-requirements: "pip<21.0"
 
     - name: inspect packages to upload
       run: |
@@ -282,6 +278,7 @@ jobs:
       with:
         path: ./dist/pytrip98*manylinux2014_x86_64.whl
         if-no-files-found: error
+        name: wheel-${{ matrix.python-versions }}
 
    
   upload_wheels:
@@ -292,8 +289,14 @@ jobs:
     steps:
       - uses: actions/download-artifact@v4
         with:
-              name: artifact
-              path: dist
+          path: dist
+          pattern: wheel-*
+          merge-multiple: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+          name: artifact
 
       - name: inspect packages to upload
         run: |
