@@ -222,11 +222,11 @@ class Cube(object):
         """
         eps = 1e-5
 
-        x_dim_compatible = (a.dimx == b.dimx)
-        y_dim_compatible = (a.dimy == b.dimy)
-        z_dim_compatible = (a.dimz == b.dimz)
-        pixel_size_compatible = (a.pixel_size - b.pixel_size <= eps)
-        slice_distance_compatible = (a.slice_distance == b.slice_distance)
+        x_dim_compatible = a.dimx == b.dimx
+        y_dim_compatible = a.dimy == b.dimy
+        z_dim_compatible = a.dimz == b.dimz
+        pixel_size_compatible = a.pixel_size - b.pixel_size <= eps
+        slice_distance_compatible = a.slice_distance == b.slice_distance
         return x_dim_compatible and y_dim_compatible and z_dim_compatible and pixel_size_compatible and \
             slice_distance_compatible
 

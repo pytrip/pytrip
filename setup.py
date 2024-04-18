@@ -31,9 +31,7 @@ class build_ext(_build_ext):
     """
     def finalize_options(self):
         _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        # __builtins__.__NUMPY_SETUP__ = False
-        
+
         import numpy
 
         # Prevent numpy from thinking it is still in its setup process
@@ -42,11 +40,12 @@ class build_ext(_build_ext):
         # Newer numpy versions don't support this hack, nor do they need it.
         # https://github.com/pyvista/pyacvd/pull/23#issue-1298467701
         #
+        # inspired by https://github.com/piskvorky/gensim/commit/2fd3e89ca42a7812a71c608572aba2e858377c8c
+        import builtins
         try:
             builtins.__NUMPY_SETUP__ = False
         except Exception as ex:
             print(f'could not use __NUMPY_SETUP__ hack (numpy version: {numpy.__version__}): {ex}')
-
 
         print("Building package with numpy version {}".format(numpy.__version__))  # skipcq: PYL-C0209
         self.include_dirs.append(numpy.get_include())
@@ -162,6 +161,7 @@ install_requires = [
     "matplotlib",
     "pydicom",
     "scipy",
+    "packaging",
     # full range of NumPy version with support for given python version
     "numpy>=1.26.0 ; python_version == '3.12'",
     "numpy>=1.23.3 ; python_version == '3.11'",
