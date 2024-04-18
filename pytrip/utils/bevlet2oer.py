@@ -47,15 +47,14 @@ class ReadGd(object):  # TODO: rename me
 
         if _dataset > 2:
             print("DOS: Error- only 0,1,2 OER set available. Got:", _dataset)
-        from importlib import resources
-
         model_files = ('OER_furusawa_V79_C12.dat', 'OER_furusawa_HSG_C12.dat', 'OER_barendsen.dat')
 
         try:
+            from importlib import resources
             with resources.files('pytrip.data').joinpath(model_files[_dataset]).open('r') as file:
                 model_data = file.read()
             lines = model_data.split('\n')
-        except (FileNotFoundError, AttributeError, TypeError) as e:
+        except (FileNotFoundError, AttributeError, TypeError):
             from pkg_resources import resource_string
             model_data = resource_string('pytrip', os.path.join('data', model_files[_dataset]))
             lines = model_data.decode('ascii').split('\n')
