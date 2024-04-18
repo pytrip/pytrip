@@ -222,11 +222,11 @@ class Cube(object):
         """
         eps = 1e-5
 
-        x_dim_compatible = (a.dimx == b.dimx)
-        y_dim_compatible = (a.dimy == b.dimy)
-        z_dim_compatible = (a.dimz == b.dimz)
-        pixel_size_compatible = (a.pixel_size - b.pixel_size <= eps)
-        slice_distance_compatible = (a.slice_distance == b.slice_distance)
+        x_dim_compatible = a.dimx == b.dimx
+        y_dim_compatible = a.dimy == b.dimy
+        z_dim_compatible = a.dimz == b.dimz
+        pixel_size_compatible = a.pixel_size - b.pixel_size <= eps
+        slice_distance_compatible = a.slice_distance == b.slice_distance
         return x_dim_compatible and y_dim_compatible and z_dim_compatible and pixel_size_compatible and \
             slice_distance_compatible
 
@@ -719,11 +719,12 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
-        from distutils.version import LooseVersion  # skipcq: PYL-W0402
+        from packaging.version import parse as parse_version  # skipcq: PYL-W0402
+
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         # include created_by and creation_info only for files newer than 1.4
-        if LooseVersion(self.version) >= LooseVersion("1.4"):
+        if parse_version(self.version) >= parse_version("1.4"):
             output_str += f"created_by {self.created_by}\n"
             output_str += f"creation_info {self.creation_info}\n"
         output_str += "primary_view " + self.primary_view + "\n"

@@ -31,9 +31,22 @@ class build_ext(_build_ext):
     """
     def finalize_options(self):
         _build_ext.finalize_options(self)
-        # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
+
         import numpy
+
+        # Prevent numpy from thinking it is still in its setup process
+        # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+        #
+        # Newer numpy versions don't support this hack, nor do they need it.
+        # https://github.com/pyvista/pyacvd/pull/23#issue-1298467701
+        #
+        # inspired by https://github.com/piskvorky/gensim/commit/2fd3e89ca42a7812a71c608572aba2e858377c8c
+        import builtins
+        try:
+            builtins.__NUMPY_SETUP__ = False
+        except Exception as ex:
+            print(f'could not use __NUMPY_SETUP__ hack (numpy version: {numpy.__version__}): {ex}')
+
         print("Building package with numpy version {}".format(numpy.__version__))  # skipcq: PYL-C0209
         self.include_dirs.append(numpy.get_include())
 
@@ -67,9 +80,9 @@ def git_version():
             if no_of_commits_since_last_tag == 0:
                 return tag_name
             return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)  # skipcq: PYL-C0209
-        return "Unknown"
+        return "0.0.0"
     except OSError:
-        return "Unknown"
+        return "0.0.0"
 
 
 def pytrip_init_version():
@@ -86,12 +99,12 @@ def pytrip_init_version():
             delim = '"' if '"' in line else "'"  # check if string is in " or '
             version = line.split(delim)[1]
             return version
-    return "Unknown"
+    return "0.0.0"
 
 
 def get_version():
     version = git_version()
-    if version != "Unknown":
+    if version != "0.0.0":
         return version
     return pytrip_init_version()
 
@@ -120,12 +133,13 @@ extensions = [
 # numpy is also added install_requires which is list of dependencies needed by pip when running `pip install`
 #
 # from time to time numpy is introducing new binary API
-# detailed list of API versions: https://github.com/numpy/numpy/blob/main/numpy/core/code_generators/cversions.txt
+# detailed list of API versions: https://github.com/numpy/numpy/blob/main/numpy/_core/code_generators/cversions.txt
 # we are taking the approach to build pytrip wheel package with oldest available API version for given python version
 # here is table with corresponding numpy versions, numpy API version and supported python versions
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
+# |    1.25.0-    | 17 (0x11) |   3.11 - 3.12   | linux, mac, win |
 # |    1.23.3-    | 16 (0x10) |    3.8 - 3.11   | linux, mac, win |
 # | 1.23.0-1.23.2 | 16 (0x10) |    3.8 - 3.10   | linux, mac, win |
 # |      1.22     | 15 (0xf)  |    3.8 - 3.10   | linux, mac, win |
@@ -143,13 +157,13 @@ extensions = [
 # ----------------------------------------------------------------|
 
 
-# as for now pydicom is broken under python 3.11, once this is fixed we need to replace it with normal version
 install_requires = [
     "matplotlib",
-    "pydicom>=2.3.1 ; python_version == '3.11'",
-    "pydicom ; python_version < '3.11'",
+    "pydicom",
     "scipy",
+    "packaging",
     # full range of NumPy version with support for given python version
+    "numpy>=1.26.0 ; python_version == '3.12'",
     "numpy>=1.23.3 ; python_version == '3.11'",
     "numpy>=1.21.4 ; python_version == '3.10'",
     "numpy>=1.20 ; python_version == '3.9'",
@@ -160,6 +174,7 @@ install_requires = [
 
 # oldest NumPy version with support for given python version
 setup_requires = [
+    "numpy==1.26.0 ; python_version == '3.12'",
     "numpy==1.23.3 ; python_version == '3.11'",
     "numpy==1.21.4 ; python_version == '3.10'",
     "numpy==1.20.0 ; python_version == '3.9'",
@@ -216,6 +231,7 @@ setuptools.setup(
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
