@@ -32,8 +32,22 @@ class build_ext(_build_ext):
     def finalize_options(self):
         _build_ext.finalize_options(self)
         # Prevent numpy from thinking it is still in its setup process:
-        __builtins__.__NUMPY_SETUP__ = False
+        # __builtins__.__NUMPY_SETUP__ = False
+        
         import numpy
+
+        # Prevent numpy from thinking it is still in its setup process
+        # http://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py
+        #
+        # Newer numpy versions don't support this hack, nor do they need it.
+        # https://github.com/pyvista/pyacvd/pull/23#issue-1298467701
+        #
+        try:
+            builtins.__NUMPY_SETUP__ = False
+        except Exception as ex:
+            print(f'could not use __NUMPY_SETUP__ hack (numpy version: {numpy.__version__}): {ex}')
+
+
         print("Building package with numpy version {}".format(numpy.__version__))  # skipcq: PYL-C0209
         self.include_dirs.append(numpy.get_include())
 
