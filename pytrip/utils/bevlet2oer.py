@@ -51,11 +51,10 @@ class ReadGd(object):  # TODO: rename me
 
         model_files = ('OER_furusawa_V79_C12.dat', 'OER_furusawa_HSG_C12.dat', 'OER_barendsen.dat')
 
-        # Using 'read_text' to read the file as text directly
-        with resources.open_text('pytrip', os.path.join('data', model_files[_dataset])) as file:
+        with resources.open_text('pytrip.data', model_files[_dataset]) as file:
             model_data = file.read()
 
-        lines = model_data.decode('ascii').split('\n')
+        lines = model_data.split('\n')
         x = np.asarray([float(line.split()[0]) for line in lines if line])
         y = np.asarray([float(line.split()[1]) for line in lines if line])
         us = RegularInterpolator(x, y, kind='linear')
