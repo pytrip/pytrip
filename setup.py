@@ -67,9 +67,9 @@ def git_version():
             if no_of_commits_since_last_tag == 0:
                 return tag_name
             return '{}+rev{}'.format(tag_name, no_of_commits_since_last_tag)  # skipcq: PYL-C0209
-        return "Unknown"
+        return "0.0.0"
     except OSError:
-        return "Unknown"
+        return "0.0.0"
 
 
 def pytrip_init_version():
@@ -86,12 +86,12 @@ def pytrip_init_version():
             delim = '"' if '"' in line else "'"  # check if string is in " or '
             version = line.split(delim)[1]
             return version
-    return "Unknown"
+    return "0.0.0"
 
 
 def get_version():
     version = git_version()
-    if version != "Unknown":
+    if version != "0.0.0":
         return version
     return pytrip_init_version()
 
