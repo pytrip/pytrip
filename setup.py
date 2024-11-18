@@ -163,12 +163,12 @@ install_requires = [
     "scipy",
     "packaging",
     # full range of NumPy version with support for given python version
-    "numpy>=1.26.0 ; python_version == '3.12'",
-    "numpy>=1.23.3 ; python_version == '3.11'",
-    "numpy>=1.21.4 ; python_version == '3.10'",
-    "numpy>=1.20 ; python_version == '3.9'",
-    "numpy>=1.18 ; python_version == '3.8'",
-    "numpy>=1.15 ; python_version == '3.7'",
+    "numpy>=1.26.0<2.0 ; python_version == '3.12'",
+    "numpy>=1.23.3<2.0 ; python_version == '3.11'",
+    "numpy>=1.21.4<2.0 ; python_version == '3.10'",
+    "numpy>=1.20<2.0 ; python_version == '3.9'",
+    "numpy>=1.18<2.0 ; python_version == '3.8'",
+    "numpy>=1.15<2.0 ; python_version == '3.7'",
     "numpy>=1.12,<1.20 ; python_version == '3.6'"
 ]
 
