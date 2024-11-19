@@ -45,11 +45,8 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.11', '3.12']
+         python-version: ['3.11', '3.12', '3.13']
          platform: [ubuntu-latest, windows-latest]
-         include:
-           - python-version: '3.6'
-             platform: ubuntu-20.04 # 3.6 is not available on Ubuntu 22.04 (currently latest)
 
     steps:
       - uses: actions/checkout@v4
@@ -92,11 +89,8 @@ jobs:
     needs: [initialise, smoke_test]
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         platform: [ubuntu-latest, windows-latest]
-        include:
-           - python-version: '3.6'
-             platform: ubuntu-20.04
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
@@ -140,7 +134,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5.3.0
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
       - name: Install dependencies
         run: |
@@ -257,7 +251,7 @@ jobs:
     needs: [initialise, full_tests]
     strategy:
        matrix:
-         python-versions: ['cp311-cp311', 'cp312-cp312']
+         python-versions: ['cp311-cp311', 'cp312-cp312', 'cp313-cp313']
 
     steps:
     - uses: actions/checkout@v4
