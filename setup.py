@@ -163,6 +163,7 @@ install_requires = [
     "scipy",
     "packaging",
     # full range of NumPy version with support for given python version
+    "numpy>=2.1.0 ; python_version == '3.13'",
     "numpy>=1.26.0,<2.0 ; python_version == '3.12'",
     "numpy>=1.23.3,<2.0 ; python_version == '3.11'",
     "numpy>=1.21.4,<2.0 ; python_version == '3.10'",
@@ -174,6 +175,7 @@ install_requires = [
 
 # oldest NumPy version with support for given python version
 setup_requires = [
+    "numpy==2.1.0 ; python_version == '3.13'",
     "numpy==1.26.0 ; python_version == '3.12'",
     "numpy==1.23.3 ; python_version == '3.11'",
     "numpy==1.21.4 ; python_version == '3.10'",
