@@ -45,7 +45,7 @@ jobs:
     needs: [initialise]
     strategy:
        matrix:
-         python-version: ['3.11', '3.12']
+         python-version: ['3.12', '3.13']
          platform: [ubuntu-latest, windows-latest]
          include:
            - python-version: '3.6'
@@ -92,7 +92,7 @@ jobs:
     needs: [initialise, smoke_test]
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12']
+        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
         platform: [ubuntu-latest, windows-latest]
         include:
            - python-version: '3.6'
@@ -257,7 +257,7 @@ jobs:
     needs: [initialise, full_tests]
     strategy:
        matrix:
-         python-versions: ['cp311-cp311', 'cp312-cp312']
+         python-versions: ['cp311-cp311', 'cp312-cp312', 'cp313-cp313']
 
     steps:
     - uses: actions/checkout@v4
