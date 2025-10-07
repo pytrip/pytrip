@@ -139,7 +139,9 @@ extensions = [
 # ----------------------------------------------------------------|
 # | numpy version | numpy API | python versions |    OS support   |
 # ----------------------------------------------------------------|
-# |    1.25.0-    | 17 (0x11) |   3.11 - 3.12   | linux, mac, win |
+# |    2.1.0-     | 19 (0x13) |   3.10 - 3.13   | linux, mac, win |
+# |    1.26.0-    | 18 (0x12) |   3.9 - 3.12    | linux, mac, win |
+# |    1.25.0-    | 17 (0x11) |   3.9 - 3.11    | linux, mac, win |
 # |    1.23.3-    | 16 (0x10) |    3.8 - 3.11   | linux, mac, win |
 # | 1.23.0-1.23.2 | 16 (0x10) |    3.8 - 3.10   | linux, mac, win |
 # |      1.22     | 15 (0xf)  |    3.8 - 3.10   | linux, mac, win |
@@ -163,24 +165,24 @@ install_requires = [
     "scipy",
     "packaging",
     # full range of NumPy version with support for given python version
+    "numpy>=2.1.0 ; python_version == '3.13'",
     "numpy>=1.26.0,<2.0 ; python_version == '3.12'",
     "numpy>=1.23.3,<2.0 ; python_version == '3.11'",
     "numpy>=1.21.4,<2.0 ; python_version == '3.10'",
     "numpy>=1.20,<2.0 ; python_version == '3.9'",
     "numpy>=1.18,<2.0 ; python_version == '3.8'",
-    "numpy>=1.15,<2.0 ; python_version == '3.7'",
-    "numpy>=1.12,<1.20 ; python_version == '3.6'"
+    "numpy>=1.15,<2.0 ; python_version == '3.7'"
 ]
 
 # oldest NumPy version with support for given python version
 setup_requires = [
+    "numpy==2.1.0 ; python_version == '3.13'",
     "numpy==1.26.0 ; python_version == '3.12'",
     "numpy==1.23.3 ; python_version == '3.11'",
     "numpy==1.21.4 ; python_version == '3.10'",
     "numpy==1.20.0 ; python_version == '3.9'",
     "numpy==1.18.0 ; python_version == '3.8'",
-    "numpy==1.15.0 ; python_version == '3.7'",
-    "numpy==1.12.0 ; python_version == '3.6'"
+    "numpy==1.15.0 ; python_version == '3.7'"
 ]
 
 extras_require = {
@@ -225,13 +227,13 @@ setuptools.setup(
         # Specify the Python versions you support here. In particular, ensure
         # that you indicate whether you support Python 2, Python 3 or both.
         'Programming Language :: C',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
         'Programming Language :: Python :: 3.9',
         'Programming Language :: Python :: 3.10',
         'Programming Language :: Python :: 3.11',
         'Programming Language :: Python :: 3.12',
+        'Programming Language :: Python :: 3.13',
         'Programming Language :: Python :: Implementation :: CPython'
     ],
     package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
@@ -253,4 +255,4 @@ setuptools.setup(
             'spc2pdf=pytrip.utils.spc2pdf:main',
         ],
     },
-    python_requires='>=3.6')
+    python_requires='>=3.7')

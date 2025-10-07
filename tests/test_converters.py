@@ -20,7 +20,6 @@
 TODO: documentation here.
 """
 import glob
-import imghdr
 import logging
 import os
 import shutil
@@ -35,7 +34,7 @@ import pytrip.utils.gd2agr
 import pytrip.utils.gd2dat
 import pytrip.utils.rst2sobp
 import pytrip.utils.trip2dicom
-from tests.conftest import exists_and_nonempty
+from tests.conftest import exists_and_nonempty, image_type
 
 logger = logging.getLogger(__name__)
 
@@ -143,7 +142,7 @@ def test_convert_one(ctx_corename, dos_filename):
     assert os.path.basename(output_filename) == "tst003001_005.png"
 
     logger.info("Checking if " + output_filename + " is PNG")
-    assert imghdr.what(output_filename) == 'png'
+    assert image_type(output_filename) == 'png'
 
     logger.info("Removing " + working_dir)
     shutil.rmtree(working_dir)
@@ -161,7 +160,7 @@ def test_convert_all(ctx_corename, dos_filename):
 
     for output_file in output_file_list:
         logger.info("Checking if " + output_file + " is PNG")
-        assert imghdr.what(output_file) == 'png'
+        assert image_type(output_file) == 'png'
 
     logger.info("Removing " + working_dir)
     shutil.rmtree(working_dir)
