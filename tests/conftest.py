@@ -1,5 +1,43 @@
 import os
+import sys
 import pytest
+
+
+def image_type(filename):
+    """
+    Determine the type of image file.
+    
+    This function replaces imghdr.what() which was removed in Python 3.13.
+    For Python < 3.13, it uses imghdr. For Python 3.13+, it checks file signatures directly.
+    
+    Args:
+        filename: Path to the image file
+        
+    Returns:
+        Image type as string (e.g., 'png', 'jpeg') or None if not recognized
+    """
+    if sys.version_info < (3, 13):
+        import imghdr
+        return imghdr.what(filename)
+    else:
+        # For Python 3.13+, check file signature directly
+        with open(filename, 'rb') as f:
+            header = f.read(32)
+        
+        # PNG signature
+        if header.startswith(b'\x89PNG\r\n\x1a\n'):
+            return 'png'
+        # JPEG signature
+        elif header.startswith(b'\xff\xd8\xff'):
+            return 'jpeg'
+        # GIF signature
+        elif header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):
+            return 'gif'
+        # BMP signature
+        elif header.startswith(b'BM'):
+            return 'bmp'
+        
+        return None
 
 
 @pytest.fixture(scope='module')
