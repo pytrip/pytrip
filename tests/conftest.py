@@ -19,25 +19,24 @@ def image_type(filename):
     if sys.version_info < (3, 13):
         import imghdr
         return imghdr.what(filename)
-    else:
-        # For Python 3.13+, check file signature directly
-        with open(filename, 'rb') as f:
-            header = f.read(32)
-        
-        # PNG signature
-        if header.startswith(b'\x89PNG\r\n\x1a\n'):
-            return 'png'
-        # JPEG signature
-        elif header.startswith(b'\xff\xd8\xff'):
-            return 'jpeg'
-        # GIF signature
-        elif header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):
-            return 'gif'
-        # BMP signature
-        elif header.startswith(b'BM'):
-            return 'bmp'
-        
-        return None
+    # For Python 3.13+, check file signature directly
+    with open(filename, 'rb') as f:
+        header = f.read(32)
+    
+    # PNG signature
+    if header.startswith(b'\x89PNG\r\n\x1a\n'):
+        return 'png'
+    # JPEG signature
+    if header.startswith(b'\xff\xd8\xff'):
+        return 'jpeg'
+    # GIF signature
+    if header.startswith(b'GIF87a') or header.startswith(b'GIF89a'):
+        return 'gif'
+    # BMP signature
+    if header.startswith(b'BM'):
+        return 'bmp'
+    
+    return None
 
 
 @pytest.fixture(scope='module')
