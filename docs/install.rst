@@ -19,7 +19,7 @@ Try if one of following commands (printing Python version) works::
 At the time of writing Python language interpreter has two popular versions: 2.x (Python 2) and 3.x (Python 3) families.
 Command ``python`` invokes either Python 2 or 3, while ``python3`` can invoke only Python 3.
 
-**pytrip** supports most of the modern Python versions, mainly: 3.6 - 3.13.
+**pytrip** supports most of the modern Python versions, mainly: 3.7 - 3.13.
 Check if your interpreter version is supported.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
