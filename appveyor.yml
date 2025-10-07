@@ -9,16 +9,6 @@ environment:
      secure: GgEHENWgbfFj3Y3ESLvQqfHXKyp2BPy65U8B21ACBOw57Yv/epOgh8bp5tsi4PUa9ZkAIRW8m4GZx5HHm4q36zkXZZaZUZYV3qMRNpoGe/EweEdg8dqjW5wAGQ/bDQgVgfbWzg9o2KwuSFd+j1wLcKEc4ZMcKZvgOQlQQXqVKNB3VpeZftjI14ss1QPFgY4TLpa+bfaH1xHVCT/BKAy7y8wKBfZBvpb4xWOyOKaRKDa1+NOxS8TGYRBThWK6R9/gvXvh9ySzFwUbjCbHdcpK/w==
   PYPIUSER: __token__
   matrix:
-    - platform: x64
-      PYTHON: "C:\\Python36-x64"
-
-    - platform: x64
-      PYTHON: "C:\\Python37-x64"
-
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      platform: x64
-      PYTHON: "C:\\Python38-x64"
-
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
       platform: x64
       PYTHON: "C:\\Python39-x64"

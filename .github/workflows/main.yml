@@ -89,7 +89,7 @@ jobs:
     needs: [initialise, smoke_test]
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9', '3.10', '3.11', '3.12', '3.13']
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']
         platform: [ubuntu-latest, windows-latest]
     steps:
     - uses: actions/checkout@v4
@@ -168,7 +168,7 @@ jobs:
     needs: [initialise, full_tests]
     strategy:
        matrix:
-         python-versions: ["cp37-cp37m","cp38-cp38", "cp39-cp39"]
+         python-versions: ["cp39-cp39"]
 
     steps:
     - uses: actions/checkout@v4
