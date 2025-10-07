@@ -222,7 +222,7 @@ def main(args=None):  # skipcq: PY-R1000
     data_colorscale_max = parsed_args.csmax
     if data_colorscale_max is None and data_cube is not None:
         data_colorscale_max = cube.cube.max()
-    smallest_number = np.NINF
+    smallest_number = -np.inf
     if np.issubdtype(data_cube.cube.dtype, np.integer):
         smallest_number = np.iinfo(data_cube.cube.dtype).min
     data_cube.cube.clip(smallest_number, data_colorscale_max, data_cube.cube)
