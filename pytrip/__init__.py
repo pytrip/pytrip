@@ -43,4 +43,3 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 __version__ = '0.0.0'
-__version__ = '0.0.0'
