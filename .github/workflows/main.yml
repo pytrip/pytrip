@@ -191,7 +191,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        path: ./dist/pytrip98*manylinux1_x86_64.whl
+        path: ./dist/pytrip98*manylinux1_x86_64*.whl
         if-no-files-found: error
         name: wheel-${{ matrix.python-versions }}
 
@@ -270,7 +270,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        path: ./dist/pytrip98*manylinux2014_x86_64.whl
+        path: ./dist/pytrip98*manylinux2014_x86_64*.whl
         if-no-files-found: error
         name: wheel-${{ matrix.python-versions }}
 
