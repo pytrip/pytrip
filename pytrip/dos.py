@@ -275,8 +275,8 @@ class DosCube(Cube):
         rt_set.ReferencedSOPInstanceUID = '1.2.3'
         ds.ReferencedRTPlanSequence = Sequence([rt_set])
         pixel_array = np.zeros((len(self.cube), ds.Rows, ds.Columns), dtype=self.pydata_type)
-        pixel_array[:][:][:] = self.cube[:][:][:]
-        ds.PixelData = pixel_array.tostring()
+        pixel_array[:] = self.cube[:]
+        ds.PixelData = pixel_array.tobytes()
         return ds
 
     def write_dicom(self, directory):

@@ -138,8 +138,8 @@ class CtxCube(Cube):
             _ds.SliceLocation = str(self.slice_pos[i])
             _ds.InstanceNumber = str(i + 1)
             pixel_array = np.zeros((_ds.Rows, _ds.Columns), dtype=self.pydata_type)
-            pixel_array[:][:] = cube[:][:]
-            _ds.PixelData = pixel_array.tostring()
+            pixel_array[:] = cube[:]
+            _ds.PixelData = pixel_array.tobytes()
             data.append(_ds)
         return data
 
