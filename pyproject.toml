@@ -38,9 +38,6 @@ classifiers = [
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: Implementation :: CPython"
 ]
-# Version remains managed by legacy setup.py logic for now
-# Mark as dynamic to avoid duplication
-version = "3.9.2+rev1"
 
 dependencies = [
   "matplotlib",
