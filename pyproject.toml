@@ -79,14 +79,9 @@ skip = "cp3??t-*"
 CFLAGS = "-fPIC"
 
 [tool.setuptools]
-# Exclude tests from the wheel
 packages = { find = { exclude = ["tests", "tests.*"] } }
 include-package-data = true
 package-data = { pytrip = ["data/*.dat"] }
-ext-modules = [
-  { name = "pytrip.pytriplib", sources = ["pytrip/lib/core.c"], extra-compile-args=["-fPIC"] },
-  { name = "pytrip._cntr", sources = ["pytrip/lib/cntr.c"], extra-compile-args=["-fPIC"] }
-]
 
 
 [tool.setuptools_scm]
