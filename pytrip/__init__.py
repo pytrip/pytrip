@@ -42,7 +42,9 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 # as described here: https://docs.python.org/3/howto/logging.html#library-config
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-# Single authoritative package version (managed via pyproject.toml)
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev2'
-__version__ = '3.9.2+rev2'
+# Version is resolved dynamically from installed metadata; no hardcoded stamping.
+try:  # Python >=3.8 importlib.metadata
+    from importlib import metadata as _md
+    __version__ = _md.version("pytrip98")
+except Exception:
+    __version__ = "unknown"
