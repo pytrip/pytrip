@@ -492,7 +492,11 @@ class Cube(object):
         content = ""
         if header_path.endswith(".gz"):
             import gzip
-            with gzip.open(header_path, file_open_mode) as fp:
+                try:
+                    from importlib import metadata as _md
+                    _ptversion = _md.version("pytrip98")
+                except Exception:
+                    _ptversion = "unknown"
                 content = fp.read()
         else:
             with open(header_path, file_open_mode) as fp:

@@ -2,7 +2,7 @@
 
 Detailed Installation Guide
 ===========================
-Installation guide is divided in two phases: checking the prerequisites and main package installation.
+This guide covers prerequisites, wheel installation from PyPI and building from source using ``pyproject.toml``.
 
 
 Prerequisites
@@ -16,11 +16,7 @@ Try if one of following commands (printing Python version) works::
     $ python --version
     $ python3 --version
 
-At the time of writing Python language interpreter has two popular versions: 2.x (Python 2) and 3.x (Python 3) families.
-Command ``python`` invokes either Python 2 or 3, while ``python3`` can invoke only Python 3.
-
-**pytrip** supports most of the modern Python versions, mainly: 3.9 - 3.13.
-Check if your interpreter version is supported.
+**pytrip** supports modern Python versions 3.9 – 3.13. Ensure your interpreter is within this range.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
 
@@ -30,69 +26,70 @@ We suggest to use the newest version available (from 3.x family).
 Python installers can be found at the python web site
 (http://python.org/download/).
 
-PyTRiP also relies on these packages:
+PyTRiP relies on these core packages which are installed automatically when using pip:
 
-  * `NumPy <http://www.numpy.org/>`_ -- Better arrays and data processing.
-  * `matplotlib <http://matplotlib.org/>`_ -- Needed for plotting.
-  * `paramiko <http://www.paramiko.org/>`_ -- Needed for remote execution of TRiP98 via SSH.
+    * `NumPy <http://www.numpy.org/>`_ – Array and numerical operations (ABI handled during wheel builds).
+    * `SciPy <https://scipy.org/>`_ – Scientific routines.
+    * `matplotlib <http://matplotlib.org/>`_ – Plotting.
+    * `pydicom <https://pydicom.github.io/>`_ – DICOM handling.
+    * `packaging <https://pypi.org/project/packaging/>`_ – Version parsing.
 
-and if they are not installed beforehand, these will automatically be fetched by pip.
+Optional remote execution support via SSH requires:
 
-Installing using pip (all platforms)
-------------------------------------
+    * `paramiko <http://www.paramiko.org/>`_ – Install with ``pip install pytrip98[remote]``.
 
-The easiest way to install PyTRiP98 is using `pip <https://pypi.python.org/pypi/pip>`_::
+Installing from PyPI (All Platforms)
+-----------------------------------
 
-.. note::
-    Pip comes pre-installed with Python newer than 3.4
+The easiest way to install PyTRiP98 is using `pip <https://pypi.python.org/pypi/pip>`_ wheels. Pre-built wheels
+are generated for Linux, macOS and Windows using `cibuildwheel <https://cibuildwheel.pypa.io/>`_ and include the
+compiled C extensions.
 
+Basic installation::
 
-Administrator installation (root access)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pip install pytrip98
 
-Administrator installation is very simple, but requires to save some files in system-wide directories (i.e. `/usr`)::
+With remote execution extras::
 
-    $ sudo pip install pytrip98
-
-To upgrade the **pytrip** to newer version, simply type::
-
-    $ sudo pip install --upgrade pytrip98
-
-To completely remove **pytrip** from your system, use following command::
-
-    $ sudo pip uninstall pytrip98
-
-Now all **pytrip** commands should be installed for all users::
-
-    $ cubeslice --help
+    pip install pytrip98[remote]
 
 
-User installation (non-root access)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Administrator (system-wide) install::
 
-User installation will put the **pytrip** under hidden directory `$HOME/.local`.
+    sudo pip install pytrip98
 
-To install the package, type in the terminal::
+Upgrade system-wide installation::
 
-    $ pip install pytrip98 --user
+    sudo pip install --upgrade pytrip98
 
-If `pip` command is missing on your system, replace `pip` with `pip3` in abovementioned instruction.
+Uninstall::
 
-To upgrade the **pytrip** to newer version, simply type::
+    sudo pip uninstall pytrip98
 
-    $ pip install --upgrade pytrip98 --user
 
-To completely remove **pytrip** from your system, use following command::
+User (local) install::
 
-    $ pip uninstall pytrip98
+    pip install pytrip98 --user
 
-In most of modern systems all executables found in `$HOME/.local/bin` directory can be called
-like normal commands (i.e. `ls`, `cd`). It means that after installation you should be able
-to simply type in terminal::
+Upgrade local installation::
 
-    $ cubeslice --help
+    pip install --upgrade pytrip98 --user
 
-If this is not the case, please prefix the command with `$HOME/.local/bin` and call it in the following way::
+Uninstall::
 
-    $ $HOME/.local/bin/cubeslice --help
+    pip uninstall pytrip98
+
+Executables (e.g. ``cubeslice``) will be placed in ``$HOME/.local/bin``; ensure this directory is on your ``PATH``.
+
+Building From Source
+--------------------
+
+If you need to build from source (e.g. for development or unsupported architectures)::
+
+    git clone https://github.com/pytrip/pytrip.git
+    cd pytrip
+    pip install -e .
+
+During wheel builds a minimal NumPy version appropriate for your Python interpreter is pre-installed to ensure
+stable binary compatibility of the C extensions.
 

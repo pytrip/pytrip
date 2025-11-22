@@ -42,4 +42,9 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 # as described here: https://docs.python.org/3/howto/logging.html#library-config
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-__version__ = '0.0.0'
+# Version is resolved dynamically from installed metadata; no hardcoded stamping.
+try:
+    import pytrip98._version as v
+    __version__ = v.version
+except ImportError:
+    __version__ = "0.0.0"  # Fallback version
