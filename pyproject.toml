@@ -69,7 +69,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
 test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
-before-all = "pip install 'numpy>=2.0' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
+before-build = "pip install 'numpy>=2.0' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
 archs = ["auto64"]
 build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
