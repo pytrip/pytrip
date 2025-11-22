@@ -42,13 +42,7 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 # as described here: https://docs.python.org/3/howto/logging.html#library-config
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
-# Package version (PEP 621 dynamic). Updated during releases.
-__version__ = "0.0.0"
+# Single authoritative package version (managed via pyproject.toml)
 __version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
-__version__ = '3.9.2+rev1'
+__version__ = '3.9.2+rev2'
+__version__ = '3.9.2+rev2'

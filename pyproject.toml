@@ -44,7 +44,7 @@ classifiers = [
 ]
 # Version remains managed by legacy setup.py logic for now
 # Mark as dynamic to avoid duplication
-dynamic = ["version"]
+version = "3.9.2+rev1"
 
 dependencies = [
   "matplotlib",
@@ -78,10 +78,8 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-# Minimal import test to verify wheel loads; full test suite can be enabled later.
-test-command = "python -c 'import pytrip; print(pytrip.__all__)'"
-# Oldest supported numpy per Python version installed before build for stable ABI
-before-build = "python - <<'EOF'\nimport sys, subprocess\nver=(sys.version_info.major, sys.version_info.minor)\nmapping={ (3,9):'numpy==1.20.0', (3,10):'numpy==1.21.4', (3,11):'numpy==1.23.3', (3,12):'numpy==1.26.0', (3,13):'numpy==2.1.0'}\nsubprocess.check_call([sys.executable,'-m','pip','install', mapping.get(ver,'numpy')])\nEOF"
+test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
+before-build = "python - <<'EOF'\nimport sys, subprocess, numpy\nver=(sys.version_info.major, sys.version_info.minor)\nmapping={ (3,9):'numpy==1.20.0', (3,10):'numpy==1.21.4', (3,11):'numpy==1.23.3', (3,12):'numpy==1.26.0', (3,13):'numpy==2.1.0'}\nsubprocess.check_call([sys.executable,'-m','pip','install', mapping.get(ver,'numpy')])\nprint('NumPy include:', numpy.get_include())\nEOF\nexport CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
 
 # You can skip unsupported architectures if needed (none skipped now)
 # skip = ""
@@ -93,9 +91,11 @@ CFLAGS = "-fPIC"
 [tool.setuptools]
 # Exclude tests from the wheel
 packages = { find = { exclude = ["tests", "tests.*"] } }
+ext-modules = [
+  { name = "pytrip.pytriplib", sources = ["pytrip/lib/core.c"], extra-compile-args=["-fPIC"] },
+  { name = "pytrip._cntr", sources = ["pytrip/lib/cntr.c"], extra-compile-args=["-fPIC"] }
+]
 
 [tool.setuptools.package-data]
 pytrip = ["data/*.dat", "pytriplib.*", "cntr.*"]
 
-[tool.setuptools.dynamic]
-version = { attr = "pytrip.__version__" }
