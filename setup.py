@@ -16,8 +16,11 @@
 #    You should have received a copy of the GNU General Public License
 #    along with PyTRiP98.  If not, see <http://www.gnu.org/licenses/>.
 #
-"""
-TODO: documentation here.
+"""Legacy setup.py retained for compatibility.
+
+Primary build configuration has migrated to ``pyproject.toml``. This script
+still supplies dynamic version stamping for environments invoking ``setup.py``
+directly, but new workflows (CI, wheel builds) should rely on ``pyproject.toml``.
 """
 import os
 import setuptools
@@ -185,68 +188,14 @@ extras_require = {
     'remote': ['paramiko']
 }
 
-setuptools.setup(
-    name='pytrip98',
-    cmdclass={'build_ext': build_ext},
-    version=pytrip98_version,
-    packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
-    url='https://github.com/pytrip/pytrip',
-    license='GPL',
-    author='Jakob Toftegaard, Niels Bassler, Leszek Grzanka',
-    author_email='leszek.grzanka@ifj.edu.pl',
-    description='PyTRiP',
-    long_description=readme + '\n',
-    classifiers=[
-        # How mature is this project? Common values are
-        #   3 - Alpha
-        #   4 - Beta
-        #   5 - Production/Stable
-        'Development Status :: 3 - Alpha',
-
-        # Indicate who your project is intended for
-        'Intended Audience :: Developers',
-        'Intended Audience :: Science/Research',
-        'Topic :: Software Development :: Libraries :: Python Modules',
-        'Topic :: Scientific/Engineering :: Medical Science Apps.',
-        'Topic :: Scientific/Engineering :: Physics',
-
-        # OS and env
-        'Environment :: Console',
-        'Operating System :: POSIX :: Linux',
-        'Operating System :: Unix',
-        'Operating System :: Microsoft :: Windows',
-        'Operating System :: MacOS',
-
-        # Pick your license as you wish (should match "license" above)
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-
-        # Specify the Python versions you support here. In particular, ensure
-        # that you indicate whether you support Python 2, Python 3 or both.
-        'Programming Language :: C',
-        'Programming Language :: Python :: 3.9',
-        'Programming Language :: Python :: 3.10',
-        'Programming Language :: Python :: 3.11',
-        'Programming Language :: Python :: 3.12',
-        'Programming Language :: Python :: 3.13',
-        'Programming Language :: Python :: Implementation :: CPython'
-    ],
-    package_data={'pytrip': ['data/*.dat', 'pytriplib.*', 'cntr.*']},
-    setup_requires=setup_requires,
-    install_requires=install_requires,
-    extras_require=extras_require,
-    ext_package='pytrip',
-    ext_modules=extensions,
-    entry_points={
-        'console_scripts': [
-            'trip2dicom=pytrip.utils.trip2dicom:main',
-            'dicom2trip=pytrip.utils.dicom2trip:main',
-            'cubeslice=pytrip.utils.cubeslice:main',
-            'rst2sobp=pytrip.utils.rst2sobp:main',
-            'rst_plot=pytrip.utils.rst_plot:main',
-            'bevlet2oer=pytrip.utils.bevlet2oer:main',
-            'gd2dat=pytrip.utils.gd2dat:main',
-            'gd2agr=pytrip.utils.gd2agr:main',
-            'spc2pdf=pytrip.utils.spc2pdf:main',
-        ],
-    },
-    python_requires='>=3.9')
+if __name__ == "__main__":
+    # Minimal invocation for legacy environments.
+    setuptools.setup(
+        name='pytrip98',
+        cmdclass={'build_ext': build_ext},
+        version=pytrip98_version,
+        packages=setuptools.find_packages(exclude=["tests", "tests.*"]),
+        ext_package='pytrip',
+        ext_modules=extensions,
+        install_requires=install_requires,
+    )

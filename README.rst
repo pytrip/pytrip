@@ -19,3 +19,26 @@ Full PyTRiP documentation can be found here: https://pytrip.readthedocs.io/
 See `Getting Started <https://pytrip.readthedocs.org/en/stable/getting_started.html>`_ for installation and basic
 information, and the `User's Guide <https://pytrip.readthedocs.org/en/stable/user_guide.html>`_ for an overview of
 how to use the PyTRiP library.
+
+Installation
+------------
+
+PyTRiP98 is distributed as pre-built wheels for CPython 3.9–3.13 on Linux, macOS and Windows. The wheels are
+produced by `cibuildwheel <https://cibuildwheel.pypa.io/>`_ via GitHub Actions.
+
+Basic installation (latest release from PyPI)::
+
+	pip install pytrip98
+
+Optional remote execution support (adds ``paramiko``)::
+
+	pip install pytrip98[remote]
+
+To build from source (requires a C compiler and Python headers)::
+
+	git clone https://github.com/pytrip/pytrip.git
+	cd pytrip
+	pip install .
+
+The build is managed by ``pyproject.toml`` (PEP 621) and uses ``setuptools``; the NumPy headers are automatically
+installed during wheel builds to ensure a stable ABI.

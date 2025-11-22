@@ -1,0 +1,101 @@
+[build-system]
+requires = [
+  "setuptools>=64",
+  "wheel",
+  "numpy==2.1.0; python_version=='3.13'",
+  "numpy==1.26.0; python_version=='3.12'",
+  "numpy==1.23.3; python_version=='3.11'",
+  "numpy==1.21.4; python_version=='3.10'",
+  "numpy==1.20.0; python_version=='3.9'"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytrip98"
+description = "PyTRiP: Python tools for TRiP98 treatment planning and data handling"
+readme = "README.rst"
+license = { file = "GPL_LICENSE" }
+authors = [
+  { name = "Jakob Toftegaard" },
+  { name = "Niels Bassler" },
+  { name = "Leszek Grzanka", email = "leszek.grzanka@ifj.edu.pl" }
+]
+requires-python = ">=3.9"
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Topic :: Scientific/Engineering :: Medical Science Apps.",
+  "Topic :: Scientific/Engineering :: Physics",
+  "Environment :: Console",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Unix",
+  "Operating System :: Microsoft :: Windows",
+  "Operating System :: MacOS",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Programming Language :: C",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: Implementation :: CPython"
+]
+# Version remains managed by legacy setup.py logic for now
+# Mark as dynamic to avoid duplication
+dynamic = ["version"]
+
+dependencies = [
+  "matplotlib",
+  "pydicom",
+  "scipy",
+  "packaging",
+  "numpy>=2.1.0; python_version == '3.13'",
+  "numpy>=1.26.0,<2.0; python_version == '3.12'",
+  "numpy>=1.23.3,<2.0; python_version == '3.11'",
+  "numpy>=1.21.4,<2.0; python_version == '3.10'",
+  "numpy>=1.20,<2.0; python_version == '3.9'"
+]
+
+[project.optional-dependencies]
+remote = ["paramiko"]
+
+[project.urls]
+Homepage = "https://github.com/pytrip/pytrip"
+Documentation = "https://pytrip.readthedocs.io/"
+Source = "https://github.com/pytrip/pytrip"
+
+[project.scripts]
+trip2dicom = "pytrip.utils.trip2dicom:main"
+dicom2trip = "pytrip.utils.dicom2trip:main"
+cubeslice = "pytrip.utils.cubeslice:main"
+rst2sobp = "pytrip.utils.rst2sobp:main"
+rst_plot = "pytrip.utils.rst_plot:main"
+bevlet2oer = "pytrip.utils.bevlet2oer:main"
+gd2dat = "pytrip.utils.gd2dat:main"
+gd2agr = "pytrip.utils.gd2agr:main"
+spc2pdf = "pytrip.utils.spc2pdf:main"
+
+[tool.cibuildwheel]
+# Minimal import test to verify wheel loads; full test suite can be enabled later.
+test-command = "python -c 'import pytrip; print(pytrip.__all__)'"
+# Oldest supported numpy per Python version installed before build for stable ABI
+before-build = "python - <<'EOF'\nimport sys, subprocess\nver=(sys.version_info.major, sys.version_info.minor)\nmapping={ (3,9):'numpy==1.20.0', (3,10):'numpy==1.21.4', (3,11):'numpy==1.23.3', (3,12):'numpy==1.26.0', (3,13):'numpy==2.1.0'}\nsubprocess.check_call([sys.executable,'-m','pip','install', mapping.get(ver,'numpy')])\nEOF"
+
+# You can skip unsupported architectures if needed (none skipped now)
+# skip = ""
+
+[tool.cibuildwheel.environment]
+# Ensure compile flags for position-independent code (already set in extensions, but redundant safety)
+CFLAGS = "-fPIC"
+
+[tool.setuptools]
+# Exclude tests from the wheel
+packages = { find = { exclude = ["tests", "tests.*"] } }
+
+[tool.setuptools.package-data]
+pytrip = ["data/*.dat", "pytriplib.*", "cntr.*"]
+
+[tool.setuptools.dynamic]
+version = { attr = "pytrip.__version__" }
