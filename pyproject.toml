@@ -8,6 +8,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pytrip98"
+dynamic = ["version"]
 description = "PyTRiP: Python tools for TRiP98 treatment planning and data handling"
 readme = "README.rst"
 license = { file = "GPL_LICENSE" }
