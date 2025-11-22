@@ -2,11 +2,7 @@
 requires = [
   "setuptools>=64",
   "wheel",
-  "numpy==2.1.0; python_version=='3.13'",
-  "numpy==1.26.0; python_version=='3.12'",
-  "numpy==1.23.3; python_version=='3.11'",
-  "numpy==1.21.4; python_version=='3.10'",
-  "numpy==1.20.0; python_version=='3.9'"
+  "numpy>=2.0"
 ]
 build-backend = "setuptools.build_meta"
 
@@ -51,11 +47,7 @@ dependencies = [
   "pydicom",
   "scipy",
   "packaging",
-  "numpy>=2.1.0; python_version == '3.13'",
-  "numpy>=1.26.0,<2.0; python_version == '3.12'",
-  "numpy>=1.23.3,<2.0; python_version == '3.11'",
-  "numpy>=1.21.4,<2.0; python_version == '3.10'",
-  "numpy>=1.20,<2.0; python_version == '3.9'"
+  "numpy>=2.0"
 ]
 
 [project.optional-dependencies]
@@ -79,7 +71,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
 test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
-before-build = "python - <<'EOF'\nimport sys, subprocess, numpy\nver=(sys.version_info.major, sys.version_info.minor)\nmapping={ (3,9):'numpy==1.20.0', (3,10):'numpy==1.21.4', (3,11):'numpy==1.23.3', (3,12):'numpy==1.26.0', (3,13):'numpy==2.1.0'}\nsubprocess.check_call([sys.executable,'-m','pip','install', mapping.get(ver,'numpy')])\nprint('NumPy include:', numpy.get_include())\nEOF\nexport CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
+before-build = "pip install 'numpy>=2.0,<3' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
 
 # You can skip unsupported architectures if needed (none skipped now)
 # skip = ""

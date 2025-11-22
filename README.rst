@@ -24,7 +24,7 @@ Installation
 ------------
 
 PyTRiP98 is distributed as pre-built wheels for CPython 3.9–3.13 on Linux, macOS and Windows. The wheels are
-produced by `cibuildwheel <https://cibuildwheel.pypa.io/>`_ via GitHub Actions.
+produced by `cibuildwheel <https://cibuildwheel.pypa.io/>`_ via GitHub Actions. NumPy 2.x is required.
 
 Basic installation (latest release from PyPI)::
 
@@ -40,5 +40,5 @@ To build from source (requires a C compiler and Python headers)::
 	cd pytrip
 	pip install .
 
-The build is managed by ``pyproject.toml`` (PEP 621) and uses ``setuptools``; the NumPy headers are automatically
-installed during wheel builds to ensure a stable ABI.
+The build is managed by ``pyproject.toml`` (PEP 621) and uses ``setuptools``; NumPy (>=2.0) headers are installed
+during wheel builds to ensure a stable ABI.
