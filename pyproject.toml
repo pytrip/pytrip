@@ -71,7 +71,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
 test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
-before-build = "pip install 'numpy>=2.0,<3' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
+before-all = "pip install 'numpy>=2.0,<3' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
 
 # You can skip unsupported architectures if needed (none skipped now)
 # skip = ""
