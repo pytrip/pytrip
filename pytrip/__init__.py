@@ -43,8 +43,8 @@ __all__ = ['CtxCube', 'VdxCube', 'Voi', 'DosCube', 'DensityCube', 'LETCube', 'di
 logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 # Version is resolved dynamically from installed metadata; no hardcoded stamping.
-try:  # Python >=3.8 importlib.metadata
-    from importlib import metadata as _md
-    __version__ = _md.version("pytrip98")
-except Exception:
-    __version__ = "unknown"
+try:
+    import pytrip98._version as v
+    __version__ = v.version
+except ImportError:
+    __version__ = "0.0.0"  # Fallback version

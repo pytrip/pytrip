@@ -71,7 +71,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
 test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
-before-all = "pip install 'numpy>=2.0,<3' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
+before-all = "pip install 'numpy>=2.0' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
 
 # You can skip unsupported architectures if needed (none skipped now)
 # skip = ""
@@ -90,3 +90,8 @@ ext-modules = [
   { name = "pytrip._cntr", sources = ["pytrip/lib/cntr.c"], extra-compile-args=["-fPIC"] }
 ]
 
+
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "node-and-date"
+write_to = "pytrip/_version.py"
