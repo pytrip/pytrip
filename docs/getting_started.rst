@@ -50,18 +50,20 @@ command, or read the detailed documentation.
 Quick Installation Guide
 ========================
 
-PyTRiP is available for python 3.6 or later, and can be installed via pip. 
+PyTRiP is available for python 3.9 or later, and can be installed via pip. 
 
 We recommend that you run a modern Linux distribution, like: **Ubuntu 22.04** or newer, **Debian 11**
  or any updated rolling release (archLinux, openSUSE tumbleweed). In that case,
-be sure you have **python** and **python-pip** installed.
+be sure you have **python** and **pip** installed.
 To get them on Debian or Ubuntu, type being logged in as normal user::
 
-    $ sudo apt-get install python-pip
+    $ sudo apt-get install python3-pip python3-venv
 
-To automatically download and install the pytrip library, type::
+To automatically download and install the pytrip library, we recommend using a virtual environment::
 
-    $ sudo pip install pytrip98
+    $ python3 -m venv venv
+    $ source venv/bin/activate
+    $ pip install pytrip98
 
 NOTE: the package is named **pytrip98**, while the name of library is **pytrip**.
 
