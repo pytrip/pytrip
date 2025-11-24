@@ -42,3 +42,33 @@ To build from source (requires a C compiler and Python headers)::
 
 The build is managed by ``pyproject.toml`` (PEP 621) and uses ``setuptools``; NumPy (>=2.0) headers are installed
 during wheel builds to ensure a stable ABI.
+
+Local Development
+-----------------
+
+To set up a local development environment:
+
+1. Clone the repository::
+
+    git clone https://github.com/pytrip/pytrip.git
+    cd pytrip
+
+2. Create and activate a virtual environment::
+
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+3. Install dependencies and the package in editable mode::
+
+    pip install -r requirements.txt
+    pip install -r tests/requirements-test.txt
+    pip install -e .
+
+4. Run tests::
+
+    pytest tests/
+
+5. Build the package locally::
+
+    pip install build
+    python -m build

@@ -1,13 +1,12 @@
 include *.rst
 # Do not include top-level arbitrary .py files (legacy setup removed)
-exclude setup.py
 exclude setup.cfg
 include GPL_LICENSE LICENSE
 include requirements.txt
 graft pytrip
 graft examples
 graft docs
-exclude *.yml *.toml *.ini
+exclude *.yml *.ini
 exclude .coveragerc
 exclude .gitmodules
 exclude pytrip/lib/unused.c
