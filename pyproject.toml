@@ -12,7 +12,7 @@ name = "pytrip98"
 dynamic = ["version"]
 description = "PyTRiP: Python tools for TRiP98 treatment planning and data handling"
 readme = "README.rst"
-license = { file = "GPL_LICENSE" }
+license = "GPL-3.0-only"
 authors = [
   { name = "Jakob Toftegaard" },
   { name = "Niels Bassler" },
@@ -31,7 +31,6 @@ classifiers = [
   "Operating System :: Unix",
   "Operating System :: Microsoft :: Windows",
   "Operating System :: MacOS",
-  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
   "Programming Language :: C",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",

@@ -29,6 +29,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         submodules: true
+        fetch-depth: 0
 
     - name: Build SDist
       run: pipx run build --sdist
@@ -54,6 +55,7 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0  # Fetch all history for git describe and versioning
+        submodules: true
 
     - uses: pypa/cibuildwheel@v2.19
       env:
