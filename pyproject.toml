@@ -50,6 +50,10 @@ dependencies = [
 
 [project.optional-dependencies]
 remote = ["paramiko"]
+test = [
+  "pytest",
+  "flake8"
+]
 
 [project.urls]
 Homepage = "https://github.com/pytrip/pytrip"
