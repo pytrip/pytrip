@@ -60,7 +60,6 @@ To set up a local development environment:
 
 3. Install dependencies and the package in editable mode::
 
-    pip install -r requirements.txt
     pip install -r tests/requirements-test.txt
     pip install -e .
 

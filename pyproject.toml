@@ -89,3 +89,7 @@ package-data = { pytrip = ["data/*.dat"] }
 version_scheme = "post-release"
 local_scheme = "node-and-date"
 write_to = "pytrip/_version.py"
+
+[tool.yapf]
+based_on_style = "pep8"
+column_limit = 120

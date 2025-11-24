@@ -101,11 +101,10 @@ In this way python interpreter will set properly all directories needed for prop
 
 6. When you're done making changes, check that your changes comply with PEP8 code quality standards (flake8 tests) run pytest tests::
 
-    $ pep8 --max-line-length=120 pytrip tests
-    $ flake8 --max-line-length=120 pytrip tests
+    $ flake8 pytrip tests
     $ pytest
 
-   To get pep8, flake8 and pytest, just pip install them.
+   To get flake8 and pytest, just pip install them.
 
 7. Commit your changes and push your branch to GitHub::
 

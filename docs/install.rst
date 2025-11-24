@@ -88,6 +88,8 @@ If you need to build from source (e.g. for development or unsupported architectu
 
     git clone https://github.com/pytrip/pytrip.git
     cd pytrip
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
     pip install -e .
 
 During wheel builds a minimal NumPy version appropriate for your Python interpreter is pre-installed to ensure
