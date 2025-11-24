@@ -1,39 +1,101 @@
-name: Build Wheels
+name: Wheels
+permissions:
+  contents: read
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+     - master
+     - main
+  release:
+    types:
+      - published
+  schedule:
+    - cron: '46 18 * * 2'
+
+env:
+  FORCE_COLOR: 3
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
+  build_sdist:
+    name: Build SDist
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Build SDist
+      run: pipx run build --sdist
+
+    - name: Check metadata
+      run: pipx run twine check dist/*
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-sdist
+        path: dist/*.tar.gz
+
+
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
+    name: Wheels on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Fetch all history for git describe and versioning
 
-      - name: Build wheels
-        uses: pypa/cibuildwheel@v2.16.5
-        env:
-          CIBW_TEST_COMMAND: "python -c 'import pytrip; print(pytrip.__version__)'"
+    - uses: pypa/cibuildwheel@v2.19
+      env:
+        CIBW_TEST_COMMAND: "python -c 'import pytrip; print(pytrip.__version__)'"
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: wheels-${{ matrix.os }}
-          path: ./wheelhouse/*.whl
+    - name: Verify clean directory
+      run: git diff --exit-code
+      shell: bash
 
-  build_sdist:
-    name: Build source distribution
+    - uses: actions/upload-artifact@v4
+      with:
+        name: cibw-wheels-${{ matrix.os }}
+        path: wheelhouse/*.whl
+
+
+  upload_all:
+    name: Upload if release
+    needs: [build_wheels, build_sdist]
     runs-on: ubuntu-latest
+    if: github.event_name == 'release' && github.event.action == 'published'
+    environment: pypi
+    permissions:
+      id-token: write
+      attestations: write
+      contents: read
+
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.x"
 
-      - name: Build sdist
-        run: pipx run build --sdist
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: cibw-*
+        merge-multiple: true
+        path: dist
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: sdist
-          path: dist/*.tar.gz
+    - name: Generate artifact attestation for sdist and wheels
+      uses: actions/attest-build-provenance@v1
+      with:
+        subject-path: "dist/*"
+
+    - uses: pypa/gh-action-pypi-publish@release/v1
+      with:
+        attestations: true
