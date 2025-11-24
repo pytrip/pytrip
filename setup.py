@@ -29,6 +29,7 @@ class build_ext(_build_ext):
     """
     From https://stackoverflow.com/questions/19919905/how-to-bootstrap-numpy-installation-in-setup-py/21621689#21621689
     """
+
     def finalize_options(self):
         _build_ext.finalize_options(self)
 
@@ -247,6 +248,7 @@ setuptools.setup(
             'gd2dat=pytrip.utils.gd2dat:main',
             'gd2agr=pytrip.utils.gd2agr:main',
             'spc2pdf=pytrip.utils.spc2pdf:main',
+            'dddplot=pytrip.utils.dddplot:main',
         ],
     },
     python_requires='>=3.9')
