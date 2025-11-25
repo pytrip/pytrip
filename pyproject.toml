@@ -71,7 +71,10 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-test-command = "python -c \"import pytrip; print(pytrip.__version__)\"; python -m pytest {project}/tests/"
+# Debug: list wheel contents after build
+before-test = "unzip -l {wheel} | grep -E '\\.(so|pyd)$' || echo 'No C extensions found in wheel'"
+# Run tests from temp dir to avoid importing from source
+test-command = "cd /tmp && python -c \"import pytrip; print('Version:', pytrip.__version__); import pytrip._cntr; import pytrip.pytriplib; print('C extensions loaded successfully')\" && python -m pytest {project}/tests/"
 test-requires = "pytest"
 before-build = "pip install numpy"
 build-verbosity = 1
