@@ -719,9 +719,8 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
-        def _compare_version(version_str, reference_str):
+        def _compare_version(version_str: str, reference_str: str) -> bool:
             """Simple version comparison for semantic versions like '1.4', '2.0'.
-            
             Returns True if version_str >= reference_str, False otherwise.
             """
             try:
