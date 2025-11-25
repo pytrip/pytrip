@@ -12,7 +12,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.12']
+        python-version: ['3.13']
 
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
           pip install numpy
 
       - name: Install package
-        run: pip install -v .[test]
+        run: pip install -v -e .[test]
 
       - name: Lint with flake8
         run: |
