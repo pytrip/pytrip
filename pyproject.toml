@@ -72,6 +72,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
 test-command = "python -c \"import pytrip; print(pytrip.__version__)\"; python -m pytest tests/"
+test-requires = "pytest"
 before-build = "pip install numpy"
 build-verbosity = 1
 dependency-versions = "latest"
