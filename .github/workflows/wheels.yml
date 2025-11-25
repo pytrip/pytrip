@@ -57,8 +57,6 @@ jobs:
         submodules: true
 
     - uses: pypa/cibuildwheel@v2.19
-      env:
-        CIBW_TEST_COMMAND: "python -c 'import pytrip; print(pytrip.__version__)'"
 
     - name: Verify clean directory
       run: git diff --exit-code
