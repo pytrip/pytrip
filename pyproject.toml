@@ -80,7 +80,7 @@ build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
 
 [tool.cibuildwheel.environment]
-PIP_PREFER_BINARY = "numpy"
+PIP_PREFER_BINARY = "true"
 
 [tool.setuptools]
 packages = { find = { exclude = ["tests", "tests.*"] } }
