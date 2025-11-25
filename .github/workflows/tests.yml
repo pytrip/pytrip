@@ -32,7 +32,7 @@ jobs:
           pip install numpy
 
       - name: Install package
-        run: pip install -v -e .[test]
+        run: pip install -e .[test]
 
       - name: Lint with flake8
         run: |
