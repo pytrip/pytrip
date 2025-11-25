@@ -45,7 +45,7 @@ dependencies = [
   "matplotlib",
   "pydicom",
   "scipy",
-  "packaging",
+  "packaging>=24.2",
   "numpy>=2.0"
 ]
 
