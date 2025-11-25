@@ -1,7 +1,7 @@
 [build-system]
 requires = [
   "setuptools>=64",
-  "packaging",
+  "packaging>=24.2",
   "setuptools_scm>=8",
   "wheel",
   "numpy>=2.0"
@@ -74,6 +74,7 @@ spc2pdf = "pytrip.utils.spc2pdf:main"
 [tool.cibuildwheel]
 test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
 before-build = "pip install numpy"
+build-verbosity = 1
 archs = ["auto64"]
 build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
