@@ -71,10 +71,10 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-# Debug: list wheel contents after build
-before-test = "unzip -l {wheel} | grep -E '\\.(so|pyd)$' || echo 'No C extensions found in wheel'"
-# Run tests from temp dir to avoid importing from source
-test-command = "cd /tmp && python -c \"import pytrip; print('Version:', pytrip.__version__); import pytrip._cntr; import pytrip.pytriplib; print('C extensions loaded successfully')\" && python -m pytest {project}/tests/"
+# Debug: list ALL wheel contents to verify C extensions are included
+before-test = "python -m zipfile -l {wheel} || unzip -l {wheel}"
+# Copy tests to /tmp and run from there to ensure imports come from installed wheel, not source
+test-command = "cp -r {project}/tests /tmp/pytrip_tests && cd /tmp && python -c \"import pytrip; print('Version:', pytrip.__version__); import pytrip._cntr; import pytrip.pytriplib; print('C extensions loaded successfully')\" && python -m pytest /tmp/pytrip_tests/"
 test-requires = "pytest"
 before-build = "pip install numpy"
 build-verbosity = 1
@@ -90,6 +90,8 @@ PIP_PREFER_BINARY = "true"
 packages = { find = { exclude = ["tests", "tests.*"] } }
 include-package-data = true
 package-data = { pytrip = ["data/*.dat"] }
+# C extensions are defined in setup.py
+script-files = []
 
 [tool.setuptools_scm]
 version_scheme = "post-release"
