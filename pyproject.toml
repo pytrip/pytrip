@@ -71,7 +71,7 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-test-command = "python -c \"import pytrip; print(pytrip.__version__)\""
+test-command = "python -c \"import pytrip; print(pytrip.__version__)\"; python -m pytest tests/"
 before-build = "pip install numpy"
 build-verbosity = 1
 dependency-versions = "latest"
@@ -86,7 +86,6 @@ PIP_PREFER_BINARY = "true"
 packages = { find = { exclude = ["tests", "tests.*"] } }
 include-package-data = true
 package-data = { pytrip = ["data/*.dat"] }
-
 
 [tool.setuptools_scm]
 version_scheme = "post-release"

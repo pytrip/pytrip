@@ -80,7 +80,7 @@ def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane,
 
 
 def filter_predicate(i, contour):
-    is_last = (i == len(contour) - 1)
+    is_last = i == len(contour) - 1
     return is_last or (not is_last and (contour[i] != contour[i + 1]).any())
 
 
