@@ -12,8 +12,12 @@ on:
       - published
   schedule:
     - cron: '46 18 * * 2'
-  pull_request:
-    branches: [ master ]
+  # Note:
+  # Wheels take long to build and test across OSes/Python versions.
+  # We trigger on demand (workflow_dispatch) and on releases, plus a periodic schedule,
+  # to avoid running on every commit/PR which would be too slow and resource intensive.
+  # pull_request:
+  #   branches: [ master ]
 
 env:
   FORCE_COLOR: 3
@@ -56,12 +60,14 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0  # Fetch all history for git describe and versioning
-        submodules: true
+        submodules: true  # We rely on test data stored in a separate repo; submodules must be fetched
+        fetch-depth: 0    # Full git history is required for setuptools_scm to derive version from tags/releases
 
     - uses: pypa/cibuildwheel@v3.3.0
       env:
         CIBW_BUILD: ${{ matrix.cibw_python }}-*
+        # Build exactly one Python ABI per worker using a matrix (3 OSes × 5 Python versions).
+        # Packaging itself is quick (~30s) but tests are lengthy; parallel workers keep total time manageable.
 
     - name: Verify clean directory
       run: git diff --exit-code

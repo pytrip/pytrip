@@ -17,8 +17,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0
-          submodules: true
+          submodules: true  # We rely on test data stored in a separate repo; submodules must be fetched
+          fetch-depth: 0    # Full git history is required for setuptools_scm to derive version from tags/releases
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
