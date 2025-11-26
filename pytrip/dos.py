@@ -1,3 +1,4 @@
+# skipcq: PYL-R0401 
 #
 #    Copyright (C) 2010-2025 PyTRiP98 Developers.
 #
