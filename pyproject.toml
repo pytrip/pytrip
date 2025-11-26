@@ -78,7 +78,7 @@ archs = ["auto64"]
 build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
 test-sources = "tests"
-test-requires = "pytest"
+test-requires = ["pytest", "setuptools"]
 #before-test = "python -m zipfile -l {wheel} || unzip -l {wheel}"
 test-command = "pytest"
 
