@@ -59,7 +59,7 @@ jobs:
         fetch-depth: 0  # Fetch all history for git describe and versioning
         submodules: true
 
-    - uses: pypa/cibuildwheel@v2.19
+    - uses: pypa/cibuildwheel@v3.3.0
 
     - name: Verify clean directory
       run: git diff --exit-code
