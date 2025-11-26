@@ -1,5 +1,5 @@
 #
-#    Copyright (C) 2010-2017 PyTRiP98 Developers.
+#    Copyright (C) 2010-2025 PyTRiP98 Developers.
 #
 #    This file is part of PyTRiP98.
 #
@@ -44,7 +44,7 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 # Version is resolved dynamically from installed metadata; no hardcoded stamping.
 try:
-    import pytrip98._version as v
+    import pytrip._version as v
     __version__ = v.version
 except ImportError:
     __version__ = "0.0.0"  # Fallback version
