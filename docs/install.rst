@@ -38,7 +38,7 @@ PyTRiP relies on these core packages which are installed automatically when usin
 
 Optional remote execution support via SSH requires:
 
-    * `paramiko <http://www.paramiko.org/>`_ – Install with ``pip install pytrip98[remote]``.
+    * `paramiko <http://www.paramiko.org/>`_ – Install with ``pip install "pytrip98[remote]"``.
 
 Installing from PyPI (All Platforms)
 ------------------------------------

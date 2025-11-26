@@ -37,7 +37,7 @@ Basic installation (latest release from PyPI)::
 
 Optional remote execution support (adds ``paramiko``)::
 
-	pip install pytrip98[remote]
+	pip install "pytrip98[remote]"
 
 To build from source (requires a C compiler and Python headers)::
 
