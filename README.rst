@@ -26,6 +26,11 @@ Installation
 PyTRiP98 is distributed as pre-built wheels for CPython 3.9–3.13 on Linux, macOS and Windows. The wheels are
 produced by `cibuildwheel <https://cibuildwheel.pypa.io/>`_ via GitHub Actions. NumPy 2.x is required.
 
+We strongly recommend using a Python virtual environment::
+
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+
 Basic installation (latest release from PyPI)::
 
 	pip install pytrip98
@@ -36,9 +41,11 @@ Optional remote execution support (adds ``paramiko``)::
 
 To build from source (requires a C compiler and Python headers)::
 
-	git clone https://github.com/pytrip/pytrip.git
-	cd pytrip
-	pip install .
+    git clone --recurse-submodules https://github.com/pytrip/pytrip.git
+    cd pytrip
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+    pip install -e .
 
 The build is managed by ``pyproject.toml`` (PEP 621) and uses ``setuptools``; NumPy (>=2.0) headers are installed
 during wheel builds to ensure a stable ABI.
@@ -48,10 +55,12 @@ Local Development
 
 To set up a local development environment:
 
-1. Clone the repository::
+1. Clone the repository (with test-data submodules)::
 
-    git clone https://github.com/pytrip/pytrip.git
+    git clone --recurse-submodules https://github.com/pytrip/pytrip.git
     cd pytrip
+    # If you already cloned without submodules:
+    #   git submodule update --init --recursive
 
 2. Create and activate a virtual environment::
 
@@ -60,12 +69,13 @@ To set up a local development environment:
 
 3. Install dependencies and the package in editable mode::
 
-    pip install -r tests/requirements-test.txt
-    pip install -e .
+    pip install -e .[test]
+    # If your pip complains about NumPy headers, install NumPy first:
+    #   pip install numpy
 
 4. Run tests::
 
-    pytest tests/
+    python -m pytest tests/
 
 5. Build the package locally::
 
