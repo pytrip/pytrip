@@ -23,7 +23,7 @@ how to use the PyTRiP library.
 Installation
 ------------
 
-PyTRiP98 is distributed as pre-built wheels for CPython 3.9–3.13 on Linux, macOS and Windows. The wheels are
+PyTRiP98 is distributed as pre-built wheels for CPython 3.9–3.14 on Linux, macOS and Windows. The wheels are
 produced by `cibuildwheel <https://cibuildwheel.pypa.io/>`_ via GitHub Actions. NumPy 2.x is required.
 
 We strongly recommend using a Python virtual environment::
