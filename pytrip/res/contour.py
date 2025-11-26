@@ -5,7 +5,7 @@ written by Elise Badun:
 https://github.com/ellieb
 """
 import numpy as np
-from pytrip import _cntr
+import pytrip._cntr as _cntr
 
 sagittal = 2  #: id for sagittal view
 coronal = 1  #: id for coronal view
@@ -80,7 +80,7 @@ def translate_contour_to_mm(contours_indices, depth, offsets, pixel_size, plane,
 
 
 def filter_predicate(i, contour):
-    is_last = (i == len(contour) - 1)
+    is_last = i == len(contour) - 1
     return is_last or (not is_last and (contour[i] != contour[i + 1]).any())
 
 

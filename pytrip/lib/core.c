@@ -1013,6 +1013,7 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
 
     // input vector
     PyObject *arg1 = NULL;
+    PyArrayObject *arr1 = NULL;
 
     // output vector, 1-dimensional, 3 elements
     // it should hold coordinates of center-of-the-mass of the dose cube
@@ -1032,6 +1033,7 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     if (!PyArg_ParseTuple(args, "O", &arg1)) return NULL;
 
     // TODO add check if input is a 3-D table holding int32 integers
+    arr1 = (PyArrayObject *)arg1;
 
     // allocate output vector with zeros
     out_dims[0] = 3;  // set the vector to be 3 elements long
@@ -1040,13 +1042,13 @@ static PyObject * calculate_dose_center(PyObject *dummy, PyObject *args) {
     // loop over all elements of input cube and calculate center-of-mass location
     cube_element = 0;
     tot_dose = 0.0;
-    for (i = 0; i < PyArray_DIM(arg1, 0); i++)
+    for (i = 0; i < PyArray_DIM(arr1, 0); i++)
     {
-        for (j = 0; j < PyArray_DIM(arg1, 1); j++)
+        for (j = 0; j < PyArray_DIM(arr1, 1); j++)
         {
-            for (k = 0; k < PyArray_DIM(arg1, 2); k++)
+            for (k = 0; k < PyArray_DIM(arr1, 2); k++)
             {
-                cube_element = *((npy_int16*)PyArray_GETPTR3(arg1, i, j, k));
+                cube_element = *((npy_int16*)PyArray_GETPTR3(arr1, i, j, k));
                 if( cube_element > 0){
                     tot_dose += cube_element;
                     *((double*)PyArray_GETPTR1(vec_out, 0)) += (double)cube_element * i;

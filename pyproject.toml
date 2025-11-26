@@ -44,7 +44,6 @@ dependencies = [
   "matplotlib",
   "pydicom",
   "scipy",
-  "packaging",
   "numpy>=2.0"
 ]
 
@@ -72,21 +71,35 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-test-command = "python -c 'import pytrip; print(pytrip.__version__)'"
-before-build = "pip install 'numpy>=2.0' && export CFLAGS=\"$CFLAGS -I$(python -c 'import numpy; print(numpy.get_include())')\""
+before-build = "pip install numpy"
+#build-verbosity = 3
+dependency-versions = "latest"
 archs = ["auto64"]
 build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
+test-sources = "tests"
+# - test-sources = "tests" tells cibuildwheel to copy our tests into a temporary directory
+#   where it installs the freshly built wheel and runs pytest against the installed package;
+#   tests are not included in the wheel payload itself.
+test-requires = ["pytest", "setuptools"]
+test-command = "pytest"
 
 [tool.cibuildwheel.environment]
-# Ensure compile flags for position-independent code (already set in extensions, but redundant safety)
-CFLAGS = "-fPIC"
+PIP_PREFER_BINARY = "true"
+# - PIP_PREFER_BINARY=true nudges pip to choose prebuilt wheels when available (e.g. NumPy),
+#   avoiding slow source builds observed on some OS/Python combinations during cibuildwheel runs.
 
 [tool.setuptools]
+# C extensions are defined in setup.py
+# - setup.py remains because pyproject.toml alone does not yet cover our C extension
+#   compilation needs (NumPy headers, build-time configuration). See the header in setup.py.
 packages = { find = { exclude = ["tests", "tests.*"] } }
+# Rationale:
+# - We explicitly exclude tests from the packaged wheel to keep artifacts small and focused.
+#   Tests are executed separately by cibuildwheel (see test-sources note above).
 include-package-data = true
 package-data = { pytrip = ["data/*.dat"] }
-
+script-files = []
 
 [tool.setuptools_scm]
 version_scheme = "post-release"

@@ -1,3 +1,16 @@
+"""
+This setup.py is intentionally kept alongside pyproject.toml.
+
+Why it's still needed:
+- Our package ships C extensions that depend on NumPy headers and require
+    build-time configuration that pyproject-only workflows don't fully cover
+    for all cibuildwheel targets.
+- Using setuptools + Extension here ensures consistent discovery of NumPy's
+    include paths and reliable compilation across platforms.
+
+Most metadata/configuration moved to pyproject.toml; setup.py focuses solely on
+declaring and building the C extensions.
+"""
 from setuptools import setup, Extension, find_packages
 import numpy
 

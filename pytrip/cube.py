@@ -719,12 +719,26 @@ class Cube(object):
 
         :param path: fully qualified path, including file extension (.hed)
         """
-        from packaging.version import parse as parse_version  # skipcq: PYL-W0402
+        def _compare_version(version_str: str, reference_str: str) -> bool:
+            """Simple version comparison for semantic versions like '1.4', '2.0'.
+            Returns True if version_str >= reference_str, False otherwise.
+            """
+            try:
+                version_parts = [int(x) for x in version_str.split('.')]
+                reference_parts = [int(x) for x in reference_str.split('.')]
+                # Pad shorter version with zeros
+                max_len = max(len(version_parts), len(reference_parts))
+                version_parts += [0] * (max_len - len(version_parts))
+                reference_parts += [0] * (max_len - len(reference_parts))
+                return version_parts >= reference_parts
+            except (ValueError, AttributeError):
+                # If parsing fails, assume it's an older version
+                return False
 
         output_str = "version " + self.version + "\n"
         output_str += "modality " + self.modality + "\n"
         # include created_by and creation_info only for files newer than 1.4
-        if parse_version(self.version) >= parse_version("1.4"):
+        if _compare_version(self.version, "1.4"):
             output_str += f"created_by {self.created_by}\n"
             output_str += f"creation_info {self.creation_info}\n"
         output_str += "primary_view " + self.primary_view + "\n"
