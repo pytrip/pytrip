@@ -16,7 +16,7 @@ Try if one of following commands (printing Python version) works::
     $ python --version
     $ python3 --version
 
-**pytrip** supports modern Python versions 3.9 – 3.13. Ensure your interpreter is within this range.
+**pytrip** supports modern Python versions 3.9 – 3.14. Ensure your interpreter is within this range.
 
 If none of ``python`` and ``python3`` commands are present, then Python interpreter has to be installed.
 

@@ -37,6 +37,7 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Programming Language :: Python :: Implementation :: CPython"
 ]
 
@@ -75,7 +76,7 @@ before-build = "pip install numpy"
 #build-verbosity = 3
 dependency-versions = "latest"
 archs = ["auto64"]
-build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
+build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*", "cp314-*"]
 skip = "cp3??t-*"
 test-sources = "tests"
 # - test-sources = "tests" tells cibuildwheel to copy our tests into a temporary directory
