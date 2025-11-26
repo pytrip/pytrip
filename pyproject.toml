@@ -71,17 +71,16 @@ gd2agr = "pytrip.utils.gd2agr:main"
 spc2pdf = "pytrip.utils.spc2pdf:main"
 
 [tool.cibuildwheel]
-# Debug: list ALL wheel contents to verify C extensions are included
-before-test = "python -m zipfile -l {wheel} || unzip -l {wheel}"
-# Copy tests to /tmp and run from there to ensure imports come from installed wheel, not source
-test-command = "cp -r {project}/tests /tmp/pytrip_tests && cd /tmp && python -c \"import pytrip; print('Version:', pytrip.__version__); import pytrip._cntr; import pytrip.pytriplib; print('C extensions loaded successfully')\" && python -m pytest /tmp/pytrip_tests/"
-test-requires = "pytest"
 before-build = "pip install numpy"
-build-verbosity = 1
+build-verbosity = 3
 dependency-versions = "latest"
 archs = ["auto64"]
 build = ["cp39-*", "cp310-*", "cp311-*", "cp312-*", "cp313-*"]
 skip = "cp3??t-*"
+test-sources = "tests"
+test-requires = "pytest"
+#before-test = "python -m zipfile -l {wheel} || unzip -l {wheel}"
+test-command = "pytest"
 
 [tool.cibuildwheel.environment]
 PIP_PREFER_BINARY = "true"
