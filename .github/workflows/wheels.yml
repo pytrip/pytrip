@@ -45,13 +45,13 @@ jobs:
 
 
   build_wheels:
-    name: Wheels on ${{ matrix.os }}
+    name: Wheels on ${{ matrix.os }} for Python ${{ matrix.cibw_python }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        # os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        cibw_python: ["cp39", "cp310", "cp311", "cp312", "cp313"]
 
     steps:
     - uses: actions/checkout@v4
@@ -60,6 +60,8 @@ jobs:
         submodules: true
 
     - uses: pypa/cibuildwheel@v3.3.0
+      env:
+        CIBW_BUILD: ${{ matrix.cibw_python }}-*
 
     - name: Verify clean directory
       run: git diff --exit-code
@@ -67,7 +69,7 @@ jobs:
 
     - uses: actions/upload-artifact@v4
       with:
-        name: cibw-wheels-${{ matrix.os }}
+        name: cibw-wheels-${{ matrix.os }}-${{ matrix.cibw_python }}
         path: wheelhouse/*.whl
 
 
