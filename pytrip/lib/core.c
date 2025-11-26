@@ -1,6 +1,6 @@
 /*
 
-    Copyright (C) 2010-2020 PyTRiP98 Developers.
+    Copyright (C) 2010-2025 PyTRiP98 Developers.
 
     This file is part of PyTRiP98.
 
