@@ -64,6 +64,28 @@ With remote execution extras::
 
 Executables (e.g. ``cubeslice``) will be placed in your virtual environment's ``bin`` (Linux/macOS) or ``Scripts`` (Windows) directory.
 
+Installing from git
+-------------------
+
+To install pytrip98 directly from git in a virtual environment, use the following commands.
+
+Create and activate a virtual environment::
+
+    python -m venv venv
+    source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+Install from the master branch::
+
+    pip install git+https://github.com/pytrip/pytrip.git@master
+
+Install from a specific branch (e.g., a feature branch)::
+
+    pip install git+https://github.com/pytrip/pytrip.git@branch-name
+
+To install with additional dependencies, use the extras syntax::
+
+    pip install "git+https://github.com/pytrip/pytrip.git@master#egg=pytrip98[remote]"
+
 Building From Source
 --------------------
 
