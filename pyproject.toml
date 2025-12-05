@@ -94,7 +94,7 @@ PIP_PREFER_BINARY = "true"
 # C extensions are defined in setup.py
 # - setup.py remains because pyproject.toml alone does not yet cover our C extension
 #   compilation needs (NumPy headers, build-time configuration). See the header in setup.py.
-packages = { find = { exclude = ["tests", "tests.*"] } }
+packages = { find = { exclude = ["tests", "tests.*", "docs", "docs.*", "examples", "examples.*", "build", "build.*", "dist", "dist.*"] } }
 # Rationale:
 # - We explicitly exclude tests from the packaged wheel to keep artifacts small and focused.
 #   Tests are executed separately by cibuildwheel (see test-sources note above).

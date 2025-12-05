@@ -31,7 +31,7 @@ ext_modules = [
 
 setup(
     name="pytrip",
-    packages=find_packages(exclude=["tests", "tests.*"]),
+    packages=find_packages(exclude=["tests", "tests.*", "docs", "docs.*", "examples", "examples.*", "build", "build.*", "dist", "dist.*"]),
     include_package_data=True,
     package_data={"pytrip": ["data/*.dat"]},
     ext_modules=ext_modules,

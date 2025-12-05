@@ -308,3 +308,6 @@ pyrightconfig.json
 # End of https://www.toptal.com/developers/gitignore/api/python,visualstudiocode,pycharm
 
 wheelhouse/
+
+# Auto-generated version file
+pytrip/_version.py
