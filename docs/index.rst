@@ -12,6 +12,8 @@ Contents:
    user_guide.rst
    interaction_with_trip.rst
    examples.rst
+   developer.rst
+   contributing.rst
    authors.rst
    Source Code <apidoc/pytrip>
 
