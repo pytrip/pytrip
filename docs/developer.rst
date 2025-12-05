@@ -168,7 +168,7 @@ Then build the HTML documentation:
 ::
 
     cd docs
-    make html
+    sphinx-build -b html . _build/html
 
 The built documentation will be available in ``docs/_build/html/``.
 
