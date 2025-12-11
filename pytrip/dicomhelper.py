@@ -20,7 +20,7 @@
 Auxiliary functions for handling Dicom data.
 """
 
-import pydicom as pd
+from pydicom import dcmread
 from pathlib import Path
 
 
@@ -51,7 +51,7 @@ def read_dicom_dir(dicom_dir):
     data = {}
     for item in dicom_path.iterdir():
         if item.suffix.lower() in dicom_suffix:
-            dcm = pd.dcmread(item, force=True)
+            dcm = dcmread(item)
 
             if hasattr(dcm, "Modality"):
                 if dcm.Modality == "CT":
