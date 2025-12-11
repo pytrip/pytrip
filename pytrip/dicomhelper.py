@@ -49,7 +49,6 @@ def read_dicom_dir(dicom_dir):
     dicom_suffix = {'.dcm', '.ima', '.v2'}
 
     data = {}
-    dicom_path = Path(dicom_dir)
     for item in dicom_path.iterdir():
         if item.suffix.lower() in dicom_suffix:
             dcm = pd.dcmread(item, force=True)
