@@ -20,6 +20,7 @@
 This module provides the Cube class, which is used by the CTX, DOS, LET and VDX modules.
 A cube is a 3D object holding data, such as CT Hounsfield units, Dose- or LET values.
 """
+
 import os
 import io
 import re
@@ -29,22 +30,13 @@ import datetime
 
 import numpy as np
 
-try:
-    # as of version 1.0 pydicom package import has beed renamed from dicom to pydicom
-    from pydicom import uid
-    from pydicom.dataset import Dataset, FileDataset
-    _dicom_loaded = True
-except ImportError:
-    try:
-        # fallback to old (<1.0) pydicom package version
-        from dicom import UID as uid  # old pydicom had UID instead of uid
-        from dicom.dataset import Dataset, FileDataset
-        _dicom_loaded = True
-    except ImportError:
-        _dicom_loaded = False
 
-from pytrip.error import InputError, ModuleNotLoadedError, FileNotFound
+from pydicom import uid
+from pydicom.dataset import Dataset, FileDataset
+
+from pytrip.error import InputError, FileNotFound
 from pytrip.util import TRiP98FilePath, TRiP98FileLocator
+
 
 logger = logging.getLogger(__name__)
 
@@ -138,7 +130,7 @@ class Cube(object):
 
             # UIDs unique for whole structure set
             # generation of UID is done here in init, the reason why we are not generating them in create_dicom
-            # method is that subsequent calls to write method shouldn't changed UIDs
+            # method is that subsequent calls to write method shouldn't change the UIDs
             self._dicom_study_instance_uid = uid.generate_uid(prefix=None)
             self._ct_dicom_series_instance_uid = uid.generate_uid(prefix=None)
 
@@ -818,8 +810,6 @@ class Cube(object):
 
         :param DICOM dcm: Dicom object which will be used for generating the header data.
         """
-        if not _dicom_loaded:
-            raise ModuleNotLoadedError("Dicom")
         if 'images' in dcm:
             ds = dcm["images"][0]
             _dimz = len(dcm["images"])
@@ -920,8 +910,6 @@ class Cube(object):
     # ######################  WRITING DICOM FILES #######################################
 
     def create_dicom_base(self):
-        if _dicom_loaded is False:
-            raise ModuleNotLoadedError("Dicom")
         if self.header_set is False:
             raise InputError("Header not loaded")
 
@@ -947,8 +935,7 @@ class Cube(object):
         ds.PatientBirthDate = '19010101'
         ds.SpecificCharacterSet = 'ISO_IR 100'
         ds.AccessionNumber = ''
-        ds.is_little_endian = True
-        ds.is_implicit_VR = True
+        ds.file_meta.TransferSyntaxUID = uid.ExplicitVRLittleEndian
         ds.SOPClassUID = '1.2.3'  # !!!!!!!!
         # SOP Instance UID tag 0x0008,0x0018 (type UI - Unique Identifier)
         ds.SOPInstanceUID = self._ct_sop_instance_uid
