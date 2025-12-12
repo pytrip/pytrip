@@ -238,8 +238,9 @@ class Cube(object):
         :params [int] indices: tuple or list of integer indices (i,j,k) or [i,j,k]
         :returns: list of positions, including offsets, as a list of floats [x,y,z]
         """
-        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset, (indices[1] + 0.5) * self.pixel_size + self.yoffset,
-               self.slice_pos[indices[2]] + self.zoffset]
+        pos = [(indices[0] + 0.5) * self.pixel_size + self.xoffset,
+               (indices[1] + 0.5) * self.pixel_size + self.yoffset,
+               self.slice_pos[indices[2]]]
         logger.debug("Map [i,j,k] {:d} {:d} {:d} to [x,y,z] {:.2f} {:.2f} {:.2f}".format(
             indices[0], indices[1], indices[2], pos[0], pos[1], pos[2]))
         return pos
