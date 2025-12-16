@@ -12,10 +12,9 @@ from pytrip import dicomhelper
 
 def process_dicom_study(study_path: str) -> int:
     """Process and mask a DICOM study based on VOI contours.
-    
+
     Args:
         study_path: Path to directory containing DICOM CT and RT Structure Set files
-        
     Returns:
         Exit code (0 for success)
     """
