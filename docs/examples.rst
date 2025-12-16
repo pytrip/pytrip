@@ -47,10 +47,10 @@ Most of the lines concern with the setup of TRiP.
 
 
 Example 03 - DICOM import / export
-------------------------
+----------------------------------
 This example demonstrates how to read DICOM CT images and RT Structure Set files into PyTRiP data structures.
 .. literalinclude:: ../examples/example03_dicom.py
     :language: python
     :linenos:
-    :lines: 19-
+    :lines: 1-
 
