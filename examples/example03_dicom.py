@@ -53,7 +53,7 @@ def process_dicom_study(study_path: str) -> int:
     # All voxels inside the VOI holds the value 1000, and 0 elsewhere.
     print("get VOI cube")
     voi_cube = voi_body.get_voi_cube()
-    mask = (voi_cube.cube == 1000)
+    mask = voi_cube.cube == 1000
 
     # Set all CT Values inside the BODY VOI to zero HU.
     ctx.cube[mask] = 0
