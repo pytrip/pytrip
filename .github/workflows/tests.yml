@@ -43,5 +43,13 @@ jobs:
         run: |
           python -m pytest tests/
 
+      - name: Download DICOM test resources
+        run: |
+          git clone --depth 1 https://github.com/nbassler/dicomexport.git /tmp/dicomexport
+
+      - name: Run DICOM example script
+        run: |
+          python examples/example03_dicom.py /tmp/dicomexport/res/test_studies/DCPT_headphantom
+
       - name: Build package
         run: python -m build

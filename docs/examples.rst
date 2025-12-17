@@ -32,7 +32,8 @@ This example shows how one can select a region inside a CTX data cube using a VD
    :lines: 19-
 
 Working with dose cubes is fully analogous to the CTX cubes.
-	   
+
+
 Example 02 - TRiP execution
 ---------------------------
 
@@ -43,4 +44,13 @@ Most of the lines concern with the setup of TRiP.
    :language: python
    :linenos:
    :lines: 19-
+
+
+Example 03 - DICOM import / export
+----------------------------------
+This example demonstrates how to read DICOM CT images and RT Structure Set files into PyTRiP data structures.
+.. literalinclude:: ../examples/example03_dicom.py
+    :language: python
+    :linenos:
+    :lines: 1-
 
