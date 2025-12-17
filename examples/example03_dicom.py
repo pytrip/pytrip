@@ -73,7 +73,7 @@ def main() -> int:
         help="Path to directory containing DICOM CT and RT Structure Set files"
     )
     args = parser.parse_args()
-    
+
     return process_dicom_study(args.study_path)
 
 
