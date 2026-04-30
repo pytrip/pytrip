@@ -21,7 +21,7 @@ jobs:
           fetch-depth: 0    # Full git history is required for setuptools_scm to derive version from tags/releases
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
 
