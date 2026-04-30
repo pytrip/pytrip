@@ -102,7 +102,7 @@ jobs:
         path: dist
 
     - name: Generate artifact attestation for sdist and wheels
-      uses: actions/attest-build-provenance@v1
+      uses: actions/attest-build-provenance@v4
       with:
         subject-path: "dist/*"
 
