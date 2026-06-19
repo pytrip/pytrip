@@ -31,7 +31,7 @@ jobs:
     name: Build SDist
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true
         fetch-depth: 0
@@ -58,7 +58,7 @@ jobs:
         cibw_python: ["cp39", "cp310", "cp311", "cp312", "cp313", "cp314"]
 
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
       with:
         submodules: true  # We rely on test data stored in a separate repo; submodules must be fetched
         fetch-depth: 0    # Full git history is required for setuptools_scm to derive version from tags/releases
